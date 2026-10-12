@@ -61,8 +61,10 @@ A renderer **never writes `option().value`** — it reports the edit through
 `commit()($event)` and the panel decides what that means: a placement ghost
 writes the option directly (the eventual `AddComponentsAction` captures it), a
 selected placed component gets a `ChangeOptionAction` (undoable,
-dirty-tracking). Bindings are therefore one-way; an external mutation of
-`option.value` does not push back into the renderer.
+dirty-tracking). Bindings are therefore one-way. The option keeps its value in
+a signal, so a template or `computed` reading `option().value` follows every
+write, from any path: a commit, an undo or redo, an automation edit, or, for a
+summary that reads sibling options through a resolver, a change to those.
 
 Each renderer owns its whole row — wrapper, label, input — so the panel renders
 no per-option chrome and an option is free to be a full-width textarea or a

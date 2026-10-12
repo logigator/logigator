@@ -1,4 +1,4 @@
-import { Signal, Type } from '@angular/core';
+import { Signal, signal, Type, WritableSignal } from '@angular/core';
 import { Subject } from 'rxjs';
 import { TranslationKey } from '../translation/translation-key.model';
 
@@ -20,18 +20,20 @@ export abstract class ComponentOption<T = any> {
    */
   public inspectorHidden = false;
 
-  private _value: T;
+  // A signal, so a template or computed reading `value` follows every write —
+  // a commit, an undo, an automation edit — without being told.
+  private readonly _value: WritableSignal<T>;
 
   protected constructor(value: T) {
-    this._value = value;
+    this._value = signal(value);
   }
 
   get value(): T {
-    return this._value;
+    return this._value();
   }
 
   set value(value: T) {
-    this._value = value;
+    this._value.set(value);
     this.onChange$.next(value);
   }
 
@@ -40,7 +42,7 @@ export abstract class ComponentOption<T = any> {
    * default; a kind whose value is an object compares what it would store.
    */
   public isCurrent(value: T): boolean {
-    return this._value === value;
+    return this._value() === value;
   }
 
   /** Returns `this`, for fluent use in config definitions. */

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
+import { firstValueFrom } from 'rxjs';
 import { By } from '@angular/platform-browser';
 import { Rectangle } from 'pixi.js';
 import { BuiltInComponentType, gamepadMeta } from '@logigator/core';
@@ -15,6 +17,7 @@ import { gamepadComponentConfig } from './gamepad.config';
 import { ProjectMetadataStore } from '../../../persistence/project-metadata.store';
 import { Project } from '../../../project/project';
 import { ProjectService } from '../../../project/project.service';
+import { TranslationService } from '../../../translation/translation.service';
 import { ComponentSettingsComponent } from '../../../ui/component-settings/component-settings.component';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
 
@@ -174,5 +177,55 @@ describe('GamepadNamesEditorComponent in the settings panel', () => {
     expect(placedPads().map((pad) => pad.options.names.value)).toEqual([
       { x: 'Dash' }
     ]);
+  });
+
+  it('keeps the row’s named count in step after a save and an undo', async () => {
+    // The summary is checked as the reader sees it, so the bundle is loaded.
+    const transloco = TestBed.inject(TranslocoService);
+    await firstValueFrom(transloco.load('en'));
+    transloco.setActiveLang('en');
+
+    project = new Project();
+    const pad = makeGamepad({ face: 2, names: { b: 'Fire' } });
+    project.addComponent(pad);
+    TestBed.inject(ProjectMetadataStore).register(project, {
+      id: 'p',
+      name: 'P',
+      type: 'project',
+      source: 'browser',
+      visibility: 'private'
+    });
+    TestBed.inject(ProjectService).setMainProject(project);
+    project.selectionManager.commit(
+      new Rectangle(-1, -1, 20, 20),
+      WorkMode.SELECT
+    );
+    const fixture = TestBed.createComponent(ComponentSettingsComponent);
+    fixture.detectChanges();
+    const appRef = TestBed.inject(ApplicationRef);
+    const translation = TestBed.inject(TranslationService);
+    const named = (count: number) =>
+      translation.translate('components.options.nameMap.summary', { count });
+
+    const row = (
+      fixture.nativeElement as HTMLElement
+    ).querySelector<HTMLElement>('app-name-map-option-input button')!;
+    const summary = () =>
+      document
+        .getElementById(row.getAttribute('aria-describedby') ?? '')
+        ?.textContent?.trim();
+    expect(summary()).toBe(named(1));
+
+    row.click();
+    appRef.tick();
+    typeInto(editorInputs(), 'a', 'Jump').dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+    );
+    appRef.tick();
+    expect(summary()).toBe(named(2));
+
+    project.actionManager.undo();
+    appRef.tick();
+    expect(summary()).toBe(named(1));
   });
 });
