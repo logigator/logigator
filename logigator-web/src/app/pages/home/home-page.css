@@ -58,8 +58,8 @@
   background: linear-gradient(
     to bottom,
     var(--hero-page) 0%,
-    color-mix(in srgb, var(--hero-page) 30%, transparent) 8%,
-    color-mix(in srgb, var(--hero-page) 30%, transparent) 70%,
+    color-mix(in srgb, var(--hero-page) 30%, transparent) 20%,
+    color-mix(in srgb, var(--hero-page) 30%, transparent) 62%,
     var(--hero-page) 100%
   );
 }
@@ -76,11 +76,11 @@
     background: linear-gradient(
       to right,
       var(--hero-page) 0%,
-      var(--hero-page) calc(50% - 0.08 * var(--hero-span)),
+      var(--hero-page) calc(50% - 0.17 * var(--hero-span)),
       color-mix(in srgb, var(--hero-page) 66%, transparent)
-        calc(50% + 0.02 * var(--hero-span)),
+        calc(50% - 0.05 * var(--hero-span)),
       color-mix(in srgb, var(--hero-page) 16%, transparent)
-        calc(50% + 0.2 * var(--hero-span)),
+        calc(50% + 0.14 * var(--hero-span)),
       transparent calc(100% - var(--hero-gap) - min(var(--hero-gap), 3.5rem)),
       var(--hero-page) calc(100% - var(--hero-gap))
     );
