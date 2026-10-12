@@ -285,7 +285,13 @@ const fr: TranslationSchema = {
         window: {
           keyboardActive: 'Clavier actif',
           keyboardInactive: 'Cliquez ici pour utiliser le clavier',
-          assignKeys: 'Attribuer les touches'
+          assignKeys: 'Attribuer les touches',
+          controller: 'Manette',
+          controllerNone: 'Aucune',
+          controllerHint:
+            'Appuyez sur un bouton de votre manette pour la connecter',
+          controllerUnsupported:
+            "La disposition de cette manette n'est pas prise en charge"
         },
         assign: {
           hint: 'Cliquez sur une commande, puis appuyez sur une touche',

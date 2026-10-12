@@ -286,7 +286,13 @@ const de: TranslationSchema = {
         window: {
           keyboardActive: 'Tastatur aktiv',
           keyboardInactive: 'Hier klicken, um die Tastatur zu nutzen',
-          assignKeys: 'Tasten zuweisen'
+          assignKeys: 'Tasten zuweisen',
+          controller: 'Controller',
+          controllerNone: 'Keiner',
+          controllerHint:
+            'Eine Taste am Controller drücken, um ihn zu verbinden',
+          controllerUnsupported:
+            'Die Tastenbelegung dieses Controllers wird nicht unterstützt'
         },
         assign: {
           hint: 'Ein Bedienelement anklicken, dann eine Taste drücken',

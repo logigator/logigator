@@ -3,6 +3,7 @@ import { ApplicationRef, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { makeGamepad } from '../../../../testing/factories';
+import { GamepadHardwareService } from '../../../inspection/gamepad/gamepad-hardware.service';
 import {
   GamepadKeyboardService,
   GamepadKeyTarget
@@ -66,6 +67,30 @@ describe('GamepadInspection', () => {
     inspection.pointerUp('a', 7);
     expect(route.calls).toEqual(['press a', 'release a']);
     expect(inspection.pressed().has('a')).toBe(false);
+  });
+
+  it('keeps a control held by a key, a pointer and a controller until all three let go', () => {
+    inspection.keyDown('a', 'KeyX');
+    inspection.pointerDown('a', 7);
+    inspection.padDown('a', '0:button-1');
+
+    inspection.keyUp('a', 'KeyX');
+    inspection.pointerUp('a', 7);
+    expect(route.calls).toEqual(['press a']);
+
+    inspection.padUp('a', '0:button-1');
+    expect(route.calls).toEqual(['press a', 'release a']);
+  });
+
+  it('drops only the controller holds when the controller lets go', () => {
+    inspection.padDown('up', '0:button-12');
+    inspection.padDown('b', '0:button-0');
+    inspection.keyDown('b', 'KeyZ');
+
+    inspection.releasePad();
+
+    expect(route.calls).toEqual(['press up', 'press b', 'release up']);
+    expect([...inspection.pressed()]).toEqual(['b']);
   });
 
   it('sends each control to its own slot, and a repeated holder nothing', () => {
@@ -364,5 +389,55 @@ describe('GamepadInspectionComponent in assign mode', () => {
 
     expect(bindings.bindings().b).toBeNull();
     expect(bindings.controlFor('KeyZ')).toBeNull();
+  });
+});
+
+describe('GamepadInspectionComponent with a controller connected', () => {
+  let pad: GamepadComponent;
+  let frame: HTMLElement;
+
+  beforeEach(() => {
+    const controller = {
+      index: 0,
+      id: 'Pad (STANDARD GAMEPAD Vendor: 045e Product: 0b13)',
+      mapping: 'standard',
+      connected: true,
+      buttons: [],
+      axes: []
+    };
+    Object.defineProperty(navigator, 'getGamepads', {
+      configurable: true,
+      value: () => [controller]
+    });
+    configureTestBed(
+      [{ provide: SimulationService, useValue: { isReady: signal(true) } }],
+      [GamepadInspectionComponent]
+    );
+    pad = makeGamepad();
+    frame = document.createElement('div');
+    frame.setAttribute('role', 'dialog');
+    document.body.appendChild(frame);
+  });
+
+  afterEach(() => {
+    frame.remove();
+    pad.destroy({ children: true });
+    TestBed.resetTestingModule();
+    delete (navigator as { getGamepads?: unknown }).getGamepads;
+  });
+
+  it('takes the free controller while open and frees it when the view goes', () => {
+    const hardware = TestBed.inject(GamepadHardwareService);
+    const inspection = new GamepadInspection(pad, recordingRoute(pad));
+    const fixture = TestBed.createComponent(GamepadInspectionComponent);
+    frame.appendChild(fixture.nativeElement as HTMLElement);
+    fixture.componentRef.setInput('inspection', inspection);
+    fixture.detectChanges();
+    TestBed.inject(ApplicationRef).tick();
+
+    expect(hardware.assignmentOf(inspection)()).toBe(0);
+
+    fixture.destroy();
+    expect(hardware.assignmentOf(inspection)()).toBeNull();
   });
 });

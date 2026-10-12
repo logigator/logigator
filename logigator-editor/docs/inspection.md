@@ -191,12 +191,15 @@ difference goes out (`heldChanges`), so a thumb rolls from ← over ↖ to ↑,
 pressing ↑ once and releasing ← once.
 
 **`GamepadInspection`** merges every source. Each control has a set of
-**holders**, `key:<code>` and `ptr:<pointerId>`, and is pressed while the set
-is non-empty; only an empty ↔ non-empty transition goes out, as
+**holders**, `key:<code>`, `ptr:<pointerId>` and `pad:<index>:<input>`, and is
+pressed while the set is non-empty; only an empty ↔ non-empty transition goes out, as
 `route.press(slot)` / `route.release(slot)`, the slot read from
 `component.slotIds` at the call. Holding a key and clicking the same control,
 then letting go of either, keeps it held. `releaseKeys()` drops only `key:`
-holders, so pointer holds survive the window losing focus. What the window
+holders, so pointer and controller holds survive the window losing focus;
+`releasePad()` drops only `pad:` holders. A control the pad does not have takes
+no holder, so a controller's shoulder buttons play nothing on a pad without
+them. What the window
 draws as pressed is not the holders but the component's own slot state,
 re-read into `pressed` on every frame and after every route call, so a press
 from automation or a second view shows, and one the simulation dropped does
@@ -210,8 +213,8 @@ the type's name.
 
 **`GamepadInspectionComponent`** is the window body: the pad in `play` over a
 footer reading _Keyboard active_ while focus is inside the frame, and _Click
-here to use the keyboard_ otherwise, and _Assign keys_; the footer keeps a
-marked place for the controller select. The frame is the nearest
+here to use the keyboard_ otherwise, the controller select (see Physical
+Controllers) and _Assign keys_. The frame is the nearest
 `[role="dialog"]` ancestor (the `lg-window` host on desktop, the drawer panel
 in the sheet), and it is registered with `GamepadKeyboardService` as the
 target's `host`, so a click on the title bar, which focuses the window, hands
@@ -223,7 +226,10 @@ breakpoint flip re-renders the view while the inspection lives on. On compact
 the pad fills the sheet's width with enlarged hit regions, and the footer and
 chips show only once a keyboard is known to be at hand: an
 `(any-pointer: fine)` device, or a key pressed since the view opened. Assign
-mode is reached from that footer, so only where it shows.
+mode is reached from that footer, so only where it shows. The footer also shows
+on compact whenever a controller is connected, holding only the controller
+select until a keyboard is at hand, since a phone or tablet can pair a
+controller.
 
 **Assign mode.** _Assign keys_ unregisters the view from
 `GamepadKeyboardService`, which releases the keys the pad held, then calls
@@ -295,3 +301,83 @@ since. A `focusout` leaving a host releases that target's keys
 (`releaseKeys()`); a `window` blur, `visibilitychange` to hidden and
 unregistering release theirs too. Listeners attach on the first registration
 and are removed with the service.
+
+## Physical Controllers
+
+**`GamepadHardwareService`** (`inspection/gamepad/gamepad-hardware.service.ts`)
+plays gamepads from physical controllers through the browser Gamepad API. A
+controller does **not** follow focus as the keyboard does: it is **assigned**
+to one target and plays it whichever window has focus, so two players with two
+controllers play two pads at once, and clicking the board does not cut off the
+controller in hand.
+
+**Discovery.** `controllers` lists every connected controller by index, with
+its `id`, a `label` (`1 · Xbox Wireless Controller`: the index from 1 and the
+`id` without Chromium's parenthesised mapping and vendor/product suffix or
+Firefox's `vendor-product-` prefix, `controllerLabel` in
+`gamepad-hardware-mapping.ts`) and `supported`, which is `mapping ===
+'standard'`. It is read from `navigator.getGamepads()` on the first
+registration and again on every `gamepadconnected` / `gamepaddisconnected`.
+Browsers expose a controller only after one of its buttons is pressed while the
+page has focus, and only in a secure context; where `getGamepads` is missing,
+`available` is `false` and the service does nothing.
+
+**Assignment.** A pad view registers its `GamepadInspection` as a
+`GamepadPadTarget` (`padDown(control, input)`, `padUp(control, input)`,
+`releasePad()`), with a disposer; a target registered twice, as a breakpoint
+flip can do while the old view goes, stays until both registrations have gone.
+`assign(index, target)`, `unassign(target)` and `assignmentOf(target)` (a
+signal of the index or `null`) are the window's select.
+
+- A controller belongs to at most one target. Assigning one another target
+  holds moves it, and that target releases what it held.
+- An unsupported controller is never assigned; the select lists it disabled,
+  with the tooltip _This controller's layout isn't supported_.
+- A target registering takes the controller it last chose if that is free,
+  otherwise the first free supported one, and none if its last choice was
+  _None_. A controller connecting is offered the same way to every target
+  without one, so pressing a button with a window open connects it there.
+- Assignments last for the session, and nothing is persisted: controller
+  indices are not stable across reconnects.
+
+The select is hidden until a controller is reported. Before that, on desktop
+and only where `available`, the footer's spacer carries a muted _Press a button
+on your controller to connect it_, which truncates rather than wrapping the
+footer.
+
+**Polling.** The API has no input events: `getGamepads()` is a snapshot. One
+`FRAME_SCHEDULER` callback reads it each frame while at least one assignment
+exists, the simulation `isReady()` (paused included, as the board's buttons can
+be held while paused) and the page is visible, and stops otherwise. Each frame
+maps every assigned controller through `standardHolds` (pure, in
+`gamepad-hardware-mapping.ts`) to the inputs holding a control right now, and
+**diffs** that against the last frame, so a target hears only changes, as
+`padDown` / `padUp` with `input` = `<index>:<input>`.
+
+| Standard input                       | Control                  | Input id                |
+| ------------------------------------ | ------------------------ | ----------------------- |
+| buttons 12 / 13 / 14 / 15            | up / down / left / right | `button-12` …           |
+| left stick, axes 1 and 0 beyond ±0.5 | up / down / left / right | `stick-up` …            |
+| button 1 (right face)                | a                        | `button-1`              |
+| button 0 (bottom face)               | b                        | `button-0`              |
+| button 3 (top face)                  | x                        | `button-3`              |
+| button 2 (left face)                 | y                        | `button-2`              |
+| button 4 (LB) / 6 (LT)               | l                        | `button-4` / `button-6` |
+| button 5 (RB) / 7 (RT)               | r                        | `button-5` / `button-7` |
+| button 8 (back / share)              | select                   | `button-8`              |
+| button 9 (start)                     | start                    | `button-9`              |
+
+The face buttons take the SNES positions (A right, B bottom), so the layout is
+the same on every standard controller whatever its labels say. A trigger holds
+at `value > 0.5`; every other button by `pressed`. Each input is its own
+holder, so the D-pad and the stick both holding _up_, or a bumper and its
+trigger both holding _l_, release only when both let go. Controller remapping
+does not exist; the keyboard is what is rebindable.
+
+**Release.** Every controller hold of the targets concerned is released
+(`releasePad()`) on a disconnect, an unassignment or a move to another target,
+an unregistered target (the window closed), `visibilitychange` to hidden, and
+the simulation stopping being ready, simulation exit included; the last three
+stop polling, which releases everything held. Assign mode lets go of `pad:`
+holders as of every other kind and takes no new one, so a controller plays
+nothing while keys are assigned.

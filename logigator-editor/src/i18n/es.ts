@@ -285,7 +285,11 @@ const es: TranslationSchema = {
         window: {
           keyboardActive: 'Teclado activo',
           keyboardInactive: 'Haz clic aquí para usar el teclado',
-          assignKeys: 'Asignar teclas'
+          assignKeys: 'Asignar teclas',
+          controller: 'Mando',
+          controllerNone: 'Ninguno',
+          controllerHint: 'Pulsa un botón del mando para conectarlo',
+          controllerUnsupported: 'La disposición de este mando no es compatible'
         },
         assign: {
           hint: 'Haz clic en un control y pulsa una tecla',

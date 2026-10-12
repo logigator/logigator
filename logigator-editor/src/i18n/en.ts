@@ -286,7 +286,11 @@ const en = {
         window: {
           keyboardActive: 'Keyboard active',
           keyboardInactive: 'Click here to use the keyboard',
-          assignKeys: 'Assign keys'
+          assignKeys: 'Assign keys',
+          controller: 'Controller',
+          controllerNone: 'None',
+          controllerHint: 'Press a button on your controller to connect it',
+          controllerUnsupported: "This controller's layout isn't supported"
         },
         assign: {
           hint: 'Click a control, then press a key',

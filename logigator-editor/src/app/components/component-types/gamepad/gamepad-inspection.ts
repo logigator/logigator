@@ -2,6 +2,7 @@ import { computed, signal, Signal } from '@angular/core';
 import { GamepadControlId, NameMap } from '@logigator/core';
 import { TranslationService } from '../../../translation/translation.service';
 import { getStaticDI } from '../../../utils/get-di';
+import type { GamepadPadTarget } from '../../../inspection/gamepad/gamepad-hardware.service';
 import { ComponentInspection, InputRoute } from '../../component-inspection';
 import type { GamepadComponent } from './gamepad.component';
 import { GamepadInspectionComponent } from './gamepad-inspection.component';
@@ -10,22 +11,28 @@ import { GamepadInspectionComponent } from './gamepad-inspection.component';
 const KEY_HOLDER = 'key:';
 /** The holder prefix of a pointer, followed by its `pointerId`. */
 const POINTER_HOLDER = 'ptr:';
+/** The holder prefix of a controller input, followed by `<index>:<input>`. */
+const PAD_HOLDER = 'pad:';
 
 /**
  * A gamepad played in its window. Every source that can hold a control — a
- * key, a pointer, later a physical controller — is a **holder** of it, named
- * `key:<code>`, `ptr:<pointerId>` and so on. A control is pressed while it
- * has a holder, and only the moments it gains its first holder or loses its
- * last one reach the {@link InputRoute}, as a press or release of the
- * control's slot. Holding a key and clicking the same control, then letting
- * go of either, keeps the control held.
+ * key, a pointer, a physical controller's input — is a **holder** of it,
+ * named `key:<code>`, `ptr:<pointerId>` or `pad:<index>:<input>`. A control
+ * is pressed while it has a holder, and only the moments it gains its first
+ * holder or loses its last one reach the {@link InputRoute}, as a press or
+ * release of the control's slot. Holding a key and clicking the same control,
+ * then letting go of either, keeps the control held. A control the pad does
+ * not have takes no holder.
  *
  * What the window draws as pressed is the component's own slot state, not
  * the holders: {@link pressed} re-reads it on every frame and after every
  * route call, so a press that arrived any other way shows too, and a press
  * the simulation dropped does not.
  */
-export class GamepadInspection extends ComponentInspection {
+export class GamepadInspection
+  extends ComponentInspection
+  implements GamepadPadTarget
+{
   public readonly kind = 'gamepad';
   public readonly renderer = GamepadInspectionComponent;
   public readonly title: Signal<string>;
@@ -92,6 +99,20 @@ export class GamepadInspection extends ComponentInspection {
   /** Every pointer lets go at once: the view holding them went away. */
   public releasePointers(): void {
     this.letGoWhere((holder) => holder.startsWith(POINTER_HOLDER));
+  }
+
+  /** A controller input (`<index>:<input>`) started holding `control`. */
+  public padDown(control: GamepadControlId, input: string): void {
+    this.hold(control, PAD_HOLDER + input);
+  }
+
+  public padUp(control: GamepadControlId, input: string): void {
+    this.letGo(control, PAD_HOLDER + input);
+  }
+
+  /** Every controller input lets go at once: the controller went away. */
+  public releasePad(): void {
+    this.letGoWhere((holder) => holder.startsWith(PAD_HOLDER));
   }
 
   /**

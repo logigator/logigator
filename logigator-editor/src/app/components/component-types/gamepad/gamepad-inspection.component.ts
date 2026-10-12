@@ -9,8 +9,10 @@ import {
   input,
   signal
 } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { GamepadControlId } from '@logigator/core';
-import { LgButton } from '@logigator/ui';
+import { LgButton, LgSelect } from '@logigator/ui';
+import { GamepadHardwareService } from '../../../inspection/gamepad/gamepad-hardware.service';
 import { GamepadKeyboardService } from '../../../inspection/gamepad/gamepad-keyboard.service';
 import { LayoutService } from '../../../layout/layout.service';
 import { GamepadBindingsService } from '../../../shortcuts/gamepad-bindings.service';
@@ -29,6 +31,17 @@ const FRAME_SELECTOR = '[role="dialog"]';
 /** How long a control whose key moved in a swap stays highlighted. */
 const FLASH_MS = 600;
 
+const CONTROLLER_ICON = 'ph ph-game-controller';
+
+/** One row of the controller select; `index` is `null` for none. */
+interface ControllerOption {
+  readonly index: number | null;
+  readonly label: string;
+  readonly icon: string;
+  readonly disabled: boolean;
+  readonly tooltip: string | null;
+}
+
 /**
  * The gamepad's window: the pad in `play` mode over a status footer. Keys
  * reach the pad while focus is anywhere inside the frame hosting it, so the
@@ -38,6 +51,13 @@ const FLASH_MS = 600;
  * On compact the pad fills the sheet with enlarged hit regions, and the
  * footer and keycap chips show only once a keyboard is known to be at hand:
  * a fine pointer exists, or a key has been pressed since the view opened.
+ *
+ * A physical controller plays the pad wherever focus is: the view registers
+ * the inspection with {@link GamepadHardwareService}, and the footer's
+ * controller select, shown once the browser reports a controller, picks which
+ * one. Before that, on desktop, the footer hints that a button press connects
+ * one. On compact the select shows even with no keyboard at hand, since a
+ * phone or tablet can pair a controller.
  *
  * The footer's Assign keys switches the inspection to assigning: the pad
  * draws in `assign`, and the view leaves {@link GamepadKeyboardService} for
@@ -51,7 +71,13 @@ const FLASH_MS = 600;
 @Component({
   selector: 'app-gamepad-inspection',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [GamepadPadComponent, LgButton, TranslateDirective],
+  imports: [
+    FormsModule,
+    GamepadPadComponent,
+    LgButton,
+    LgSelect,
+    TranslateDirective
+  ],
   host: {
     class: 'flex h-full flex-col gap-2 outline-none',
     tabindex: '-1',
@@ -104,28 +130,58 @@ const FLASH_MS = 600;
             {{ t('components.def.GAMEPAD.assign.done') }}
           </button>
         } @else {
-          @if (focused()) {
-            <span class="flex items-center gap-1.5 text-primary">
-              <i class="ph ph-keyboard" aria-hidden="true"></i>
-              {{ t('components.def.GAMEPAD.window.keyboardActive') }}
-            </span>
-          } @else {
-            <span class="text-muted">
-              {{ t('components.def.GAMEPAD.window.keyboardInactive') }}
-            </span>
+          @if (showKeyboardControls()) {
+            @if (focused()) {
+              <span class="flex shrink-0 items-center gap-1.5 text-primary">
+                <i class="ph ph-keyboard" aria-hidden="true"></i>
+                {{ t('components.def.GAMEPAD.window.keyboardActive') }}
+              </span>
+            } @else {
+              <span class="shrink-0 text-muted">
+                {{ t('components.def.GAMEPAD.window.keyboardInactive') }}
+              </span>
+            }
           }
-          <span class="grow"></span>
-          <!-- Controls beside the status, right-aligned: the controller
-               select, then the Assign keys toggle. -->
-          <button
-            lgButton
-            size="sm"
-            severity="secondary"
-            outlined
-            (onClick)="enterAssign()"
+          <!-- Fills the space between the status and the controls, so a
+               long hint truncates rather than wrapping the footer. -->
+          <span
+            class="min-w-0 flex-1 truncate text-right text-xs text-muted"
+            [attr.title]="
+              showControllerHint()
+                ? t('components.def.GAMEPAD.window.controllerHint')
+                : null
+            "
           >
-            {{ t('components.def.GAMEPAD.window.assignKeys') }}
-          </button>
+            @if (showControllerHint()) {
+              <i class="ph ph-game-controller mr-1" aria-hidden="true"></i>
+              {{ t('components.def.GAMEPAD.window.controllerHint') }}
+            }
+          </span>
+          @if (controllerOptions().length > 1) {
+            <lg-select
+              class="max-w-56 min-w-0"
+              [options]="controllerOptions()"
+              optionLabel="label"
+              optionValue="index"
+              optionDisabled="disabled"
+              optionTooltip="tooltip"
+              optionIcon="icon"
+              [ariaLabel]="t('components.def.GAMEPAD.window.controller')"
+              [ngModel]="assignedController()"
+              (ngModelChange)="chooseController($event)"
+            />
+          }
+          @if (showKeyboardControls()) {
+            <button
+              lgButton
+              size="sm"
+              severity="secondary"
+              outlined
+              (onClick)="enterAssign()"
+            >
+              {{ t('components.def.GAMEPAD.window.assignKeys') }}
+            </button>
+          }
         }
       </div>
     }
@@ -137,6 +193,7 @@ export class GamepadInspectionComponent {
   private readonly host =
     inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly keyboard = inject(GamepadKeyboardService);
+  private readonly hardware = inject(GamepadHardwareService);
   private readonly bindings = inject(GamepadBindingsService);
   private readonly translation = inject(TranslationService);
   private readonly layout = inject(LayoutService);
@@ -162,9 +219,55 @@ export class GamepadInspectionComponent {
   protected readonly keyboardPresent = computed(
     () => this.finePointer || this.keySeen()
   );
+  /** The keyboard status and Assign keys, which need a keyboard at hand. */
+  protected readonly showKeyboardControls = computed(
+    () => !this.compact() || this.keyboardPresent()
+  );
   /** Assign mode keeps its footer, Done included, wherever it is resumed. */
   protected readonly showFooter = computed(
-    () => !this.compact() || this.keyboardPresent() || this.assigning()
+    () =>
+      this.showKeyboardControls() ||
+      this.assigning() ||
+      this.hardware.controllers().length > 0
+  );
+
+  /** `None`, then every connected controller; empty while there is none. */
+  protected readonly controllerOptions = computed<readonly ControllerOption[]>(
+    () => {
+      const controllers = this.hardware.controllers();
+      if (controllers.length === 0) return [];
+      const unsupported = this.translation.translate(
+        'components.def.GAMEPAD.window.controllerUnsupported'
+      );
+      return [
+        {
+          index: null,
+          label: this.translation.translate(
+            'components.def.GAMEPAD.window.controllerNone'
+          ),
+          icon: CONTROLLER_ICON,
+          disabled: false,
+          tooltip: null
+        },
+        ...controllers.map((controller) => ({
+          index: controller.index,
+          label: controller.label,
+          icon: CONTROLLER_ICON,
+          disabled: !controller.supported,
+          tooltip: controller.supported ? null : unsupported
+        }))
+      ];
+    }
+  );
+  /** The controller playing this pad, or `null`. */
+  protected readonly assignedController = computed(() =>
+    this.hardware.assignmentOf(this.inspection())()
+  );
+  protected readonly showControllerHint = computed(
+    () =>
+      this.hardware.available &&
+      !this.compact() &&
+      this.hardware.controllers().length === 0
   );
 
   /** As wide as the area allows without the pad outgrowing its height. */
@@ -206,6 +309,8 @@ export class GamepadInspectionComponent {
       );
 
       if (!this.inspection().assigning()) this.routeKeys();
+      const unregisterPad = this.hardware.register(this.inspection());
+      destroyRef.onDestroy(unregisterPad);
 
       this.host.focus({ preventScroll: true });
       this.focused.set(frame.contains(document.activeElement));
@@ -229,6 +334,12 @@ export class GamepadInspectionComponent {
     if (!this.frame.contains(document.activeElement)) {
       this.host.focus({ preventScroll: true });
     }
+  }
+
+  protected chooseController(index: number | null): void {
+    const inspection = this.inspection();
+    if (index === null) this.hardware.unassign(inspection);
+    else this.hardware.assign(index, inspection);
   }
 
   protected onControlDown({ control, pointerId }: GamepadPadPointer): void {
