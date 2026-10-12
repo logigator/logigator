@@ -217,3 +217,73 @@ describe('LgSelect optionIcon', () => {
     ]);
   });
 });
+
+@Component({
+  imports: [LgSelect, FormsModule],
+  template: `
+    <lg-select
+      [options]="options"
+      optionLabel="label"
+      optionValue="value"
+      optionDisabled="unavailable"
+      [ngModel]="selected()"
+      (ngModelChange)="selected.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  `
+})
+class DisabledOptionHostComponent {
+  readonly options = [
+    { label: 'None', value: null, unavailable: false },
+    { label: 'Broken', value: 1, unavailable: true },
+    { label: 'Working', value: 2, unavailable: false }
+  ];
+  readonly selected = signal<number | null>(null);
+}
+
+describe('LgSelect optionDisabled', () => {
+  afterEach(() => {
+    document
+      .querySelectorAll('.cdk-overlay-container')
+      .forEach((el) => el.remove());
+  });
+
+  async function open() {
+    const f = TestBed.createComponent(DisabledOptionHostComponent);
+    f.detectChanges();
+    await f.whenStable();
+    f.detectChanges();
+    const button = f.nativeElement.querySelector('button') as HTMLButtonElement;
+    button.click();
+    f.detectChanges();
+    return { f, button };
+  }
+
+  it('lists a disabled option but does not commit it when clicked', async () => {
+    const { f, button } = await open();
+    const broken = panelOptions()[1];
+    expect(broken.getAttribute('aria-disabled')).toBe('true');
+
+    broken.click();
+    f.detectChanges();
+    expect(f.componentInstance.selected()).toBeNull();
+    expect(button.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('skips a disabled option when moving with the arrow keys', async () => {
+    const { f, button } = await open();
+    // The cdk key manager reads the legacy `keyCode`.
+    button.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'ArrowDown',
+        keyCode: 40,
+        bubbles: true
+      })
+    );
+    button.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+    );
+    f.detectChanges();
+    expect(f.componentInstance.selected()).toBe(2);
+  });
+});
