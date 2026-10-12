@@ -386,6 +386,61 @@ export const SHOTS: Shot[] = [
     }
   },
   {
+    // A full gamepad holding A and right, its controller window beside it, so
+    // the pressed buttons and the powered ports read as one state.
+    name: 'gamepad-window',
+    async run(ed) {
+      const type = await ed.typeOf('PAD');
+      await ed.api(
+        (t) =>
+          __logigator.applyEdit([
+            {
+              op: 'addComponent',
+              type: t,
+              pos: [4, 4],
+              direction: 0,
+              options: { face: 4, shoulders: 2, menu: 2, label: 'P1' }
+            }
+          ]),
+        type
+      );
+      const [pad] = await ed.componentsOfType('PAD');
+
+      await ed.enterSimulation();
+      await ed.api(async (id) => {
+        await __logigator.sim.setInput(id, true, 'a');
+        await __logigator.sim.setInput(id, true, 'right');
+      }, pad.id);
+      await ed.runUntilSettled();
+      const circuit = await ed.contentClip({
+        pad: 2,
+        zoom: BOARD_ZOOM,
+        anchor: 'top-left'
+      });
+      // The window opens focused, so its footer reads "Keyboard active".
+      await ed.openWatch('PAD');
+      const opened = await ed.box(ed.watchWindow());
+      await ed.moveWatch({
+        x: circuit.x + circuit.width + 24,
+        y: circuit.y + Math.max(0, (circuit.height - opened.height) / 2)
+      });
+      const controller = await ed.unionClip(ed.watchWindow(), 8);
+
+      // Whichever of the two is shorter is centred on the other.
+      const board = await ed.canvasBox();
+      const bounds = await ed.contentBounds();
+      if (controller.height > circuit.height) {
+        await ed.centerContentAt({
+          y: controller.y + controller.height / 2 - board.y
+        });
+      }
+      await ed.parkPointer();
+      return {
+        clip: mergeRects(await ed.gridClip(bounds, 2), controller)
+      };
+    }
+  },
+  {
     // Animated: the watch following the board it mirrors, inner circuit
     // lighting with the outer one.
     name: 'inspection-showcase',
