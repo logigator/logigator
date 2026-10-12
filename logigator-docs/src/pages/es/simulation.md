@@ -44,8 +44,23 @@ Bajo los modos, «Relojes a esta velocidad» lista la frecuencia que da cada ret
 - Un interruptor cambia con cada clic y se queda donde lo dejas.
 - Un botón está activo mientras lo mantienes pulsado.
 - Un botón de pulso envía un pulso de un tick por clic, lo mantengas pulsado el tiempo que sea.
+- Un mando abre su ventana de juego, descrita en la sección siguiente.
 
 Arrastrar en cualquier otro punto del tablero desplaza la vista.
+
+## Jugar con un mando
+
+Un clic en un mando abre una ventana con el mando dibujado, que lleva por título la etiqueta del componente. Un botón que mantienes pulsado ahí pone su salida a 1 hasta que lo sueltas, y se ilumina también en el tablero.
+
+![La ventana de un mando con A y Derecha pulsados, junto al mando en el tablero.](./images/gamepad-window.webp)
+
+La ventana toma el teclado al abrirse, y la línea de abajo dice «Teclado activo». Después de un clic en el tablero o en otra ventana dice «Haz clic aquí para usar el teclado», y las teclas ya no llegan al mando. Bajo cada botón aparece su tecla. Mientras la ventana tiene el teclado, las teclas del mando van antes que los atajos: `Enter` pulsa Start en lugar de salir de la simulación. `Escape` sigue cerrando la ventana, y los atajos con `Ctrl` o `Alt` siguen funcionando. Las teclas predeterminadas y cómo cambiarlas están en [Atajos de teclado](docs:shortcuts#teclas-del-mando).
+
+Con el ratón o con el dedo, un botón sigue pulsado mientras lo mantienes, y en una pantalla táctil cada dedo sostiene su propio botón. La cruceta tiene ocho direcciones: al pulsar entre dos brazos se pulsan los dos, y al deslizar el pulgar pasas de una dirección a la siguiente sin levantarlo. El centro de la cruceta no pulsa ninguna dirección.
+
+Un mando físico conectado al ordenador también puede jugar. El navegador solo informa de un mando después de que pulses uno de sus botones con el editor abierto. Si lo haces con una ventana de mando abierta, el mando físico se conecta a esa ventana y aparece en el menú Mando de abajo. Un mando físico sigue jugando cuando otra ventana tiene el teclado, así que dos mandos físicos pueden manejar dos mandos a la vez, cada uno elegido en su propia ventana. Los botones se asignan por posición, digan lo que digan sus etiquetas: el botón de acción de la derecha es A, el de abajo B, el de arriba X y el de la izquierda Y. La cruceta y el stick izquierdo manejan los dos la cruceta, LB y LT son L, RB y RT son R, Back o Share es Select, y Start es Start. Los mandos de los que el navegador no informa con la disposición estándar aparecen en la lista, pero no se pueden elegir.
+
+Al cerrar la ventana o salir de la simulación se sueltan todos los botones. Un mando dentro de un componente personalizado se juega desde un [monitor](docs:inspection#monitores). En la vista táctil, el mando se abre en el panel de la parte inferior de la pantalla; las teclas aparecen ahí en cuanto pulsas una tecla de un teclado, y el menú Mando en cuanto hay un mando físico conectado.
 
 ## Cuando la simulación no arranca
 

@@ -41,14 +41,15 @@ Cada componente tarda un tick en pasar un cambio a su salida. Las tablas indican
 
 ### Entradas / Salidas
 
-| Componente           | Qué hace                                                                                                                                                                                         | Opciones                                           |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
-| Interruptor          | Cambia entre 0 y 1 con cada clic durante una simulación.                                                                                                                                         |                                                    |
-| Botón                | Da 1 mientras lo mantienes pulsado.                                                                                                                                                              |                                                    |
-| Botón de pulso       | Da un pulso de un tick por clic.                                                                                                                                                                 |                                                    |
-| LED                  | Se enciende mientras su entrada es 1.                                                                                                                                                            |                                                    |
-| Display de segmentos | Muestra el número binario de sus entradas; la entrada 0 es el bit menos significativo.                                                                                                           | Entradas 1 a 16, Base decimal, hexadecimal u octal |
-| Matriz de LEDs       | Una cuadrícula cuadrada de LEDs. En el flanco de subida de CLK, las entradas de datos se escriben en la fila que eligen las entradas de dirección. En 16 × 16, cada dirección abarca media fila. | Ancho/Alto 4, 8 o 16                               |
+| Componente           | Qué hace                                                                                                                                                                                         | Opciones                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Interruptor          | Cambia entre 0 y 1 con cada clic durante una simulación.                                                                                                                                         |                                                                                     |
+| Botón                | Da 1 mientras lo mantienes pulsado.                                                                                                                                                              |                                                                                     |
+| Botón de pulso       | Da un pulso de un tick por clic.                                                                                                                                                                 |                                                                                     |
+| LED                  | Se enciende mientras su entrada es 1.                                                                                                                                                            |                                                                                     |
+| Display de segmentos | Muestra el número binario de sus entradas; la entrada 0 es el bit menos significativo.                                                                                                           | Entradas 1 a 16, Base decimal, hexadecimal u octal                                  |
+| Matriz de LEDs       | Una cuadrícula cuadrada de LEDs. En el flanco de subida de CLK, las entradas de datos se escriben en la fila que eligen las entradas de dirección. En 16 × 16, cada dirección abarca media fila. | Ancho/Alto 4, 8 o 16                                                                |
+| Mando                | Una salida por botón, a 1 mientras el botón está pulsado. La cruceta siempre está. Durante una simulación, un clic abre un mando en pantalla para jugar.                                         | Botones de acción, Botones laterales, Botones de menú, Etiqueta, Nombres de botones |
 
 ## La tarjeta de ajustes
 
@@ -59,6 +60,10 @@ Al seleccionar un solo componente, o al elegir uno para colocar, aparece su tarj
 Cambiar Entradas, Salidas o una opción de tamaño cambia al instante el número de puertos.
 
 En una ROM, «Editar contenido» abre un editor hexadecimal para las palabras guardadas. Tamaño de palabra fija cuántos bits tiene una palabra y Tamaño de dirección cuántas entradas de dirección hay, así que una ROM con tamaño de dirección 4 guarda 16 palabras. El contenido se guarda con el circuito.
+
+Un mando tiene siempre las cuatro direcciones de la cruceta. Botones de acción puede ser 0, A, A B o A B X Y; Botones laterales, 0 o L R, y Botones de menú, 0, ST o SL ST, donde SL es Select y ST es Start. Los valores predeterminados, A B y SL ST sin botones laterales, dan ocho salidas; con todos los grupos activados hay doce. Los puertos se llaman UP, DN, LT, RT, A, B, X, Y, L, R, SL y ST, en ese orden. La etiqueta, de hasta 8 caracteres, es el título de la ventana del mando durante una simulación.
+
+Nombres de botones abre una imagen del mando con un campo en cada botón. Un nombre de hasta 8 caracteres sustituye la etiqueta del puerto de ese botón en el tablero y aparece junto al botón en la ventana del mando; un campo vacío mantiene la etiqueta predeterminada. Los nombres de los botones que desactivas se conservan y vuelven cuando los activas de nuevo.
 
 ## Negar un puerto
 

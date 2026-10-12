@@ -47,6 +47,28 @@ Si la combinaison appartient déjà à une autre action, celle-ci la perd et un 
 
 Vos raccourcis sont enregistrés dans ce navigateur. Effacer les données du site les réinitialise.
 
+## Touches de la manette
+
+Une [manette](docs:simulation#jouer-avec-une-manette) a ses propres touches, distinctes des raccourcis ci-dessus. Elles agissent tant que sa fenêtre a le clavier, et y passent avant les raccourcis : `Enter` appuie sur Start.
+
+| Bouton                       | Touche par défaut |
+| ---------------------------- | ----------------- |
+| Haut / Bas / Gauche / Droite | flèches           |
+| A                            | `X`               |
+| B                            | `W`               |
+| X                            | `S`               |
+| Y                            | `Q`               |
+| L                            | `A`               |
+| R                            | `Z`               |
+| Select                       | `Shift` droite    |
+| Start                        | `Enter`           |
+
+Une touche compte par sa position sur le clavier. Le tableau la nomme telle qu'elle est inscrite sur un clavier AZERTY ; sur un clavier QWERTY, B est par exemple la touche Z. Chrome et Edge affichent dans la fenêtre les touches telles que votre clavier les inscrit, les autres navigateurs celles d'un clavier QWERTY américain.
+
+Pour modifier les touches, cliquez sur « Attribuer les touches » en bas d'une fenêtre de manette. Cliquez sur un bouton, puis appuyez sur la touche qu'il doit recevoir. Si un autre bouton avait déjà cette touche, les deux échangent leurs touches et l'autre bouton s'allume brièvement. `Escape` annule, et `Backspace` ou `Delete` laisse le bouton sans touche ; `Escape` et `Tab` ne peuvent pas être attribuées. « Rétablir les valeurs par défaut » remet le tableau ci-dessus, et « Terminé » revient au jeu.
+
+Les touches sont communes à toutes les manettes de tous les projets et enregistrées dans ce navigateur, comme les raccourcis. Une modification apparaît aussitôt dans chaque fenêtre de manette ouverte, y compris dans d'autres onglets.
+
 ## Voir aussi
 
 - [Plan de travail et outils](docs:board-and-tools) : les outils et actions derrière ces touches

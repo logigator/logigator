@@ -47,6 +47,28 @@ Gehört die Kombination schon zu einer anderen Aktion, verliert diese sie, und e
 
 Deine Belegungen werden in diesem Browser gespeichert. Löschst du die Website-Daten, gelten wieder die Standardwerte.
 
+## Tasten des Gamepads
+
+Ein [Gamepad](docs:simulation#ein-gamepad-spielen) hat eigene Tasten, getrennt von den Tastaturbefehlen oben. Sie wirken, solange sein Controller-Fenster die Tastatur hat, und gehen dort den Tastaturbefehlen vor: `Enter` drückt Start.
+
+| Gamepad-Taste                  | Standard       |
+| ------------------------------ | -------------- |
+| Hoch / Runter / Links / Rechts | Pfeiltasten    |
+| A                              | `X`            |
+| B                              | `Y`            |
+| X                              | `S`            |
+| Y                              | `A`            |
+| L                              | `Q`            |
+| R                              | `W`            |
+| Select                         | `Shift` rechts |
+| Start                          | `Enter`        |
+
+Es zählt die Lage einer Taste auf der Tastatur. Die Tabelle nennt sie, wie sie auf einer deutschen Tastatur beschriftet sind; auf einer US-Tastatur liegt B zum Beispiel auf Z. Chrome und Edge zeigen im Fenster die Beschriftung deiner Tastatur, andere Browser die einer US-Tastatur.
+
+Um die Tasten zu ändern, klicke unten in einem Gamepad-Fenster auf „Tasten zuweisen“. Klicke auf eine Gamepad-Taste und drücke dann die Tastaturtaste, die sie bekommen soll. Hatte eine andere Gamepad-Taste sie schon, tauschen die beiden, und die andere leuchtet kurz auf. `Escape` bricht ab, und `Backspace` oder `Delete` lässt die Gamepad-Taste ohne Tastaturtaste; `Escape` und `Tab` lassen sich nicht zuweisen. „Standard wiederherstellen“ stellt die Tabelle oben wieder her, und „Fertig“ kehrt zum Spielen zurück.
+
+Die Tasten gelten für jedes Gamepad in jedem Projekt und werden wie die Tastaturbefehle in diesem Browser gespeichert. Eine Änderung erscheint sofort in jedem offenen Gamepad-Fenster, auch in anderen Tabs.
+
 ## Siehe auch
 
 - [Arbeitsfläche und Werkzeuge](docs:board-and-tools): die Werkzeuge und Aktionen hinter diesen Tasten

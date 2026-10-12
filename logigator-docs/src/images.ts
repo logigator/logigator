@@ -5,6 +5,7 @@ import componentSettingsEn from './pages/en/images/component-settings.webp';
 import customComponentShowcaseEn from './pages/en/images/custom-component-showcase.webp';
 import customComponentTabEn from './pages/en/images/custom-component-tab.webp';
 import exportImageEn from './pages/en/images/export-image.webp';
+import gamepadWindowEn from './pages/en/images/gamepad-window.webp';
 import inspectionShowcaseEn from './pages/en/images/inspection-showcase.webp';
 import inspectionWindowMultilayerEn from './pages/en/images/inspection-window-multilayer.webp';
 import negatedGateEn from './pages/en/images/negated-gate.webp';
@@ -28,6 +29,7 @@ import boardOverviewDe from './pages/de/images/board-overview.webp';
 import componentPaletteDe from './pages/de/images/component-palette.webp';
 import componentSettingsDe from './pages/de/images/component-settings.webp';
 import exportImageDe from './pages/de/images/export-image.webp';
+import gamepadWindowDe from './pages/de/images/gamepad-window.webp';
 import inspectionShowcaseDe from './pages/de/images/inspection-showcase.webp';
 import openCloudDe from './pages/de/images/open-cloud.webp';
 import openFileDe from './pages/de/images/open-file.webp';
@@ -46,6 +48,7 @@ import boardOverviewFr from './pages/fr/images/board-overview.webp';
 import componentPaletteFr from './pages/fr/images/component-palette.webp';
 import componentSettingsFr from './pages/fr/images/component-settings.webp';
 import exportImageFr from './pages/fr/images/export-image.webp';
+import gamepadWindowFr from './pages/fr/images/gamepad-window.webp';
 import inspectionShowcaseFr from './pages/fr/images/inspection-showcase.webp';
 import openCloudFr from './pages/fr/images/open-cloud.webp';
 import openFileFr from './pages/fr/images/open-file.webp';
@@ -64,6 +67,7 @@ import boardOverviewEs from './pages/es/images/board-overview.webp';
 import componentPaletteEs from './pages/es/images/component-palette.webp';
 import componentSettingsEs from './pages/es/images/component-settings.webp';
 import exportImageEs from './pages/es/images/export-image.webp';
+import gamepadWindowEs from './pages/es/images/gamepad-window.webp';
 import inspectionShowcaseEs from './pages/es/images/inspection-showcase.webp';
 import openCloudEs from './pages/es/images/open-cloud.webp';
 import openFileEs from './pages/es/images/open-file.webp';
@@ -87,6 +91,7 @@ const en: Readonly<Record<string, string>> = {
   './images/custom-component-showcase.webp': customComponentShowcaseEn,
   './images/custom-component-tab.webp': customComponentTabEn,
   './images/export-image.webp': exportImageEn,
+  './images/gamepad-window.webp': gamepadWindowEn,
   './images/inspection-showcase.webp': inspectionShowcaseEn,
   './images/inspection-window-multilayer.webp': inspectionWindowMultilayerEn,
   './images/negated-gate.webp': negatedGateEn,
@@ -113,6 +118,7 @@ const de: Readonly<Record<string, string>> = {
   './images/component-palette.webp': componentPaletteDe,
   './images/component-settings.webp': componentSettingsDe,
   './images/export-image.webp': exportImageDe,
+  './images/gamepad-window.webp': gamepadWindowDe,
   './images/inspection-showcase.webp': inspectionShowcaseDe,
   './images/open-cloud.webp': openCloudDe,
   './images/open-file.webp': openFileDe,
@@ -134,6 +140,7 @@ const fr: Readonly<Record<string, string>> = {
   './images/component-palette.webp': componentPaletteFr,
   './images/component-settings.webp': componentSettingsFr,
   './images/export-image.webp': exportImageFr,
+  './images/gamepad-window.webp': gamepadWindowFr,
   './images/inspection-showcase.webp': inspectionShowcaseFr,
   './images/open-cloud.webp': openCloudFr,
   './images/open-file.webp': openFileFr,
@@ -155,6 +162,7 @@ const es: Readonly<Record<string, string>> = {
   './images/component-palette.webp': componentPaletteEs,
   './images/component-settings.webp': componentSettingsEs,
   './images/export-image.webp': exportImageEs,
+  './images/gamepad-window.webp': gamepadWindowEs,
   './images/inspection-showcase.webp': inspectionShowcaseEs,
   './images/open-cloud.webp': openCloudEs,
   './images/open-file.webp': openFileEs,

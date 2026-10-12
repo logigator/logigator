@@ -47,6 +47,28 @@ If the combination already belongs to another action, that action loses it and a
 
 Your bindings are stored in this browser. Clearing the site data resets them.
 
+## Gamepad keys
+
+A [gamepad](docs:simulation#playing-a-gamepad) has its own keys, separate from the shortcuts above. They work while its controller window has the keyboard, and there they come before the shortcuts, so `Enter` presses Start.
+
+| Button                   | Default key   |
+| ------------------------ | ------------- |
+| Up / Down / Left / Right | arrow keys    |
+| A                        | `X`           |
+| B                        | `Z`           |
+| X                        | `S`           |
+| Y                        | `A`           |
+| L                        | `Q`           |
+| R                        | `W`           |
+| Select                   | right `Shift` |
+| Start                    | `Enter`       |
+
+A key counts by its position on the keyboard, and the table names it as on a US keyboard. On a German keyboard, for example, B is the key labelled Y. In Chrome and Edge, the window shows each key as your keyboard labels it.
+
+To change the keys, click Assign keys at the bottom of a gamepad window. Click a button, then press the key it should have. If another button had that key, the two swap keys and the other button lights up briefly. `Escape` cancels, and `Backspace` or `Delete` leaves the button without a key; `Escape` and `Tab` can't be assigned. Reset to defaults restores the table above, and Done goes back to playing.
+
+The keys are shared by every gamepad in every project and stored in this browser, like the shortcuts. A change shows at once in every open gamepad window, in other tabs as well.
+
 ## See also
 
 - [Board and tools](docs:board-and-tools): the tools and actions these keys trigger

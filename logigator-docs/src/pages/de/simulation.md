@@ -44,8 +44,23 @@ Unter den Modi listet „Taktgeber bei dieser Geschwindigkeit“ die Frequenz, d
 - Ein Schalter wechselt mit jedem Klick und bleibt, wo du ihn lässt.
 - Ein Taster ist an, solange du ihn gedrückt hältst.
 - Ein Impulstaster sendet pro Klick einen Impuls von einem Tick, egal wie lange du ihn hältst.
+- Ein Gamepad öffnet seinen Controller, beschrieben im nächsten Abschnitt.
 
 Ziehen an jeder anderen Stelle der Arbeitsfläche verschiebt die Ansicht.
+
+## Ein Gamepad spielen
+
+Ein Klick auf ein Gamepad öffnet ein Fenster mit einem gezeichneten Controller, betitelt mit der Beschriftung des Gamepads. Eine Taste, die du dort gedrückt hältst, setzt ihren Ausgang auf 1, bis du loslässt, und leuchtet auch auf der Arbeitsfläche.
+
+![Das Controller-Fenster eines Gamepads mit gedrücktem A und Rechts, neben dem Gamepad auf der Arbeitsfläche.](./images/gamepad-window.webp)
+
+Das Fenster bekommt beim Öffnen die Tastatur, und die Zeile unten zeigt „Tastatur aktiv“. Klickst du auf die Arbeitsfläche oder ein anderes Fenster, steht dort „Hier klicken, um die Tastatur zu nutzen“, und Tastendrücke erreichen das Gamepad nicht mehr. Unter jeder Gamepad-Taste steht die Tastaturtaste dafür. Solange das Fenster die Tastatur hat, gehen die Tasten des Gamepads den Tastaturbefehlen vor: `Enter` drückt Start und verlässt die Simulation nicht. `Escape` schließt weiterhin das Fenster, und Tastaturbefehle mit `Ctrl` oder `Alt` funktionieren weiter. Die Standardtasten und wie du sie änderst, stehen unter [Tastaturbefehle](docs:shortcuts#tasten-des-gamepads).
+
+Mit der Maus oder dem Finger bleibt eine Taste gedrückt, solange du sie hältst, und auf einem Touchscreen hält jeder Finger seine eigene Taste. Das Steuerkreuz hat acht Richtungen: Drückst du zwischen zwei Arme, sind beide gedrückt, und wenn du den Daumen weiterschiebst, wechselst du von einer Richtung zur nächsten, ohne abzusetzen. In der Mitte des Steuerkreuzes ist keine Richtung gedrückt.
+
+Auch ein Gamecontroller, der mit deinem Computer verbunden ist, kann ein Gamepad spielen. Der Browser meldet einen Controller erst, nachdem du bei geöffnetem Editor eine seiner Tasten gedrückt hast. Tust du das bei offenem Gamepad-Fenster, wird der Controller mit diesem Fenster verbunden und erscheint unten im Controller-Menü. Ein Controller spielt sein Gamepad weiter, auch wenn ein anderes Fenster die Tastatur hat. So können zwei Controller zwei Gamepads gleichzeitig spielen, jeder in seinem eigenen Fenster ausgewählt. Die Tasten werden nach ihrer Lage zugeordnet, egal wie sie beschriftet sind: Die rechte Aktionstaste ist A, die untere B, die obere X und die linke Y. Steuerkreuz und linker Stick bedienen beide das Steuerkreuz, LB und LT sind L, RB und RT sind R, Back oder Share ist Select, und Start ist Start. Controller, die der Browser nicht mit der Standardbelegung meldet, stehen in der Liste, lassen sich aber nicht auswählen.
+
+Schließt du das Fenster oder verlässt die Simulation, werden alle Tasten losgelassen. Ein Gamepad in einer benutzerdefinierten Komponente spielst du aus einer [Beobachtung](docs:inspection#beobachtungen) heraus. In der Touch-Ansicht öffnet sich der Controller in der Leiste am unteren Bildschirmrand; die Tastenbeschriftungen erscheinen dort, sobald du eine Taste auf einer Tastatur drückst, und das Controller-Menü, sobald ein Controller verbunden ist.
 
 ## Wenn die Simulation nicht startet
 

@@ -41,14 +41,15 @@ Chaque composant met un tick à transmettre un changement à sa sortie. Les tabl
 
 ### Entrées / Sorties
 
-| Composant            | Rôle                                                                                                                                                                                          | Options                                               |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| Interrupteur         | Bascule entre 0 et 1 à chaque clic pendant une simulation.                                                                                                                                    |                                                       |
-| Bouton               | Donne 1 tant que vous le maintenez enfoncé.                                                                                                                                                   |                                                       |
-| Bouton à impulsion   | Donne une impulsion d'un tick par clic.                                                                                                                                                       |                                                       |
-| LED                  | S'allume tant que son entrée est à 1.                                                                                                                                                         |                                                       |
-| Affichage à segments | Affiche le nombre binaire présent sur ses entrées, l'entrée 0 étant le bit de poids faible.                                                                                                   | Entrées 1 à 16, Base décimale, hexadécimale ou octale |
-| Matrice de LED       | Une grille carrée de LED. Sur le front montant de CLK, les entrées de données sont écrites dans la ligne choisie par les entrées d'adresse. En 16 × 16, chaque adresse couvre une demi-ligne. | Largeur/Hauteur 4, 8 ou 16                            |
+| Composant            | Rôle                                                                                                                                                                                          | Options                                                                            |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Interrupteur         | Bascule entre 0 et 1 à chaque clic pendant une simulation.                                                                                                                                    |                                                                                    |
+| Bouton               | Donne 1 tant que vous le maintenez enfoncé.                                                                                                                                                   |                                                                                    |
+| Bouton à impulsion   | Donne une impulsion d'un tick par clic.                                                                                                                                                       |                                                                                    |
+| LED                  | S'allume tant que son entrée est à 1.                                                                                                                                                         |                                                                                    |
+| Affichage à segments | Affiche le nombre binaire présent sur ses entrées, l'entrée 0 étant le bit de poids faible.                                                                                                   | Entrées 1 à 16, Base décimale, hexadécimale ou octale                              |
+| Matrice de LED       | Une grille carrée de LED. Sur le front montant de CLK, les entrées de données sont écrites dans la ligne choisie par les entrées d'adresse. En 16 × 16, chaque adresse couvre une demi-ligne. | Largeur/Hauteur 4, 8 ou 16                                                         |
+| Manette              | Une sortie par bouton, à 1 tant que le bouton est enfoncé. La croix directionnelle est toujours présente. Pendant une simulation, un clic ouvre une manette à l'écran pour jouer.             | Boutons d'action, Boutons de tranche, Boutons de menu, Étiquette, Noms des boutons |
 
 ## La carte de paramètres
 
@@ -59,6 +60,10 @@ Quand vous sélectionnez un seul composant, ou en choisissez un à placer, sa ca
 Modifier Entrées, Sorties ou une option de taille change immédiatement le nombre de ports.
 
 Pour une ROM, « Modifier le contenu » ouvre un éditeur hexadécimal pour les mots stockés. Taille de mot fixe le nombre de bits par mot et Taille d'adresse le nombre d'entrées d'adresse : une ROM avec une taille d'adresse de 4 contient donc 16 mots. Le contenu est enregistré avec le circuit.
+
+Une manette a toujours les quatre directions de la croix directionnelle. Boutons d'action vaut 0, A, A B ou A B X Y, Boutons de tranche 0 ou L R, et Boutons de menu 0, ST ou SL ST, SL étant Select et ST Start. Les valeurs par défaut, A B et SL ST sans boutons de tranche, donnent huit sorties ; avec tous les groupes, il y en a douze. Les ports s'appellent UP, DN, LT, RT, A, B, X, Y, L, R, SL et ST, dans cet ordre. L'étiquette, jusqu'à 8 caractères, sert de titre à la fenêtre de la manette pendant une simulation.
+
+Noms des boutons ouvre une image de la manette avec un champ à chaque bouton. Un nom de 8 caractères au plus remplace le libellé du port de ce bouton sur le plan de travail et s'affiche à côté du bouton dans la fenêtre de la manette ; un champ vide garde le libellé par défaut. Les noms des boutons que vous désactivez sont conservés et reviennent quand vous les réactivez.
 
 ## Inverser un port
 

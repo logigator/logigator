@@ -41,14 +41,15 @@ Jede Komponente braucht einen Tick, um eine Änderung an ihren Ausgang weiterzug
 
 ### Ein- / Ausgänge
 
-| Komponente      | Was sie tut                                                                                                                                                                                           | Optionen                                                 |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| Schalter        | Wechselt während einer Simulation mit jedem Klick zwischen 0 und 1.                                                                                                                                   |                                                          |
-| Taster          | Gibt 1 aus, solange du ihn gedrückt hältst.                                                                                                                                                           |                                                          |
-| Impulstaster    | Gibt pro Klick einen Impuls von einem Tick aus.                                                                                                                                                       |                                                          |
-| LED             | Leuchtet, solange ihr Eingang 1 ist.                                                                                                                                                                  |                                                          |
-| Segment Display | Zeigt die Binärzahl an seinen Eingängen, Eingang 0 ist das niedrigste Bit.                                                                                                                            | Eingänge 1 bis 16, Basis dezimal, hexadezimal oder oktal |
-| LED-Matrix      | Ein quadratisches LED-Raster. Bei der steigenden Flanke von CLK werden die Dateneingänge in die Zeile geschrieben, die die Adresseingänge wählen. Bei 16 × 16 deckt jede Adresse eine halbe Zeile ab. | Breite/Höhe 4, 8 oder 16                                 |
+| Komponente      | Was sie tut                                                                                                                                                                                           | Optionen                                                             |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Schalter        | Wechselt während einer Simulation mit jedem Klick zwischen 0 und 1.                                                                                                                                   |                                                                      |
+| Taster          | Gibt 1 aus, solange du ihn gedrückt hältst.                                                                                                                                                           |                                                                      |
+| Impulstaster    | Gibt pro Klick einen Impuls von einem Tick aus.                                                                                                                                                       |                                                                      |
+| LED             | Leuchtet, solange ihr Eingang 1 ist.                                                                                                                                                                  |                                                                      |
+| Segment Display | Zeigt die Binärzahl an seinen Eingängen, Eingang 0 ist das niedrigste Bit.                                                                                                                            | Eingänge 1 bis 16, Basis dezimal, hexadezimal oder oktal             |
+| LED-Matrix      | Ein quadratisches LED-Raster. Bei der steigenden Flanke von CLK werden die Dateneingänge in die Zeile geschrieben, die die Adresseingänge wählen. Bei 16 × 16 deckt jede Adresse eine halbe Zeile ab. | Breite/Höhe 4, 8 oder 16                                             |
+| Gamepad         | Ein Ausgang pro Taste, 1 solange die Taste gedrückt ist. Das Steuerkreuz ist immer da. Während einer Simulation öffnet ein Klick einen Controller zum Spielen.                                        | Aktionstasten, Schultertasten, Menütasten, Beschriftung, Tastennamen |
 
 ## Die Einstellungskarte
 
@@ -59,6 +60,10 @@ Wählst du genau eine Komponente aus oder nimmst eine zum Platzieren, erscheint 
 Änderst du Eingänge, Ausgänge oder eine Größenoption, ändert sich die Zahl der Anschlüsse sofort.
 
 Bei einem ROM öffnet „Inhalt bearbeiten“ einen Hex-Editor für die gespeicherten Wörter. Wortbreite legt fest, wie viele Bits ein Wort hat, Adressgröße, wie viele Adresseingänge es gibt. Ein ROM mit Adressgröße 4 hält also 16 Wörter. Der Inhalt wird mit der Schaltung gespeichert.
+
+Ein Gamepad hat immer die vier Richtungen des Steuerkreuzes. Aktionstasten steht auf 0, A, A B oder A B X Y, Schultertasten auf 0 oder L R und Menütasten auf 0, ST oder SL ST; SL ist Select, ST ist Start. Die Standardwerte, A B und SL ST ohne Schultertasten, ergeben acht Ausgänge, mit allen Gruppen sind es zwölf. Die Anschlüsse heißen in dieser Reihenfolge UP, DN, LT, RT, A, B, X, Y, L, R, SL und ST. Die Beschriftung, bis zu 8 Zeichen, ist während einer Simulation der Titel des Controller-Fensters.
+
+Tastennamen öffnet ein Bild des Controllers mit einem Feld an jeder Taste. Ein Name mit bis zu 8 Zeichen ersetzt auf der Arbeitsfläche die Anschlussbeschriftung der Taste und steht im Controller-Fenster neben der Taste. Ein leeres Feld behält die Standardbeschriftung. Namen von Tasten, die du abschaltest, bleiben erhalten und sind wieder da, wenn du die Tasten wieder einschaltest.
 
 ## Einen Anschluss negieren
 

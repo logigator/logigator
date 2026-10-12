@@ -47,6 +47,28 @@ Si la combinación ya pertenece a otra acción, esa acción la pierde y un mensa
 
 Tus atajos se guardan en este navegador. Borrar los datos del sitio los restablece.
 
+## Teclas del mando
+
+Un [mando](docs:simulation#jugar-con-un-mando) tiene sus propias teclas, aparte de los atajos de arriba. Funcionan mientras su ventana tiene el teclado, y ahí van antes que los atajos: `Enter` pulsa Start.
+
+| Botón                                | Tecla predeterminada |
+| ------------------------------------ | -------------------- |
+| Arriba / Abajo / Izquierda / Derecha | flechas              |
+| A                                    | `X`                  |
+| B                                    | `Z`                  |
+| X                                    | `S`                  |
+| Y                                    | `A`                  |
+| L                                    | `Q`                  |
+| R                                    | `W`                  |
+| Select                               | `Shift` derecha      |
+| Start                                | `Enter`              |
+
+Una tecla cuenta por su posición en el teclado; en un teclado español están donde indica la tabla. En un teclado francés AZERTY, por ejemplo, B queda en la W. Chrome y Edge muestran en la ventana cada tecla como la rotula tu teclado.
+
+Para cambiar las teclas, haz clic en «Asignar teclas» en la parte inferior de una ventana de mando. Haz clic en un botón y pulsa la tecla que debe tener. Si otro botón ya tenía esa tecla, los dos intercambian sus teclas y el otro botón se ilumina un momento. `Escape` cancela, y `Backspace` o `Delete` deja el botón sin tecla; `Escape` y `Tab` no se pueden asignar. «Restablecer valores predeterminados» vuelve a la tabla de arriba, y «Listo» vuelve al juego.
+
+Las teclas son las mismas para todos los mandos de todos los proyectos y se guardan en este navegador, como los atajos. Un cambio aparece al momento en cada ventana de mando abierta, también en otras pestañas.
+
 ## Ver también
 
 - [Tablero y herramientas](docs:board-and-tools): las herramientas y acciones detrás de estas teclas

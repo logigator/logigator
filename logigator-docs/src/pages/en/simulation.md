@@ -44,8 +44,23 @@ Under the modes, Clocks at this speed lists the frequency each clock delay in th
 - A Switch toggles with each click and stays where you left it.
 - A Button is on for as long as you hold it down.
 - A Pulse button sends a pulse of one tick per click, however long you hold it.
+- A Gamepad opens its controller, described in the next section.
 
 Dragging from anywhere else on the board pans it.
+
+## Playing a gamepad
+
+Clicking a Gamepad opens a window with a controller drawn in it, titled with the gamepad's Label. A button held there sets its output to 1 until you let go, and lights up on the board too.
+
+![A gamepad's controller window with A and right held, beside the gamepad on the board.](./images/gamepad-window.webp)
+
+The window takes the keyboard when it opens, and the line at the bottom reads Keyboard active. After you click the board or another window it reads Click here to use the keyboard, and keys no longer reach the gamepad. The key for each button is shown under it. While the window has the keyboard, a gamepad key comes before a shortcut, so `Enter` presses Start and does not leave the simulation. `Escape` still closes the window, and shortcuts with `Ctrl` or `Alt` still work. The default keys and how to change them are in [Keyboard shortcuts](docs:shortcuts#gamepad-keys).
+
+With the mouse or a finger, a button stays pressed for as long as you hold it, and on a touchscreen each finger holds its own button. The D-pad has eight directions: pressing between two arms holds both, and sliding your thumb moves from one direction to the next without lifting it. Pressing the centre of the D-pad holds no direction.
+
+A game controller connected to your computer can play a gamepad as well. The browser reports a controller only after you press one of its buttons while the editor is open. Do that with a gamepad window open, and the controller is connected to that window and appears in the Controller menu at the bottom. A controller keeps playing its gamepad when another window has the keyboard, so two controllers can play two gamepads at once, each chosen in its own window. Buttons are matched by position, whatever they are labelled: the right face button is A, the bottom one B, the top one X and the left one Y. The D-pad and the left stick both work the D-pad, LB and LT are L, RB and RT are R, Back or Share is Select, and Start is Start. Controllers that the browser doesn't report with the standard layout are listed but can't be chosen.
+
+Closing the window or leaving the simulation lets go of every button. A gamepad inside a custom component is played from a [watch](docs:inspection#watches). In the touch layout, the controller opens in the sheet at the bottom of the screen; the key labels appear there once you press a key on a keyboard, and the Controller menu once a controller is connected.
 
 ## When the simulation won't start
 
