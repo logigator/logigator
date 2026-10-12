@@ -1,14 +1,6 @@
-<div *appTranslate="let t">
-  <button
-    lgButton
-    class="float-right"
-    size="sm"
-    severity="secondary"
-    (onClick)="open()"
-  >
-    {{ t(option().label) }}
-  </button>
+<app-dialog-option-button [label]="option().label" (open)="open()" />
 
+<ng-container *appTranslate="let t">
   <lg-dialog
     [visible]="dialogVisible()"
     (visibleChange)="$event ? null : cancel()"
@@ -35,4 +27,4 @@
       <button lgButton (onClick)="save()">{{ t('common.save') }}</button>
     </ng-template>
   </lg-dialog>
-</div>
+</ng-container>

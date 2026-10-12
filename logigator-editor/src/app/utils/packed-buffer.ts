@@ -35,6 +35,35 @@ export function readWord(
 }
 
 /**
+ * How many of the first `wordCount` words hold a set bit. Visits set bits
+ * only, so a sparse buffer costs its non-zero bytes.
+ */
+export function countNonZeroWords(
+  bytes: Uint8Array,
+  wordSize: number,
+  wordCount: number
+): number {
+  const end = wordCount * wordSize;
+  let count = 0;
+  let lastWord = -1;
+  for (let i = 0; i < bytes.length && i * 8 < end; i++) {
+    const byte = bytes[i];
+    if (byte === 0) continue;
+    for (let k = 0; k < 8; k++) {
+      const bit = i * 8 + k;
+      if (bit >= end) break;
+      if ((byte & (1 << k)) === 0) continue;
+      const word = Math.floor(bit / wordSize);
+      if (word !== lastWord) {
+        count++;
+        lastWord = word;
+      }
+    }
+  }
+  return count;
+}
+
+/**
  * Writes the `wordSize`-bit word at `index` into `bytes`, mutating it. Size
  * `bytes` to {@link packedByteLength}; bits past the end are dropped.
  */

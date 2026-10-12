@@ -85,7 +85,17 @@ option, eliding the back edge at runtime — no cycle, no `forwardRef`.
 | `TextInputComponentOption`         | inline `input[lgInputText]`; `maxLength` + `forbiddenChars` per use  |
 | `TextAreaComponentOption`          | button opening an `lg-dialog` textarea with draft/save/cancel        |
 | `MemoryDataComponentOption`        | button opening `HexEditorComponent` in a dynamic dialog              |
-| `NameMapComponentOption`           | row button opening the owner's names editor in a dynamic dialog      |
+| `NameMapComponentOption`           | button opening the owner's names editor in a dynamic dialog          |
+
+The three dialog-opening kinds share one row, `DialogOptionButtonComponent`
+(`component-options/dialog-option-button/`): a small secondary button named
+after the option at the row's end, with an optional icon (the pencil for the
+two editors) and an optional muted summary of the value at the row's start.
+The renderer keeps its dialog and hands the row the translated summary, if
+any: the memory row reads _12 of 256 words set_ (`nonZeroWords()` out of the
+attached word count, recounted when the value or a dimension changes) or
+_Empty_, the names row _3 named_ over the keys it lists, or nothing when none
+is named. The textarea row has none.
 
 Text writes are sanitized on every set — forbidden characters stripped, then
 clamped to `maxLength` — including the constructor's default value.
@@ -100,11 +110,12 @@ at `MAX_HALF_CYCLE_TICKS` (4294967295), that field's own bound.
 `MemoryDataComponentOption` is **generic**: it knows nothing about ROM. Its
 value is the memory contents as an immutable base64 bit-packed blob (a string,
 so clone/paste/undo never alias a buffer), stored trailing-zero-trimmed. The
-editing dimensions are not in the blob: the owning component attaches them as
-resolver closures via `attachDimensions(() => wordSize, () => wordCount)`, so
-any component-specific derivation stays on its side (`RomComponent` passes
-`() => 1 << addressSize`) and the link survives every clone path, all of which
-run the component factory. The renderer decodes the blob into the dialog and
+editing dimensions are not in the blob: the owner attaches them as resolver
+closures via `attachDimensions(() => wordSize, () => wordCount)` from its
+config's `bindOptions` (see `component-system.md`), so any component-specific
+derivation stays on its side (`bindRomOptions` passes `() => 1 << addressSize`)
+and both the config's options, edited while placing, and every instance's read
+their own sizes. The renderer decodes the blob into the dialog and
 trims + re-encodes on save. For ROM that same blob is the legacy v0 `s`-slot
 value and, via `rom-data.codec.ts`, the engine's ROM `ops` table; the buffer/bit
 math is `utils/packed-buffer.ts`.
@@ -124,14 +135,16 @@ frames the editor with Save and Cancel and binds it through
 `ViewContainerRef.createComponent` bindings: `keys` and `maxLength` as inputs,
 the draft `names` two-way, and a `save` output that saves as Save does. Save
 commits the draft once, so a whole rename is one undo step; Cancel commits
-nothing. Both attachments survive `clone`; an owner whose key resolver reads its
-own options attaches it again in its constructor, which every clone path runs.
+nothing. Both attachments are made by the config's `bindOptions`, on the
+config's options and on every instance's; a clone starts unlinked.
 On compact the dialog is fullscreen (`DialogConfig.fullscreen` bound to
 `LayoutService.isCompact`), so an editor that draws its keys spatially gets the
 screen's width.
 
-The gamepad is the one owner. `GamepadComponent`'s constructor attaches its
-`slotIds` as the keys and `GamepadNamesEditorComponent` as the editor
+The gamepad is the one owner. `bindGamepadOptions` attaches as the keys the
+controls its face, shoulder and menu options switch on (`gamepadControls`,
+the same list as the pad's `slotIds`), so a dialog opened while placing lists
+the ghost's current controls, and `GamepadNamesEditorComponent` as the editor
 (`component-types/gamepad/`): the controller drawing the simulation window
 plays (`GamepadPadComponent`, see `inspection.md`) in `names` mode, laid out for
 the pad's present controls, every caption an input with the default name as its

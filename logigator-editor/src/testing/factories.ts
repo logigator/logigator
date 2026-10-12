@@ -156,7 +156,6 @@ export function makeGamepad(
     face: defaults.face.clone(options.face),
     shoulders: defaults.shoulders.clone(options.shoulders),
     menu: defaults.menu.clone(options.menu),
-    label: defaults.label.clone(),
     names: defaults.names.clone(options.names)
   });
   pad.position.set(px, py);

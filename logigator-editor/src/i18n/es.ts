@@ -347,6 +347,10 @@ const es: TranslationSchema = {
       index: 'Índice',
       nameMap: {
         summary: '{{count}} con nombre'
+      },
+      memory: {
+        summary: '{{count}} de {{total}} palabras ocupadas',
+        empty: 'Vacía'
       }
     }
   },

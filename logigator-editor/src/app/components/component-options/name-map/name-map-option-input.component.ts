@@ -1,23 +1,22 @@
 import { Component, inject, input } from '@angular/core';
 import { NameMap } from '@logigator/core';
-import { DialogService, LgButton } from '@logigator/ui';
+import { DialogService } from '@logigator/ui';
 import { DialogId } from '../../../analytics/analytics.mapping';
 import { LayoutService } from '../../../layout/layout.service';
 import { TranslationService } from '../../../translation/translation.service';
-import { TranslateDirective } from '../../../translation/translate.directive';
 import { ComponentOptionInput } from '../../component-option';
 import type { NameMapComponentOption } from './name-map.component-option';
 import { NameMapDialogComponent } from './name-map-dialog.component';
+import { DialogOptionButtonComponent } from '../dialog-option-button/dialog-option-button.component';
 
 /**
- * A full-width row button naming how many shown keys carry a name, opening the
- * owner's editor in a dialog. A save is one `commit`, so a whole rename is one
- * undo step. With no editor attached there is nothing to open, and the row is
- * not drawn.
+ * Opens the owner's editor in a dialog. A save is one `commit`, so a whole
+ * rename is one undo step. With no editor attached there is nothing to open,
+ * and the row is not drawn.
  */
 @Component({
   selector: 'app-name-map-option-input',
-  imports: [LgButton, TranslateDirective],
+  imports: [DialogOptionButtonComponent],
   templateUrl: './name-map-option-input.component.html',
   // Without an editor the host stays empty, and `contents` keeps it from
   // taking a gap in the form's column.
@@ -31,12 +30,17 @@ export class NameMapOptionInputComponent implements ComponentOptionInput<NameMap
   public readonly option = input.required<NameMapComponentOption>();
   public readonly commit = input.required<(value: NameMap) => void>();
 
-  /** How many of the keys the dialog lists carry a name. */
-  protected namedCount(): number {
+  /** How many of the keys the dialog lists carry a name; none when zero. */
+  protected summary(): string | undefined {
     const names = this.option().value;
-    return this.option()
+    const count = this.option()
       .visibleKeys()
       .filter((key) => Object.hasOwn(names, key)).length;
+    return count > 0
+      ? this.translation.translate('components.options.nameMap.summary', {
+          count
+        })
+      : undefined;
   }
 
   protected open(): void {

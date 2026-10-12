@@ -17,8 +17,11 @@ import {
   GamepadRuleGraphics
 } from '../../../rendering/graphics/gamepad.graphics';
 import { strokeScaleFor } from '../../../rendering/graphics/stroke-scale';
-import { gamepadComponentConfig, GamepadOptions } from './gamepad.config';
-import { GamepadNamesEditorComponent } from './gamepad-names-editor.component';
+import {
+  bindGamepadOptions,
+  gamepadComponentConfig,
+  GamepadOptions
+} from './gamepad.config';
 
 /** One control of a group's glyph, placed relative to the glyph's centre. */
 interface ControlGlyph {
@@ -130,12 +133,7 @@ export class GamepadComponent
 
   constructor(options: GamepadOptions) {
     super(gamepadMeta, options);
-
-    // Which controls the pad has is the pad's knowledge; doing it here rather
-    // than in the config keeps the link alive across every clone path.
-    this.options.names
-      .attachKeys(() => this.slotIds)
-      .attachEditor(GamepadNamesEditorComponent);
+    bindGamepadOptions(this.options);
   }
 
   public get inputSlots(): number {

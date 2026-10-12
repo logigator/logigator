@@ -348,6 +348,10 @@ const en = {
       index: 'Index',
       nameMap: {
         summary: '{{count}} named'
+      },
+      memory: {
+        summary: '{{count}} of {{total}} words set',
+        empty: 'Empty'
       }
     }
   },

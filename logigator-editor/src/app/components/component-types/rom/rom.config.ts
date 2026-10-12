@@ -14,10 +14,19 @@ export interface RomOptions {
   data: MemoryDataComponentOption;
 }
 
+/** Links the memory editor's table shape to the word and address sizes. */
+export function bindRomOptions(options: RomOptions): void {
+  options.data.attachDimensions(
+    () => options.wordSize.value,
+    () => 1 << options.addressSize.value
+  );
+}
+
 export const romComponentConfig: ComponentConfig<RomOptions> = configFromMeta(
   romMeta,
   {
     inspection: (component) => new RomInspection(component as RomComponent),
+    bindOptions: bindRomOptions,
     create: (options) => new RomComponent(options)
   }
 );

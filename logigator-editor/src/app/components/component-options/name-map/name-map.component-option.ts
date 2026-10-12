@@ -21,8 +21,10 @@ export interface NameMapComponentOptionConfig {
  *
  * What the dialog shows is the owner's knowledge, not the option's: which
  * keys are present right now ({@link attachKeys}) and the component that edits
- * them ({@link attachEditor}). Without an editor the option has no settings
- * row. A name whose key is not shown stays in the value.
+ * them ({@link attachEditor}), both attached by a config's `bindOptions` to the
+ * config's options and to every instance's. A clone starts unlinked. Without
+ * an editor the option has no settings row. A name whose key is not shown
+ * stays in the value.
  */
 export class NameMapComponentOption extends ComponentOption<NameMap> {
   public readonly renderer = NameMapOptionInputComponent;
@@ -108,21 +110,13 @@ export class NameMapComponentOption extends ComponentOption<NameMap> {
     return this;
   }
 
-  /**
-   * Carries both attachments, so a config's option passes its editor on to
-   * every instance. An owner whose key resolver reads its own state attaches
-   * it again in its constructor, which every clone path runs.
-   */
   protected cloneWithValue(initialValue?: NameMap): NameMapComponentOption {
-    const cloned = new NameMapComponentOption(
+    return new NameMapComponentOption(
       this.label,
       this.keys,
       initialValue ?? this.value,
       { maxLength: this.maxLength, forbiddenChars: this.forbiddenChars }
     );
-    cloned.visibleKeys = this.visibleKeys;
-    cloned.editor = this.editor;
-    return cloned;
   }
 
   private _sanitize(value: unknown): NameMap {

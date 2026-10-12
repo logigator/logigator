@@ -1,20 +1,35 @@
-import { gamepadMeta } from '@logigator/core';
+import { gamepadControls, gamepadMeta } from '@logigator/core';
 import { ComponentConfig } from '../../component-config.model';
 import { configFromMeta } from '../../config-from-meta';
 import { ComponentOption } from '../../component-option';
 import { SelectButtonComponentOption } from '../../component-options/select-button/select-button.component-option';
-import { TextInputComponentOption } from '../../component-options/text-input/text-input.component-option';
 import { NameMapComponentOption } from '../../component-options/name-map/name-map.component-option';
 import { GamepadComponent } from './gamepad.component';
 import { GamepadInspection } from './gamepad-inspection';
+import { GamepadNamesEditorComponent } from './gamepad-names-editor.component';
 
 export interface GamepadOptions {
   [key: string]: ComponentOption;
   face: SelectButtonComponentOption<number>;
   shoulders: SelectButtonComponentOption<number>;
   menu: SelectButtonComponentOption<number>;
-  label: TextInputComponentOption;
   names: NameMapComponentOption;
+}
+
+/**
+ * Links the names option to the controls the face, shoulder and menu options
+ * of the same set switch on, and to the pad's names editor.
+ */
+export function bindGamepadOptions(options: GamepadOptions): void {
+  options.names
+    .attachKeys(() =>
+      gamepadControls({
+        face: options.face.value,
+        shoulders: options.shoulders.value,
+        menu: options.menu.value
+      })
+    )
+    .attachEditor(GamepadNamesEditorComponent);
 }
 
 export const gamepadComponentConfig: ComponentConfig<GamepadOptions> =
@@ -39,5 +54,6 @@ export const gamepadComponentConfig: ComponentConfig<GamepadOptions> =
         context.input
       );
     },
+    bindOptions: bindGamepadOptions,
     create: (options) => new GamepadComponent(options)
   });

@@ -350,6 +350,10 @@ const de: TranslationSchema = {
       index: 'Index',
       nameMap: {
         summary: '{{count}} benannt'
+      },
+      memory: {
+        summary: '{{count}} von {{total}} Wörtern belegt',
+        empty: 'Leer'
       }
     }
   },

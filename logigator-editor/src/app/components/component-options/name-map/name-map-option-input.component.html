@@ -1,19 +1,8 @@
 @if (option().editor) {
-  <button
-    *appTranslate="let t"
-    lgButton
-    size="sm"
-    severity="secondary"
-    [outlined]="true"
+  <app-dialog-option-button
+    [label]="option().label"
     icon="ph ph-pencil-simple"
-    class="w-full"
-    (onClick)="open()"
-  >
-    <span class="grow text-left">{{ t(option().label) }}</span>
-    @if (namedCount(); as count) {
-      <span class="text-muted">{{
-        t('components.options.nameMap.summary', { count })
-      }}</span>
-    }
-  </button>
+    [summary]="summary()"
+    (open)="open()"
+  />
 }

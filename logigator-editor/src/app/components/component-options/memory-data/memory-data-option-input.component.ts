@@ -1,6 +1,6 @@
 import { Component, inject, input } from '@angular/core';
 import { TranslationService } from '../../../translation/translation.service';
-import { DialogService, LgButton } from '@logigator/ui';
+import { DialogService } from '@logigator/ui';
 import { DialogId } from '../../../analytics/analytics.mapping';
 import { ComponentOptionInput } from '../../component-option';
 import type { MemoryDataComponentOption } from './memory-data.component-option';
@@ -10,7 +10,7 @@ import {
   bytesToBase64,
   trimTrailingZeros
 } from '../../../utils/packed-buffer';
-import { TranslateDirective } from '../../../translation/translate.directive';
+import { DialogOptionButtonComponent } from '../dialog-option-button/dialog-option-button.component';
 
 /**
  * Opens the generic {@link HexEditorComponent} in a dialog and adapts between
@@ -19,7 +19,7 @@ import { TranslateDirective } from '../../../translation/translate.directive';
  */
 @Component({
   selector: 'app-memory-data-option-input',
-  imports: [TranslateDirective, LgButton],
+  imports: [DialogOptionButtonComponent],
   templateUrl: './memory-data-option-input.component.html'
 })
 export class MemoryDataOptionInputComponent implements ComponentOptionInput<string> {
@@ -28,6 +28,18 @@ export class MemoryDataOptionInputComponent implements ComponentOptionInput<stri
 
   public readonly option = input.required<MemoryDataComponentOption>();
   public readonly commit = input.required<(value: string) => void>();
+
+  /** How many of the words hold a value, or that none does. */
+  protected summary(): string {
+    const opt = this.option();
+    const count = opt.nonZeroWords();
+    return count === 0
+      ? this.translation.translate('components.options.memory.empty')
+      : this.translation.translate('components.options.memory.summary', {
+          count,
+          total: opt.wordCount()
+        });
+  }
 
   protected open(): void {
     const opt = this.option();

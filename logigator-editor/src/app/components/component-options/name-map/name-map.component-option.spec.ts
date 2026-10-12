@@ -1,19 +1,9 @@
-import { Component, input, model, output } from '@angular/core';
 import { NameMap } from '@logigator/core';
 import { describe, expect, it } from 'vitest';
 import { NameMapComponentOption } from './name-map.component-option';
-import { NameMapEditor } from './name-map-editor';
 
 const LABEL = 'components.def.GAMEPAD.options.names';
 const KEYS = ['up', 'down', 'a', 'b'];
-
-@Component({ selector: 'app-test-names-editor', template: '' })
-class TestNamesEditor implements NameMapEditor {
-  public readonly keys = input.required<readonly string[]>();
-  public readonly names = model.required<NameMap>();
-  public readonly maxLength = input.required<number>();
-  public readonly save = output<void>();
-}
 
 function makeOption(value: NameMap = {}): NameMapComponentOption {
   return new NameMapComponentOption(LABEL, KEYS, value, {
@@ -56,15 +46,6 @@ describe('NameMapComponentOption', () => {
     expect(cloned.value).toEqual(option.value);
     expect(cloned.value).not.toBe(option.value);
     expect(Object.isFrozen(cloned.value)).toBe(true);
-  });
-
-  it('carries its attachments into a clone', () => {
-    const option = makeOption()
-      .attachKeys(() => ['up', 'a'])
-      .attachEditor(TestNamesEditor);
-    const cloned = option.clone({ b: 'Run' });
-    expect(cloned.editor).toBe(TestNamesEditor);
-    expect(cloned.visibleKeys()).toEqual(['up', 'a']);
   });
 
   it('keeps names of keys the owner does not list', () => {

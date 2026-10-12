@@ -185,8 +185,18 @@ The pure half of each lives in the meta:
 `configFromMeta(meta, extras)` composes the editor's config around one: it
 instantiates an option class per schema kind, and the caller supplies only what
 the editor has — the `create` factory, the palette `symbolShape`, the inspector
-`actions`, the `inspection`. A built-in's `<name>.config.ts` is therefore its meta
-plus its factory, with **no** hand-written option list. Custom components have no
+`actions`, the `inspection`, and `bindOptions`. A built-in's `<name>.config.ts` is
+therefore its meta plus its factory, with **no** hand-written option list.
+
+`bindOptions(options)` is for an option whose editing reads its siblings: the
+ROM's memory dialog sizes its table from the word and address sizes, the
+gamepad's names dialog lists the controls the face, shoulder and menu options
+switch on. It attaches resolvers closing over the option set it is handed.
+`configFromMeta` applies it to the config's own options — the ones the settings
+panel edits while the type is being placed, so the dialog opened from a
+placement ghost's row reads the values set there — and the component's
+constructor applies it again to its own options, which every clone path runs;
+an option clone starts unlinked. Custom components have no
 meta — their `CustomComponentDefinition` _is_ that data, and
 `buildCustomComponentConfig` fills the same fields from it.
 

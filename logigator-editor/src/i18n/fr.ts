@@ -349,6 +349,10 @@ const fr: TranslationSchema = {
       index: 'Index',
       nameMap: {
         summary: '{{count}} nommé(s)'
+      },
+      memory: {
+        summary: '{{count}} sur {{total}} mots remplis',
+        empty: 'Vide'
       }
     }
   },

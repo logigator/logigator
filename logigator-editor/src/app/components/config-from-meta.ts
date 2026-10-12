@@ -34,6 +34,14 @@ export interface ConfigExtras<
   TOptions extends Record<string, ComponentOption>
 > {
   create(options: TOptions): Component<TOptions>;
+  /**
+   * Links the options whose editing reads their sibling options, closing over
+   * the set it is handed. It binds the config's own options, which the
+   * settings form edits while the type is being placed, so their dialogs read
+   * the values set there; each component's constructor applies it again to its
+   * own options, which every clone path runs.
+   */
+  bindOptions?(options: TOptions): void;
   symbolShape?: ComponentSymbolShape;
   actions?: ComponentAction[];
   inspection?(
@@ -125,6 +133,7 @@ export function configFromMeta<
 ): ComponentConfig<TOptions> {
   const meta = widenMeta(source);
   const options = optionsFromMeta(meta) as TOptions;
+  extras.bindOptions?.(options);
   const view: ComponentConfigView<TOptions> = {
     meta,
     type: meta.type,
