@@ -367,28 +367,30 @@ describe('SimulationService', () => {
     expect(sentKinds()).toEqual(['state', 'state']);
   });
 
-  it('shows a switch flipped several times while paused in its final position after one step', async () => {
+  it('shows a switch flipped several times while paused only in its final position', async () => {
     const switchComp = makeSwitch();
     project.addComponent(switchComp);
     await enterAndBoot();
     const unit = service.board!.userInputs.get(switchComp.id)!;
 
-    project.emitUserInput(switchComp);
-    project.emitUserInput(switchComp);
-    project.emitUserInput(switchComp);
-    service.step();
-    expect(engineOutput(unit)).toBe(true);
+    /** Flips the switch `flips` times, then reads the next two steps. */
+    const flipAndStep = (flips: number): boolean[] => {
+      for (let flip = 0; flip < flips; flip++) {
+        project.emitUserInput(switchComp);
+      }
+      const seen: boolean[] = [];
+      for (let step = 0; step < 2; step++) {
+        service.step();
+        seen.push(engineOutput(unit));
+      }
+      return seen;
+    };
 
-    project.emitUserInput(switchComp);
-    project.emitUserInput(switchComp);
-    project.emitUserInput(switchComp);
-    service.step();
-    expect(engineOutput(unit)).toBe(false);
-
-    project.emitUserInput(switchComp);
-    project.emitUserInput(switchComp);
-    service.step();
-    expect(engineOutput(unit)).toBe(false);
+    // The engine takes a write up on the next tick and drives it on the one
+    // after, so a position shows from the second step.
+    expect(flipAndStep(3)).toEqual([false, true]);
+    expect(flipAndStep(3)).toEqual([true, false]);
+    expect(flipAndStep(2)).toEqual([false, false]);
   });
 
   describe('a button', () => {
@@ -422,16 +424,18 @@ describe('SimulationService', () => {
       expect(sentKinds()).toEqual(['event', 'event']);
     });
 
-    it('is high for one step and low after the next when tapped while paused', async () => {
+    it('reaches the circuit when tapped while paused, then lets go', async () => {
       await bootWithButton();
 
       project.emitUserInput(button, 'press');
       project.emitUserInput(button, 'release');
 
-      service.step();
-      expect(engineOutput(unit)).toBe(true);
-      service.step();
-      expect(engineOutput(unit)).toBe(false);
+      const seen: boolean[] = [];
+      for (let step = 0; step < 4; step++) {
+        service.step();
+        seen.push(engineOutput(unit));
+      }
+      expect(seen).toEqual([false, true, true, false]);
     });
 
     it('ignores a press while the engine is still starting', () => {
@@ -476,13 +480,15 @@ describe('SimulationService', () => {
       project.emitUserInput(button, 'press'); // reaches the rebuilt engine
       await vi.waitFor(() => expect(button.isActive(0)).toBe(false));
 
-      // The press is an event, on the outputs for its tick; the reset's
-      // release follows it on the next.
-      service.step();
-      expect(engineOutput(unit)).toBe(true);
+      // The press is an event and reaches the outputs; the reset's release
+      // follows it there.
+      const seen: boolean[] = [];
+      for (let step = 0; step < 4; step++) {
+        service.step();
+        seen.push(engineOutput(unit));
+      }
+      expect(seen).toEqual([false, true, true, false]);
       expect(engineLevel(unit)).toBe(false);
-      service.step();
-      expect(engineOutput(unit)).toBe(false);
     });
 
     it('is released by exit', async () => {
@@ -525,6 +531,7 @@ describe('SimulationService', () => {
       expect(input.isActive(0)).toBe(false);
 
       expect(service.setUserInput(input.id, true, 0)).toBe(true);
+      service.step();
       service.step();
       expect(engineLevel(base)).toBe(true);
       expect(engineLevel(base + 1)).toBe(false);
@@ -675,7 +682,7 @@ describe('SimulationService', () => {
       expect(sentKinds()).toEqual(['event', 'event']);
     });
 
-    it('gives two pulses on consecutive ticks for two taps between ticks', async () => {
+    it('gives two pulses for two taps between ticks', async () => {
       const input = new FakeUserInput(3, { drive: 'pulse', gesture: 'tap' });
       await bootWith(input);
 
@@ -684,11 +691,11 @@ describe('SimulationService', () => {
       expect(sentKinds()).toEqual(['event', 'event']);
 
       const seen: boolean[] = [];
-      for (let tick = 0; tick < 3; tick++) {
+      for (let tick = 0; tick < 5; tick++) {
         service.step();
         seen.push(engineOutput(base + 1));
       }
-      expect(seen).toEqual([true, true, false]);
+      expect(seen).toEqual([false, true, false, true, false]);
     });
 
     it('sends one pulse for a tap on a pulse slot and clears it after the flash', async () => {

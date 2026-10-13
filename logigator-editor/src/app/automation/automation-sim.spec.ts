@@ -440,14 +440,16 @@ describe('AutomationApiService simulation', () => {
       expect(pressed()).toEqual([0x41]);
     });
 
-    it('shows a key set and let go of while paused for one step, then 0', async () => {
+    it('shows a key set and let go of while paused before it falls back to 0', async () => {
       await api.simSetKey(keyboard.id, 'A');
       await api.simSetKey(keyboard.id, null);
 
-      await api.simStep();
-      expect(onD()).toBe(0x41);
-      await api.simStep();
-      expect(onD()).toBe(0);
+      const seen: number[] = [];
+      for (let step = 0; step < 4; step++) {
+        await api.simStep();
+        seen.push(onD());
+      }
+      expect(seen).toEqual([0, 0x41, 0x41, 0]);
     });
 
     it('agrees with its window on the key held', async () => {
@@ -462,8 +464,9 @@ describe('AutomationApiService simulation', () => {
       await api.simSetKey(keyboard.id, null);
       // The window's key is up already: its keyup sends nothing more.
       window.release('KeyA');
-      await api.simStep();
-      await api.simStep();
+      for (let step = 0; step < 4; step++) {
+        await api.simStep();
+      }
       expect(onD()).toBe(0);
       expect(window.heldEntry()).toBeNull();
     });

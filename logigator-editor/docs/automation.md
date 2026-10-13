@@ -63,7 +63,7 @@ api.camera.focus({ elementIds: [id] });
 await api.sim.enter(); // sim reads are async — this order is
 api.sim.pause(); // the deterministic recipe
 await api.sim.setInput(leverId, true);
-await api.sim.step();
+await api.sim.step(2); // taken up on the first tick, driven on the second
 const [readout] = await api.sim.readPorts([id]);
 ```
 
@@ -224,11 +224,14 @@ so read the returned `state`.
   change, so an unchanged slot sends nothing and every changed one lands on
   the same tick, paused or running. That is what lets the recipe above set a
   whole input in one `setInput` before its `step`.
-- `setInput` writes are `state` frames: written twice while paused, the next
-  `step` sees the last value and nothing in between. What a pointer does to a
-  button or a pulse button is an `event` instead, each on the outputs for a
-  tick of its own — so a button pressed and released while paused takes two
-  steps, high after the first and low after the second.
+- The engine takes an input write up on the next tick and drives it on the
+  tick after, so an input's own output port shows a write after **two**
+  steps, and a gate it feeds after three.
+- `setInput` writes are `state` frames: written twice while paused, the
+  circuit sees the last value and nothing in between. What a pointer does to a
+  button or a pulse button is an `event` instead, each reaching the outputs
+  before the next is written — so a button pressed and released while paused
+  is high after the second and third steps and low after the fourth.
 - A **keyboard** is not a user input and `setInput` refuses it, naming `type`
   and `setKey`. Its calls build the frames its window sends, through the
   same `KeyboardComponent` methods, so both agree on the key held on `D`
@@ -236,8 +239,8 @@ so read the returned `state`.
   sends nothing on its keyup, and a key the window holds is one `setKey`
   already holds.
   - `type(id, text)` queues the text as taps, a press and a release per
-    character, each an `event` frame on the outputs for a tick of its own, so
-    a character takes two steps while paused. It is **strict**, unlike a
+    character, each an `event` frame that reaches the outputs before the next
+    is written, so a character takes four steps while paused. It is **strict**, unlike a
     paste: printable ASCII, `\n`, `\t`, `\b`, `\x1b` and `\x7f` only, CRLF
     and CR reading as one `\n`, at most `KEYBOARD_TEXT_LIMIT` (10 000)
     characters. Any other character is an error naming it, its code point
@@ -247,7 +250,8 @@ so read the returned `state`.
   - `setKey(id, key)` presses the key for one such character — a no-op when
     that code is already on `D` — and `null` lets go — a no-op when no key
     holds it. Both are `event` frames, never merged: `setKey('A')` then
-    `setKey(null)` while paused shows `A` for one step and then `0`.
+    `setKey(null)` while paused shows `A` after the second and third steps
+    and `0` after the fourth.
 - `step(count)` posts the ticks back to back and pulls **one** snapshot, so
   settling a circuit costs one round trip rather than one per tick.
 - `readPorts` builds a component → link-id reverse index once per compiled board

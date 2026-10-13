@@ -14,11 +14,9 @@ import {
   SimulationSessionHooks,
   SimulationWorkerService
 } from './simulation-worker.service';
+import { userInputBoard } from '../../../testing/sim-engine';
 
-const DESCRIPTOR = {
-  links: 1,
-  components: [{ type: 201, inputs: [], outputs: [0] }]
-};
+const DESCRIPTOR = userInputBoard(8);
 
 describe('SimulationWorkerService', () => {
   let service: SimulationWorkerService;

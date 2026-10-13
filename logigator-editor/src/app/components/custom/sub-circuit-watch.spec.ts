@@ -494,6 +494,7 @@ describe('SubCircuitWatch', () => {
       );
       expect(base).not.toBe(boardBase);
       simulation.step();
+      simulation.step();
       expect(copyCode()).toBe(0x41);
       expect(keyboardCopy.heldKey()).toEqual({ code: 0x41, key: 'KeyA' });
     });
@@ -506,10 +507,12 @@ describe('SubCircuitWatch', () => {
 
       inspections.close(watchEntry);
 
-      simulation.step();
-      expect(copyCode()).toBe(0x41);
-      simulation.step();
-      expect(copyCode()).toBe(0);
+      const seen: number[] = [];
+      for (let step = 0; step < 4; step++) {
+        simulation.step();
+        seen.push(copyCode());
+      }
+      expect(seen).toEqual([0, 0x41, 0x41, 0]);
     });
 
     it('releases a key held from its window once when the watch closes', () => {
@@ -525,8 +528,9 @@ describe('SubCircuitWatch', () => {
         .flatMap((msg) => msg.frames)
         .filter((frame) => frame.units.every(([, , state]) => !state));
       expect(releases).toHaveLength(1);
-      simulation.step();
-      simulation.step();
+      for (let step = 0; step < 4; step++) {
+        simulation.step();
+      }
       expect(copyCode()).toBe(0);
     });
   });

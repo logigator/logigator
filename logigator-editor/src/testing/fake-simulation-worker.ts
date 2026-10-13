@@ -6,7 +6,7 @@ import {
   UnitFrame,
   WorkerToMainMessage
 } from '../app/simulation/worker/protocol';
-import { FakeFrameEngine } from './fake-frame-engine';
+import { SimEngine } from './sim-engine';
 
 /**
  * Message-level stand-in for the simulation worker, structurally compatible
@@ -19,10 +19,11 @@ import { FakeFrameEngine } from './fake-frame-engine';
  * with `statusTick` per `requestStatus` — all on microtasks, like real worker
  * messages. Turn it off to script the conversation manually.
  *
- * Whatever it responds, it runs the worker's input-frame queues against a
- * {@link FakeFrameEngine} as each message is posted: `step` ticks the engine
- * and pumps, `init` and `stop` rebuild it and drop every queue. `engine`
- * then answers what the circuit sees, tick by tick.
+ * Whatever it responds, it runs the worker's input-frame queues against the
+ * real engine ({@link SimEngine}) as each message is posted: `init` builds it
+ * from the posted board, `step` ticks it and pumps, `stop` rebuilds it, and
+ * both drop every queue. `engine` then answers what the circuit sees, tick by
+ * tick. Frames posted before `init` are dropped, as the worker drops them.
  */
 export class FakeSimulationWorker {
   public posted: MainToWorkerMessage[] = [];
@@ -32,8 +33,16 @@ export class FakeSimulationWorker {
   public terminated = false;
   /** Tick reported by auto-responded status messages. */
   public statusTick = 0;
-  public readonly engine = new FakeFrameEngine();
-  private readonly frames = new InputFrameQueues(this.engine);
+  private _engine: SimEngine | null = null;
+  private frames: InputFrameQueues | null = null;
+
+  /** The engine the posted board runs on; there is none before `init`. */
+  public get engine(): SimEngine {
+    if (!this._engine) {
+      throw new Error('No board has been posted to the worker');
+    }
+    return this._engine;
+  }
 
   constructor(public autoRespond = true) {
     if (autoRespond) {
@@ -57,7 +66,7 @@ export class FakeSimulationWorker {
       }
       switch (msg.kind) {
         case 'requestSnapshot': {
-          const queues = this.frames.countedRemaining();
+          const queues = this.frames?.countedRemaining() ?? [];
           this.emit({
             kind: 'snapshot',
             reqId: msg.reqId,
@@ -120,21 +129,30 @@ export class FakeSimulationWorker {
   }
 
   private runFrames(msg: MainToWorkerMessage): void {
+    if (msg.kind === 'init') {
+      this._engine = new SimEngine(msg.descriptor);
+      this.frames = new InputFrameQueues(this._engine);
+      return;
+    }
+    const engine = this._engine;
+    const frames = this.frames;
+    if (!engine || !frames) {
+      return;
+    }
     switch (msg.kind) {
-      case 'init':
       case 'stop':
-        this.engine.reset();
-        this.frames.dropAll();
+        engine.reset();
+        frames.dropAll();
         break;
       case 'step':
-        this.engine.step();
-        this.frames.pump();
+        engine.step();
+        frames.pump();
         break;
       case 'queueFrames':
-        this.frames.enqueue(msg.queue, msg.frames);
+        frames.enqueue(msg.queue, msg.frames);
         break;
       case 'clearFrames':
-        this.frames.clear(msg.queue, msg.reset);
+        frames.clear(msg.queue, msg.reset);
         break;
     }
   }

@@ -11,10 +11,19 @@ export interface FrameEngine {
   write(unit: number, event: InputEventKind, state: boolean): void;
 }
 
+/**
+ * Ticks between two frames of one queue. The engine takes a write up on the
+ * next tick and drives it on the tick after, and a later write to the same
+ * unit taken up before then replaces it: a frame written one tick after
+ * another would overwrite the first before it reaches the outputs, a pulse
+ * excepted.
+ */
+const FRAME_SPACING_TICKS = 2;
+
 interface FrameQueue {
   /** Frames not yet applied, oldest first. */
   readonly frames: UnitFrame[];
-  /** The tick the last frame was applied at; `-1` before any. */
+  /** The tick the last frame was applied at; `-Infinity` before any. */
   lastTick: number;
   /** The kind of the last frame applied, `null` before any. */
   lastKind: UnitFrame['kind'] | null;
@@ -26,11 +35,12 @@ interface FrameQueue {
  *
  * {@link pump} applies a queue's head frame — every write of it in one
  * synchronous run, so no tick falls between them — once the engine has
- * ticked since the queue last applied one. That keeps every frame on the
- * outputs for at least one tick before the next. The one exception is a
- * `state` frame following a `state` frame: it applies at the same tick
- * boundary, where its writes land on top of the earlier ones, so a setting
- * changed twice between ticks reaches the engine as its final value.
+ * ticked {@link FRAME_SPACING_TICKS} times since the queue last applied one.
+ * That puts every frame on the outputs for at least one tick before the next
+ * replaces it. The one exception is a `state` frame following a `state`
+ * frame: it applies at once, its writes replacing the earlier ones before
+ * they reach the outputs, so a setting changed twice in quick succession
+ * reaches the circuit as its final value.
  *
  * A `state` frame merges into the queue's last frame when that one is also a
  * `state` frame: the later write per unit wins, and two pulses on one unit
@@ -56,7 +66,7 @@ export class InputFrameQueues {
   public enqueue(key: number, frames: readonly UnitFrame[]): void {
     let queue = this.queues.get(key);
     if (!queue) {
-      queue = { frames: [], lastTick: -1, lastKind: null };
+      queue = { frames: [], lastTick: -Infinity, lastKind: null };
       this.queues.set(key, queue);
     }
     for (const frame of frames) {
@@ -76,7 +86,7 @@ export class InputFrameQueues {
   /**
    * Drops a queue's frames and applies `reset` at once. A reset that writes
    * anything counts as an applied `state` frame, so an `event` frame queued
-   * after it waits a tick.
+   * after it waits until the reset shows.
    */
   public clear(key: number, reset: readonly UnitWrite[]): void {
     const queue = this.queues.get(key);
@@ -133,7 +143,7 @@ export class InputFrameQueues {
     const head = queue.frames[0];
     if (
       !head ||
-      (tick <= queue.lastTick &&
+      (tick < queue.lastTick + FRAME_SPACING_TICKS &&
         !(head.kind === 'state' && queue.lastKind === 'state'))
     ) {
       return;

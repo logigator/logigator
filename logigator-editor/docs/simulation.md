@@ -160,17 +160,17 @@ Every write a user input makes to the engine goes out as an **input frame**
 with no tick between them. There are two kinds, because inputs report two
 different things:
 
-- **`event`** — queued in order, and each is on the outputs for at least one
-  tick before the next frame of its queue applies. A press and its release
-  both reach the circuit however fast they came: a button tapped while paused
-  is high for one step and low after the next, and two pulse-button taps
-  between ticks give pulses on consecutive ticks.
+- **`event`** — queued in order, and each reaches the outputs before the next
+  frame of its queue is written. A press and its release both reach the
+  circuit however fast they came: a button tapped while paused is high after
+  the second and third steps and low after the fourth, and two pulse-button
+  taps between ticks give two pulses.
 - **`state`** — a position, not a happening. It merges into the queue's last
   frame when that one is a `state` frame not yet applied (the later write per
   unit wins, two pulses on one unit stay one), and one arriving after an
   applied `state` frame lands at that same boundary. A switch flipped on, off
-  and on while paused, or `setInput` called twice, shows the final state on
-  the next step and nothing in between. It never merges into an applied
+  and on while paused, or `setInput` called twice, reaches the circuit as the
+  final state and nothing in between. It never merges into an applied
   frame or past a queued `event` frame, so it cannot reorder anything.
 
 `counted` marks a frame `pending()` counts, for an input that reports how much
@@ -183,12 +183,23 @@ queue and one never waits on another. `clearFrames` drops a queue and applies
 its `reset` writes at once. The merge happens in the worker, the only place
 that knows whether a frame has been applied.
 
+The spacing comes from how the engine applies input: a write is taken up on
+the next tick and driven on the tick after, and a second write to the same
+unit taken up before then replaces the first, so the first never reaches the
+outputs (a pulse excepted, which still fires). Frames of one queue are
+therefore written two ticks apart (`FRAME_SPACING_TICKS`); one tick apart, a
+keyboard's release would overwrite its data bits while its strobe still
+pulsed.
+
 The worker's queues are `InputFrameQueues` (`input-frames.ts`), pure and
-engine-agnostic, so `input-frames.spec.ts` runs them against a fake engine.
-Each queue keeps a FIFO and the tick its last frame applied at; the pump
-applies a head frame only once `getStatus().tick` is past that tick (the
-`state`-after-`state` case aside), calling `triggerInput` for every write in
-one synchronous run. It runs when frames are queued, after a `step`, after each
+engine-agnostic. Specs run them against the real engine:
+`src/testing/sim-engine.ts` wraps the WASM build (whose bytes
+`vitest.setup.ts` reads) as a hand-ticked `FrameEngine`, and
+`FakeSimulationWorker` runs the posted board on it, so a spec observes input
+timing exactly as the worker's engine applies it. Each queue keeps a FIFO and
+the tick its last frame applied at; the pump applies a head frame only once
+`getStatus().tick` is two past that tick (the `state`-after-`state` case
+aside), calling `triggerInput` for every write in one synchronous run. It runs when frames are queued, after a `step`, after each
 pace iteration in `target` mode, and on a 0 ms timer while a `continuous` run
 is active and a queue holds a frame — the run yields to the event loop between
 batches. A frame for an empty queue therefore applies as soon as it arrives,

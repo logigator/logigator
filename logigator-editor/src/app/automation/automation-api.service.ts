@@ -594,8 +594,9 @@ export class AutomationApiService {
 
   /**
    * Drives one slot, or every slot, of a lever, button or pulse button to an absolute state. The
-   * engine applies the input at its next tick — every slot of an array the same one — so the
-   * deterministic recipe is `pause()` → `setInput()` → `step()` → `readPorts()`.
+   * engine takes the input up at its next tick and drives it on the tick after — every slot of an
+   * array on the same one — so the deterministic recipe is `pause()` → `setInput()` → `step(2)` →
+   * `readPorts()`.
    */
   public async simSetInput(
     componentId: number,
