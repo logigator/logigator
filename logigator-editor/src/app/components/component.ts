@@ -585,6 +585,19 @@ export abstract class Component<
       : powered;
   }
 
+  /**
+   * The value output `index` carries ahead of its bubble: a negated output's
+   * net is low while the component drives it high. Only a live session
+   * inverts, as for {@link isInputHigh}: at rest the board draws nothing
+   * powered.
+   */
+  public isOutputHigh(index: number): boolean {
+    const powered = this.isPortPowered(this._numInputs + index);
+    return this._simulating && this.isPortNegated('out', index)
+      ? !powered
+      : powered;
+  }
+
   /** Stub graphics in `connectionPoints` order (rebuilt on every redraw). */
   public get portStubs(): readonly Graphics[] {
     return this._portStubs;

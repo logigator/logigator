@@ -24,6 +24,7 @@ import { SegmentDisplayComponent } from '../app/components/component-types/segme
 import { segmentDisplayComponentConfig } from '../app/components/component-types/segment-display/segment-display.config';
 import { GamepadComponent } from '../app/components/component-types/gamepad/gamepad.component';
 import { gamepadComponentConfig } from '../app/components/component-types/gamepad/gamepad.config';
+import { KeyboardComponent } from '../app/components/component-types/keyboard/keyboard.component';
 
 /** AndComponent with the given port count, rotation, and grid position. */
 export function makeAnd(
@@ -160,6 +161,13 @@ export function makeGamepad(
   });
   pad.position.set(px, py);
   return pad;
+}
+
+/** KeyboardComponent at a grid position. */
+export function makeKeyboard(px = 0, py = 0): KeyboardComponent {
+  const keyboard = new KeyboardComponent({});
+  keyboard.position.set(px, py);
+  return keyboard;
 }
 
 /**
