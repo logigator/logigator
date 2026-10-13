@@ -12,6 +12,7 @@ import {
   halfAdderMeta,
   inputMeta,
   jkFfMeta,
+  keyboardMeta,
   ledMatrixMeta,
   ledMeta,
   muxMeta,
@@ -75,6 +76,7 @@ export type BuiltInTranslationKeys =
   | MetaKeys<typeof halfAdderMeta>
   | MetaKeys<typeof inputMeta>
   | MetaKeys<typeof jkFfMeta>
+  | MetaKeys<typeof keyboardMeta>
   | MetaKeys<typeof ledMatrixMeta>
   | MetaKeys<typeof ledMeta>
   | MetaKeys<typeof muxMeta>

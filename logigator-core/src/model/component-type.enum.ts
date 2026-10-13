@@ -33,7 +33,9 @@ export enum BuiltInComponentType {
   // High for as long as it is held; absent from the legacy v0 format.
   BUTTON = 205,
   // One output per controller button; absent from the legacy v0 format.
-  GAMEPAD = 206
+  GAMEPAD = 206,
+  // The held key's ASCII code plus a strobe; absent from the legacy v0 format.
+  KEYBOARD = 207
 }
 
 /** A runtime-allocated custom component type id ({@link CUSTOM_TYPE_ID_BASE}+). */

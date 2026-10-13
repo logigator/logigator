@@ -310,6 +310,11 @@ const de: TranslationSchema = {
             'Einige dieser Zeichen kann das Board nicht darstellen, daher fehlen sie in den Anschlussbeschriftungen.'
         }
       },
+      KEYBOARD: {
+        name: 'Tastatur',
+        description:
+          'Eine Tastatur. Solange eine Taste gedrückt ist, liegt ihr ASCII-Code an D0–D6 an, und STB gibt bei jedem Tastendruck einen Puls aus. Während die Simulation läuft, öffnet ein Klick ein Fenster, das deine Eingaben entgegennimmt.'
+      },
       PULSE_BUTTON: {
         name: 'Impulstaster',
         description:

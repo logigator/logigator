@@ -13,6 +13,7 @@ import { fullAdderMeta } from './built-ins/full-adder.meta';
 import { halfAdderMeta } from './built-ins/half-adder.meta';
 import { inputMeta } from './built-ins/input.meta';
 import { jkFfMeta } from './built-ins/jk-ff.meta';
+import { keyboardMeta } from './built-ins/keyboard.meta';
 import { ledMeta } from './built-ins/led.meta';
 import { ledMatrixMeta } from './built-ins/led-matrix.meta';
 import { muxMeta } from './built-ins/mux.meta';
@@ -59,7 +60,8 @@ const ALL = [
   segmentDisplayMeta,
   ledMatrixMeta,
   buttonMeta,
-  gamepadMeta
+  gamepadMeta,
+  keyboardMeta
 ];
 
 /**

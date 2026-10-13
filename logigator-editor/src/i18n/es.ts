@@ -307,6 +307,11 @@ const es: TranslationSchema = {
             'Algunos de estos caracteres no se pueden dibujar en la placa, así que las etiquetas de los puertos los omiten.'
         }
       },
+      KEYBOARD: {
+        name: 'Teclado',
+        description:
+          'Un teclado. Mientras se mantiene pulsada una tecla, D0–D6 llevan su código ASCII, y STB emite un pulso cada vez que se pulsa una tecla. Mientras la simulación está en marcha, al hacer clic se abre una ventana que recibe lo que escribes.'
+      },
       PULSE_BUTTON: {
         name: 'Botón de pulso',
         description:

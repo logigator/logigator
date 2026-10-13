@@ -157,6 +157,7 @@ export { gamepadMeta } from './catalog/built-ins/gamepad.meta';
 export { halfAdderMeta } from './catalog/built-ins/half-adder.meta';
 export { inputMeta } from './catalog/built-ins/input.meta';
 export { jkFfMeta } from './catalog/built-ins/jk-ff.meta';
+export { keyboardMeta } from './catalog/built-ins/keyboard.meta';
 export { ledMeta } from './catalog/built-ins/led.meta';
 export { ledMatrixMeta } from './catalog/built-ins/led-matrix.meta';
 export { muxMeta } from './catalog/built-ins/mux.meta';
@@ -190,6 +191,11 @@ export type {
   GamepadGroupId,
   GamepadGroupValues
 } from './catalog/built-ins/gamepad.meta';
+export {
+  KEYBOARD_DATA_BITS,
+  KEYBOARD_GLYPH_COLUMN_WIDTH,
+  KEYBOARD_STROBE_OUTPUT
+} from './catalog/built-ins/keyboard.meta';
 export {
   SegmentBase,
   segmentReadoutDigits

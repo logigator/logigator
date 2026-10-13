@@ -308,6 +308,11 @@ const en = {
             "Some of these characters can't be drawn on the board, so its port labels leave them out."
         }
       },
+      KEYBOARD: {
+        name: 'Keyboard',
+        description:
+          'A keyboard. While a key is held down, D0–D6 carry its ASCII code, and STB pulses once each time a key is pressed. While the simulation is running, clicking it opens a window that receives your typing.'
+      },
       PULSE_BUTTON: {
         name: 'Pulse button',
         description:

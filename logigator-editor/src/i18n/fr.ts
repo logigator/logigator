@@ -309,6 +309,11 @@ const fr: TranslationSchema = {
             'Certains de ces caractères ne peuvent pas être dessinés sur la carte : les libellés des ports les omettent.'
         }
       },
+      KEYBOARD: {
+        name: 'Clavier',
+        description:
+          "Un clavier. Tant qu'une touche est maintenue enfoncée, D0–D6 portent son code ASCII, et STB émet une impulsion à chaque appui. Pendant que la simulation tourne, cliquer dessus ouvre une fenêtre qui reçoit votre saisie."
+      },
       PULSE_BUTTON: {
         name: 'Bouton à impulsion',
         description:
