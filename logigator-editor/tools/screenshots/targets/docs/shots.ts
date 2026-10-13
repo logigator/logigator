@@ -441,6 +441,80 @@ export const SHOTS: Shot[] = [
     }
   },
   {
+    // A keyboard whose window has two words typed and the last key still
+    // held, so the strip's highlighted character, On D and the readout on the
+    // board all show the same code.
+    name: 'keyboard-window',
+    async run(ed) {
+      const type = await ed.typeOf('KBD');
+      await ed.api(
+        (t) =>
+          __logigator.applyEdit([
+            {
+              op: 'addComponent',
+              type: t,
+              pos: [4, 4],
+              direction: 0,
+              options: {}
+            }
+          ]),
+        type
+      );
+
+      await ed.enterSimulation();
+      const circuit = await ed.contentClip({
+        pad: 2,
+        zoom: BOARD_ZOOM,
+        anchor: 'top-left'
+      });
+      // The window opens with its typing field focused. The keys are typed
+      // there rather than through `sim.type`, because the strip shows what
+      // the window itself sent.
+      await ed.openWatch('KBD');
+      await ed.page.keyboard.type('hello');
+      await ed.page.keyboard.press('Enter');
+      await ed.page.keyboard.type('worl');
+      await ed.page.keyboard.down('d');
+      // Paused, every character takes two steps: one pressed, one released.
+      await ed.runUntilSettled(30);
+
+      // The status line truncates in a language longer than the window's
+      // initial width allows; the window grows by what it overflows.
+      const status = ed
+        .watchWindow()
+        .getByText(ed.t('components.def.KEYBOARD.window.typing'));
+      const overflow = await status.evaluate(
+        (span) => span.scrollWidth - span.clientWidth
+      );
+      if (overflow > 0) {
+        const { width } = await ed.box(ed.watchWindow());
+        await ed.api(
+          (a) => __logigator.inspect.setBounds(a.id, { width: a.width }),
+          { id: ed.requireWatch(), width: Math.ceil(width + overflow + 4) }
+        );
+        await ed.settle();
+      }
+
+      const opened = await ed.box(ed.watchWindow());
+      await ed.moveWatch({
+        x: circuit.x + circuit.width + 24,
+        y: circuit.y + Math.max(0, (circuit.height - opened.height) / 2)
+      });
+      const typing = await ed.unionClip(ed.watchWindow(), 8);
+
+      // Whichever of the two is shorter is centred on the other.
+      const board = await ed.canvasBox();
+      const bounds = await ed.contentBounds();
+      if (typing.height > circuit.height) {
+        await ed.centerContentAt({
+          y: typing.y + typing.height / 2 - board.y
+        });
+      }
+      await ed.parkPointer();
+      return { clip: mergeRects(await ed.gridClip(bounds, 2), typing) };
+    }
+  },
+  {
     // Animated: the watch following the board it mirrors, inner circuit
     // lighting with the outer one.
     name: 'inspection-showcase',
