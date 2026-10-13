@@ -45,6 +45,7 @@ Bajo los modos, «Relojes a esta velocidad» lista la frecuencia que da cada ret
 - Un botón está activo mientras lo mantienes pulsado.
 - Un botón de pulso envía un pulso de un tick por clic, lo mantengas pulsado el tiempo que sea.
 - Un mando abre su ventana de juego, descrita en la sección siguiente.
+- Un teclado abre una ventana para escribir, descrita después del mando.
 
 Arrastrar en cualquier otro punto del tablero desplaza la vista.
 
@@ -61,6 +62,34 @@ Con el ratón o con el dedo, un botón sigue pulsado mientras lo mantienes, y en
 Un mando físico conectado al ordenador también puede jugar. El navegador solo informa de un mando después de que pulses uno de sus botones con el editor abierto. Si lo haces con una ventana de mando abierta, el mando físico se conecta a esa ventana y aparece en el menú Mando de abajo. Un mando físico sigue jugando cuando otra ventana tiene el teclado, así que dos mandos físicos pueden manejar dos mandos a la vez, cada uno elegido en su propia ventana. Los botones se asignan por posición, digan lo que digan sus etiquetas: el botón de acción de la derecha es A, el de abajo B, el de arriba X y el de la izquierda Y. La cruceta y el stick izquierdo manejan los dos la cruceta, LB y LT son L, RB y RT son R, Back o Share es Select, y Start es Start. Los mandos de los que el navegador no informa con la disposición estándar aparecen en la lista, pero no se pueden elegir.
 
 Al cerrar la ventana o salir de la simulación se sueltan todos los botones. Un mando dentro de un componente personalizado se juega desde un [monitor](docs:inspection#monitores). En la vista táctil, el mando se abre en el panel de la parte inferior de la pantalla; las teclas aparecen ahí en cuanto pulsas una tecla de un teclado, y el menú Mando en cuanto hay un mando físico conectado.
+
+## Escribir en un teclado
+
+Un clic en un teclado abre una ventana con un campo de escritura arriba. Mientras el campo tiene el foco, las teclas que pulsas van al circuito. Al pulsar una tecla, su código ASCII pasa a D0 a D6 y STB envía un pulso de un tick. El código se mantiene mientras sostienes la tecla, y D vuelve a 0 cuando la sueltas. En el tablero, el recuadro del teclado muestra el carácter que hay en D.
+
+![La ventana de un teclado con hello y world escritos y la d pulsada, junto al teclado del tablero, que muestra la d.](./images/keyboard-window.webp)
+
+El campo muestra los últimos 64 caracteres enviados, el más reciente a la derecha, y resalta el que está pulsado. Debajo, «En D» indica el código que recibe el circuito en ese momento: el carácter, su valor hexadecimal y sus 7 bits. La línea siguiente dice «Escribiendo en el circuito · Mayús+Tab para salir» mientras el campo tiene el foco. Después de un clic en otro sitio dice «Haz clic aquí para escribir», y las teclas no llegan al teclado hasta que vuelves a hacer clic en la ventana.
+
+Una tecla sostenida no se repite, así que STB envía un pulso por pulsación. Un circuito que deba repetir una tecla sostenida puede hacer funcionar un reloj mientras D no sea 0. Ninguna tecla envía 0, así que una puerta O sobre D0 a D6 da 1 justo mientras hay una tecla pulsada. Si pulsas una segunda tecla antes de soltar la primera, el código de la segunda pasa a D, con un nuevo pulso en STB. Al soltar esa segunda tecla, D vuelve a 0 aunque la primera siga pulsada.
+
+Los caracteres ASCII imprimibles, del espacio a `~`, se envían tal cual. Estas teclas envían códigos de control, que el tablero y «En D» muestran por su nombre:
+
+| Tecla       | Código | Se muestra como |
+| ----------- | ------ | --------------- |
+| `Enter`     | `0x0A` | LF              |
+| `Backspace` | `0x08` | BS              |
+| `Tab`       | `0x09` | TAB             |
+| `Escape`    | `0x1B` | ESC             |
+| `Delete`    | `0x7F` | DEL             |
+
+Las flechas, las teclas de función, `Home`, `End`, `Page Up`, `Page Down` e `Insert` no envían nada. Un carácter fuera de ASCII, como ñ o €, se omite, y la línea de abajo lo indica durante unos segundos. Los caracteres que escribes con `AltGr`, como @ en un teclado español, se envían. Las combinaciones con `Ctrl`, `Alt` o `⌘` quedan para el navegador. Qué teclas van al circuito en lugar de al editor está en [Atajos de teclado](docs:shortcuts#teclas-en-la-ventana-de-un-teclado).
+
+Pegar envía el texto pegado carácter a carácter. «Escribir texto…», en la parte inferior de la ventana, abre un diálogo donde puedes escribir o pegar un texto más largo, un programa por ejemplo. Antes de enviarlo, el diálogo indica cuántos caracteres se omitirán. Los saltos de línea se envían como LF, y cada pegado o cada envío desde el diálogo admite hasta 10 000 caracteres. Cada carácter está en D al menos un tick y le sigue al menos un tick de 0, así que una letra doble llega como dos pulsaciones. Mientras hay caracteres esperando, la ventana muestra «Enviando» con el número que queda y una ✕ que descarta el resto. También pasa cuando escribes más rápido de lo que avanza la simulación, por ejemplo a una velocidad fija baja.
+
+Con la simulación en pausa, las teclas esperan a «Paso». Una tecla que pulsas y sueltas está en D después del siguiente paso y desaparece después del otro, así que un texto pegado necesita dos pasos por carácter.
+
+Al cerrar la ventana, hacer clic fuera de ella o cambiar a otra pestaña se suelta la tecla pulsada. «Detener» borra los caracteres del campo. En un teclado dentro de un componente personalizado se escribe desde un [monitor](docs:inspection#monitores). En un móvil o una tableta, la ventana se abre en el panel de la parte inferior de la pantalla (consulta [Móviles y tabletas](docs:phones-and-tablets#simulación-e-inspección)).
 
 ## Cuando la simulación no arranca
 

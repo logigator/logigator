@@ -22,7 +22,7 @@ Un monitor dibuja el circuito interno del componente con los mismos cables ilumi
 
 Un clic en un componente personalizado dentro de un monitor abre su circuito en la misma ventana, y el título muestra la ruta, por ejemplo Outer › Inner. Haz clic en un nombre anterior para volver a subir. Una ROM dentro de un monitor abre su propia vista.
 
-Un clic en un mando dentro de un monitor abre su ventana de juego, con la ruta en el título, por ejemplo Outer › Inner › Mando. Se juega como un mando del tablero (consulta [Simulación](docs:simulation#jugar-con-un-mando)). Al subir por encima de su nivel o cerrar el monitor, también se cierra la ventana del mando.
+Un clic en un mando o un teclado dentro de un monitor abre su ventana, con la ruta en el título, por ejemplo Outer › Inner › Mando. Funciona como en el tablero (consulta [Jugar con un mando](docs:simulation#jugar-con-un-mando) y [Escribir en un teclado](docs:simulation#escribir-en-un-teclado)), y lo que pulsas ahí llega al componente dentro del monitor. Al subir por encima de su nivel o cerrar el monitor, también se cierra esa ventana.
 
 Si el monitor avisa de que el circuito interno no coincide con la simulación compilada, el componente se cambió después de iniciar la simulación. Sal de la simulación y vuelve a iniciarla.
 

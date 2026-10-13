@@ -22,7 +22,7 @@ Une surveillance dessine le circuit interne du composant avec les mêmes fils al
 
 Un clic sur un composant personnalisé à l'intérieur d'une surveillance ouvre son circuit dans la même fenêtre, et le titre montre le chemin, par exemple Outer › Inner. Cliquez sur un nom précédent pour remonter. Une ROM à l'intérieur d'une surveillance ouvre sa propre vue.
 
-Un clic sur une manette à l'intérieur d'une surveillance ouvre sa fenêtre de jeu, dont le titre montre le chemin, par exemple Outer › Inner › Manette. Elle se joue comme une manette du plan de travail (voir [Simulation](docs:simulation#jouer-avec-une-manette)). Remonter au-dessus de son niveau ou fermer la surveillance ferme aussi la fenêtre de la manette.
+Un clic sur une manette ou un clavier à l'intérieur d'une surveillance ouvre sa fenêtre, dont le titre montre le chemin, par exemple Outer › Inner › Manette. Elle fonctionne comme sur le plan de travail (voir [Jouer avec une manette](docs:simulation#jouer-avec-une-manette) et [Taper sur un clavier](docs:simulation#taper-sur-un-clavier)), et ce que vous y faites atteint le composant dans la surveillance. Remonter au-dessus de son niveau ou fermer la surveillance ferme aussi cette fenêtre.
 
 Si la surveillance signale que le circuit interne ne correspond pas à la simulation compilée, le composant a été modifié après le démarrage de la simulation. Quittez la simulation et relancez-la.
 

@@ -69,6 +69,19 @@ Pour modifier les touches, cliquez sur « Attribuer les touches » en bas d'une 
 
 Les touches sont communes à toutes les manettes de tous les projets et enregistrées dans ce navigateur, comme les raccourcis. Une modification apparaît aussitôt dans chaque fenêtre de manette ouverte, y compris dans d'autres onglets.
 
+## Touches dans la fenêtre d'un clavier
+
+Tant que le champ de saisie de la [fenêtre d'un clavier](docs:simulation#taper-sur-un-clavier) a le focus, les touches vont au circuit et les raccourcis ci-dessus ne font rien. Quatre touches y agissent autrement :
+
+| Touche      | Dans le champ de saisie                   |
+| ----------- | ----------------------------------------- |
+| `Enter`     | Envoie LF. La simulation continue.        |
+| `Escape`    | Envoie ESC. La fenêtre reste ouverte.     |
+| `Tab`       | Envoie TAB. Le focus reste dans le champ. |
+| `Shift+Tab` | Fait sortir le focus du champ.            |
+
+Les combinaisons avec `Ctrl`, `Alt` ou `⌘` vont au navigateur, si bien que `Ctrl+V` colle du texte dans le clavier. `AltGr` n'en fait pas partie : un caractère tapé avec cette touche est envoyé. Une touche envoie le caractère que lui donne la disposition de votre clavier ; ces touches ne se réattribuent donc pas comme celles d'une manette.
+
 ## Voir aussi
 
 - [Plan de travail et outils](docs:board-and-tools) : les outils et actions derrière ces touches

@@ -33,6 +33,8 @@ Die Play-Schaltfläche oben startet die Simulation. Die Steuerung erscheint dann
 
 Ein Tippen auf ein ROM öffnet seine Ansicht in einer Leiste am unteren Bildschirmrand. Die Arbeitsfläche darüber bleibt bedienbar, und mehrere Ansichten teilen sich die Leiste als Tabs. Die Beobachtung einer benutzerdefinierten Komponente füllt den ganzen Bildschirm, und ihr Zurück-Pfeil führt zur Arbeitsfläche. Siehe [Inspektion und Beobachtungen](docs:inspection).
 
+Das Fenster einer Tastatur öffnet sich in derselben Leiste. Tippe auf das Eingabefeld, in dem „Hier tippen, um zu schreiben“ steht, damit die Bildschirmtastatur erscheint; die Leiste rückt nach oben und bleibt über ihr. Text, den die Bildschirmtastatur auf einmal einträgt, etwa ein vorgeschlagenes Wort, wird wie eingefügter Text Zeichen für Zeichen gesendet. Wie Tasten die Schaltung erreichen, steht unter [Simulation](docs:simulation#in-eine-tastatur-tippen).
+
 ## Siehe auch
 
 - [Arbeitsfläche und Werkzeuge](docs:board-and-tools): was jedes Werkzeug tut

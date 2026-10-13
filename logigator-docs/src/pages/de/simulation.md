@@ -45,6 +45,7 @@ Unter den Modi listet „Taktgeber bei dieser Geschwindigkeit“ die Frequenz, d
 - Ein Taster ist an, solange du ihn gedrückt hältst.
 - Ein Impulstaster sendet pro Klick einen Impuls von einem Tick, egal wie lange du ihn hältst.
 - Ein Gamepad öffnet seinen Controller, beschrieben im nächsten Abschnitt.
+- Eine Tastatur öffnet ein Fenster zum Tippen, beschrieben nach dem Gamepad.
 
 Ziehen an jeder anderen Stelle der Arbeitsfläche verschiebt die Ansicht.
 
@@ -61,6 +62,34 @@ Mit der Maus oder dem Finger bleibt eine Taste gedrückt, solange du sie hältst
 Auch ein Gamecontroller, der mit deinem Computer verbunden ist, kann ein Gamepad spielen. Der Browser meldet einen Controller erst, nachdem du bei geöffnetem Editor eine seiner Tasten gedrückt hast. Tust du das bei offenem Gamepad-Fenster, wird der Controller mit diesem Fenster verbunden und erscheint unten im Controller-Menü. Ein Controller spielt sein Gamepad weiter, auch wenn ein anderes Fenster die Tastatur hat. So können zwei Controller zwei Gamepads gleichzeitig spielen, jeder in seinem eigenen Fenster ausgewählt. Die Tasten werden nach ihrer Lage zugeordnet, egal wie sie beschriftet sind: Die rechte Aktionstaste ist A, die untere B, die obere X und die linke Y. Steuerkreuz und linker Stick bedienen beide das Steuerkreuz, LB und LT sind L, RB und RT sind R, Back oder Share ist Select, und Start ist Start. Controller, die der Browser nicht mit der Standardbelegung meldet, stehen in der Liste, lassen sich aber nicht auswählen.
 
 Schließt du das Fenster oder verlässt die Simulation, werden alle Tasten losgelassen. Ein Gamepad in einer benutzerdefinierten Komponente spielst du aus einer [Beobachtung](docs:inspection#beobachtungen) heraus. In der Touch-Ansicht öffnet sich der Controller in der Leiste am unteren Bildschirmrand; die Tastenbeschriftungen erscheinen dort, sobald du eine Taste auf einer Tastatur drückst, und das Controller-Menü, sobald ein Controller verbunden ist.
+
+## In eine Tastatur tippen
+
+Ein Klick auf eine Tastatur öffnet ein Fenster mit einem Eingabefeld oben. Solange das Feld den Fokus hat, gehen die Tasten, die du drückst, an die Schaltung. Eine Taste, die du drückst, legt ihren ASCII-Code an D0 bis D6 an und gibt an STB einen Impuls von einem Tick aus. Der Code liegt an, solange du die Taste hältst, und D geht auf 0 zurück, wenn du loslässt. Auf der Arbeitsfläche zeigt das Kästchen in der Tastatur das Zeichen an D.
+
+![Das Fenster einer Tastatur mit getipptem hello und world und gedrücktem d, neben der Tastatur auf der Arbeitsfläche, die d zeigt.](./images/keyboard-window.webp)
+
+Das Feld zeigt die letzten 64 gesendeten Zeichen, das neueste rechts, und hebt das gehaltene hervor. Darunter steht bei „An D“ der Code, den die Schaltung gerade bekommt: das Zeichen, sein Hex-Wert und seine 7 Bits. Die Zeile darunter lautet „Eingaben gehen an die Schaltung · Umschalt+Tab zum Verlassen“, solange das Feld den Fokus hat. Klickst du woanders hin, steht dort „Hier klicken, um zu tippen“, und Tasten erreichen die Tastatur erst wieder, wenn du ins Fenster klickst.
+
+Eine gehaltene Taste wiederholt sich nicht, STB gibt also pro Tastendruck einen Impuls aus. Soll eine Schaltung eine gehaltene Taste wiederholen, kann sie einen Taktgeber laufen lassen, solange D nicht 0 ist. Keine Taste sendet 0, also ist ein ODER über D0 bis D6 genau dann 1, wenn eine Taste gehalten wird. Drückst du eine zweite Taste, bevor du die erste loslässt, liegt der Code der zweiten an D an, mit einem neuen Impuls an STB. Lässt du die zweite los, geht D auf 0, auch wenn die erste noch gedrückt ist.
+
+Druckbare ASCII-Zeichen, vom Leerzeichen bis `~`, werden unverändert gesendet. Diese Tasten senden Steuerzeichen, die auf der Arbeitsfläche und bei „An D“ mit ihrem Namen erscheinen:
+
+| Taste       | Code   | Angezeigt als |
+| ----------- | ------ | ------------- |
+| `Enter`     | `0x0A` | LF            |
+| `Backspace` | `0x08` | BS            |
+| `Tab`       | `0x09` | TAB           |
+| `Escape`    | `0x1B` | ESC           |
+| `Delete`    | `0x7F` | DEL           |
+
+Die Pfeiltasten, die Funktionstasten, `Home`, `End`, `Page Up`, `Page Down` und `Insert` senden nichts. Ein Zeichen außerhalb von ASCII, etwa ä oder €, wird übersprungen, und die Zeile unten weist ein paar Sekunden lang darauf hin. Zeichen, die du mit `AltGr` tippst, etwa das @ auf einer deutschen Tastatur, werden gesendet. Tastenkombinationen mit `Ctrl`, `Alt` oder `⌘` bleiben dem Browser überlassen. Welche Tasten an die Schaltung gehen statt an den Editor, steht unter [Tastaturbefehle](docs:shortcuts#tasten-im-fenster-einer-tastatur).
+
+Eingefügter Text wird Zeichen für Zeichen gesendet. „Text eingeben…“ unten im Fenster öffnet einen Dialog, in dem du einen längeren Text schreiben oder einfügen kannst, etwa ein Programm. Er zeigt vor dem Senden, wie viele Zeichen übersprungen werden. Zeilenumbrüche werden als LF gesendet, und ein Einfügen oder ein „Senden“ nimmt bis zu 10.000 Zeichen. Jedes Zeichen liegt mindestens einen Tick an D an, und danach folgt mindestens ein Tick mit 0, sodass auch ein doppelter Buchstabe als zwei Tastendrücke ankommt. Solange Zeichen warten, zeigt das Fenster „Sende“ mit der Zahl der übrigen und ein ✕, das den Rest verwirft. Das kommt auch vor, wenn du schneller tippst, als die Simulation läuft, etwa bei einer niedrigen festen Geschwindigkeit.
+
+Ist die Simulation pausiert, warten Tasten auf „Einzelschritt“. Eine Taste, die du drückst und loslässt, liegt nach dem nächsten Schritt an D an und ist nach dem übernächsten wieder weg. Ein eingefügter Text braucht also zwei Schritte pro Zeichen.
+
+Schließt du das Fenster, klickst daneben oder wechselst in einen anderen Tab, wird die gehaltene Taste losgelassen. „Stopp“ leert die Zeichen im Feld. In eine Tastatur in einer benutzerdefinierten Komponente tippst du aus einer [Beobachtung](docs:inspection#beobachtungen) heraus. Auf einem Smartphone oder Tablet öffnet sich das Fenster in der Leiste am unteren Bildschirmrand (siehe [Smartphones und Tablets](docs:phones-and-tablets#simulation-und-inspektion)).
 
 ## Wenn die Simulation nicht startet
 

@@ -41,15 +41,16 @@ Every component takes one tick to pass a change on to its output. The tables lis
 
 ### Inputs / Outputs
 
-| Component       | What it does                                                                                                                                                      | Options                                                    |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Switch          | Toggles between 0 and 1 with each click during a simulation.                                                                                                      |                                                            |
-| Button          | Outputs 1 for as long as you hold it down.                                                                                                                        |                                                            |
-| Pulse button    | Outputs a one-tick pulse per click.                                                                                                                               |                                                            |
-| LED             | Lights up while its input is 1.                                                                                                                                   |                                                            |
-| Segment Display | Shows the binary number on its inputs, input 0 being the lowest bit.                                                                                              | Inputs 1 to 16, Base decimal, hex or octal                 |
-| LED Matrix      | A square grid of LEDs. On the rising edge of CLK, the data inputs are written into the row the address inputs select. At 16 × 16, each address covers half a row. | Width/Height 4, 8 or 16                                    |
-| Gamepad         | One output per button, 1 while the button is held. The D-pad is always there. During a simulation, clicking it opens a controller to play.                        | Face buttons, Shoulder buttons, Menu buttons, Button names |
+| Component       | What it does                                                                                                                                                                             | Options                                                    |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Switch          | Toggles between 0 and 1 with each click during a simulation.                                                                                                                             |                                                            |
+| Button          | Outputs 1 for as long as you hold it down.                                                                                                                                               |                                                            |
+| Pulse button    | Outputs a one-tick pulse per click.                                                                                                                                                      |                                                            |
+| LED             | Lights up while its input is 1.                                                                                                                                                          |                                                            |
+| Segment Display | Shows the binary number on its inputs, input 0 being the lowest bit.                                                                                                                     | Inputs 1 to 16, Base decimal, hex or octal                 |
+| LED Matrix      | A square grid of LEDs. On the rising edge of CLK, the data inputs are written into the row the address inputs select. At 16 × 16, each address covers half a row.                        | Width/Height 4, 8 or 16                                    |
+| Gamepad         | One output per button, 1 while the button is held. The D-pad is always there. During a simulation, clicking it opens a controller to play.                                               | Face buttons, Shoulder buttons, Menu buttons, Button names |
+| Keyboard        | D0 to D6 carry the 7-bit ASCII code of the key held down, and 0 while no key is. STB sends a one-tick pulse on each press. During a simulation, clicking it opens a window to type into. |                                                            |
 
 ## The settings card
 

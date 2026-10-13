@@ -69,6 +69,19 @@ Um die Tasten zu ändern, klicke unten in einem Gamepad-Fenster auf „Tasten zu
 
 Die Tasten gelten für jedes Gamepad in jedem Projekt und werden wie die Tastaturbefehle in diesem Browser gespeichert. Eine Änderung erscheint sofort in jedem offenen Gamepad-Fenster, auch in anderen Tabs.
 
+## Tasten im Fenster einer Tastatur
+
+Solange das Eingabefeld im [Fenster einer Tastatur](docs:simulation#in-eine-tastatur-tippen) den Fokus hat, gehen Tasten an die Schaltung, und die Tastaturbefehle oben tun nichts. Vier Tasten verhalten sich dort anders:
+
+| Taste       | Im Eingabefeld                          |
+| ----------- | --------------------------------------- |
+| `Enter`     | Sendet LF. Die Simulation läuft weiter. |
+| `Escape`    | Sendet ESC. Das Fenster bleibt offen.   |
+| `Tab`       | Sendet TAB. Der Fokus bleibt im Feld.   |
+| `Shift+Tab` | Bewegt den Fokus aus dem Feld.          |
+
+Tastenkombinationen mit `Ctrl`, `Alt` oder `⌘` gehen an den Browser, sodass `Ctrl+V` Text in die Tastatur einfügt. `AltGr` gehört nicht dazu: Ein Zeichen, das du damit tippst, wird gesendet. Eine Taste sendet das Zeichen, das deine Tastaturbelegung ihr gibt, deshalb lassen sich diese Tasten nicht neu zuweisen wie die eines Gamepads.
+
 ## Siehe auch
 
 - [Arbeitsfläche und Werkzeuge](docs:board-and-tools): die Werkzeuge und Aktionen hinter diesen Tasten

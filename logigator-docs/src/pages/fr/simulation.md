@@ -45,6 +45,7 @@ Sous les modes, « Horloges à cette vitesse » liste la fréquence que donne ch
 - Un bouton est actif tant que vous le maintenez enfoncé.
 - Un bouton à impulsion envoie une impulsion d'un tick par clic, quelle que soit la durée de l'appui.
 - Une manette ouvre sa fenêtre de jeu, décrite dans la section suivante.
+- Un clavier ouvre une fenêtre de saisie, décrite après la manette.
 
 Un glisser n'importe où ailleurs sur le plan de travail déplace la vue.
 
@@ -61,6 +62,34 @@ La fenêtre prend le clavier à son ouverture, et la ligne du bas indique « Cla
 Une manette physique branchée à votre ordinateur peut aussi jouer. Le navigateur ne signale une manette qu'après l'appui sur l'un de ses boutons pendant que l'éditeur est ouvert. Faites-le avec une fenêtre de manette ouverte : la manette physique est reliée à cette fenêtre et apparaît dans le menu Manette en bas. Une manette physique continue de jouer quand une autre fenêtre a le clavier ; deux manettes physiques peuvent donc jouer sur deux manettes à la fois, chacune choisie dans sa propre fenêtre. Les boutons sont associés par position, quelle que soit leur inscription : le bouton d'action de droite est A, celui du bas B, celui du haut X et celui de gauche Y. La croix et le stick gauche commandent tous deux la croix, LB et LT sont L, RB et RT sont R, Back ou Share est Select, et Start est Start. Les manettes que le navigateur ne signale pas avec la disposition standard figurent dans la liste mais ne peuvent pas être choisies.
 
 Fermer la fenêtre ou quitter la simulation relâche tous les boutons. Une manette placée dans un composant personnalisé se joue depuis une [surveillance](docs:inspection#surveillances). En disposition tactile, la manette s'ouvre dans le panneau en bas de l'écran ; les touches s'y affichent dès que vous appuyez sur une touche d'un clavier, et le menu Manette dès qu'une manette physique est connectée.
+
+## Taper sur un clavier
+
+Un clic sur un clavier ouvre une fenêtre avec un champ de saisie en haut. Tant que ce champ a le focus, les touches sur lesquelles vous appuyez vont au circuit. Une touche enfoncée met son code ASCII sur D0 à D6 et envoie une impulsion d'un tick sur STB. Le code reste là tant que vous maintenez la touche, et D revient à 0 quand vous la relâchez. Sur le plan de travail, la case du clavier affiche le caractère présent sur D.
+
+![La fenêtre d'un clavier avec hello et world tapés et d maintenu, à côté du clavier qui affiche d sur le plan de travail.](./images/keyboard-window.webp)
+
+Le champ montre les 64 derniers caractères envoyés, le plus récent à droite, et met en évidence celui qui est maintenu. En dessous, « Sur D » donne le code que le circuit reçoit à cet instant : le caractère, sa valeur hexadécimale et ses 7 bits. La ligne suivante indique « Vous tapez dans le circuit · Maj+Tab pour sortir » tant que le champ a le focus. Après un clic ailleurs, elle indique « Cliquez ici pour taper », et les touches n'atteignent plus le clavier jusqu'à ce que vous cliquiez de nouveau dans la fenêtre.
+
+Une touche maintenue ne se répète pas : STB envoie une impulsion par appui. Un circuit qui doit répéter une touche maintenue peut faire tourner une horloge tant que D n'est pas à 0. Aucune touche n'envoie 0, donc une porte OU sur D0 à D6 est à 1 exactement tant qu'une touche est maintenue. Appuyer sur une deuxième touche avant de relâcher la première met le code de la deuxième sur D, avec une nouvelle impulsion sur STB. Relâcher cette deuxième touche remet D à 0, même si la première est encore enfoncée.
+
+Les caractères ASCII imprimables, de l'espace à `~`, sont envoyés tels quels. Ces touches envoient des codes de contrôle, affichés par leur nom sur le plan de travail et à côté de « Sur D » :
+
+| Touche      | Code   | Affiché |
+| ----------- | ------ | ------- |
+| `Enter`     | `0x0A` | LF      |
+| `Backspace` | `0x08` | BS      |
+| `Tab`       | `0x09` | TAB     |
+| `Escape`    | `0x1B` | ESC     |
+| `Delete`    | `0x7F` | DEL     |
+
+Les flèches, les touches de fonction, `Home`, `End`, `Page Up`, `Page Down` et `Insert` n'envoient rien. Un caractère hors ASCII, comme é ou €, est ignoré, et la ligne du bas le signale pendant quelques secondes. Les caractères tapés avec `AltGr`, comme @ sur un clavier AZERTY, sont envoyés. Les combinaisons avec `Ctrl`, `Alt` ou `⌘` restent au navigateur. Les touches qui vont au circuit plutôt qu'à l'éditeur sont décrites dans [Raccourcis clavier](docs:shortcuts#touches-dans-la-fenêtre-d-un-clavier).
+
+Un collage envoie le texte collé caractère par caractère. « Saisir du texte… », en bas de la fenêtre, ouvre une boîte de dialogue où vous pouvez écrire ou coller un texte plus long, un programme par exemple. Elle indique avant l'envoi combien de caractères seront ignorés. Les sauts de ligne sont envoyés comme LF, et un collage ou un envoi depuis la boîte de dialogue prend jusqu'à 10 000 caractères. Chaque caractère reste sur D au moins un tick, suivi d'au moins un tick à 0, si bien qu'une lettre double arrive comme deux appuis. Tant que des caractères attendent, la fenêtre affiche « Envoi : » suivi du nombre restant, et un ✕ qui abandonne le reste. Cela arrive aussi quand vous tapez plus vite que la simulation n'avance, à une vitesse fixe basse par exemple.
+
+En pause, les touches attendent « Pas à pas ». Une touche enfoncée puis relâchée est sur D après le pas suivant et disparaît après celui d'après ; un texte collé demande donc deux pas par caractère.
+
+Fermer la fenêtre, cliquer en dehors ou passer à un autre onglet relâche la touche maintenue. « Arrêter » efface les caractères du champ. Pour un clavier placé dans un composant personnalisé, tapez depuis une [surveillance](docs:inspection#surveillances). Sur un téléphone ou une tablette, la fenêtre s'ouvre dans le panneau en bas de l'écran (voir [Téléphones et tablettes](docs:phones-and-tablets#simulation-et-inspection)).
 
 ## Quand la simulation ne démarre pas
 

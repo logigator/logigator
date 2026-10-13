@@ -8,6 +8,7 @@ import exportImageEn from './pages/en/images/export-image.webp';
 import gamepadWindowEn from './pages/en/images/gamepad-window.webp';
 import inspectionShowcaseEn from './pages/en/images/inspection-showcase.webp';
 import inspectionWindowMultilayerEn from './pages/en/images/inspection-window-multilayer.webp';
+import keyboardWindowEn from './pages/en/images/keyboard-window.webp';
 import negatedGateEn from './pages/en/images/negated-gate.webp';
 import openCloudEn from './pages/en/images/open-cloud.webp';
 import openFileEn from './pages/en/images/open-file.webp';
@@ -31,6 +32,7 @@ import componentSettingsDe from './pages/de/images/component-settings.webp';
 import exportImageDe from './pages/de/images/export-image.webp';
 import gamepadWindowDe from './pages/de/images/gamepad-window.webp';
 import inspectionShowcaseDe from './pages/de/images/inspection-showcase.webp';
+import keyboardWindowDe from './pages/de/images/keyboard-window.webp';
 import openCloudDe from './pages/de/images/open-cloud.webp';
 import openFileDe from './pages/de/images/open-file.webp';
 import phoneLayoutDe from './pages/de/images/phone-layout.webp';
@@ -50,6 +52,7 @@ import componentSettingsFr from './pages/fr/images/component-settings.webp';
 import exportImageFr from './pages/fr/images/export-image.webp';
 import gamepadWindowFr from './pages/fr/images/gamepad-window.webp';
 import inspectionShowcaseFr from './pages/fr/images/inspection-showcase.webp';
+import keyboardWindowFr from './pages/fr/images/keyboard-window.webp';
 import openCloudFr from './pages/fr/images/open-cloud.webp';
 import openFileFr from './pages/fr/images/open-file.webp';
 import phoneLayoutFr from './pages/fr/images/phone-layout.webp';
@@ -69,6 +72,7 @@ import componentSettingsEs from './pages/es/images/component-settings.webp';
 import exportImageEs from './pages/es/images/export-image.webp';
 import gamepadWindowEs from './pages/es/images/gamepad-window.webp';
 import inspectionShowcaseEs from './pages/es/images/inspection-showcase.webp';
+import keyboardWindowEs from './pages/es/images/keyboard-window.webp';
 import openCloudEs from './pages/es/images/open-cloud.webp';
 import openFileEs from './pages/es/images/open-file.webp';
 import phoneLayoutEs from './pages/es/images/phone-layout.webp';
@@ -94,6 +98,7 @@ const en: Readonly<Record<string, string>> = {
   './images/gamepad-window.webp': gamepadWindowEn,
   './images/inspection-showcase.webp': inspectionShowcaseEn,
   './images/inspection-window-multilayer.webp': inspectionWindowMultilayerEn,
+  './images/keyboard-window.webp': keyboardWindowEn,
   './images/negated-gate.webp': negatedGateEn,
   './images/open-cloud.webp': openCloudEn,
   './images/open-file.webp': openFileEn,
@@ -120,6 +125,7 @@ const de: Readonly<Record<string, string>> = {
   './images/export-image.webp': exportImageDe,
   './images/gamepad-window.webp': gamepadWindowDe,
   './images/inspection-showcase.webp': inspectionShowcaseDe,
+  './images/keyboard-window.webp': keyboardWindowDe,
   './images/open-cloud.webp': openCloudDe,
   './images/open-file.webp': openFileDe,
   './images/phone-layout.webp': phoneLayoutDe,
@@ -142,6 +148,7 @@ const fr: Readonly<Record<string, string>> = {
   './images/export-image.webp': exportImageFr,
   './images/gamepad-window.webp': gamepadWindowFr,
   './images/inspection-showcase.webp': inspectionShowcaseFr,
+  './images/keyboard-window.webp': keyboardWindowFr,
   './images/open-cloud.webp': openCloudFr,
   './images/open-file.webp': openFileFr,
   './images/phone-layout.webp': phoneLayoutFr,
@@ -164,6 +171,7 @@ const es: Readonly<Record<string, string>> = {
   './images/export-image.webp': exportImageEs,
   './images/gamepad-window.webp': gamepadWindowEs,
   './images/inspection-showcase.webp': inspectionShowcaseEs,
+  './images/keyboard-window.webp': keyboardWindowEs,
   './images/open-cloud.webp': openCloudEs,
   './images/open-file.webp': openFileEs,
   './images/phone-layout.webp': phoneLayoutEs,

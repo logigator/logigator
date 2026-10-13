@@ -69,6 +69,19 @@ Para cambiar las teclas, haz clic en «Asignar teclas» en la parte inferior de 
 
 Las teclas son las mismas para todos los mandos de todos los proyectos y se guardan en este navegador, como los atajos. Un cambio aparece al momento en cada ventana de mando abierta, también en otras pestañas.
 
+## Teclas en la ventana de un teclado
+
+Mientras el campo de escritura de la [ventana de un teclado](docs:simulation#escribir-en-un-teclado) tiene el foco, las teclas van al circuito y los atajos de arriba no hacen nada. Cuatro teclas se comportan ahí de otra manera:
+
+| Tecla       | En el campo de escritura                 |
+| ----------- | ---------------------------------------- |
+| `Enter`     | Envía LF. La simulación sigue.           |
+| `Escape`    | Envía ESC. La ventana sigue abierta.     |
+| `Tab`       | Envía TAB. El foco se queda en el campo. |
+| `Shift+Tab` | Saca el foco del campo.                  |
+
+Las combinaciones con `Ctrl`, `Alt` o `⌘` van al navegador, así que `Ctrl+V` pega texto en el teclado. `AltGr` no es una de ellas: un carácter escrito con ella se envía. Una tecla envía el carácter que le da la distribución de tu teclado, por eso estas teclas no se reasignan como las de un mando.
+
 ## Ver también
 
 - [Tablero y herramientas](docs:board-and-tools): las herramientas y acciones detrás de estas teclas
