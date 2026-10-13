@@ -211,9 +211,9 @@ describe('SubCircuitWatchComponent', () => {
   /** Cont levels sent to one engine unit, in order. */
   function levels(unit: number): boolean[] {
     return fakeWorker
-      .postedOfKind('triggerInput')
-      .filter((msg) => msg.componentIndex === unit && msg.event === 0)
-      .map((msg) => msg.state[0]);
+      .sentWrites()
+      .filter((write) => write.unit === unit && write.event === 0)
+      .map((write) => write.state);
   }
 
   function copyButton(): ButtonComponent {

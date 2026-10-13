@@ -49,7 +49,10 @@ describe('InspectionSheetComponent with two gamepad tabs', () => {
       release: (slot) => {
         calls.push(`release ${pad.slotIds[slot]}`);
         pad.setActive(slot, false);
-      }
+      },
+      send: () => undefined,
+      cancel: () => undefined,
+      pending: () => 0
     };
     return {
       pad,

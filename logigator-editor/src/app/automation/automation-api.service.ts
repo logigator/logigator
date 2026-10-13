@@ -572,9 +572,8 @@ export class AutomationApiService {
 
   /**
    * Drives one slot, or every slot, of a lever, button or pulse button to an absolute state. The
-   * engine applies the input at its next tick — every slot of an array the same one while
-   * paused — so the deterministic recipe is
-   * `pause()` → `setInput()` → `step()` → `readPorts()`.
+   * engine applies the input at its next tick — every slot of an array the same one — so the
+   * deterministic recipe is `pause()` → `setInput()` → `step()` → `readPorts()`.
    */
   public async simSetInput(
     componentId: number,
@@ -595,10 +594,19 @@ export class AutomationApiService {
     ) {
       throw notAnInput();
     }
-    for (const write of resolveInputWrites(component, value, input)) {
-      if (!this.simulation.setUserInput(componentId, write.value, write.slot)) {
-        throw notAnInput();
-      }
+    const writes = resolveInputWrites(component, value, input);
+    const applied = Array.isArray(value)
+      ? this.simulation.setUserInputs(
+          componentId,
+          writes.map((write) => write.value)
+        )
+      : this.simulation.setUserInput(
+          componentId,
+          writes[0].value,
+          writes[0].slot
+        );
+    if (!applied) {
+      throw notAnInput();
     }
     await this.nextFrame();
   }
@@ -1089,10 +1097,15 @@ export class AutomationApiService {
     if (!isUserInput(component) || !watch.isLevelInput(component)) {
       throw notAnInput();
     }
-    for (const write of resolveInputWrites(component, value, input)) {
-      if (!watch.setInput(component, write.value, write.slot)) {
-        throw notAnInput();
-      }
+    const writes = resolveInputWrites(component, value, input);
+    const applied = Array.isArray(value)
+      ? watch.setInputs(
+          component,
+          writes.map((write) => write.value)
+        )
+      : watch.setInput(component, writes[0].value, writes[0].slot);
+    if (!applied) {
+      throw notAnInput();
     }
     await this.nextFrame();
   }
@@ -1485,8 +1498,8 @@ export function toGridRect(rect: Rectangle): GridRect {
 /**
  * The slot writes a `setInput` value stands for, validated whole before any
  * is applied: a boolean is one write to the slot `input` addresses, an array
- * one write per slot, in slot order. An array must have one element per slot
- * (`inputSlots`) and takes no address.
+ * one write per slot, in slot order, which reach the engine as one frame. An
+ * array must have one element per slot (`inputSlots`) and takes no address.
  */
 function resolveInputWrites(
   component: Component & UserInput,

@@ -180,6 +180,23 @@ export class SubCircuitWatch extends ComponentInspection {
     );
   }
 
+  /**
+   * {@link setInput} for every slot at once, `values[i]` for slot `i`, as one
+   * `state` frame, as `SimulationService.setUserInputs` does a top-level
+   * input. Reports whether the component is one of the level's user inputs
+   * with exactly that many slots.
+   */
+  public setInputs(component: Component, values: readonly boolean[]): boolean {
+    const level = this.activeLevel();
+    const unitIndex = this._unitIndexAt(level, component);
+    if (unitIndex === undefined) {
+      return false;
+    }
+    return this.simulation.setUnitInputs(unitIndex, component, values, () =>
+      level.session.project.triggerTicker('single')
+    );
+  }
+
   /** Breadcrumb navigation: pops every level deeper than `index`. */
   public navigateTo(index: number): void {
     const levels = this._levels();
@@ -301,11 +318,32 @@ export class SubCircuitWatch extends ComponentInspection {
     };
   }
 
-  /** An inspection's route into `level`: its presses hold the copy's slots. */
+  /**
+   * An inspection's route into `level`: its presses hold the copy's slots,
+   * and its frames go to the copy's units, resolved on every call like the
+   * holds.
+   */
   private _routeFor(level: WatchLevel, component: Component): InputRoute {
+    const unitIndex = () => this._unitIndexAt(level, component);
     return {
       press: (slot) => this._holdAt(level, component, slot)?.press(),
-      release: (slot) => this._holdAt(level, component, slot)?.release()
+      release: (slot) => this._holdAt(level, component, slot)?.release(),
+      send: (frames) => {
+        const base = unitIndex();
+        if (base !== undefined) {
+          this.simulation.sendUnitFrames(base, component, frames);
+        }
+      },
+      cancel: (reset) => {
+        const base = unitIndex();
+        if (base !== undefined) {
+          this.simulation.cancelUnitFrames(base, component, reset);
+        }
+      },
+      pending: () => {
+        const base = unitIndex();
+        return base === undefined ? 0 : this.simulation.pendingUnitFrames(base);
+      }
     };
   }
 

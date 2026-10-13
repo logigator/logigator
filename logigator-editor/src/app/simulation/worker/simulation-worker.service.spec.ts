@@ -7,7 +7,7 @@ import {
 } from '../../../testing/fake-simulation-worker';
 import { AnalyticsService } from '../../analytics/analytics.service';
 import { LinkStateApplier } from '../state/link-state-applier';
-import { packSnapshot } from './protocol';
+import { packSnapshot, UnitFrame } from './protocol';
 import {
   FRAME_SCHEDULER,
   SIMULATION_WORKER_FACTORY,
@@ -314,18 +314,77 @@ describe('SimulationWorkerService', () => {
     expect(service.tick()).toBe(0);
   });
 
-  it('forwards user inputs fire-and-forget', async () => {
+  it('forwards input frames and clears fire-and-forget', async () => {
+    await service.startSession(DESCRIPTOR, hooks);
+    const frames: UnitFrame[] = [
+      { kind: 'event', units: [[3, 0, true]], counted: false }
+    ];
+
+    service.queueFrames(3, frames);
+    service.clearFrames(3, [[3, 0, false]]);
+
+    expect(fakeWorker.postedOfKind('queueFrames')).toEqual([
+      expect.objectContaining({ queue: 3, frames })
+    ]);
+    expect(fakeWorker.postedOfKind('clearFrames')).toEqual([
+      expect.objectContaining({ queue: 3, reset: [[3, 0, false]] })
+    ]);
+  });
+
+  it('reports the counted frames a queue holds as of the last snapshot', async () => {
+    autoRespond = false;
+    const session = service.startSession(DESCRIPTOR, hooks);
+    fakeWorker.emit({ kind: 'ready' });
+    await vi.waitFor(() =>
+      expect(fakeWorker.postedOfKind('init')).toHaveLength(1)
+    );
+    fakeWorker.emit({
+      kind: 'ok',
+      reqId: fakeWorker.postedOfKind('init')[0].reqId
+    });
+    await session;
+    const snapshot = (reqId: number, queues?: [number, number][]) =>
+      fakeWorker.emit({
+        kind: 'snapshot',
+        reqId,
+        tick: reqId,
+        isDelta: true,
+        ...packSnapshot(undefined, new Uint8Array(0), new Uint8Array(0)),
+        ...(queues ? { queues } : {})
+      });
+
+    snapshot(1, [
+      [3, 12],
+      [9, 1]
+    ]);
+    expect(service.pendingFrames(3)).toBe(12);
+    expect(service.pendingFrames(9)).toBe(1);
+    expect(service.pendingFrames(4)).toBe(0);
+
+    // A snapshot without queues means none holds a counted frame.
+    snapshot(2);
+    expect(service.pendingFrames(3)).toBe(0);
+
+    snapshot(3, [[3, 5]]);
+    service.clearFrames(3, []);
+    expect(service.pendingFrames(3)).toBe(0);
+  });
+
+  it('pulls a snapshot for a counted frame queued while paused, so its count shows', async () => {
     await service.startSession(DESCRIPTOR, hooks);
 
-    service.triggerInput(3, 0, [true]);
+    service.queueFrames(3, [
+      { kind: 'event', units: [[3, 0, true]], counted: false }
+    ]);
+    expect(fakeWorker.postedOfKind('requestSnapshot')).toHaveLength(0);
 
-    const inputs = fakeWorker.postedOfKind('triggerInput');
-    expect(inputs).toHaveLength(1);
-    expect(inputs[0]).toMatchObject({
-      componentIndex: 3,
-      event: 0,
-      state: [true]
-    });
+    service.queueFrames(3, [
+      { kind: 'event', units: [[3, 0, true]], counted: true },
+      { kind: 'event', units: [[3, 0, false]], counted: true }
+    ]);
+    expect(fakeWorker.postedOfKind('requestSnapshot')).toHaveLength(1);
+    // Both wait behind the frame applied on arrival at this tick.
+    await vi.waitFor(() => expect(service.pendingFrames(3)).toBe(2));
   });
 
   it('reports worker faults to error tracking, but not session teardown', async () => {
@@ -384,8 +443,13 @@ describe('SimulationWorkerService', () => {
 
     // A switch tapped before the engine is up: reaching the worker, it would
     // fail there uncorrelated and take the session down.
-    service.triggerInput(3, 0, [true]);
-    expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+    const frames: UnitFrame[] = [
+      { kind: 'state', units: [[3, 0, true]], counted: false }
+    ];
+    service.queueFrames(3, frames);
+    service.clearFrames(3, [[3, 0, false]]);
+    expect(fakeWorker.postedOfKind('queueFrames')).toHaveLength(0);
+    expect(fakeWorker.postedOfKind('clearFrames')).toHaveLength(0);
 
     fakeWorker.emit({
       kind: 'ok',
@@ -393,8 +457,8 @@ describe('SimulationWorkerService', () => {
     });
     await session;
 
-    service.triggerInput(3, 0, [true]);
-    expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
+    service.queueFrames(3, frames);
+    expect(fakeWorker.postedOfKind('queueFrames')).toHaveLength(1);
     expect(hooks.onError).not.toHaveBeenCalled();
   });
 

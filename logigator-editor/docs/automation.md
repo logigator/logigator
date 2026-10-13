@@ -218,9 +218,15 @@ so read the returned `state`.
   element per slot and takes no `input`; either mistake is an error naming the
   slot count. It is validated whole before any slot is touched
   (`resolveInputWrites`, shared by `sim.` and `inspect.setInput`), then applied
-  slot by slot through the same absolute path, so an unchanged slot sends
-  nothing. Paused, every slot lands on the same next tick, which is what lets
-  the recipe above set a whole input in one `setInput` before its `step`.
+  through the same absolute path as **one** input frame of the slots that
+  change, so an unchanged slot sends nothing and every changed one lands on
+  the same tick, paused or running. That is what lets the recipe above set a
+  whole input in one `setInput` before its `step`.
+- `setInput` writes are `state` frames: written twice while paused, the next
+  `step` sees the last value and nothing in between. What a pointer does to a
+  button or a pulse button is an `event` instead, each on the outputs for a
+  tick of its own — so a button pressed and released while paused takes two
+  steps, high after the first and low after the second.
 - `step(count)` posts the ticks back to back and pulls **one** snapshot, so
   settling a circuit costs one round trip rather than one per tick.
 - `readPorts` builds a component → link-id reverse index once per compiled board

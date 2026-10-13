@@ -30,8 +30,14 @@ inspection sends its presses, so the inspection never resolves an engine unit
 itself. Where the component was opened decides the route: on the board it
 emits on the main project's `userInput$` (`emitUserInput(component, phase,
 slot)`), exactly as a press on the canvas does; in a watch it holds the copy's
-slot through that level (`SubCircuitWatch.holdFor`). The gamepad plays its
-slots through it; the ROM and the watch ignore it.
+slot through that level (`SubCircuitWatch.holdFor`). Beside the presses, the
+route queues [input frames](simulation.md#input-frames) on the component's
+own units (`send(frames)`), drops the ones still queued while applying a reset
+(`cancel(reset)`), and counts the counted ones left (`pending()`) — through
+`SimulationService.sendFrames` and its siblings on the board, through
+`sendUnitFrames` with the copy's resolved first unit in a watch. The gamepad
+plays its slots through `press` and `release`; the ROM and the watch ignore
+the route.
 
 ## Orchestration: `InspectionService`
 

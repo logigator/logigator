@@ -146,6 +146,52 @@ The engine runs inside the worker; the main thread **samples** it.
 - **`sync`** — not a worker mode: the engine idles and the bridge posts one
   `step` per rendered frame, capping the tick rate at the frame rate.
 
+### Input frames
+
+Every write a user input makes to the engine goes out as an **input frame**
+(`InputFrame` in `components/component-inspection.ts`): a set of slot writes
+(`SlotWrite` — slot, `drive`, value) the worker applies at one tick boundary,
+with no tick between them. There are two kinds, because inputs report two
+different things:
+
+- **`event`** — queued in order, and each is on the outputs for at least one
+  tick before the next frame of its queue applies. A press and its release
+  both reach the circuit however fast they came: a button tapped while paused
+  is high for one step and low after the next, and two pulse-button taps
+  between ticks give pulses on consecutive ticks.
+- **`state`** — a position, not a happening. It merges into the queue's last
+  frame when that one is a `state` frame not yet applied (the later write per
+  unit wins, two pulses on one unit stay one), and one arriving after an
+  applied `state` frame lands at that same boundary. A switch flipped on, off
+  and on while paused, or `setInput` called twice, shows the final state on
+  the next step and nothing in between. It never merges into an applied
+  frame or past a queued `event` frame, so it cannot reorder anything.
+
+`counted` marks a frame `pending()` counts, for an input that reports how much
+it still has to send.
+
+The service resolves a frame to units (`UnitFrame`: `[unit, event, state]`
+writes) and posts it as `queueFrames`, keyed by the input's **first unit**, so
+every input — and every watch copy, flattened to its own units — has its own
+queue and one never waits on another. `clearFrames` drops a queue and applies
+its `reset` writes at once. The merge happens in the worker, the only place
+that knows whether a frame has been applied.
+
+The worker's queues are `InputFrameQueues` (`input-frames.ts`), pure and
+engine-agnostic, so `input-frames.spec.ts` runs them against a fake engine.
+Each queue keeps a FIFO and the tick its last frame applied at; the pump
+applies a head frame only once `getStatus().tick` is past that tick (the
+`state`-after-`state` case aside), calling `triggerInput` for every write in
+one synchronous run. It runs when frames are queued, after a `step`, after each
+pace iteration in `target` mode, and on a 0 ms timer while a `continuous` run
+is active and a queue holds a frame — the run yields to the event loop between
+batches. A frame for an empty queue therefore applies as soon as it arrives,
+and while paused each `step` consumes at most one frame per queue. `init` and
+`stop` drop every queue. While any queue holds a counted frame, snapshots carry
+`queues: [queue, countedRemaining][]`, which the bridge keeps for
+`pendingFrames`; a counted frame queued while paused pulls a snapshot so its
+count shows.
+
 Independently the bridge pulls **one snapshot per `requestAnimationFrame`**, at
 most one in flight, so a slow worker answers late rather than piling up a queue.
 Simulation rate and render rate are fully decoupled.
@@ -167,8 +213,8 @@ between spawning the worker and its `init` ack, in which the worker holds no
 SIMULATION mode (and with it the tap path) while the engine is still booting. An
 input arriving then has no promise to fail, so the worker's error would come
 back uncorrelated and kill a session that was about to work. Hence the gate
-here, a matching drop in the worker for the three advisory kinds, and the
-`isReady()` guard in `_setLevel` and `_pulse` so a dropped input cannot leave a
+here, a matching drop in the worker for the advisory kinds, and the
+`isReady()` guard in `_drive` and `_send` so a dropped input cannot leave a
 slot showing a state the engine never received. Such inputs are dropped rather than queued:
 they have no tick to apply at. `requestSnapshot` is the exception —
 `wantFullSnapshot` survives the drop and is reissued once `init` acks.
@@ -287,18 +333,21 @@ interface alone, never by class. It has **slots**, one per output port and
 engine unit (see [Units and links](#units-and-links)); the button, switch and
 pulse button have the one slot `0`, the gamepad one per control. Two independent properties describe it:
 
-- **`drive`** — what the engine receives, and the service's only two
-  operations. `level` (button, switch): `_setLevel` sends `INPUT_EVENT_CONT`
-  with the slot's new state, which latches until the next one; it is
-  idempotent per slot — a slot already there sends nothing. `pulse` (pulse
-  button): `_pulse` sends `INPUT_EVENT_PULSE` (one tick) and flashes the slot
-  active for `PULSE_BUTTON_FLASH_MS`. Setting a level high and pulsing obey
-  the readiness rule; setting a level low always clears the visual and
-  reaches the engine whenever one is up.
-- **`gesture`** — how a pointer operates it, mapped onto a value in one
-  place, `_operate`: `hold` (button) is high on `press` and low on `release`,
-  `toggle` (switch) flips on a `tap`, `tap` (pulse button) is `true` on a
-  `tap`. Any other phase is ignored.
+- **`drive`** — what the engine receives. `_drive` sets slots to values and
+  sends the writes that result as one [input frame](#input-frames): a `level`
+  slot (button, switch) is written as `INPUT_EVENT_CONT` with its new state,
+  which latches until the next one, and is idempotent per slot — a slot
+  already there writes nothing; a `pulse` slot (pulse button) is written as
+  `INPUT_EVENT_PULSE` (one tick) and flashes active for
+  `PULSE_BUTTON_FLASH_MS`. Setting a level high and pulsing obey the readiness
+  rule; setting a level low always clears the visual and reaches the engine
+  whenever one is up. The visuals change when the frame is sent, so while
+  paused they lead the engine by up to a step.
+- **`gesture`** — how a pointer operates it, mapped onto a value and a frame
+  kind in one place, `_operate`: `hold` (button) is high on `press` and low on
+  `release`, `tap` (pulse button) is `true` on a `tap` — both reported as
+  `event` frames — and `toggle` (switch) flips on a `tap`, a `state` frame.
+  Any other phase is ignored.
 
 Only three pairs exist, and only they type-check: `UserInput` is the union of
 `LevelUserInput` (`level` with `hold` or `toggle`) and `PulseUserInput`
@@ -325,25 +374,39 @@ ignored.
 
 The service keeps every high `level` slot — toggled and held alike, per
 input, the board's and a watch's copies — so nothing outlives the session
-holding it high. `stop()` sets each low against the rebuilt engine once the
-reset lands, which also catches a press or toggle that reached the engine
+holding it high. `stop()` sets them low against the rebuilt engine once the
+reset lands, one `state` frame per input, which also catches a press or toggle that reached the engine
 while the reset was in flight; `exit()` clears them visually, the engine being
 gone. A hold still open afterwards releases nothing further. A watch copy
 whose `toggle` slot is posed high from its link on open is entered through
 `adoptHighLevel`, which tracks it without an engine event — the engine already
 holds it — so it is reset like any other.
 
-Callers pass an input's **first** unit and a slot, and the service is the one
-place that adds them (`unitOfSlot`). Top-level first units come from
-`CompiledBoard.userInputs` (`Component.id` → submission index); inner inputs
-operated in a watch arrive through `triggerUnitInput` with the first unit
-already resolved by the watch index and the phase read through the same
-gesture mapping. The automation API's `setUserInput` (and `setUnitInput`, its
-watch counterpart) drives one slot to an **absolute** state, which follows
-from the drive alone: a `level` slot is set to `value`, one already there
-being left alone, and a `pulse` slot pulses on `true` and ignores `false`,
-holding no state to clear. Both report `false` for a slot the input does not
-have.
+Callers pass an input's **first** unit and slots, and the service is the one
+place that turns `base + slot` and a `drive` into a unit and an engine event
+(`unitWrites`). Top-level first units come from `CompiledBoard.userInputs`
+(`Component.id` → submission index); inner inputs operated in a watch arrive
+through `triggerUnitInput` with the first unit already resolved by the watch
+index and the phase read through the same gesture mapping. The automation
+API's `setUserInput` (and `setUnitInput`, its watch counterpart) drives one
+slot to an **absolute** state, which follows from the drive alone: a `level`
+slot is set to `value`, one already there being left alone, and a `pulse` slot
+pulses on `true` and ignores `false`, holding no state to clear.
+`setUserInputs` (and `setUnitInputs`) takes one value per slot and sends
+**one** `state` frame of the slots that change, so all of them land on the
+same tick. All of them report `false` for a slot the input does not have, the
+array forms for a list that is not one value per slot.
+
+Beside the slot paths, `sendFrames(componentId, frames)` and
+`sendUnitFrames(unitIndex, component, frames)` queue frames on a component's
+units as they are, reading and setting no slot state — the component's
+visuals are the caller's. `cancelFrames` / `cancelUnitFrames` drop the frames
+still queued and apply a reset frame's writes at once, and `pendingFrames` /
+`pendingUnitFrames` report the counted frames still queued as of the last
+snapshot. A write addressing a slot past the component's outputs refuses the
+whole call. An inspection reaches all of them through its `InputRoute`
+(`send`, `cancel`, `pending` beside `press` and `release`), so it never
+resolves a unit itself.
 
 ---
 
@@ -358,8 +421,8 @@ have.
    `gesture` (how a pointer operates it: `hold`, `toggle` or `tap`). It needs
    no type id in any set and no branch anywhere: the compiler emits it as one
    `ENGINE_USER_INPUT_TYPE` (200) unit per slot — the engine rejects any other
-   id, and pulse-vs-continuous is decided at `triggerInput` time from the
-   drive, not the descriptor — the service drives each slot through its own
+   id, and pulse-vs-continuous is decided when a frame is resolved to units,
+   from the drive, not the descriptor — the service drives each slot through its own
    unit, and the canvas, the watch and the automation API operate and address
    it by slot. With an `inspection` declared, a tap opens that instead and the
    inspection plays it through its `InputRoute`.

@@ -53,7 +53,10 @@ function recordingRoute(pad: GamepadComponent): InputRoute & {
     release: (slot) => {
       calls.push(`release ${pad.slotIds[slot]}`);
       pad.setActive(slot, false);
-    }
+    },
+    send: () => undefined,
+    cancel: () => undefined,
+    pending: () => 0
   };
 }
 

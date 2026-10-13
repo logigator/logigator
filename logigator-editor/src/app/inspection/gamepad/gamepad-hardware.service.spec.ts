@@ -56,7 +56,10 @@ function playedPad(options: Parameters<typeof makeGamepad>[0] = {}): {
     release: (slot) => {
       calls.push(`release ${pad.slotIds[slot]}`);
       pad.setActive(slot, false);
-    }
+    },
+    send: () => undefined,
+    cancel: () => undefined,
+    pending: () => 0
   };
   return { pad, inspection: new GamepadInspection(pad, route), calls };
 }

@@ -35,6 +35,7 @@ export class InspectionService {
   private readonly windowPresenter = inject(WindowInspectionPresenter);
   private readonly sheetPresenter = inject(SheetInspectionPresenter);
   private readonly analytics = inject(AnalyticsService);
+  private readonly simulation = inject(SimulationService);
 
   private readonly _open = signal<readonly OpenInspection[]>([]);
   /** The open inspections, in opening order. */
@@ -43,8 +44,7 @@ export class InspectionService {
   private requestSub?: Subscription;
 
   constructor() {
-    const simulationService = inject(SimulationService);
-    simulationService.frame$
+    this.simulation.frame$
       .pipe(takeUntilDestroyed())
       .subscribe(() => this._onFrame());
 
@@ -174,6 +174,11 @@ export class InspectionService {
     }
   }
 
+  /**
+   * The route of a top-level component: presses join the board's user-input
+   * stream, as a press on the canvas does, and frames go to the component's
+   * own units.
+   */
   private _topLevelRoute(component: Component): InputRoute {
     return {
       press: (slot) =>
@@ -183,7 +188,10 @@ export class InspectionService {
       release: (slot) =>
         this.projectService
           .mainProject()
-          ?.emitUserInput(component, 'release', slot)
+          ?.emitUserInput(component, 'release', slot),
+      send: (frames) => this.simulation.sendFrames(component.id, frames),
+      cancel: (reset) => this.simulation.cancelFrames(component.id, reset),
+      pending: () => this.simulation.pendingFrames(component.id)
     };
   }
 

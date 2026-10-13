@@ -1,8 +1,12 @@
+import { InputFrameQueues } from '../app/simulation/worker/input-frames';
 import {
+  InputEventKind,
   MainToWorkerMessage,
   packSnapshot,
+  UnitFrame,
   WorkerToMainMessage
 } from '../app/simulation/worker/protocol';
+import { FakeFrameEngine } from './fake-frame-engine';
 
 /**
  * Message-level stand-in for the simulation worker, structurally compatible
@@ -10,10 +14,15 @@ import {
  * `emit()` delivers worker→main messages.
  *
  * With `autoRespond` it behaves like a healthy worker: `ready` after
- * construction, `ok` for every correlated request, an empty-delta snapshot per
- * `requestSnapshot`, a `status` with `statusTick` per `requestStatus` — all on
- * microtasks, like real worker messages. Turn it off to script the
- * conversation manually.
+ * construction, `ok` for every correlated request, an empty-delta snapshot
+ * carrying the queues' counted remainder per `requestSnapshot`, a `status`
+ * with `statusTick` per `requestStatus` — all on microtasks, like real worker
+ * messages. Turn it off to script the conversation manually.
+ *
+ * Whatever it responds, it runs the worker's input-frame queues against a
+ * {@link FakeFrameEngine} as each message is posted: `step` ticks the engine
+ * and pumps, `init` and `stop` rebuild it and drop every queue. `engine`
+ * then answers what the circuit sees, tick by tick.
  */
 export class FakeSimulationWorker {
   public posted: MainToWorkerMessage[] = [];
@@ -23,6 +32,8 @@ export class FakeSimulationWorker {
   public terminated = false;
   /** Tick reported by auto-responded status messages. */
   public statusTick = 0;
+  public readonly engine = new FakeFrameEngine();
+  private readonly frames = new InputFrameQueues(this.engine);
 
   constructor(public autoRespond = true) {
     if (autoRespond) {
@@ -36,6 +47,7 @@ export class FakeSimulationWorker {
 
   public postMessage(msg: MainToWorkerMessage): void {
     this.posted.push(msg);
+    this.runFrames(msg);
     if (!this.autoRespond || this.terminated) {
       return;
     }
@@ -44,15 +56,18 @@ export class FakeSimulationWorker {
         return;
       }
       switch (msg.kind) {
-        case 'requestSnapshot':
+        case 'requestSnapshot': {
+          const queues = this.frames.countedRemaining();
           this.emit({
             kind: 'snapshot',
             reqId: msg.reqId,
             tick: this.statusTick,
             isDelta: true,
-            ...packSnapshot(undefined, new Uint8Array(0), new Uint8Array(0))
+            ...packSnapshot(undefined, new Uint8Array(0), new Uint8Array(0)),
+            ...(queues.length > 0 ? { queues } : {})
           });
           break;
+        }
         case 'requestStatus':
           this.emit({
             kind: 'status',
@@ -80,6 +95,48 @@ export class FakeSimulationWorker {
 
   public terminate(): void {
     this.terminated = true;
+  }
+
+  /**
+   * Every unit write of every queued frame, in posting order, beside its
+   * frame's kind — what was sent, whether or not the queue applied it yet.
+   */
+  public sentWrites(): {
+    kind: UnitFrame['kind'];
+    unit: number;
+    event: InputEventKind;
+    state: boolean;
+  }[] {
+    return this.postedOfKind('queueFrames').flatMap((msg) =>
+      msg.frames.flatMap((frame) =>
+        frame.units.map(([unit, event, state]) => ({
+          kind: frame.kind,
+          unit,
+          event,
+          state
+        }))
+      )
+    );
+  }
+
+  private runFrames(msg: MainToWorkerMessage): void {
+    switch (msg.kind) {
+      case 'init':
+      case 'stop':
+        this.engine.reset();
+        this.frames.dropAll();
+        break;
+      case 'step':
+        this.engine.step();
+        this.frames.pump();
+        break;
+      case 'queueFrames':
+        this.frames.enqueue(msg.queue, msg.frames);
+        break;
+      case 'clearFrames':
+        this.frames.clear(msg.queue, msg.reset);
+        break;
+    }
   }
 
   /** Messages of one kind, for focused assertions. */

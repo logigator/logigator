@@ -199,14 +199,10 @@ describe('SubCircuitWatch', () => {
     watch.activate(switchCopy);
 
     expect((switchCopy as SwitchComponent).isActive(0)).toBe(true);
-    const inputs = fakeWorker.postedOfKind('triggerInput');
-    expect(inputs).toHaveLength(1);
     // The flattened board's only unit is the inner switch — index 0.
-    expect(inputs[0]).toMatchObject({
-      componentIndex: 0,
-      event: 0,
-      state: [true]
-    });
+    expect(fakeWorker.sentWrites()).toEqual([
+      { kind: 'state', unit: 0, event: 0, state: true }
+    ]);
 
     watch.destroy();
   });
@@ -228,9 +224,9 @@ describe('SubCircuitWatch', () => {
     /** Cont events sent to the flattened board's only unit, the button. */
     const levels = () =>
       fakeWorker
-        .postedOfKind('triggerInput')
-        .filter((msg) => msg.componentIndex === 0 && msg.event === 0)
-        .map((msg) => msg.state[0]);
+        .sentWrites()
+        .filter((write) => write.unit === 0 && write.event === 0)
+        .map((write) => write.state);
 
     it('is held for as long as its hold lasts', () => {
       const hold = watch.holdFor(buttonCopy)!;
@@ -281,6 +277,29 @@ describe('SubCircuitWatch', () => {
       expect(levels()).toEqual([true]);
       route.release(0);
       expect(levels()).toEqual([true, false]);
+
+      route.send([
+        {
+          kind: 'event',
+          writes: [{ slot: 0, drive: 'level', value: true }],
+          counted: true
+        }
+      ]);
+      expect(fakeWorker.postedOfKind('queueFrames').at(-1)).toMatchObject({
+        queue: 0,
+        frames: [{ kind: 'event', units: [[0, 0, true]], counted: true }]
+      });
+      // Frames leave the copy's slot state alone.
+      expect(buttonCopy.isActive(0)).toBe(false);
+
+      route.cancel({
+        kind: 'state',
+        writes: [{ slot: 0, drive: 'level', value: false }]
+      });
+      expect(fakeWorker.postedOfKind('clearFrames')).toEqual([
+        expect.objectContaining({ queue: 0, reset: [[0, 0, false]] })
+      ]);
+      expect(route.pending()).toBe(0);
     });
 
     it('takes an absolute value through setInput', () => {
@@ -324,14 +343,13 @@ describe('SubCircuitWatch', () => {
     /** Cont events sent to the unit of one of the copy's controls. */
     const levelsOf = (control: string) =>
       fakeWorker
-        .postedOfKind('triggerInput')
+        .sentWrites()
         .filter(
-          (msg) =>
-            msg.componentIndex ===
-              base + padCopy.slotIds.indexOf(control as never) &&
-            msg.event === 0
+          (write) =>
+            write.unit === base + padCopy.slotIds.indexOf(control as never) &&
+            write.event === 0
         )
-        .map((msg) => msg.state[0]);
+        .map((write) => write.state);
 
     /** Stops the simulation and waits for the reset to land. */
     async function stop(): Promise<void> {
@@ -401,9 +419,13 @@ describe('SubCircuitWatch', () => {
       const reset = posted.findIndex((msg) => msg.kind === 'stop');
       const low = posted.findIndex(
         (msg) =>
-          msg.kind === 'triggerInput' &&
-          msg.componentIndex === base + padCopy.slotIds.indexOf('a') &&
-          msg.state[0] === false
+          msg.kind === 'queueFrames' &&
+          msg.frames.some((frame) =>
+            frame.units.some(
+              ([unit, , state]) =>
+                unit === base + padCopy.slotIds.indexOf('a') && !state
+            )
+          )
       );
       expect(reset).toBeGreaterThanOrEqual(0);
       expect(low).toBeGreaterThan(reset);

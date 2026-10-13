@@ -8,6 +8,23 @@ export const INPUT_EVENT_CONT = 0;
 export const INPUT_EVENT_PULSE = 1;
 export type InputEventKind = typeof INPUT_EVENT_CONT | typeof INPUT_EVENT_PULSE;
 
+/** One engine write: the unit, how its state is applied, and the state. */
+export type UnitWrite = [unit: number, event: InputEventKind, state: boolean];
+
+/**
+ * An input frame with its slots resolved to engine units: writes the worker
+ * applies at one tick boundary, with no tick between them. An `event` frame
+ * is on the outputs for at least one tick before the next frame of its queue
+ * applies; a `state` frame merges into the queue's last frame while that one
+ * is a `state` frame not yet applied. `counted` marks a frame the queue's
+ * remainder in snapshots counts.
+ */
+export interface UnitFrame {
+  kind: 'state' | 'event';
+  units: UnitWrite[];
+  counted: boolean;
+}
+
 /**
  * Worker-paced run modes. Sync-to-frame is not one: the bridge drives it with
  * one `step` per rendered frame, so the worker stays idle between messages.
@@ -25,13 +42,13 @@ export type MainToWorkerMessage =
   | { kind: 'step'; reqId: number }
   /** Destroy and rebuild from the kept descriptor; the engine has no reset. */
   | { kind: 'stop'; reqId: number }
-  | {
-      kind: 'triggerInput';
-      reqId: number;
-      componentIndex: number;
-      event: InputEventKind;
-      state: boolean[];
-    }
+  /**
+   * Appends frames to one input's queue, keyed by the input's first unit;
+   * each applies at a tick boundary of its own.
+   */
+  | { kind: 'queueFrames'; reqId: number; queue: number; frames: UnitFrame[] }
+  /** Drops one input's queued frames and applies `reset` at once. */
+  | { kind: 'clearFrames'; reqId: number; queue: number; reset: UnitWrite[] }
   /** `full` forces a full snapshot, seeding a fresh watch applier. */
   | { kind: 'requestSnapshot'; reqId: number; full?: boolean }
   | { kind: 'requestStatus'; reqId: number }
@@ -52,6 +69,11 @@ export interface SnapshotMessage {
   valuesByteLength: number;
   /** Transferred payload: ids at offset 0, values right after. */
   buffer: ArrayBuffer;
+  /**
+   * `[queue, counted frames not yet applied]` for every queue holding one;
+   * absent while none does.
+   */
+  queues?: [queue: number, counted: number][];
 }
 
 export type WorkerToMainMessage =

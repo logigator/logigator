@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { Component } from '../components/component';
+import { InputFrame, SlotWrite } from '../components/component-inspection';
 import {
   isUserInput,
   LevelUserInput,
@@ -24,7 +25,12 @@ import { CompiledBoard, TOP_LEVEL_PATH } from './compiler/compiled-board.model';
 import { CompileDiagnostic } from './compiler/compile-error';
 import { LinkStateApplier, SnapshotApplier } from './state/link-state-applier';
 import { MIN_TARGET_HZ } from './worker/pacing';
-import { INPUT_EVENT_CONT, INPUT_EVENT_PULSE } from './worker/protocol';
+import {
+  INPUT_EVENT_CONT,
+  INPUT_EVENT_PULSE,
+  UnitFrame,
+  UnitWrite
+} from './worker/protocol';
 import {
   SimulationRunMode,
   SimulationWorkerService
@@ -95,11 +101,11 @@ export class SimulationService {
   // Every snapshot applied to the board applier is fanned out to these too.
   private readonly _watchAppliers = new Set<SnapshotApplier>();
   // `level` slots currently high, the board's and a watch's copies alike,
-  // with what setting each low needs — so a stop or exit can reset every one
+  // with what setting them low needs — so a stop or exit can reset every one
   // of them.
   private readonly _highLevels = new Map<
     Component & LevelUserInput,
-    Map<number, { unitIndex: number | undefined; repaint: () => void }>
+    { base: number | undefined; repaint: () => void; slots: Set<number> }
   >();
 
   constructor() {
@@ -467,21 +473,29 @@ export class SimulationService {
    * which its `drive` alone decides: a `level` slot is set to `value` — one
    * already there is left alone, so repeating the call sends no further
    * engine event — and a `pulse` slot pulses on `true` and ignores `false`,
-   * holding no state to clear. Reports whether the component is a user input
-   * of the running session with that slot.
+   * holding no state to clear. The write is a `state` frame. Reports whether
+   * the component is a user input of the running session with that slot.
    */
   public setUserInput(componentId: number, value: boolean, slot = 0): boolean {
+    return this._setTopLevel(componentId, [{ slot, value }]);
+  }
+
+  /**
+   * {@link setUserInput} for every slot at once, `values[i]` for slot `i`,
+   * sent as **one** `state` frame of the slots that change, so all of them
+   * land on the same tick. Refuses the whole call, writing nothing, unless
+   * there is exactly one value per slot.
+   */
+  public setUserInputs(
+    componentId: number,
+    values: readonly boolean[]
+  ): boolean {
     const component = this._project?.getComponentById(componentId);
-    const unitIndex = this._board?.userInputs.get(componentId);
-    if (!component || unitIndex === undefined) {
-      return false;
-    }
-    return this._setAbsolute(
-      component,
-      unitIndex,
-      value,
-      () => this._project?.triggerTicker('single'),
-      slot
+    return (
+      !!component &&
+      isUserInput(component) &&
+      values.length === component.inputSlots &&
+      this._setTopLevel(componentId, everySlot(values))
     );
   }
 
@@ -497,25 +511,134 @@ export class SimulationService {
     repaint: () => void,
     slot = 0
   ): boolean {
-    return this._setAbsolute(component, unitIndex, value, repaint, slot);
+    return this._setAbsolute(component, unitIndex, [{ slot, value }], repaint);
   }
 
-  private _setAbsolute(
-    component: Component,
+  /** {@link setUserInputs} for an inner user input of a watch. */
+  public setUnitInputs(
     unitIndex: number,
-    value: boolean,
-    repaint: () => void,
-    slot: number
+    component: Component,
+    values: readonly boolean[],
+    repaint: () => void
   ): boolean {
-    if (!isUserInput(component) || !isSlotOf(component, slot)) {
+    return (
+      isUserInput(component) &&
+      values.length === component.inputSlots &&
+      this._setAbsolute(component, unitIndex, everySlot(values), repaint)
+    );
+  }
+
+  /**
+   * Queues input frames on the units of a top-level component whose units
+   * the session records as an input's (`CompiledBoard.userInputs`). The
+   * frames reach the engine as they are: no slot state of the component is
+   * read or set, so its visuals are the caller's. Refuses the whole call,
+   * sending nothing, when a write addresses a slot past the component's
+   * outputs. Frames sent before the engine is ready are dropped.
+   */
+  public sendFrames(
+    componentId: number,
+    frames: readonly InputFrame[]
+  ): boolean {
+    const component = this._project?.getComponentById(componentId);
+    const base = this._board?.userInputs.get(componentId);
+    return (
+      !!component &&
+      base !== undefined &&
+      this.sendUnitFrames(base, component, frames)
+    );
+  }
+
+  /**
+   * {@link sendFrames} for a component whose first unit is already resolved
+   * — a copy in a watch, `unitIndex` coming from the watch index.
+   */
+  public sendUnitFrames(
+    unitIndex: number,
+    component: Component,
+    frames: readonly InputFrame[]
+  ): boolean {
+    if (!frames.every((frame) => writesFit(component, frame.writes))) {
       return false;
     }
-    const unit = unitOfSlot(unitIndex, slot);
-    if (component.drive === 'level') {
-      this._setLevel(component, slot, unit, value, repaint);
-    } else if (value) {
-      this._pulse(component, slot, unit, repaint);
+    this._send(unitIndex, frames);
+    return true;
+  }
+
+  /**
+   * Drops the frames still queued for a top-level component and applies
+   * `reset`'s writes at once. Refused like {@link sendFrames}.
+   */
+  public cancelFrames(componentId: number, reset: InputFrame): boolean {
+    const component = this._project?.getComponentById(componentId);
+    const base = this._board?.userInputs.get(componentId);
+    return (
+      !!component &&
+      base !== undefined &&
+      this.cancelUnitFrames(base, component, reset)
+    );
+  }
+
+  /** {@link cancelFrames} for a component whose first unit is resolved. */
+  public cancelUnitFrames(
+    unitIndex: number,
+    component: Component,
+    reset: InputFrame
+  ): boolean {
+    if (!writesFit(component, reset.writes)) {
+      return false;
     }
+    if (this.isReady()) {
+      this.workerService.clearFrames(
+        unitIndex,
+        unitWrites(unitIndex, reset.writes)
+      );
+    }
+    return true;
+  }
+
+  /**
+   * How many `counted` frames a top-level component still has queued, as of
+   * the last applied snapshot.
+   */
+  public pendingFrames(componentId: number): number {
+    const base = this._board?.userInputs.get(componentId);
+    return base === undefined ? 0 : this.pendingUnitFrames(base);
+  }
+
+  /** {@link pendingFrames} for a component whose first unit is resolved. */
+  public pendingUnitFrames(unitIndex: number): number {
+    return this.isReady() ? this.workerService.pendingFrames(unitIndex) : 0;
+  }
+
+  private _setTopLevel(
+    componentId: number,
+    values: readonly SlotValue[]
+  ): boolean {
+    const component = this._project?.getComponentById(componentId);
+    const base = this._board?.userInputs.get(componentId);
+    if (!component || base === undefined) {
+      return false;
+    }
+    return this._setAbsolute(component, base, values, () =>
+      this._project?.triggerTicker('single')
+    );
+  }
+
+  /** Absolute values through {@link _drive}, as one `state` frame. */
+  private _setAbsolute(
+    component: Component,
+    base: number,
+    values: readonly SlotValue[],
+    repaint: () => void
+  ): boolean {
+    if (
+      !isUserInput(component) ||
+      !values.every(({ slot }) => isSlotOf(component, slot))
+    ) {
+      return false;
+    }
+    this._drive(component, base, values, 'state', repaint);
     return true;
   }
 
@@ -539,7 +662,7 @@ export class SimulationService {
     ) {
       return;
     }
-    this._trackLevel(component, slot, unitOfSlot(unitIndex, slot), repaint);
+    this._trackLevel(component, slot, unitIndex, repaint);
     component.setActive(slot, true);
     repaint();
   }
@@ -547,12 +670,14 @@ export class SimulationService {
   /**
    * A pointer operation on a slot, mapped through the input's `gesture`: a
    * `hold` slot is set high on press and low on release, a `toggle` slot
-   * flips on a tap, a `tap` (pulse) slot pulses on a tap. A phase the gesture
-   * does not use, and a slot the input does not have, is ignored.
+   * flips on a tap, a `tap` (pulse) slot pulses on a tap. A hold and a tap
+   * report events, so each goes out as an `event` frame; a toggle reports a
+   * position, a `state` frame. A phase the gesture does not use, and a slot
+   * the input does not have, is ignored.
    */
   private _operate(
     component: Component,
-    unitIndex: number | undefined,
+    base: number | undefined,
     phase: UserInputPhase,
     repaint: () => void,
     slot: number
@@ -560,136 +685,199 @@ export class SimulationService {
     if (!isUserInput(component) || !isSlotOf(component, slot)) {
       return;
     }
-    const unit = unitOfSlot(unitIndex, slot);
     if (component.drive === 'pulse') {
       if (phase === 'tap') {
-        this._pulse(component, slot, unit, repaint);
+        this._drive(component, base, [{ slot, value: true }], 'event', repaint);
       }
     } else if (component.gesture === 'hold') {
       if (phase !== 'tap') {
-        this._setLevel(component, slot, unit, phase === 'press', repaint);
+        const value = phase === 'press';
+        this._drive(component, base, [{ slot, value }], 'event', repaint);
       }
     } else if (phase === 'tap') {
-      this._setLevel(component, slot, unit, !component.isActive(slot), repaint);
+      const value = !component.isActive(slot);
+      this._drive(component, base, [{ slot, value }], 'state', repaint);
     }
   }
 
   /**
-   * Sets one `level` slot high or low with `INPUT_EVENT_CONT`; a slot already
-   * there is left alone, so the engine never sees the same state twice.
-   * Setting it high obeys {@link _pulse}'s readiness rule, while setting it
-   * low always clears the visual and reaches the engine whenever one is up.
-   * `unitIndex` is the slot's own unit.
+   * Drives slots of a user input to the given values, by its `drive`, and
+   * sends the writes that result as one frame of `kind`. A `level` slot
+   * already at its value is left alone, so the engine never sees the same
+   * state twice; setting one high obeys the readiness rule, while setting one
+   * low always clears the visual. A `pulse` slot pulses on `true` — obeying
+   * the readiness rule and flashing active for {@link PULSE_BUTTON_FLASH_MS}
+   * — and ignores `false`. `base` is the input's first unit.
    */
-  private _setLevel(
-    input: Component & LevelUserInput,
-    slot: number,
-    unitIndex: number | undefined,
-    high: boolean,
-    repaint: () => void
-  ): void {
-    if (input.isActive(slot) === high) {
-      return;
-    }
-    if (high) {
-      if (!this.isReady()) {
-        return;
-      }
-      this._trackLevel(input, slot, unitIndex, repaint);
-    } else {
-      this._forgetLevel(input, slot);
-    }
-    input.setActive(slot, high);
-    if (unitIndex !== undefined && this.isReady()) {
-      this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [high]);
-    }
-    repaint();
-  }
-
-  private _trackLevel(
-    input: Component & LevelUserInput,
-    slot: number,
-    unitIndex: number | undefined,
-    repaint: () => void
-  ): void {
-    let slots = this._highLevels.get(input);
-    if (!slots) {
-      slots = new Map();
-      this._highLevels.set(input, slots);
-    }
-    slots.set(slot, { unitIndex, repaint });
-  }
-
-  private _forgetLevel(input: Component & LevelUserInput, slot: number): void {
-    const slots = this._highLevels.get(input);
-    slots?.delete(slot);
-    if (slots?.size === 0) {
-      this._highLevels.delete(input);
-    }
-  }
-
-  /** Sets every high `level` slot low, the engine's unit included. */
-  private _resetLevels(): void {
-    for (const [input, slots] of [...this._highLevels]) {
-      for (const [slot, { unitIndex, repaint }] of [...slots]) {
-        if (!input.destroyed) {
-          this._setLevel(input, slot, unitIndex, false, repaint);
-          continue;
-        }
-        // A copy freed while high has nothing left to draw, but its engine
-        // unit still reads high.
-        this._forgetLevel(input, slot);
-        if (unitIndex !== undefined && this.isReady()) {
-          this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [false]);
-        }
-      }
-    }
-  }
-
-  /**
-   * Pulses one `pulse` slot: `INPUT_EVENT_PULSE` (one tick), with the slot
-   * flashing active for {@link PULSE_BUTTON_FLASH_MS}.
-   */
-  private _pulse(
-    input: Component & PulseUserInput,
-    slot: number,
-    unitIndex: number | undefined,
+  private _drive(
+    input: Component & UserInput,
+    base: number | undefined,
+    values: readonly SlotValue[],
+    kind: InputFrame['kind'],
     repaint: () => void
   ): void {
     // Inputs are live from the moment simulation mode is entered, while the
     // engine is still starting. The worker drops inputs from that window, so
     // changing the visuals would show a state the engine never received.
-    if (!this.isReady()) {
+    const ready = this.isReady();
+    const writes: SlotWrite[] = [];
+    for (const { slot, value } of values) {
+      if (input.drive === 'level') {
+        if (input.isActive(slot) === value || (value && !ready)) {
+          continue;
+        }
+        if (value) {
+          this._trackLevel(input, slot, base, repaint);
+        } else {
+          this._forgetLevel(input, slot);
+        }
+        input.setActive(slot, value);
+        writes.push({ slot, drive: 'level', value });
+      } else if (value && ready) {
+        this._flash(input, slot, repaint);
+        writes.push({ slot, drive: 'pulse', value });
+      }
+    }
+    if (writes.length === 0) {
       return;
     }
+    this._send(base, [{ kind, writes }]);
+    repaint();
+  }
+
+  /** Shows a pulsed slot active for {@link PULSE_BUTTON_FLASH_MS}. */
+  private _flash(
+    input: Component & PulseUserInput,
+    slot: number,
+    repaint: () => void
+  ): void {
     input.setActive(slot, true);
-    if (unitIndex !== undefined) {
-      this.workerService.triggerInput(unitIndex, INPUT_EVENT_PULSE, [true]);
-    }
     setTimeout(() => {
       if (!input.destroyed) {
         input.setActive(slot, false);
         repaint();
       }
     }, PULSE_BUTTON_FLASH_MS);
-    repaint();
   }
+
+  /**
+   * Resolves frames to units and queues them on the input whose first unit
+   * is `base`, which keys its queue. Nothing reaches the worker while the
+   * engine is not ready.
+   */
+  private _send(base: number | undefined, frames: readonly InputFrame[]): void {
+    if (base === undefined || !this.isReady()) {
+      return;
+    }
+    const unitFrames: UnitFrame[] = [];
+    for (const frame of frames) {
+      const units = unitWrites(base, frame.writes);
+      if (units.length > 0) {
+        unitFrames.push({
+          kind: frame.kind,
+          units,
+          counted: frame.counted === true
+        });
+      }
+    }
+    if (unitFrames.length > 0) {
+      this.workerService.queueFrames(base, unitFrames);
+    }
+  }
+
+  private _trackLevel(
+    input: Component & LevelUserInput,
+    slot: number,
+    base: number | undefined,
+    repaint: () => void
+  ): void {
+    const held = this._highLevels.get(input);
+    if (held) {
+      held.slots.add(slot);
+    } else {
+      this._highLevels.set(input, { base, repaint, slots: new Set([slot]) });
+    }
+  }
+
+  private _forgetLevel(input: Component & LevelUserInput, slot: number): void {
+    const held = this._highLevels.get(input);
+    held?.slots.delete(slot);
+    if (held?.slots.size === 0) {
+      this._highLevels.delete(input);
+    }
+  }
+
+  /**
+   * Sets every high `level` slot low, the engine's units included: one
+   * `state` frame per input.
+   */
+  private _resetLevels(): void {
+    for (const [input, { base, repaint, slots }] of [...this._highLevels]) {
+      const values = [...slots].map((slot) => ({ slot, value: false }));
+      if (!input.destroyed) {
+        this._drive(input, base, values, 'state', repaint);
+        continue;
+      }
+      // A copy freed while high has nothing left to draw, but its engine
+      // units still read high.
+      this._highLevels.delete(input);
+      this._send(base, [
+        {
+          kind: 'state',
+          writes: values.map(({ slot }) => ({
+            slot,
+            drive: 'level',
+            value: false
+          }))
+        }
+      ]);
+    }
+  }
+}
+
+/** One slot and the absolute value it is driven to. */
+interface SlotValue {
+  slot: number;
+  value: boolean;
+}
+
+/** `values[i]` for slot `i`. */
+function everySlot(values: readonly boolean[]): SlotValue[] {
+  return values.map((value, slot) => ({ slot, value }));
 }
 
 function isSlotOf(input: UserInput, slot: number): boolean {
   return Number.isInteger(slot) && slot >= 0 && slot < input.inputSlots;
 }
 
+/** Whether every write addresses one of the component's output ports. */
+function writesFit(
+  component: Component,
+  writes: readonly SlotWrite[]
+): boolean {
+  return writes.every(
+    ({ slot }) =>
+      Number.isInteger(slot) && slot >= 0 && slot < component.numOutputs
+  );
+}
+
 /**
- * Where a slot becomes an engine unit: a user input's units are contiguous
- * from its first, `base`, slot `i` at `base + i`. Callers resolve and pass
- * the base only.
+ * Where a slot becomes an engine unit and a drive an engine event: an
+ * input's units are contiguous from its first, `base`, slot `i` at
+ * `base + i`. A `level` write is a `Cont` event carrying the value, a `pulse`
+ * write on `true` a `Pulse`; a `pulse` write on `false` writes nothing.
+ * Callers resolve and pass the base only.
  */
-function unitOfSlot(
-  base: number | undefined,
-  slot: number
-): number | undefined {
-  return base === undefined ? undefined : base + slot;
+function unitWrites(base: number, writes: readonly SlotWrite[]): UnitWrite[] {
+  const units: UnitWrite[] = [];
+  for (const { slot, drive, value } of writes) {
+    if (drive === 'level') {
+      units.push([base + slot, INPUT_EVENT_CONT, value]);
+    } else if (value) {
+      units.push([base + slot, INPUT_EVENT_PULSE, true]);
+    }
+  }
+  return units;
 }
 
 function clockDelaysOf(board: CompiledBoard): number[] {

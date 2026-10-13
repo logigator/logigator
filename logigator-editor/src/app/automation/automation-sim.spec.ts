@@ -142,7 +142,7 @@ describe('AutomationApiService simulation', () => {
     await api.simSetInput(lever.id, true);
 
     expect(lever.isActive(0)).toBe(true);
-    expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
+    expect(fakeWorker.sentWrites()).toHaveLength(1);
   });
 
   it('setInput rejects a component that is not a user input', async () => {
@@ -164,9 +164,10 @@ describe('AutomationApiService simulation', () => {
 
     await api.simSetInput(button.id, false);
     expect(button.isActive(0)).toBe(false);
-    expect(
-      fakeWorker.postedOfKind('triggerInput').map((msg) => msg.state)
-    ).toEqual([[true], [false]]);
+    expect(fakeWorker.sentWrites().map((write) => write.state)).toEqual([
+      true,
+      false
+    ]);
   });
 
   describe('setInput with a slot address', () => {
@@ -182,9 +183,7 @@ describe('AutomationApiService simulation', () => {
 
     /** Cont events sent per unit, in order. */
     const sent = () =>
-      fakeWorker
-        .postedOfKind('triggerInput')
-        .map((msg) => [msg.componentIndex, msg.state[0]]);
+      fakeWorker.sentWrites().map((write) => [write.unit, write.state]);
 
     it('reaches the same unit by slot id and by index', async () => {
       await api.simSetInput(input.id, true, 'b');
@@ -229,9 +228,7 @@ describe('AutomationApiService simulation', () => {
     });
 
     const sent = () =>
-      fakeWorker
-        .postedOfKind('triggerInput')
-        .map((msg) => [msg.componentIndex, msg.state[0]]);
+      fakeWorker.sentWrites().map((write) => [write.unit, write.state]);
 
     it('sets each slot absolutely, sending only for the ones that change', async () => {
       await api.simSetInput(input.id, [true, false, true]);
@@ -239,6 +236,7 @@ describe('AutomationApiService simulation', () => {
         [base, true],
         [base + 2, true]
       ]);
+      expect(fakeWorker.postedOfKind('queueFrames')).toHaveLength(1);
 
       await api.simSetInput(input.id, [true, false, true]);
       expect(sent()).toHaveLength(2);
@@ -280,9 +278,7 @@ describe('AutomationApiService simulation', () => {
     await api.simEnter();
     const base = simulation.board!.userInputs.get(pad.id)!;
     const sent = () =>
-      fakeWorker
-        .postedOfKind('triggerInput')
-        .map((msg) => [msg.componentIndex, msg.state[0]]);
+      fakeWorker.sentWrites().map((write) => [write.unit, write.state]);
 
     // Addressed by id, never by the custom name; the ids follow the options.
     await api.simSetInput(pad.id, true, 'a');
@@ -304,6 +300,33 @@ describe('AutomationApiService simulation', () => {
     ]);
   });
 
+  it('sets a gamepad array as one frame while running, so its slots land on one tick', async () => {
+    const pad = makeGamepad();
+    project.addComponent(pad);
+    await api.simEnter();
+    simulation.play();
+    await api.simSetInput(pad.id, true, 0);
+    const base = simulation.board!.userInputs.get(pad.id)!;
+
+    // Slot 0 falls and every odd slot rises; the rest stay low, unsent.
+    await api.simSetInput(
+      pad.id,
+      pad.slotIds.map((_, slot) => slot % 2 === 1)
+    );
+
+    const queued = fakeWorker.postedOfKind('queueFrames');
+    expect(queued).toHaveLength(2);
+    expect(queued[1].frames).toEqual([
+      {
+        kind: 'state',
+        units: pad.slotIds
+          .map((_, slot) => [base + slot, 0, slot % 2 === 1])
+          .filter(([, , state], slot) => state || slot === 0),
+        counted: false
+      }
+    ]);
+  });
+
   it('setInput takes a one-element array on a lever', async () => {
     const lever = makeSwitch();
     project.addComponent(lever);
@@ -312,7 +335,7 @@ describe('AutomationApiService simulation', () => {
     await api.simSetInput(lever.id, [true]);
 
     expect(lever.isActive(0)).toBe(true);
-    expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
+    expect(fakeWorker.sentWrites()).toHaveLength(1);
   });
 
   it('setInput rejects a slot past 0 on a lever', async () => {
@@ -332,11 +355,11 @@ describe('AutomationApiService simulation', () => {
     await api.simEnter();
 
     await api.simSetInput(button.id, [false]);
-    expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+    expect(fakeWorker.sentWrites()).toHaveLength(0);
 
     await api.simSetInput(button.id, [true]);
-    expect(fakeWorker.postedOfKind('triggerInput')).toEqual([
-      expect.objectContaining({ event: 1, state: [true] })
+    expect(fakeWorker.sentWrites()).toEqual([
+      expect.objectContaining({ kind: 'state', event: 1, state: true })
     ]);
   });
 
@@ -347,9 +370,10 @@ describe('AutomationApiService simulation', () => {
 
     await api.simSetInput(button.id, true);
 
-    expect(fakeWorker.postedOfKind('triggerInput')[0]).toMatchObject({
+    expect(fakeWorker.sentWrites()[0]).toMatchObject({
+      kind: 'state',
       event: 1,
-      state: [true]
+      state: true
     });
   });
 

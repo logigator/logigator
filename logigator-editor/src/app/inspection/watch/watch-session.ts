@@ -138,17 +138,12 @@ export class WatchSession {
       ) {
         return;
       }
-      for (let slot = 0; slot < component.inputSlots; slot++) {
-        if (component.isActive(slot)) {
-          simulation.setUnitInput(
-            unitIndex,
-            component,
-            false,
-            () => undefined,
-            slot
-          );
-        }
-      }
+      simulation.setUnitInputs(
+        unitIndex,
+        component,
+        new Array<boolean>(component.inputSlots).fill(false),
+        () => undefined
+      );
     });
     this.project.destroy({ children: true });
   }
