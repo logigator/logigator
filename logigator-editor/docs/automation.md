@@ -193,6 +193,8 @@ so read the returned `state`.
 | `status()`                    | state, mode, target/measured Hz, tick             |
 | `setTarget(value, unit)`      | target speed; unit `'Hz' \| 'kHz' \| 'MHz'`       |
 | `setInput(id, value, input?)` | drive a lever, button, pulse button or gamepad    |
+| `type(id, text)`              | type a text into a keyboard                       |
+| `setKey(id, key)`             | hold a keyboard key down, or `null` to let go     |
 | `readPorts(ids?)`             | per-port powered booleans, `inputs` and `outputs` |
 
 - `setInput` is **absolute**, and what that means follows from the input's
@@ -227,6 +229,25 @@ so read the returned `state`.
   button or a pulse button is an `event` instead, each on the outputs for a
   tick of its own — so a button pressed and released while paused takes two
   steps, high after the first and low after the second.
+- A **keyboard** is not a user input and `setInput` refuses it, naming `type`
+  and `setKey`. Its calls build the frames its window sends, through the
+  same `KeyboardComponent` methods, so both agree on the key held on `D`
+  (`KeyboardComponent.heldKey`): a window key that automation let go of
+  sends nothing on its keyup, and a key the window holds is one `setKey`
+  already holds.
+  - `type(id, text)` queues the text as taps, a press and a release per
+    character, each an `event` frame on the outputs for a tick of its own, so
+    a character takes two steps while paused. It is **strict**, unlike a
+    paste: printable ASCII, `\n`, `\t`, `\b`, `\x1b` and `\x7f` only, CRLF
+    and CR reading as one `\n`, at most `KEYBOARD_TEXT_LIMIT` (10 000)
+    characters. Any other character is an error naming it, its code point
+    and its UTF-16 index in the text, and nothing is queued
+    (`textToCodesStrict`, beside the paste's `textToCodes` in `ascii.ts`). It
+    resolves once queued, not once typed.
+  - `setKey(id, key)` presses the key for one such character — a no-op when
+    that code is already on `D` — and `null` lets go — a no-op when no key
+    holds it. Both are `event` frames, never merged: `setKey('A')` then
+    `setKey(null)` while paused shows `A` for one step and then `0`.
 - `step(count)` posts the ticks back to back and pulls **one** snapshot, so
   settling a circuit costs one round trip rather than one per tick.
 - `readPorts` builds a component → link-id reverse index once per compiled board
@@ -309,7 +330,7 @@ floats over and returning the box actually taken.
 
 A **watch** is a second board: each breadcrumb level is a fresh copy of the
 inner circuit, so its elements carry the copy's ids, not the placed instance's.
-Its five calls below all refuse a data inspection.
+Its seven calls below all refuse a data inspection.
 
 - `getElements(id, query?)` — the visible level's circuit.
 - `activate(id, componentId)` — the watch's tap: drives an inner lever or
@@ -321,7 +342,12 @@ Its five calls below all refuse a data inspection.
   input of the visible level, with the same absolute semantics, values and slot
   address: a button is held by `true` until a `false` releases it, and a held
   one is also released when its level closes (breadcrumb navigation, the watch
-  closing). Anything but a user input of that level is refused.
+  closing). Anything but a user input of that level is refused, a keyboard
+  with an error naming `type` and `setKey`.
+- `type(id, componentId, text)` / `setKey(id, componentId, key)` — `sim.type`
+  and `sim.setKey` for an inner keyboard of the visible level, its frames
+  reaching the copy's own units. A key held here is let go of when its level
+  closes, whoever pressed it.
 - `navigateTo(id, level)` — pops every level deeper than `level`.
 - `camera.*` — `getViewport` / `pan` / `setCenter` / `setZoom` / `focus` against
   the visible level. A level fits its circuit once, when it first shows; a write

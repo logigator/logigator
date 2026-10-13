@@ -5,6 +5,14 @@ import { environment } from '../../environments/environment';
 import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { isUserInput, UserInput } from '../components/user-input';
+import {
+  KEYBOARD_TEXT_LIMIT,
+  textToCodesStrict
+} from '../components/component-types/keyboard/ascii';
+import {
+  KeyboardComponent,
+  KeyboardRoute
+} from '../components/component-types/keyboard/keyboard.component';
 import { isCanvasOperatedInput } from '../rendering/interaction/body-hit';
 import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
@@ -205,6 +213,10 @@ export class AutomationApiService {
           value: InputValue,
           input?: InputSlot
         ): Promise<void> => this.simSetInput(componentId, value, input),
+        type: (componentId: number, text: string): Promise<void> =>
+          this.simType(componentId, text),
+        setKey: (componentId: number, key: string | null): Promise<void> =>
+          this.simSetKey(componentId, key),
         readPorts: (componentIds?: number[]): Promise<PortReadout[]> =>
           this.simReadPorts(componentIds)
       }),
@@ -253,6 +265,16 @@ export class AutomationApiService {
           input?: InputSlot
         ): Promise<void> =>
           this.inspectSetInput(inspectionId, componentId, value, input),
+        type: (
+          inspectionId: number,
+          componentId: number,
+          text: string
+        ): Promise<void> => this.inspectType(inspectionId, componentId, text),
+        setKey: (
+          inspectionId: number,
+          componentId: number,
+          key: string | null
+        ): Promise<void> => this.inspectSetKey(inspectionId, componentId, key),
         navigateTo: (inspectionId: number, level: number): InspectionInfo =>
           this.inspectNavigateTo(inspectionId, level),
         camera: Object.freeze({
@@ -587,6 +609,11 @@ export class AutomationApiService {
     const component = this.projectService
       .mainProject()
       ?.getComponentById(componentId);
+    if (component instanceof KeyboardComponent) {
+      throw new Error(
+        `logigator: component ${componentId} is a keyboard — use sim.type or sim.setKey`
+      );
+    }
     if (
       !component ||
       !isUserInput(component) ||
@@ -609,6 +636,56 @@ export class AutomationApiService {
       throw notAnInput();
     }
     await this.nextFrame();
+  }
+
+  /**
+   * Types `text` into a keyboard as taps, a press and a release per
+   * character, queued behind what the keyboard still has to send. The text is
+   * checked whole first ({@link keyboardTextCodes}), so a character the
+   * keyboard has no key for queues nothing. Resolves once queued.
+   */
+  public async simType(componentId: number, text: string): Promise<void> {
+    const codes = keyboardTextCodes(text);
+    const keyboard = this.requireBoardKeyboard(componentId);
+    keyboard.tapKeys(this.boardKeyRoute(keyboard), codes);
+    await this.nextFrame();
+  }
+
+  /**
+   * Holds a key of a keyboard down, or with `null` lets go of the one held.
+   * A key already on `D` and a release with none held send nothing.
+   */
+  public async simSetKey(
+    componentId: number,
+    key: string | null
+  ): Promise<void> {
+    const code = keyboardKeyCode(key);
+    const keyboard = this.requireBoardKeyboard(componentId);
+    setKeyboardKey(keyboard, this.boardKeyRoute(keyboard), code);
+    await this.nextFrame();
+  }
+
+  private requireBoardKeyboard(componentId: number): KeyboardComponent {
+    const component = this.projectService
+      .mainProject()
+      ?.getComponentById(componentId);
+    if (
+      !(component instanceof KeyboardComponent) ||
+      !this.simulation.board?.userInputs.has(componentId)
+    ) {
+      throw new Error(
+        `logigator: component ${componentId} is not a keyboard of the running simulation`
+      );
+    }
+    return component;
+  }
+
+  private boardKeyRoute(keyboard: KeyboardComponent): KeyboardRoute {
+    return {
+      send: (frames) => {
+        this.simulation.sendFrames(keyboard.id, frames);
+      }
+    };
   }
 
   /**
@@ -1094,6 +1171,11 @@ export class AutomationApiService {
       new Error(
         `logigator: component ${componentId} is not a user input of the visible level of inspection ${inspectionId}`
       );
+    if (component instanceof KeyboardComponent) {
+      throw new Error(
+        `logigator: component ${componentId} is a keyboard — use inspect.type or inspect.setKey`
+      );
+    }
     if (!isUserInput(component) || !watch.isLevelInput(component)) {
       throw notAnInput();
     }
@@ -1108,6 +1190,65 @@ export class AutomationApiService {
       throw notAnInput();
     }
     await this.nextFrame();
+  }
+
+  /** {@link simType} for a keyboard of the visible watch level. */
+  public async inspectType(
+    inspectionId: number,
+    componentId: number,
+    text: string
+  ): Promise<void> {
+    const codes = keyboardTextCodes(text);
+    const { keyboard, route } = this.requireWatchKeyboard(
+      inspectionId,
+      componentId
+    );
+    keyboard.tapKeys(route, codes);
+    await this.nextFrame();
+  }
+
+  /** {@link simSetKey} for a keyboard of the visible watch level. */
+  public async inspectSetKey(
+    inspectionId: number,
+    componentId: number,
+    key: string | null
+  ): Promise<void> {
+    const code = keyboardKeyCode(key);
+    const { keyboard, route } = this.requireWatchKeyboard(
+      inspectionId,
+      componentId
+    );
+    setKeyboardKey(keyboard, route, code);
+    await this.nextFrame();
+  }
+
+  /** A keyboard copy of the visible watch level, with the route to its units. */
+  private requireWatchKeyboard(
+    inspectionId: number,
+    componentId: number
+  ): { keyboard: KeyboardComponent; route: KeyboardRoute } {
+    const watch = this.requireWatch(inspectionId);
+    const keyboard = this.requireWatchComponent(
+      watch,
+      inspectionId,
+      componentId
+    );
+    if (
+      !(keyboard instanceof KeyboardComponent) ||
+      !watch.isLevelInput(keyboard)
+    ) {
+      throw new Error(
+        `logigator: component ${componentId} is not a keyboard of the visible level of inspection ${inspectionId}`
+      );
+    }
+    return {
+      keyboard,
+      route: {
+        send: (frames) => {
+          watch.sendFrames(keyboard, frames);
+        }
+      }
+    };
   }
 
   private requireWatchComponent(
@@ -1493,6 +1634,80 @@ export function toGridRect(rect: Rectangle): GridRect {
     width: rect.width,
     height: rect.height
   };
+}
+
+/** What the keyboard sends, for an error refusing what it does not. */
+const KEYBOARD_CHARACTERS =
+  'it sends printable ASCII (U+0020–U+007E), "\\n" (a CR or CRLF counting as one), "\\t", "\\b", "\\u001b" and "\\u007f"';
+
+/** A character as an error names it: quoted, with its code point. */
+function describeCharacter(char: string): string {
+  const point = char.codePointAt(0)!.toString(16).toUpperCase();
+  return `${JSON.stringify(char)} (U+${point.padStart(4, '0')})`;
+}
+
+/**
+ * The codes a `type` text sends, checked whole before any is queued: every
+ * character must be one the keyboard has a key for, and the text no longer
+ * than {@link KEYBOARD_TEXT_LIMIT} characters.
+ */
+function keyboardTextCodes(text: unknown): readonly number[] {
+  if (typeof text !== 'string') {
+    throw new Error(
+      `logigator: ${JSON.stringify(text) ?? String(text)} is not a text to type`
+    );
+  }
+  const read = textToCodesStrict(text);
+  if (read.kind === 'unsendable') {
+    throw new Error(
+      `logigator: the text has ${describeCharacter(read.char)} at position ${read.index}, which the keyboard has no key for — ${KEYBOARD_CHARACTERS}; nothing was queued`
+    );
+  }
+  if (read.codes.length > KEYBOARD_TEXT_LIMIT) {
+    throw new Error(
+      `logigator: the text has ${read.codes.length} characters, more than the ${KEYBOARD_TEXT_LIMIT} one call types; nothing was queued`
+    );
+  }
+  return read.codes;
+}
+
+/**
+ * The code a `setKey` key holds down, `null` for none: one character the
+ * keyboard has a key for, or `null`.
+ */
+function keyboardKeyCode(key: unknown): number | null {
+  if (key === null) {
+    return null;
+  }
+  if (typeof key === 'string' && [...key].length === 1) {
+    const read = textToCodesStrict(key);
+    if (read.kind === 'codes') {
+      return read.codes[0];
+    }
+  }
+  const named =
+    typeof key === 'string' && [...key].length === 1
+      ? describeCharacter(key)
+      : (JSON.stringify(key) ?? String(key));
+  throw new Error(
+    `logigator: ${named} is not a key of the keyboard — setKey takes one character or null, and ${KEYBOARD_CHARACTERS}`
+  );
+}
+
+/**
+ * Puts `code` on the keyboard's `D` unless it is already there, or with
+ * `null` sets `D` to zero unless no key holds it.
+ */
+function setKeyboardKey(
+  keyboard: KeyboardComponent,
+  route: KeyboardRoute,
+  code: number | null
+): void {
+  if (code === null) {
+    keyboard.releaseKey(route);
+  } else if (keyboard.heldKey()?.code !== code) {
+    keyboard.pressKey(route, code);
+  }
 }
 
 /**

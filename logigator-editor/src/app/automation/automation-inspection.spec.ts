@@ -8,6 +8,7 @@ import {
   makeAnd,
   makeButton,
   makeGamepad,
+  makeKeyboard,
   makeRom,
   makeSwitch
 } from '../../testing/factories';
@@ -34,6 +35,7 @@ import { RomComponent } from '../components/component-types/rom/rom.component';
 import { ButtonComponent } from '../components/component-types/button/button.component';
 import { GamepadComponent } from '../components/component-types/gamepad/gamepad.component';
 import { GamepadInspection } from '../components/component-types/gamepad/gamepad-inspection';
+import { KeyboardComponent } from '../components/component-types/keyboard/keyboard.component';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '@logigator/core';
 import { AutomationApiService } from './automation-api.service';
@@ -43,12 +45,16 @@ describe('AutomationApiService inspection', () => {
   let simulation: SimulationService;
   let project: Project;
   let rom: RomComponent;
+  let fakeWorker: FakeSimulationWorker;
 
   beforeEach(async () => {
     configureTestBed([
       {
         provide: SIMULATION_WORKER_FACTORY,
-        useValue: () => new FakeSimulationWorker().asWorker()
+        useValue: () => {
+          fakeWorker = new FakeSimulationWorker();
+          return fakeWorker.asWorker();
+        }
       },
       { provide: FRAME_SCHEDULER, useValue: new ManualFrameScheduler() }
     ]);
@@ -343,6 +349,44 @@ describe('AutomationApiService inspection', () => {
 
       await api.inspectSetInput(id, pad.id, true, 'a');
       expect(pad.isActive(slotA)).toBe(true);
+    });
+
+    it('types into and holds a key of an inner keyboard, reaching the copy’s units', async () => {
+      // A keyboard on the board too, whose units the copy's frames must miss.
+      const boardKeyboard = makeKeyboard(0, 20);
+      project.addComponent(boardKeyboard);
+      const id = await openNestedWatch(makeKeyboard());
+      const nested = api
+        .inspectGetElements(id)
+        .components.find((component) => component.type >= 1000)!;
+      api.inspectActivate(id, nested.id);
+      const level = (
+        TestBed.inject(InspectionService).open()[0]
+          .inspection as SubCircuitWatch
+      ).activeLevel();
+      const index = level.session.components.findIndex(
+        (component) => component instanceof KeyboardComponent
+      );
+      const copy = level.session.components[index] as KeyboardComponent;
+      const base = level.session.info.unitIndexFor(index)!;
+      const copyUnits = Array.from({ length: 8 }, (_, slot) => base + slot);
+      const sentUnits = () =>
+        new Set(fakeWorker.sentWrites().map((write) => write.unit));
+
+      await api.inspectType(id, copy.id, 'hi');
+      expect(sentUnits()).toEqual(new Set(copyUnits));
+      expect(simulation.board!.userInputs.get(boardKeyboard.id)).not.toBe(base);
+
+      const queued = fakeWorker.postedOfKind('queueFrames').length;
+      await api.inspectSetKey(id, copy.id, 'A');
+      await api.inspectSetKey(id, copy.id, 'A');
+      expect(fakeWorker.postedOfKind('queueFrames')).toHaveLength(queued + 1);
+      expect(copy.heldKey()).toEqual({ code: 0x41, key: null });
+      expect(sentUnits()).toEqual(new Set(copyUnits));
+
+      await expect(api.inspectSetInput(id, copy.id, true)).rejects.toThrow(
+        /is a keyboard — use inspect\.type or inspect\.setKey$/
+      );
     });
 
     it('refuses a component that is not in the visible level', async () => {

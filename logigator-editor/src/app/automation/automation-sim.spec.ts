@@ -6,6 +6,7 @@ import {
   makeAnd,
   makeButton,
   makeGamepad,
+  makeKeyboard,
   makePulseButton,
   makeSwitch
 } from '../../testing/factories';
@@ -23,6 +24,10 @@ import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { TOP_LEVEL_PATH } from '../simulation/compiler/compiled-board.model';
+import { InspectionService } from '../inspection/inspection.service';
+import { KeyboardComponent } from '../components/component-types/keyboard/keyboard.component';
+import { KeyboardInspection } from '../components/component-types/keyboard/keyboard-inspection';
+import { INPUT_EVENT_PULSE } from '../simulation/worker/protocol';
 import {
   FRAME_SCHEDULER,
   SIMULATION_WORKER_FACTORY
@@ -374,6 +379,100 @@ describe('AutomationApiService simulation', () => {
       kind: 'state',
       event: 1,
       state: true
+    });
+  });
+
+  describe('a keyboard', () => {
+    let keyboard: KeyboardComponent;
+    /** The unit of `D0`; `D0`…`D6` and `STB` follow it in port order. */
+    let base: number;
+
+    beforeEach(async () => {
+      keyboard = makeKeyboard();
+      project.addComponent(keyboard);
+      await api.simEnter();
+      base = simulation.board!.userInputs.get(keyboard.id)!;
+    });
+
+    afterEach(() => TestBed.inject(InspectionService).closeAll());
+
+    /** The code of every press queued so far, in order. */
+    const pressed = () =>
+      fakeWorker
+        .postedOfKind('queueFrames')
+        .flatMap((msg) => msg.frames)
+        .filter((frame) =>
+          frame.units.some(
+            ([unit, event, state]) =>
+              unit === base + 7 && event === INPUT_EVENT_PULSE && state
+          )
+        )
+        .map((frame) =>
+          frame.units
+            .filter(([unit, , state]) => unit < base + 7 && state)
+            .reduce((code, [unit]) => code | (1 << (unit - base)), 0)
+        );
+
+    /** The code on `D` after the last tick. */
+    const onD = () =>
+      Array.from({ length: 7 }, (_, bit) =>
+        fakeWorker.engine.output(base + bit) ? 1 << bit : 0
+      ).reduce((code, bit) => code | bit, 0);
+
+    it('types a text as one tap per character, a CRLF as one LF', async () => {
+      await api.simType(keyboard.id, 'a\r\nb');
+
+      expect(pressed()).toEqual([0x61, 0x0a, 0x62]);
+    });
+
+    it('refuses a text with a character it has no key for, naming its position and queueing nothing', async () => {
+      await expect(api.simType(keyboard.id, 'ab\r\nä!')).rejects.toThrow(
+        /"ä" \(U\+00E4\) at position 4/
+      );
+
+      expect(fakeWorker.postedOfKind('queueFrames')).toEqual([]);
+    });
+
+    it('presses a key setKey already holds once', async () => {
+      await api.simSetKey(keyboard.id, 'A');
+      await api.simSetKey(keyboard.id, 'A');
+
+      expect(pressed()).toEqual([0x41]);
+    });
+
+    it('shows a key set and let go of while paused for one step, then 0', async () => {
+      await api.simSetKey(keyboard.id, 'A');
+      await api.simSetKey(keyboard.id, null);
+
+      await api.simStep();
+      expect(onD()).toBe(0x41);
+      await api.simStep();
+      expect(onD()).toBe(0);
+    });
+
+    it('agrees with its window on the key held', async () => {
+      api.inspectOpen(keyboard.id);
+      const window = TestBed.inject(InspectionService).open()[0]
+        .inspection as KeyboardInspection;
+
+      window.press('KeyA', 0x61);
+      await api.simSetKey(keyboard.id, 'a');
+      expect(pressed()).toEqual([0x61]);
+
+      await api.simSetKey(keyboard.id, null);
+      // The window's key is up already: its keyup sends nothing more.
+      window.release('KeyA');
+      await api.simStep();
+      await api.simStep();
+      expect(onD()).toBe(0);
+      expect(window.heldEntry()).toBeNull();
+    });
+
+    it('refuses setInput, naming the calls that drive it', async () => {
+      await expect(api.simSetInput(keyboard.id, true)).rejects.toThrow(
+        /is a keyboard — use sim\.type or sim\.setKey$/
+      );
+      expect(fakeWorker.postedOfKind('queueFrames')).toEqual([]);
     });
   });
 

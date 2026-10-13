@@ -9,7 +9,8 @@ import {
   releaseFrame,
   resetFrame,
   tapFrames,
-  textToCodes
+  textToCodes,
+  textToCodesStrict
 } from './ascii';
 
 describe('keyboard ASCII', () => {
@@ -91,6 +92,34 @@ describe('keyboard ASCII', () => {
     expect(text.skipped).toEqual(['ü', 'ß', '€', '😀']);
   });
 
+  it('reads a text strictly as every control key and printable character, CRLF and CR as LF', () => {
+    const text = textToCodesStrict('a\r\nb\rc\n\t\b\u001b\u007f ~');
+    expect(text).toEqual({
+      kind: 'codes',
+      codes: [
+        0x61, 0x0a, 0x62, 0x0a, 0x63, 0x0a, 0x09, 0x08, 0x1b, 0x7f, 0x20, 0x7e
+      ]
+    });
+  });
+
+  it('refuses a strict text at its first unsendable character, by its index in the text', () => {
+    expect(textToCodesStrict('😀a\r\nä€')).toEqual({
+      kind: 'unsendable',
+      char: '😀',
+      index: 0
+    });
+    expect(textToCodesStrict('a\r\nä€')).toEqual({
+      kind: 'unsendable',
+      char: 'ä',
+      index: 3
+    });
+    expect(textToCodesStrict('ok\u0007')).toEqual({
+      kind: 'unsendable',
+      char: '\u0007',
+      index: 2
+    });
+  });
+
   it('stops a text after the limit and says so', () => {
     expect(textToCodes('abc', 3)).toEqual({
       codes: [0x61, 0x62, 0x63],
@@ -114,6 +143,7 @@ describe('keyboard ASCII', () => {
       }
     }
     expect(textToCodes(all, Infinity).codes).not.toContain(0);
+    expect(textToCodesStrict('\u0000').kind).toBe('unsendable');
     expect(() => pressFrame(0)).toThrow(RangeError);
   });
 

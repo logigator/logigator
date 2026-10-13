@@ -493,13 +493,30 @@ export interface LogigatorAutomationApi {
      * Lever: absolute set. Button: absolute too — held by `true` until a
      * `false` releases it. Pulse button: pulse on `true`, ignored on `false`.
      * A boolean sets the one slot `input` addresses (default `0`); an array
-     * sets every slot, element `i` for slot `i`, and takes no `input`.
+     * sets every slot, element `i` for slot `i`, and takes no `input`. A
+     * keyboard is refused: it takes `type` and `setKey`.
      */
     setInput(
       componentId: number,
       value: InputValue,
       input?: InputSlot
     ): Promise<void>;
+    /**
+     * Keyboard: queues `text` as taps, a press and a release per character,
+     * each on the outputs for a tick of its own — two steps per character
+     * while paused. Strict: printable ASCII, `\n`, `\t`, `\b`, `\x1b` and
+     * `\x7f` only (CRLF and CR read as `\n`), at most 10 000 characters; any
+     * other character is an error naming it and its position, and nothing is
+     * queued. Resolves once queued.
+     */
+    type(componentId: number, text: string): Promise<void>;
+    /**
+     * Keyboard: holds the key for one character down (a no-op when that key
+     * is already on `D`), or with `null` lets go of the key held (a no-op when
+     * none is). Event frames, so `setKey('A')` then `setKey(null)` while
+     * paused shows `A` for one step and then `0`.
+     */
+    setKey(componentId: number, key: string | null): Promise<void>;
     readPorts(componentIds?: number[]): Promise<PortReadout[]>;
   };
 
@@ -535,7 +552,7 @@ export interface LogigatorAutomationApi {
   ): WorkModeState;
 
   /**
-   * Live inspections. `getElements`/`activate`/`setInput`/`navigateTo`/`camera` address a
+   * Live inspections. `getElements`/`activate`/`setInput`/`type`/`setKey`/`navigateTo`/`camera` address a
    * **watch**, whose levels are fresh copies of the inner circuit — their
    * element ids are the copy's, not the placed instance's.
    */
@@ -568,6 +585,21 @@ export interface LogigatorAutomationApi {
       componentId: number,
       value: InputValue,
       input?: InputSlot
+    ): Promise<void>;
+    /**
+     * `sim.type` for a keyboard inside the visible watch level. A key held
+     * here is let go of when its level closes.
+     */
+    type(
+      inspectionId: number,
+      componentId: number,
+      text: string
+    ): Promise<void>;
+    /** `sim.setKey` for a keyboard inside the visible watch level. */
+    setKey(
+      inspectionId: number,
+      componentId: number,
+      key: string | null
     ): Promise<void>;
     /** Breadcrumb navigation: pops every level deeper than `level`. */
     navigateTo(inspectionId: number, level: number): InspectionInfo;

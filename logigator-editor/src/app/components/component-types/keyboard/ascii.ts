@@ -82,6 +82,7 @@ const PRINTABLE_FIRST = 0x20;
 const PRINTABLE_LAST = 0x7e;
 const LINE_FEED = 0x0a;
 const HORIZONTAL_TAB = 0x09;
+const CARRIAGE_RETURN = 0x0d;
 
 /**
  * What a key sends, by its `KeyboardEvent.key`: an ASCII `code`, or a
@@ -107,10 +108,44 @@ export function characterOfKey(key: string): KeyCharacter | null {
   if (point === undefined || String.fromCodePoint(point) !== key) {
     return null;
   }
-  if (point >= PRINTABLE_FIRST && point <= PRINTABLE_LAST) {
+  if (isPrintable(point)) {
     return { kind: 'ascii', code: point };
   }
   return point > 0x7f ? { kind: 'skipped', char: key } : null;
+}
+
+/** The control keys' codes, each of which a text carries as its character. */
+const CONTROL_CODES: ReadonlySet<number> = new Set(CONTROL_KEY_CODES.values());
+
+/** The control codes a paste sends; the rest a paste drops. */
+const PASTED_CONTROL_CODES: ReadonlySet<number> = new Set([
+  HORIZONTAL_TAB,
+  LINE_FEED
+]);
+
+function isPrintable(point: number): boolean {
+  return point >= PRINTABLE_FIRST && point <= PRINTABLE_LAST;
+}
+
+/**
+ * The characters of `text` by code point, with CRLF and a lone CR read as
+ * one LF at the CR's index; `index` is the UTF-16 index in `text`.
+ */
+function* textCharacters(
+  text: string
+): Generator<{ readonly char: string; readonly index: number }> {
+  let index = 0;
+  while (index < text.length) {
+    const point = text.codePointAt(index)!;
+    const char = String.fromCodePoint(point);
+    if (point === CARRIAGE_RETURN) {
+      yield { char: '\n', index };
+      index += text[index + 1] === '\n' ? 2 : 1;
+      continue;
+    }
+    yield { char, index };
+    index += char.length;
+  }
 }
 
 /** Text turned into the codes the keyboard sends for it. */
@@ -136,13 +171,9 @@ export function textToCodes(
   const codes: number[] = [];
   const skipped: string[] = [];
   let truncated = false;
-  for (const char of text.replace(/\r\n?/g, '\n')) {
+  for (const { char } of textCharacters(text)) {
     const point = char.codePointAt(0)!;
-    const sendable =
-      point === HORIZONTAL_TAB ||
-      point === LINE_FEED ||
-      (point >= PRINTABLE_FIRST && point <= PRINTABLE_LAST);
-    if (sendable) {
+    if (isPrintable(point) || PASTED_CONTROL_CODES.has(point)) {
       if (codes.length === limit) {
         truncated = true;
         break;
@@ -153,6 +184,36 @@ export function textToCodes(
     }
   }
   return { codes, skipped, truncated };
+}
+
+/**
+ * Text read strictly: its `codes`, or the first character the keyboard has no
+ * key for, at its UTF-16 `index` in the text.
+ */
+export type StrictKeyboardText =
+  | { readonly kind: 'codes'; readonly codes: readonly number[] }
+  | {
+      readonly kind: 'unsendable';
+      readonly char: string;
+      readonly index: number;
+    };
+
+/**
+ * The codes `text` sends with nothing left out: printable ASCII and the codes
+ * of the control keys (LF, tab, backspace, escape, delete) as themselves,
+ * CRLF and a lone CR as LF. Any other character makes the whole text
+ * `unsendable`.
+ */
+export function textToCodesStrict(text: string): StrictKeyboardText {
+  const codes: number[] = [];
+  for (const { char, index } of textCharacters(text)) {
+    const point = char.codePointAt(0)!;
+    if (!isPrintable(point) && !CONTROL_CODES.has(point)) {
+      return { kind: 'unsendable', char, index };
+    }
+    codes.push(point);
+  }
+  return { kind: 'codes', codes };
 }
 
 /** The seven data slots, each set to its bit of `code`. */
