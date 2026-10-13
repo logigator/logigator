@@ -1,0 +1,416 @@
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
+  ApplicationRef,
+  Component,
+  inject,
+  signal,
+  WritableSignal
+} from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { LgWindowOutlet } from '@logigator/ui';
+import { Subject } from 'rxjs';
+import { configureTestBed } from '../../../../testing/configure-test-bed';
+import { makeKeyboard } from '../../../../testing/factories';
+import { InspectionSheetComponent } from '../../../inspection/inspection-sheet.component';
+import { InspectionService } from '../../../inspection/inspection.service';
+import { LayoutService } from '../../../layout/layout.service';
+import { SimulationService } from '../../../simulation/simulation.service';
+import { WorkModeService } from '../../../work-mode/work-mode.service';
+import { InputFrame, InputRoute } from '../../component-inspection';
+import { readoutText, resetFrame } from './ascii';
+import { KeyboardComponent } from './keyboard.component';
+import { KeyboardInspection } from './keyboard-inspection';
+import { KeyboardInspectionComponent } from './keyboard-inspection.component';
+
+/**
+ * What a frame does to the keyboard's outputs, in words: `press A` for a
+ * code with the strobe, `release` for every data bit low.
+ */
+function describeFrame(frame: InputFrame): string {
+  const strobe = frame.writes.some(
+    (write) => write.drive === 'pulse' && write.value
+  );
+  let code = 0;
+  for (const write of frame.writes) {
+    if (write.drive === 'level' && write.value) code |= 1 << write.slot;
+  }
+  if (strobe) return `press ${readoutText(code)}`;
+  return code === 0 ? 'release' : `set ${readoutText(code)}`;
+}
+
+/** A route that records, in words, every frame sent through it. */
+function recordingRoute(): InputRoute & {
+  sent: string[];
+  cancels: InputFrame[];
+} {
+  const sent: string[] = [];
+  const cancels: InputFrame[] = [];
+  return {
+    sent,
+    cancels,
+    press: () => undefined,
+    release: () => undefined,
+    send: (frames) => sent.push(...frames.map(describeFrame)),
+    cancel: (reset) => cancels.push(reset),
+    pending: () => 0
+  };
+}
+
+function fakeSimulation(): {
+  isReady: WritableSignal<boolean>;
+  resets: WritableSignal<number>;
+  frame$: Subject<void>;
+} {
+  return {
+    isReady: signal(true),
+    resets: signal(0),
+    frame$: new Subject<void>()
+  };
+}
+
+/** A key event on the focused element, as the browser dispatches it. */
+function key(
+  type: 'keydown' | 'keyup',
+  code: string,
+  keyValue: string,
+  init: KeyboardEventInit = {}
+): KeyboardEvent {
+  const event = new KeyboardEvent(type, {
+    code,
+    key: keyValue,
+    bubbles: true,
+    cancelable: true,
+    ...init
+  });
+  (document.activeElement ?? document.body).dispatchEvent(event);
+  return event;
+}
+
+function paste(text: string): Event {
+  const event = new Event('paste', { bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'clipboardData', {
+    value: { getData: (type: string) => (type === 'text/plain' ? text : '') }
+  });
+  (document.activeElement ?? document.body).dispatchEvent(event);
+  return event;
+}
+
+describe('KeyboardInspectionComponent capture', () => {
+  let keyboard: KeyboardComponent;
+  let route: ReturnType<typeof recordingRoute>;
+  let simulation: ReturnType<typeof fakeSimulation>;
+  let inspection: KeyboardInspection;
+  let fixture: ComponentFixture<KeyboardInspectionComponent>;
+  let field: HTMLTextAreaElement;
+
+  beforeEach(() => {
+    simulation = fakeSimulation();
+    configureTestBed(
+      [{ provide: SimulationService, useValue: simulation }],
+      [KeyboardInspectionComponent]
+    );
+    keyboard = makeKeyboard();
+    route = recordingRoute();
+    inspection = new KeyboardInspection(keyboard, route);
+    fixture = TestBed.createComponent(KeyboardInspectionComponent);
+    document.body.appendChild(fixture.nativeElement as HTMLElement);
+    fixture.componentRef.setInput('inspection', inspection);
+    fixture.detectChanges();
+    TestBed.inject(ApplicationRef).tick();
+    field = (fixture.nativeElement as HTMLElement).querySelector('textarea')!;
+  });
+
+  afterEach(() => {
+    fixture.destroy();
+    (fixture.nativeElement as HTMLElement).remove();
+    keyboard.destroy({ children: true });
+    TestBed.resetTestingModule();
+  });
+
+  it('takes the focus into its capture field when it opens', () => {
+    expect(document.activeElement).toBe(field);
+  });
+
+  it('consumes an auto-repeat and sends nothing for it', () => {
+    key('keydown', 'KeyA', 'a');
+    const repeat = key('keydown', 'KeyA', 'a', { repeat: true });
+
+    expect(repeat.defaultPrevented).toBe(true);
+    expect(route.sent).toEqual(['press a']);
+  });
+
+  it('passes Ctrl, Meta and Alt combinations through', () => {
+    const events = [
+      key('keydown', 'KeyV', 'v', { ctrlKey: true }),
+      key('keydown', 'KeyS', 's', { ctrlKey: true }),
+      key('keydown', 'KeyC', 'c', { metaKey: true }),
+      key('keydown', 'KeyF', 'f', { altKey: true })
+    ];
+
+    expect(events.map((e) => e.defaultPrevented)).toEqual([
+      false,
+      false,
+      false,
+      false
+    ]);
+    expect(route.sent).toEqual([]);
+  });
+
+  it('types the character AltGr makes, though the platform reports Ctrl+Alt', () => {
+    const down = key('keydown', 'KeyQ', '@', {
+      ctrlKey: true,
+      altKey: true,
+      modifierAltGraph: true
+    } as KeyboardEventInit);
+
+    expect(down.defaultPrevented).toBe(true);
+    expect(route.sent).toEqual(['press @']);
+  });
+
+  it('sends Tab as TAB and keeps the focus, and lets Shift+Tab leave', () => {
+    const tab = key('keydown', 'Tab', 'Tab');
+    expect(tab.defaultPrevented).toBe(true);
+    key('keyup', 'Tab', 'Tab');
+
+    const back = key('keydown', 'Tab', 'Tab', { shiftKey: true });
+    expect(back.defaultPrevented).toBe(false);
+    expect(route.sent).toEqual(['press TAB', 'release']);
+  });
+
+  it('passes keys without a character through and consumes one outside ASCII', () => {
+    expect(key('keydown', 'ArrowUp', 'ArrowUp').defaultPrevented).toBe(false);
+    expect(key('keydown', 'F5', 'F5').defaultPrevented).toBe(false);
+    expect(key('keydown', 'Quote', 'ä').defaultPrevented).toBe(true);
+    expect(route.sent).toEqual([]);
+  });
+
+  it('leaves a key being composed to the text it produces', () => {
+    const dead = key('keydown', 'BracketLeft', 'Dead');
+    const ime = key('keydown', 'KeyA', 'Process');
+    const composing = key('keydown', 'KeyB', 'b', { isComposing: true });
+
+    expect([dead, ime, composing].map((e) => e.defaultPrevented)).toEqual([
+      false,
+      false,
+      false
+    ]);
+    field.dispatchEvent(
+      new CompositionEvent('compositionend', { data: 'b', bubbles: true })
+    );
+    expect(route.sent).toEqual(['press b', 'release']);
+  });
+
+  it('releases only the key on D: B taking over from A, and B going up', () => {
+    key('keydown', 'KeyA', 'a');
+    key('keydown', 'KeyB', 'b');
+    key('keyup', 'KeyA', 'a');
+    expect(route.sent).toEqual(['press a', 'press b']);
+
+    key('keyup', 'KeyB', 'b');
+    expect(route.sent).toEqual(['press a', 'press b', 'release']);
+  });
+
+  it('releases a shifted key by its code after Shift went up first', () => {
+    key('keydown', 'ShiftLeft', 'Shift', { shiftKey: true });
+    key('keydown', 'KeyA', 'A', { shiftKey: true });
+    key('keyup', 'ShiftLeft', 'Shift');
+    key('keyup', 'KeyA', 'a');
+
+    expect(route.sent).toEqual(['press A', 'release']);
+  });
+
+  it('releases the key on D when the field loses the focus', () => {
+    key('keydown', 'KeyA', 'a');
+    field.blur();
+    key('keyup', 'KeyA', 'a');
+
+    expect(route.sent).toEqual(['press a', 'release']);
+  });
+
+  it('releases the key on D when the page loses the focus', () => {
+    key('keydown', 'KeyA', 'a');
+    window.dispatchEvent(new Event('blur'));
+
+    expect(route.sent).toEqual(['press a', 'release']);
+  });
+
+  it('taps every character of a paste', () => {
+    const event = paste('ll');
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(route.sent).toEqual(['press l', 'release', 'press l', 'release']);
+  });
+
+  it('lets a tap take D over, so the held key going up sends nothing', () => {
+    key('keydown', 'KeyA', 'a');
+    paste('x');
+    key('keyup', 'KeyA', 'a');
+
+    expect(route.sent).toEqual(['press a', 'press x', 'release']);
+  });
+
+  it('taps the text and the deletions a soft keyboard reports without a key', () => {
+    for (const [inputType, data] of [
+      ['insertText', 'ok'],
+      ['insertLineBreak', null],
+      ['deleteContentBackward', null],
+      ['deleteContentForward', null]
+    ] as const) {
+      field.dispatchEvent(
+        new InputEvent('beforeinput', {
+          inputType,
+          data,
+          bubbles: true,
+          cancelable: true
+        })
+      );
+    }
+
+    expect(route.sent).toEqual([
+      'press o',
+      'release',
+      'press k',
+      'release',
+      'press LF',
+      'release',
+      'press BS',
+      'release',
+      'press DEL',
+      'release'
+    ]);
+  });
+
+  it('forgets the history and the held key once a stop rebuilds the engine', () => {
+    key('keydown', 'KeyA', 'a');
+    expect(inspection.history()).toHaveLength(1);
+
+    simulation.resets.set(1);
+    inspection.onFrame();
+    key('keyup', 'KeyA', 'a');
+
+    expect(inspection.history()).toEqual([]);
+    expect(route.sent).toEqual(['press a']);
+  });
+});
+
+describe('KeyboardInspection', () => {
+  let keyboard: KeyboardComponent;
+  let route: ReturnType<typeof recordingRoute>;
+  let inspection: KeyboardInspection;
+
+  beforeEach(() => {
+    configureTestBed([
+      { provide: SimulationService, useValue: fakeSimulation() }
+    ]);
+    keyboard = makeKeyboard();
+    route = recordingRoute();
+    inspection = new KeyboardInspection(keyboard, route);
+  });
+
+  afterEach(() => {
+    keyboard.destroy({ children: true });
+  });
+
+  it('cancels with every data bit low at once, forgetting the held key', () => {
+    inspection.press('KeyA', 0x61);
+    inspection.cancel();
+    inspection.release('KeyA');
+
+    expect(route.cancels).toEqual([resetFrame()]);
+    expect(route.sent).toEqual(['press a']);
+  });
+
+  it('releases the key on D when it closes', () => {
+    inspection.press('KeyA', 0x61);
+    inspection.destroy();
+
+    expect(route.sent).toEqual(['press a', 'release']);
+  });
+
+  it('keeps the last 64 characters sent, oldest first', () => {
+    inspection.type(Array.from({ length: 70 }, (_, i) => 0x21 + i));
+
+    const codes = inspection.history().map((entry) => entry.code);
+    expect(codes).toEqual(Array.from({ length: 64 }, (_, i) => 0x21 + 6 + i));
+  });
+});
+
+/** The two frames the keyboard's view opens in, by breakpoint. */
+@Component({
+  selector: 'app-presentation-host',
+  imports: [LgWindowOutlet, InspectionSheetComponent],
+  template: `
+    @if (!compact()) {
+      <lg-window-outlet />
+    }
+    <app-inspection-sheet />
+  `
+})
+class PresentationHost {
+  protected readonly compact = inject(LayoutService).isCompact;
+}
+
+describe('KeyboardInspectionComponent in its frame', () => {
+  let keyboard: KeyboardComponent;
+  let route: ReturnType<typeof recordingRoute>;
+  let compact: WritableSignal<boolean>;
+  let fixture: ComponentFixture<PresentationHost>;
+  let inspections: InspectionService;
+
+  function settle(): void {
+    for (let i = 0; i < 3; i++) TestBed.inject(ApplicationRef).tick();
+  }
+
+  function open(): void {
+    fixture = TestBed.createComponent(PresentationHost);
+    document.body.appendChild(fixture.nativeElement as HTMLElement);
+    settle();
+    inspections.openFor(keyboard, { input: route });
+    settle();
+  }
+
+  beforeEach(() => {
+    compact = signal(false);
+    configureTestBed(
+      [
+        { provide: SimulationService, useValue: fakeSimulation() },
+        {
+          provide: LayoutService,
+          useValue: { isCompact: compact, isTouch: signal(false) }
+        }
+      ],
+      [PresentationHost]
+    );
+    TestBed.inject(WorkModeService).setSimulationMode(true);
+    inspections = TestBed.inject(InspectionService);
+    keyboard = makeKeyboard();
+    route = recordingRoute();
+  });
+
+  afterEach(() => {
+    inspections.closeAll();
+    fixture.destroy();
+    (fixture.nativeElement as HTMLElement).remove();
+    keyboard.destroy({ children: true });
+    TestBed.resetTestingModule();
+  });
+
+  for (const layout of ['window', 'sheet'] as const) {
+    it(`sends Escape to the circuit and keeps the ${layout} open`, () => {
+      compact.set(layout === 'sheet');
+      open();
+      const field = document.querySelector<HTMLTextAreaElement>(
+        'app-keyboard-inspection textarea'
+      )!;
+      expect(document.activeElement).toBe(field);
+
+      const escape = key('keydown', 'Escape', 'Escape');
+      settle();
+
+      expect(escape.defaultPrevented).toBe(true);
+      expect(route.sent).toEqual(['press ESC']);
+      expect(inspections.open()).toHaveLength(1);
+      expect(document.querySelector('app-keyboard-inspection')).not.toBeNull();
+    });
+  }
+});

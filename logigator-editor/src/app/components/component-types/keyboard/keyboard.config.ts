@@ -3,6 +3,7 @@ import { ComponentConfig } from '../../component-config.model';
 import { configFromMeta } from '../../config-from-meta';
 import { ComponentOption } from '../../component-option';
 import { KeyboardComponent } from './keyboard.component';
+import { KeyboardInspection } from './keyboard-inspection';
 
 export type KeyboardOptions = Record<string, ComponentOption>;
 
@@ -22,6 +23,17 @@ export const keyboardComponentConfig: ComponentConfig<KeyboardOptions> =
         'M8.2 9.4h1.6v1.6h-1.6z M10.6 9.4h1.6v1.6h-1.6z ' +
         'M13 9.4h1.6v1.6h-1.6z ' +
         'M4.6 11.8h8.8v1.6h-8.8z'
+    },
+    // The inspection service always hands over the route for where the
+    // keyboard was opened; a keyboard without one could send nothing.
+    inspection: (component, context) => {
+      if (!context) {
+        throw new Error('A keyboard inspection needs an input route');
+      }
+      return new KeyboardInspection(
+        component as KeyboardComponent,
+        context.input
+      );
     },
     create: (options) => new KeyboardComponent(options)
   });

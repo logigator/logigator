@@ -313,7 +313,20 @@ const de: TranslationSchema = {
       KEYBOARD: {
         name: 'Tastatur',
         description:
-          'Eine Tastatur. Solange eine Taste gedrückt ist, liegt ihr ASCII-Code an D0–D6 an, und STB gibt bei jedem Tastendruck einen Puls aus. Während die Simulation läuft, öffnet ein Klick ein Fenster, das deine Eingaben entgegennimmt.'
+          'Eine Tastatur. Solange eine Taste gedrückt ist, liegt ihr ASCII-Code an D0–D6 an, und STB gibt bei jedem Tastendruck einen Puls aus. Während die Simulation läuft, öffnet ein Klick ein Fenster, das deine Eingaben entgegennimmt.',
+        window: {
+          field: 'In die Schaltung tippen',
+          onD: 'An D',
+          typing:
+            'Eingaben gehen an die Schaltung · Umschalt+Tab zum Verlassen',
+          clickToType: 'Hier klicken, um zu tippen',
+          skippedOne: '{{char}} ist kein ASCII-Zeichen und wurde übersprungen',
+          skippedMany:
+            '{{count}} Zeichen waren keine ASCII-Zeichen und wurden übersprungen',
+          truncated: 'Nur die ersten {{limit}} Zeichen wurden gesendet',
+          sending: 'Sende {{count}}…',
+          cancelSending: 'Senden abbrechen'
+        }
       },
       PULSE_BUTTON: {
         name: 'Impulstaster',

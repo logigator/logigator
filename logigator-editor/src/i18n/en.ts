@@ -311,7 +311,18 @@ const en = {
       KEYBOARD: {
         name: 'Keyboard',
         description:
-          'A keyboard. While a key is held down, D0–D6 carry its ASCII code, and STB pulses once each time a key is pressed. While the simulation is running, clicking it opens a window that receives your typing.'
+          'A keyboard. While a key is held down, D0–D6 carry its ASCII code, and STB pulses once each time a key is pressed. While the simulation is running, clicking it opens a window that receives your typing.',
+        window: {
+          field: 'Type into the circuit',
+          onD: 'On D',
+          typing: 'Typing into the circuit · Shift+Tab to leave',
+          clickToType: 'Click here to type',
+          skippedOne: "{{char}} isn't ASCII and was skipped",
+          skippedMany: "{{count}} characters weren't ASCII and were skipped",
+          truncated: 'Only the first {{limit}} characters were sent',
+          sending: 'Sending {{count}}…',
+          cancelSending: 'Stop sending'
+        }
       },
       PULSE_BUTTON: {
         name: 'Pulse button',

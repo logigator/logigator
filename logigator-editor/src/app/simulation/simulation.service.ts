@@ -86,6 +86,13 @@ export class SimulationService {
   public readonly measuredHz = this.workerService.measuredHz;
   public readonly tick = this.workerService.tick;
 
+  private readonly _resets = signal(0);
+  /**
+   * How many times {@link stop} has reset the session to tick 0, counted once
+   * the rebuilt engine is in place and before the `frame$` that follows it.
+   */
+  public readonly resets = this._resets.asReadonly();
+
   // A Subject, not a signal: it marks "fresh engine state is on the
   // components" rather than carrying a value, and fires at snapshot rate.
   private readonly _frame$ = new Subject<void>();
@@ -383,6 +390,7 @@ export class SimulationService {
           }
           this._project.triggerTicker('single');
         }
+        this._resets.update((count) => count + 1);
         // The reset changed port power without a snapshot.
         this._frame$.next();
       })

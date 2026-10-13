@@ -70,12 +70,16 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
     return this.bodyGridWidth - KEYBOARD_GLYPH_COLUMN_WIDTH;
   }
 
-  private _decode(): number {
+  /**
+   * The code on the data outputs, each read ahead of its bubble: what the
+   * keyboard sends, as the readout shows it.
+   */
+  public readCode(): number {
     return codeFromBits((bit) => this.isOutputHigh(bit));
   }
 
   private _syncReadout(): void {
-    const code = this._decode();
+    const code = this.readCode();
     if (code !== this._code) {
       this._code = code;
       this._showCode();
@@ -147,7 +151,7 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
     this._fill = fill;
     this._frame = frame;
     this._readout = readout;
-    this._code = this._decode();
+    this._code = this.readCode();
     this._showCode();
   }
 }

@@ -312,7 +312,19 @@ const fr: TranslationSchema = {
       KEYBOARD: {
         name: 'Clavier',
         description:
-          "Un clavier. Tant qu'une touche est maintenue enfoncée, D0–D6 portent son code ASCII, et STB émet une impulsion à chaque appui. Pendant que la simulation tourne, cliquer dessus ouvre une fenêtre qui reçoit votre saisie."
+          "Un clavier. Tant qu'une touche est maintenue enfoncée, D0–D6 portent son code ASCII, et STB émet une impulsion à chaque appui. Pendant que la simulation tourne, cliquer dessus ouvre une fenêtre qui reçoit votre saisie.",
+        window: {
+          field: 'Taper dans le circuit',
+          onD: 'Sur D',
+          typing: 'Vous tapez dans le circuit · Maj+Tab pour sortir',
+          clickToType: 'Cliquez ici pour taper',
+          skippedOne: "{{char}} n'est pas un caractère ASCII et a été ignoré",
+          skippedMany:
+            "{{count}} caractères n'étaient pas ASCII et ont été ignorés",
+          truncated: 'Seuls les {{limit}} premiers caractères ont été envoyés',
+          sending: 'Envoi : {{count}}…',
+          cancelSending: "Arrêter l'envoi"
+        }
       },
       PULSE_BUTTON: {
         name: 'Bouton à impulsion',

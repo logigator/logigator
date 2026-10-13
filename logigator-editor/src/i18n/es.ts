@@ -310,7 +310,18 @@ const es: TranslationSchema = {
       KEYBOARD: {
         name: 'Teclado',
         description:
-          'Un teclado. Mientras se mantiene pulsada una tecla, D0–D6 llevan su código ASCII, y STB emite un pulso cada vez que se pulsa una tecla. Mientras la simulación está en marcha, al hacer clic se abre una ventana que recibe lo que escribes.'
+          'Un teclado. Mientras se mantiene pulsada una tecla, D0–D6 llevan su código ASCII, y STB emite un pulso cada vez que se pulsa una tecla. Mientras la simulación está en marcha, al hacer clic se abre una ventana que recibe lo que escribes.',
+        window: {
+          field: 'Escribir en el circuito',
+          onD: 'En D',
+          typing: 'Escribiendo en el circuito · Mayús+Tab para salir',
+          clickToType: 'Haz clic aquí para escribir',
+          skippedOne: '{{char}} no es ASCII y se ha omitido',
+          skippedMany: '{{count}} caracteres no eran ASCII y se han omitido',
+          truncated: 'Solo se han enviado los primeros {{limit}} caracteres',
+          sending: 'Enviando {{count}}…',
+          cancelSending: 'Detener el envío'
+        }
       },
       PULSE_BUTTON: {
         name: 'Botón de pulso',
