@@ -6,6 +6,7 @@ import {
   makeAnd,
   makeButton,
   makeGamepad,
+  makeKeyboard,
   makePulseButton,
   makeSwitch,
   makeNot
@@ -609,6 +610,33 @@ describe('BoardCompilerService', () => {
       expect(targets[unit.outputs[0]].ports).toContainEqual({
         component: pad,
         portIndex: slot
+      });
+    });
+  });
+
+  it('compiles a keyboard to one single-output unit per output, contiguous from its base, a bubble negating only its own', () => {
+    place(makeAnd(2, undefined, 8, 0));
+    const keyboard = place(makeKeyboard(0, 0));
+    keyboard.setPortNegated('out', 3, true);
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    const base = board.userInputs.get(keyboard.id)!;
+    expect(base).toBe(1);
+    const units = board.descriptor.components.slice(base);
+    expect(units).toHaveLength(8);
+    const targets = board.mapping.get(TOP_LEVEL_PATH)!;
+    units.forEach((unit, port) => {
+      expect(unit).toEqual({
+        type: 200,
+        inputs: [],
+        outputs: [expect.any(Number)],
+        ...(port === 3 ? { negOutputs: [0] } : {})
+      });
+      expect(targets[unit.outputs[0]].ports).toContainEqual({
+        component: keyboard,
+        portIndex: port
       });
     });
   });

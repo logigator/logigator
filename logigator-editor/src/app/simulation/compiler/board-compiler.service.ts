@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { TranslationService } from '../../translation/translation.service';
 import { LoggingService } from '../../logging/logging.service';
 import { Component } from '../../components/component';
-import { isUserInput, UserInput } from '../../components/user-input';
+import { isUserInput } from '../../components/user-input';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import {
@@ -394,7 +394,7 @@ export class BoardCompilerService {
       return;
     }
 
-    if (isUserInput(component)) {
+    if (isUserInput(component) || type === BuiltInComponentType.KEYBOARD) {
       this._emitUserInput(component, pinNodes, ctx);
       return;
     }
@@ -438,19 +438,22 @@ export class BoardCompilerService {
   }
 
   /**
-   * A {@link UserInput}: one single-output {@link ENGINE_USER_INPUT_TYPE} unit
-   * per slot — slot `i` being output port `i` — contiguously in slot order, so
-   * slot `i` is unit `first + i` from the index `userInputs` records. A bubble
-   * on output port `i` negates unit `i`'s only output. User inputs have no
-   * inputs, and a slot count other than the output count is a broken type,
-   * refused here rather than mis-wired.
+   * A user input or a keyboard: one single-output
+   * {@link ENGINE_USER_INPUT_TYPE} unit per output port, contiguously in port
+   * order, so slot `i` — output port `i` — is unit `first + i` from the index
+   * `userInputs` records. A bubble on output port `i` negates unit `i`'s only
+   * output. Both have no inputs, and a user input whose slot count is not its
+   * output count is a broken type, refused here rather than mis-wired.
    */
   private _emitUserInput(
-    component: Component & UserInput,
+    component: Component,
     pinNodes: number[],
     ctx: EmitContext
   ): void {
-    if (component.inputSlots !== component.numOutputs) {
+    if (
+      isUserInput(component) &&
+      component.inputSlots !== component.numOutputs
+    ) {
       throw new Error(
         `${component.config.symbol}: ${component.inputSlots} input slots ` +
           `for ${component.numOutputs} outputs`

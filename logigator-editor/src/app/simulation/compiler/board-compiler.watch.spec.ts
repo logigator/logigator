@@ -5,6 +5,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   makeButton,
   makeGamepad,
+  makeKeyboard,
   makeSwitch
 } from '../../../testing/factories';
 import { Component } from '../../components/component';
@@ -233,6 +234,56 @@ describe('BoardCompilerService watch index', () => {
     }
     // The wired-out control's unit drives the plug's net.
     expect(units[base + start].outputs[0]).toBe(
+      info.linkOfLocalNet[info.tables.portNets[2][0]]
+    );
+  });
+
+  it('addresses an inner keyboard through its first unit, a bubble on port i negating unit base + i only', () => {
+    const lead = makeSwitch(0, 0);
+    const keyboard = makeKeyboard(0, 2);
+    const plug = makeOutPlug(0, [12, 0]);
+    const corner = new Point(10.5, keyboard.connectionPoints[0].y);
+    const wires = [
+      wireBetween(keyboard.connectionPoints[0], corner),
+      wireBetween(corner, new Point(10.5, plug.connectionPoints[0].y)),
+      wireBetween(
+        new Point(10.5, plug.connectionPoints[0].y),
+        plug.connectionPoints[0]
+      )
+    ];
+    const circuit = liveToBody([lead, keyboard, plug], wires);
+    circuit.components[1].negOutputs = [5];
+    const box = registry.registerSnapshot({
+      kind: 'snapshot',
+      source: 'browser',
+      name: 'KeyboardBox',
+      symbol: 'KB',
+      description: '',
+      numInputs: 0,
+      numOutputs: 1,
+      labels: ['O'],
+      circuit
+    });
+    const instance = placeByType(box, [0, 0]);
+
+    const board = compiler.compile(project);
+    const info = board.watch.infoFor(String(instance.id))!;
+
+    const base = info.unitIndexFor(1)!;
+    expect(base).toBe(info.unitIndexFor(0)! + 1);
+    const units = board.descriptor.components;
+    expect(units).toHaveLength(base + 8);
+    for (let port = 0; port < 8; port++) {
+      const portNet = info.tables.portNets[1][port];
+      expect(units[base + port]).toEqual({
+        type: 200,
+        inputs: [],
+        outputs: [info.linkOfLocalNet[portNet]],
+        ...(port === 5 ? { negOutputs: [0] } : {})
+      });
+    }
+    // D0's unit drives the plug's net.
+    expect(units[base].outputs[0]).toBe(
       info.linkOfLocalNet[info.tables.portNets[2][0]]
     );
   });
