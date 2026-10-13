@@ -2,10 +2,10 @@
 
 Tapping an inspectable component in `SIMULATION` mode opens a live view of it:
 a floating window over the board on desktop; on compact, the shared non-modal
-bottom sheet, or a fullscreen takeover for canvas-hosting views. Three content
+bottom sheet, or a fullscreen takeover for canvas-hosting views. Four content
 kinds exist — the ROM's data inspector, the custom component's
-[watch](#the-custom-component-watch) and the [gamepad](#the-gamepad)'s
-controller.
+[watch](#the-custom-component-watch), the [gamepad](#the-gamepad)'s
+controller and the [keyboard](#the-keyboard)'s typing window.
 
 ## The Model: `ComponentInspection`
 
@@ -36,8 +36,8 @@ own units (`send(frames)`), drops the ones still queued while applying a reset
 (`cancel(reset)`), and counts the counted ones left (`pending()`) — through
 `SimulationService.sendFrames` and its siblings on the board, through
 `sendUnitFrames` with the copy's resolved first unit in a watch. The gamepad
-plays its slots through `press` and `release`; the ROM and the watch ignore
-the route.
+plays its slots through `press` and `release`, the keyboard sends frames, and
+the ROM and the watch ignore the route.
 
 ## Orchestration: `InspectionService`
 
@@ -427,3 +427,80 @@ the simulation stopping being ready, simulation exit included; the last three
 stop polling, which releases everything held. Assign mode lets go of `pad:`
 holders as of every other kind and takes no new one, so a controller plays
 nothing while keys are assigned.
+
+## The Keyboard
+
+A keyboard declares an inspection, so a tap opens its typing window:
+`KeyboardInspection` (`components/component-types/keyboard/keyboard-inspection.ts`)
+rendered by `KeyboardInspectionComponent`, a 420 × 230 window (300 × 180 at
+least) on desktop and a sheet tab on compact. The config's factory throws
+without an `InspectionContext`: a keyboard without a route could send nothing.
+
+**`KeyboardInspection`** turns what the view reports into the component's key
+operations (`pressKey`, `releaseKey`, `tapKeys`, `cancelKeys`, see
+[component-system.md](component-system.md)) over its route. `press(key, code)`
+is a physical key going down, remembered by its `KeyboardEvent.code`;
+`release(key)` sends only for the key on `D`, matched by `code`, so a Shift let
+go of first still releases the letter; `releaseHeld()` is focus loss;
+`type(codes)` sends text that had no keys as taps; `cancel()` drops the
+route's queue and sets `D` low at once. The inspection keeps the last 64 codes
+sent (`KEYBOARD_HISTORY_LENGTH`) and which of them is held, and re-reads on
+every frame the code on `D` (`KeyboardComponent.readCode`, ahead of any
+bubble) and the route's `pending()`. A stop, seen as
+`SimulationService.resets()` moving, clears the history and the held entry.
+`destroy()` releases the held key, so closing the window leaves nothing on
+`D`. The title is the type's name.
+
+**`KeyboardInspectionComponent`** is the window body. A hidden `<textarea>`
+over the history strip is the capture field, and every event is handled on it:
+
+- `keydown`: a key whose character is still being composed (`isComposing`,
+  or `key` is `Process`, `Unidentified` or `Dead`) passes through, its text
+  arriving as an input event. A repeat is consumed and sends nothing, which is
+  what ignores OS auto-repeat. Ctrl, Meta, or Alt without AltGraph passes
+  through, so the browser's own shortcuts work, and so does Shift+Tab, so the
+  focus can leave the field. A key `characterOfKey` (`ascii.ts`) knows is
+  consumed: an ASCII one is pressed, any other reported as skipped. Escape also
+  stops propagation, so it closes neither the window nor the sheet. Arrows and
+  F-keys pass through.
+- `keyup` hands its code to `release`.
+- `paste`, `beforeinput` (`insertText`, `insertFromPaste`, `insertLineBreak`,
+  and `deleteContentBackward` / `deleteContentForward` as BS / DEL) and
+  `compositionend` carry text without a keydown of its own. `textToCodes`
+  normalizes it — CRLF and CR to LF, non-ASCII skipped and counted, at most
+  `KEYBOARD_TEXT_LIMIT` (10 000) characters — and it goes out through `type`.
+- `focusout`, a `window` blur and `visibilitychange` to hidden release the
+  held key.
+
+After every input event the field holds a one-character sentinel with the
+caret behind it, because a soft keyboard often sends nothing for Backspace in
+an empty field. `ShortcutService` ignores a textarea target and
+`GamepadKeyboardService` passes text fields through, so neither acts on the
+field's keys; Escape, the one key the shortcuts take from a text field, is
+stopped there.
+
+The status line reads _Typing into the circuit · Shift+Tab to leave_ while the
+field has the focus and _Click here to type_ otherwise; a skipped-characters
+notice replaces it for 4 s. _Sending N…_ and its cancel button show while
+`pending()` is above zero. A `mousedown` anywhere in the view outside a
+control focuses the field. _Type text…_ opens `TypeTextDialogComponent`, a
+modal textarea capped at the limit that shows the skip count as it is edited
+and closes with the codes to send as taps; the focus returns to the field
+either way, and the dialog closes with the view.
+
+The view focuses the field once rendered, except on a touch device in the
+compact layout (`LayoutService.isCompact()` and `isTouch()`): an OS keyboard
+opens only for a focus inside the tap that asks for it, so there the strip
+reads _Tap to type_ until the field has the focus, and a tap on the strip
+lands on the field itself. The sheet stays above the OS keyboard because
+`lg-drawer` follows the visual viewport, and the inspection sheet sizes its
+panel rather than the view, so the view shrinks with it. The view going away
+while the inspection lives on — a tab switch, a breakpoint flip — releases the
+held key, since no keyup can reach it any more.
+
+**In a watch.** A tap on a keyboard copy opens the window through
+`SubCircuitWatch.activate` with the level's route and the breadcrumb as its
+place (_Outer › Inner › Keyboard_). Its frames reach the copy's own units
+through `sendUnitFrames`, the copy's readout follows its links like the rest
+of the level, and the level's teardown lets go of the key the copy holds (see
+The Custom-Component Watch).

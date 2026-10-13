@@ -52,8 +52,14 @@ submission order defines the engine's `triggerInput` indices and output layout.
   contiguously in slot order (`_emitUserInput`). Slot `i` is output port `i` —
   a type whose `inputSlots` differs from its output count is refused with an
   error — and `userInputs` records the first unit, so slot `i` is that index
-  plus `i`. A bubble on port `i` becomes `negOutputs: [0]` on unit `i`. Every
-  built-in user input has one slot, so one unit.
+  plus `i`. A bubble on port `i` becomes `negOutputs: [0]` on unit `i`. The
+  button, switch and pulse button have one slot, so one unit; the gamepad has
+  one per control.
+- **`KEYBOARD`** — takes the same branch without being a user input: one unit
+  per output port, `D0`…`D6` then `STB`, its first recorded in `userInputs`, so
+  the watch tables and `unitIndexFor` address it unchanged. The slot paths
+  refuse it, since `isUserInput` is false; its frames arrive through
+  `sendFrames` / `sendUnitFrames` instead.
 - **`LED_MATRIX`** — a unit whose cell outputs sit on no net: fresh nodes per
   cell, mapped back onto the component as pseudo-ports past the input range
   (row-major). An inner matrix simulates but stays dark in a watch.
@@ -406,7 +412,12 @@ still queued and apply a reset frame's writes at once, and `pendingFrames` /
 snapshot. A write addressing a slot past the component's outputs refuses the
 whole call. An inspection reaches all of them through its `InputRoute`
 (`send`, `cancel`, `pending` beside `press` and `release`), so it never
-resolves a unit itself.
+resolves a unit itself. The keyboard is what uses them: it has no slots here,
+and its window and the automation API send its press, release and tap frames
+through these calls (`KeyboardComponent`, see
+[component-system.md](component-system.md)). A press frame writes the code's
+seven bits and pulses `STB`, `counted` so the window's _Sending N…_ can count
+characters; a release frame writes the seven bits low.
 
 ---
 

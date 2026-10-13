@@ -117,11 +117,31 @@ operated through its inspection, and a press on a gamepad's body on the board
 operates no slot. The names option's key resolver is attached in the
 constructor, as `RomComponent` attaches its memory dimensions.
 
+The **keyboard** (`component-types/keyboard/`) drives outputs without being a
+`UserInput`: seven `level` data bits and a `pulse` strobe in one component,
+and no pointer gesture, so no slot path, canvas session or `setInput` reaches
+it. Its keys go through the component itself — `pressKey`, `releaseKey`,
+`tapKeys`, `cancelKeys` — which send [input frames](simulation.md#input-frames)
+built by `ascii.ts` through the route they are handed, and keep the one record
+of the key on `D` (`heldKey`, stamped with the session's reset count, so a stop
+outdates it). Its window and the automation API both call these, so they
+agree on the key on `D`: a window key that automation let go of sends nothing
+on its keyup. The body has the
+gamepad's layout, a 3-cell glyph column beside a 1-cell label column (its
+`portLabelRoom`): a static keycap glyph above a readout box. The readout shows
+the code on `D0`…`D6` read through `isOutputHigh`, each output ahead of its
+bubble, so it is the code the keyboard sends, and it follows the link state
+tick by tick (`setPortPowered`). A new code assigns the `BitmapText`'s text and
+scale and the box's alphas, never a context; only the readout is a
+rotation-counter container.
+
 Also worth knowing: `ignoresWireCollision` (only `TextComponent`; wires may pass
 through), the per-side negation sets (out-of-range entries ignored on read and
 pruned on serialize, so a resize stays undo-safe), `isInputHigh` (the display
 components' read of an input, which a bubble inverts — see
-[Simulation](simulation.md#units-and-links)), and `Component.serialize` /
+[Simulation](simulation.md#units-and-links)), `isOutputHigh` (the same read
+of an output ahead of its bubble, for the keyboard's readout), and
+`Component.serialize` /
 `deserialize`, which store type, grid-unit position, direction (omitted when
 East) and raw option values keyed by name.
 
@@ -222,7 +242,7 @@ or the definition rather than probed by constructing an instance.
 
 `symbolShape` is SVG **path data** in an 18-unit box, carried only by types whose
 canvas body is a drawn shape rather than their symbol text (LED, switch,
-button, pulse button, LED matrix, segment display, gamepad), so a palette tile
+button, pulse button, LED matrix, segment display, gamepad, keyboard), so a palette tile
 always previews what placing yields. Path data rather than markup because it binds through `[attr.d]` —
 Angular's sanitizer drops SVG from `[innerHTML]` outright.
 
