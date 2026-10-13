@@ -5,6 +5,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   makeButton,
   makeGamepad,
+  makeKeyboard,
   makeSwitch
 } from '../../../testing/factories';
 import {
@@ -17,6 +18,8 @@ import { ComponentProviderService } from '../component-provider.service';
 import { ButtonComponent } from '../component-types/button/button.component';
 import { GamepadComponent } from '../component-types/gamepad/gamepad.component';
 import { GamepadInspection } from '../component-types/gamepad/gamepad-inspection';
+import { KeyboardComponent } from '../component-types/keyboard/keyboard.component';
+import { KeyboardInspection } from '../component-types/keyboard/keyboard-inspection';
 import { SwitchComponent } from '../component-types/switch/switch.component';
 import { outputComponentConfig } from '../component-types/output/output.config';
 import { Project } from '../../project/project';
@@ -438,6 +441,93 @@ describe('SubCircuitWatch', () => {
 
       played.keyDown('a', 'KeyX');
       expect(levelsOf('a')).toEqual([true, false, true]);
+    });
+  });
+
+  describe('an inner keyboard', () => {
+    let inspections: InspectionService;
+    let watchEntry: OpenInspection;
+    let watch: SubCircuitWatch;
+    let keyboardCopy: KeyboardComponent;
+    /** The engine unit of the copy's `D0`. */
+    let base: number;
+    /** The unit of the board's own keyboard's `D0`. */
+    let boardBase: number;
+
+    beforeEach(async () => {
+      // A keyboard on the board too, whose units the copy's frames must miss.
+      const boardKeyboard = makeKeyboard(0, 20);
+      project.addComponent(boardKeyboard);
+      const instance = await placeNestedFixture(() => makeKeyboard());
+      boardBase = simulation.board!.userInputs.get(boardKeyboard.id)!;
+      inspections = TestBed.inject(InspectionService);
+      inspections.openFor(instance);
+      watchEntry = inspections.open()[0];
+      watch = watchEntry.inspection as SubCircuitWatch;
+      watch.activate(watch.activeLevel().session.components[0]);
+      keyboardCopy = watch.activeLevel().session
+        .components[0] as KeyboardComponent;
+      expect(keyboardCopy).toBeInstanceOf(KeyboardComponent);
+      base = watch.activeLevel().session.info.unitIndexFor(0)!;
+    });
+
+    afterEach(() => inspections.closeAll());
+
+    /** The code on the copy's data units after the last tick. */
+    const copyCode = () =>
+      Array.from({ length: 7 }, (_, bit) =>
+        fakeWorker.engine.output(base + bit) ? 1 << bit : 0
+      ).reduce((code, bit) => code | bit, 0);
+
+    it('opens its window on the copy, whose frames reach the copy’s units and not the board’s', () => {
+      watch.activate(keyboardCopy);
+      const opened = inspections.open().at(-1)!;
+      expect(opened.component).toBe(keyboardCopy);
+      const typing = opened.inspection as KeyboardInspection;
+      expect(typing).toBeInstanceOf(KeyboardInspection);
+
+      typing.press('KeyA', 0x41);
+
+      const units = fakeWorker.sentWrites().map((write) => write.unit);
+      expect(new Set(units)).toEqual(
+        new Set(Array.from({ length: 8 }, (_, slot) => base + slot))
+      );
+      expect(base).not.toBe(boardBase);
+      simulation.step();
+      expect(copyCode()).toBe(0x41);
+      expect(keyboardCopy.heldKey()).toEqual({ code: 0x41, key: 'KeyA' });
+    });
+
+    it('sets the copy’s data units low when the watch closes under a held key', () => {
+      keyboardCopy.pressKey(
+        { send: (frames) => watch.sendFrames(keyboardCopy, frames) },
+        0x41
+      );
+
+      inspections.close(watchEntry);
+
+      simulation.step();
+      expect(copyCode()).toBe(0x41);
+      simulation.step();
+      expect(copyCode()).toBe(0);
+    });
+
+    it('releases a key held from its window once when the watch closes', () => {
+      watch.activate(keyboardCopy);
+      const typing = inspections.open().at(-1)!
+        .inspection as KeyboardInspection;
+      typing.press('KeyA', 0x41);
+
+      inspections.close(watchEntry);
+
+      const releases = fakeWorker
+        .postedOfKind('queueFrames')
+        .flatMap((msg) => msg.frames)
+        .filter((frame) => frame.units.every(([, , state]) => !state));
+      expect(releases).toHaveLength(1);
+      simulation.step();
+      simulation.step();
+      expect(copyCode()).toBe(0);
     });
   });
 });

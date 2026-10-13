@@ -3,8 +3,7 @@ import { TranslationService } from '../../../translation/translation.service';
 import { SimulationService } from '../../../simulation/simulation.service';
 import { getStaticDI } from '../../../utils/get-di';
 import { ComponentInspection, InputRoute } from '../../component-inspection';
-import { pressFrame, releaseFrame, resetFrame, tapFrames } from './ascii';
-import type { KeyboardComponent } from './keyboard.component';
+import type { KeyboardComponent, KeyboardHeldKey } from './keyboard.component';
 import { KeyboardInspectionComponent } from './keyboard-inspection.component';
 
 /** How many characters the window's history keeps. */
@@ -17,11 +16,9 @@ export interface KeyboardHistoryEntry {
   readonly code: number;
 }
 
-/** The physical key whose code is on `D`. */
-interface HeldKey {
-  /** Its `KeyboardEvent.code`, which its keyup carries whatever the modifiers. */
-  readonly key: string;
-  /** The history entry it sent. */
+/** A key the window pressed, beside the history entry it sent. */
+interface PressedKey {
+  readonly held: KeyboardHeldKey;
   readonly entry: number;
 }
 
@@ -32,9 +29,10 @@ interface HeldKey {
  * Text that arrives without a key (a paste, a soft keyboard's word, the Type
  * text dialog) goes out as taps, a press and a release per character.
  *
- * At most one physical key is on `D`: a press takes it over from the key
- * held before, and so does a tap, so the earlier key's release sends
- * nothing. Only the key on `D` going up releases it.
+ * At most one key is on `D`: a press takes it over from the key held
+ * before, and so does a tap, so the earlier key's release sends nothing. Only
+ * the key on `D` going up releases it. Which key that is lives on the
+ * component, so a key pressed or released elsewhere counts here too.
  *
  * What the window shows of the circuit — the code on `D`, how many
  * characters are still queued — is re-read on every frame. The history of
@@ -55,9 +53,14 @@ export class KeyboardInspection extends ComponentInspection {
   /** The last {@link KEYBOARD_HISTORY_LENGTH} characters sent, oldest first. */
   public readonly history = this._history.asReadonly();
 
-  private readonly _held = signal<HeldKey | null>(null);
+  private readonly _pressed = signal<PressedKey | null>(null);
   /** The history entry of the key held on `D`, or `null`. */
-  public readonly heldEntry = computed(() => this._held()?.entry ?? null);
+  public readonly heldEntry = computed(() => {
+    const pressed = this._pressed();
+    return pressed && pressed.held === this.component.heldKey()
+      ? pressed.entry
+      : null;
+  });
 
   private readonly _code = signal(0);
   /** The code on `D` as the circuit sees it, ahead of any bubble. */
@@ -88,23 +91,21 @@ export class KeyboardInspection extends ComponentInspection {
    * key is the one whose release sets `D` to zero.
    */
   public press(key: string, code: number): void {
-    const frame = pressFrame(code);
-    this.route.send([frame]);
+    this.component.pressKey(this.route, code, key);
     const [entry] = this.record([code]);
-    this._held.set({ key, entry });
+    this._pressed.set({ held: this.component.heldKey()!, entry });
   }
 
   /** The physical key `key` went up; only the key on `D` sends a release. */
   public release(key: string): void {
-    if (this._held()?.key !== key) return;
-    this.releaseHeld();
+    if (this.component.heldKey()?.key !== key) return;
+    this.component.releaseKey(this.route);
   }
 
   /** Releases the key on `D`, if a physical key is: the focus went away. */
   public releaseHeld(): void {
-    if (!this._held()) return;
-    this._held.set(null);
-    this.route.send([releaseFrame()]);
+    if (this.component.heldKey()?.key == null) return;
+    this.component.releaseKey(this.route);
   }
 
   /**
@@ -113,16 +114,13 @@ export class KeyboardInspection extends ComponentInspection {
    */
   public type(codes: readonly number[]): void {
     if (codes.length === 0) return;
-    const frames = tapFrames(codes);
-    this._held.set(null);
-    this.route.send(frames);
+    this.component.tapKeys(this.route, codes);
     this.record(codes);
   }
 
   /** Drops every character still queued and sets `D` to zero at once. */
   public cancel(): void {
-    this._held.set(null);
-    this.route.cancel(resetFrame());
+    this.component.cancelKeys(this.route);
     this._pending.set(0);
   }
 
@@ -131,7 +129,7 @@ export class KeyboardInspection extends ComponentInspection {
     if (resets !== this.seenResets) {
       // The rebuilt engine has nothing on D and nothing queued.
       this.seenResets = resets;
-      this._held.set(null);
+      this._pressed.set(null);
       this._history.set([]);
     }
     this.refresh();

@@ -135,8 +135,10 @@ slot)` is the absolute path automation drives.
   tables are keyed by body-array position, so a shape mismatch means the
   definition changed under the session: construction **throws** rather than
   mis-lighting wires. Destroying one sets every high `level` slot of its
-  copies low, held or toggled, which would otherwise leave their engine units
-  high with no copy left to reset them. The session registers with the
+  copies low, held or toggled, and lets go of the key a keyboard copy holds
+  (`KeyboardComponent.releaseKey`, queued behind what it still has to send),
+  which would otherwise leave their engine units high with no copy left to
+  reset them. The session registers with the
   snapshot fan-out and requests a full seed snapshot, which also poses the
   copies' `toggle` slots from their output-link power — a powered one adopted
   through `SimulationService.adoptHighLevel`, so a stop resets it too.

@@ -3,6 +3,7 @@ import { Observable, Subject } from 'rxjs';
 import { Component } from '../component';
 import {
   ComponentInspection,
+  InputFrame,
   InputRoute,
   InspectionTitlePart
 } from '../component-inspection';
@@ -194,6 +195,23 @@ export class SubCircuitWatch extends ComponentInspection {
     }
     return this.simulation.setUnitInputs(unitIndex, component, values, () =>
       level.session.project.triggerTicker('single')
+    );
+  }
+
+  /**
+   * Queues input frames on the units of a component of the active level's
+   * copy, as `SimulationService.sendFrames` does a top-level one. Reports
+   * whether the component is one of the level's inputs and every write fits
+   * its outputs.
+   */
+  public sendFrames(
+    component: Component,
+    frames: readonly InputFrame[]
+  ): boolean {
+    const unitIndex = this._unitIndexAt(this.activeLevel(), component);
+    return (
+      unitIndex !== undefined &&
+      this.simulation.sendUnitFrames(unitIndex, component, frames)
     );
   }
 

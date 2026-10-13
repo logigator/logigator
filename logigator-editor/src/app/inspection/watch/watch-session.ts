@@ -1,5 +1,6 @@
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
+import { KeyboardComponent } from '../../components/component-types/keyboard/keyboard.component';
 import { isUserInput } from '../../components/user-input';
 import { LoggingService } from '../../logging/logging.service';
 import { LinkRenderTargets } from '../../simulation/compiler/compiled-board.model';
@@ -126,11 +127,19 @@ export class WatchSession {
 
   public destroy(): void {
     this.unregister();
-    // Every high `level` slot of a copy is set low first: once the copy is
-    // gone, nothing is left to reset its engine unit.
+    // Every high `level` slot of a copy, and the key a keyboard copy holds,
+    // is set low first: once the copy is gone, nothing is left to reset its
+    // engine units.
     const simulation = getStaticDI(SimulationService);
     this.components.forEach((component, index) => {
       const unitIndex = this.info.unitIndexFor(index);
+      if (component instanceof KeyboardComponent && unitIndex !== undefined) {
+        component.releaseKey({
+          send: (frames) =>
+            simulation.sendUnitFrames(unitIndex, component, frames)
+        });
+        return;
+      }
       if (
         !isUserInput(component) ||
         component.drive !== 'level' ||

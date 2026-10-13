@@ -1,3 +1,4 @@
+import { computed, signal, Signal } from '@angular/core';
 import { BitmapText, Graphics } from 'pixi.js';
 import {
   KEYBOARD_DATA_BITS,
@@ -5,6 +6,9 @@ import {
   keyboardMeta
 } from '@logigator/core';
 import { Component } from '../../component';
+import type { InputRoute } from '../../component-inspection';
+import { SimulationService } from '../../../simulation/simulation.service';
+import { getStaticDI } from '../../../utils/get-di';
 import { PX } from '../../../utils/grid';
 import { CANVAS_FONT_FAMILY, fitMonoFontSize } from '../../../utils/text-fit';
 import {
@@ -13,7 +17,14 @@ import {
   KeyboardReadoutFillGraphics,
   KeyboardReadoutFrameGraphics
 } from '../../../rendering/graphics/keyboard.graphics';
-import { codeFromBits, readoutText } from './ascii';
+import {
+  codeFromBits,
+  pressFrame,
+  readoutText,
+  releaseFrame,
+  resetFrame,
+  tapFrames
+} from './ascii';
 import { keyboardComponentConfig, KeyboardOptions } from './keyboard.config';
 
 /** The readout's font size for a single character, in pixels. */
@@ -26,10 +37,28 @@ const LIT_FILL_ALPHA = 0.4;
 /** The box outline's alpha while D is zero. */
 const EMPTY_FRAME_ALPHA = 0.4;
 
+/** The key whose code is on `D`. */
+export interface KeyboardHeldKey {
+  /** The code it put on `D`. */
+  readonly code: number;
+  /**
+   * The physical key holding it, by `KeyboardEvent.code`, which its keyup
+   * carries whatever the modifiers; `null` for a key pressed with no physical
+   * key behind it.
+   */
+  readonly key: string | null;
+}
+
+/** What a key operation sends its frames through. */
+export type KeyboardRoute = Pick<InputRoute, 'send'>;
+
 /**
  * A keyboard: `D0`…`D6` carry the ASCII code of the held key, `STB` pulses on
- * every press. The canvas component holds no simulation state of its own and
- * is not a user input: no slot path and no pointer on the canvas drives it.
+ * every press. It is not a user input: no slot path and no pointer on the
+ * canvas drives it. Its keys are pressed and released through the methods
+ * here, which send the frames through the route they are given and keep the
+ * one record of which key is on `D` ({@link heldKey}), so every source of
+ * keys agrees on it.
  *
  * The body is a keycap glyph above a readout box in the glyph column, the port
  * labels beside them. The readout shows the code on the data outputs, each
@@ -47,8 +76,72 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
   declare private _frame: Graphics;
   declare private _fill: Graphics;
 
+  // Stamped with the session reset it was pressed in: a stop rebuilds the
+  // engine with nothing on D.
+  private readonly _held = signal<{
+    held: KeyboardHeldKey;
+    resets: number;
+  } | null>(null);
+
+  /**
+   * The key on `D`, or `null` when no key holds it. Transient session state:
+   * {@link clearSimState} drops it, and a stop outdates it.
+   */
+  public readonly heldKey: Signal<KeyboardHeldKey | null> = computed(() => {
+    const record = this._held();
+    return record && record.resets === this.sessionResets()
+      ? record.held
+      : null;
+  });
+
   constructor(options: KeyboardOptions) {
     super(keyboardMeta, options);
+  }
+
+  /**
+   * Puts `code` on `D` with a strobe, held by the physical key `key` or by
+   * none. The key held before is let go of without a release of its own.
+   */
+  public pressKey(
+    route: KeyboardRoute,
+    code: number,
+    key: string | null = null
+  ): void {
+    route.send([pressFrame(code)]);
+    this._held.set({ held: { code, key }, resets: this.sessionResets() });
+  }
+
+  /** Sets `D` to zero if a key is on it; reports whether one was. */
+  public releaseKey(route: KeyboardRoute): boolean {
+    if (!this.heldKey()) {
+      return false;
+    }
+    this._held.set(null);
+    route.send([releaseFrame()]);
+    return true;
+  }
+
+  /**
+   * Sends `codes` as taps, a press and a release each, in order. A tap takes
+   * `D` over, so the key held before counts as released.
+   */
+  public tapKeys(route: KeyboardRoute, codes: readonly number[]): void {
+    if (codes.length === 0) {
+      return;
+    }
+    const frames = tapFrames(codes);
+    this._held.set(null);
+    route.send(frames);
+  }
+
+  /** Drops every frame `route` still has queued and sets `D` to zero at once. */
+  public cancelKeys(route: Pick<InputRoute, 'cancel'>): void {
+    this._held.set(null);
+    route.cancel(resetFrame());
+  }
+
+  public override clearSimState(): void {
+    this._held.set(null);
   }
 
   public override setPortPowered(portIndex: number, powered: boolean): void {
@@ -76,6 +169,10 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
    */
   public readCode(): number {
     return codeFromBits((bit) => this.isOutputHigh(bit));
+  }
+
+  private sessionResets(): number {
+    return getStaticDI(SimulationService).resets();
   }
 
   private _syncReadout(): void {
