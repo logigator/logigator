@@ -316,6 +316,7 @@ const es: TranslationSchema = {
           onD: 'En D',
           typing: 'Escribiendo en el circuito · Mayús+Tab para salir',
           clickToType: 'Haz clic aquí para escribir',
+          tapToType: 'Toca aquí para escribir',
           skippedOne: '{{char}} no es ASCII y se ha omitido',
           skippedMany: '{{count}} caracteres no eran ASCII y se han omitido',
           truncated: 'Solo se han enviado los primeros {{limit}} caracteres',

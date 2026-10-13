@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { DialogRef, DialogService, LgButton } from '@logigator/ui';
 import { DialogId } from '../../../analytics/analytics.mapping';
+import { LayoutService } from '../../../layout/layout.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationService } from '../../../translation/translation.service';
 import {
@@ -88,8 +89,13 @@ function isShortcut(e: KeyboardEvent): boolean {
  *   releases the key on `D`.
  *
  * After every input event the field holds only its one-character sentinel.
- * Opening the view focuses it. Type text… opens a dialog for a longer text,
- * which goes out as taps once sent; the dialog closes with the view.
+ * Opening the view focuses it, except on a touch device in the compact
+ * layout: an OS keyboard opens only for a focus inside the tap that asks for
+ * it, and a focus without one would look like typing while no keyboard is
+ * up. There the strip says `Tap to type` while the field lacks the focus, and
+ * a tap on the strip lands on the field itself, which takes the focus inside
+ * that tap. Type text… opens a dialog for a longer text, which goes out as
+ * taps once sent; the dialog closes with the view.
  */
 @Component({
   selector: 'app-keyboard-inspection',
@@ -111,18 +117,29 @@ function isShortcut(e: KeyboardEvent): boolean {
           class="flex h-10 items-center justify-end gap-px overflow-hidden px-2 font-mono text-base"
           aria-hidden="true"
         >
-          @for (char of strip(); track char.id) {
+          @if (tapToType()) {
             <span
-              class="shrink-0 rounded-sm px-px leading-6 whitespace-pre"
-              [class.text-xs]="char.chip"
-              [class.text-muted]="char.chip && !char.held"
-              [class.bg-primary]="char.held"
-              [class.text-primary-contrast]="char.held"
-              >{{ char.label }}</span
+              class="flex w-full items-center justify-center gap-1.5 font-sans text-sm text-muted"
             >
-          }
-          @if (focused()) {
-            <span class="ml-px h-6 w-px shrink-0 bg-primary"></span>
+              <i class="ph ph-hand-tap shrink-0"></i>
+              <span class="truncate">
+                {{ t('components.def.KEYBOARD.window.tapToType') }}
+              </span>
+            </span>
+          } @else {
+            @for (char of strip(); track char.id) {
+              <span
+                class="shrink-0 rounded-sm px-px leading-6 whitespace-pre"
+                [class.text-xs]="char.chip"
+                [class.text-muted]="char.chip && !char.held"
+                [class.bg-primary]="char.held"
+                [class.text-primary-contrast]="char.held"
+                >{{ char.label }}</span
+              >
+            }
+            @if (focused()) {
+              <span class="ml-px h-6 w-px shrink-0 bg-primary"></span>
+            }
           }
         </div>
         <textarea
@@ -141,6 +158,7 @@ function isShortcut(e: KeyboardEvent): boolean {
           (input)="onInput($event)"
           (compositionend)="onCompositionEnd($event)"
           (focus)="focused.set(true)"
+          (click)="placeCaret()"
           (focusout)="onFocusOut()"
         ></textarea>
       </div>
@@ -168,7 +186,7 @@ function isShortcut(e: KeyboardEvent): boolean {
               {{ t('components.def.KEYBOARD.window.typing') }}
             </span>
           </span>
-        } @else {
+        } @else if (!tapToType()) {
           <span class="min-w-0 truncate text-muted">
             {{ t('components.def.KEYBOARD.window.clickToType') }}
           </span>
@@ -211,11 +229,23 @@ export class KeyboardInspectionComponent {
 
   private readonly translation = inject(TranslationService);
   private readonly dialogs = inject(DialogService);
+  private readonly layout = inject(LayoutService);
   private readonly field =
     viewChild.required<ElementRef<HTMLTextAreaElement>>('field');
 
   /** Whether the capture field has the focus, which is when keys are typed. */
   protected readonly focused = signal(false);
+  /**
+   * Whether the field takes the focus only from a tap on it: a touch device
+   * in the compact layout, where that tap is what opens the OS keyboard.
+   */
+  private readonly focusByTap = computed(
+    () => this.layout.isCompact() && this.layout.isTouch()
+  );
+  /** Whether the strip asks for the tap that focuses the field. */
+  protected readonly tapToType = computed(
+    () => this.focusByTap() && !this.focused()
+  );
   /** A skipped-characters notice, shown in place of the status for a while. */
   protected readonly notice = signal<string | null>(null);
   private noticeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -271,7 +301,7 @@ export class KeyboardInspectionComponent {
     afterNextRender(() => {
       const field = this.field().nativeElement;
       this.restoreSentinel();
-      field.focus({ preventScroll: true });
+      if (!this.focusByTap()) field.focus({ preventScroll: true });
       this.focused.set(document.activeElement === field);
     });
 
@@ -287,7 +317,10 @@ export class KeyboardInspectionComponent {
 
   /**
    * A press anywhere in the view outside a control types into the field, and
-   * keeps the focus where it already was if that is the field.
+   * keeps the focus where it already was if that is the field. On touch, the
+   * mousedown a tap produces arrives inside that tap, so the focus it gives
+   * opens the OS keyboard; a tap on the strip lands on the field itself and
+   * passes through to the browser's own focus.
    */
   protected claimFocus(e: MouseEvent): void {
     const field = this.field().nativeElement;
@@ -364,6 +397,15 @@ export class KeyboardInspectionComponent {
   protected onCompositionEnd(e: CompositionEvent): void {
     this.typeText(e.data);
     this.restoreSentinel();
+  }
+
+  /**
+   * Puts the caret back after the sentinel where a tap on the field placed it
+   * in front, which would leave a soft keyboard's Backspace nothing to delete.
+   */
+  protected placeCaret(): void {
+    const field = this.field().nativeElement;
+    field.setSelectionRange(SENTINEL.length, SENTINEL.length);
   }
 
   protected onFocusOut(): void {
@@ -450,8 +492,7 @@ export class KeyboardInspectionComponent {
   }
 
   private restoreSentinel(): void {
-    const field = this.field().nativeElement;
-    field.value = SENTINEL;
-    field.setSelectionRange(SENTINEL.length, SENTINEL.length);
+    this.field().nativeElement.value = SENTINEL;
+    this.placeCaret();
   }
 }

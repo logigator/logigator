@@ -320,6 +320,7 @@ const de: TranslationSchema = {
           typing:
             'Eingaben gehen an die Schaltung · Umschalt+Tab zum Verlassen',
           clickToType: 'Hier klicken, um zu tippen',
+          tapToType: 'Hier tippen, um zu schreiben',
           skippedOne: '{{char}} ist kein ASCII-Zeichen und wurde übersprungen',
           skippedMany:
             '{{count}} Zeichen waren keine ASCII-Zeichen und wurden übersprungen',

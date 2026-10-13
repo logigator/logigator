@@ -9,6 +9,10 @@ import { SheetInspectionPresenter } from './sheet-inspection.presenter';
  * simulation — no scrim and no focus trap, so the canvas above stays live. One
  * view at a time; a tab row switches between several.
  *
+ * The sheet's height is set on the drawer's panel rather than on the view, so
+ * the view shrinks with the panel's cap when an on-screen keyboard leaves
+ * less room; the extra 5.5rem is the drawer's header and padding.
+ *
  * The view is keyed by its entry, so switching tabs destroys one view and
  * builds the next, even between two inspections sharing a renderer: a view
  * is bound to the inspection it was built for, and never handed another.
@@ -23,8 +27,9 @@ import { SheetInspectionPresenter } from './sheet-inspection.presenter';
       [visible]="presenter.entries().length > 0"
       (visibleChange)="onVisibleChange($event)"
       [header]="title()"
+      styleClass="h-[calc(45dvh+5.5rem)]"
     >
-      <div class="flex h-[45dvh] flex-col gap-2">
+      <div class="flex h-full flex-col gap-2">
         @if (presenter.entries().length > 1) {
           <div class="flex shrink-0 gap-1 overflow-x-auto">
             @for (entry of presenter.entries(); track entry) {

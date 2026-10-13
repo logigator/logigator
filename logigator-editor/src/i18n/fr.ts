@@ -318,6 +318,7 @@ const fr: TranslationSchema = {
           onD: 'Sur D',
           typing: 'Vous tapez dans le circuit · Maj+Tab pour sortir',
           clickToType: 'Cliquez ici pour taper',
+          tapToType: 'Touchez ici pour taper',
           skippedOne: "{{char}} n'est pas un caractère ASCII et a été ignoré",
           skippedMany:
             "{{count}} caractères n'étaient pas ASCII et ont été ignorés",

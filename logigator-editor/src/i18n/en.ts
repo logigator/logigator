@@ -317,6 +317,7 @@ const en = {
           onD: 'On D',
           typing: 'Typing into the circuit · Shift+Tab to leave',
           clickToType: 'Click here to type',
+          tapToType: 'Tap to type',
           skippedOne: "{{char}} isn't ASCII and was skipped",
           skippedMany: "{{count}} characters weren't ASCII and were skipped",
           truncated: 'Only the first {{limit}} characters were sent',
