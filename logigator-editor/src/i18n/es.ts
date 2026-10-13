@@ -320,7 +320,16 @@ const es: TranslationSchema = {
           skippedMany: '{{count}} caracteres no eran ASCII y se han omitido',
           truncated: 'Solo se han enviado los primeros {{limit}} caracteres',
           sending: 'Enviando {{count}}…',
-          cancelSending: 'Detener el envío'
+          cancelSending: 'Detener el envío',
+          typeText: 'Escribir texto…'
+        },
+        typeText: {
+          header: 'Escribir texto',
+          label: 'Texto que enviará el teclado',
+          skippedOne: '{{char}} no es ASCII y se omitirá',
+          skippedMany: '{{count}} caracteres no son ASCII y se omitirán',
+          send: 'Enviar',
+          cancel: 'Cancelar'
         }
       },
       PULSE_BUTTON: {

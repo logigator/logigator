@@ -67,6 +67,7 @@ export const DialogId = {
   ShareProject: 'share-project',
   ShareProjectFromList: 'share-project-from-list',
   ShortcutManager: 'shortcut-manager',
+  TypeText: 'type-text',
   Upload: 'upload'
 } as const;
 

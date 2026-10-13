@@ -325,7 +325,17 @@ const de: TranslationSchema = {
             '{{count}} Zeichen waren keine ASCII-Zeichen und wurden übersprungen',
           truncated: 'Nur die ersten {{limit}} Zeichen wurden gesendet',
           sending: 'Sende {{count}}…',
-          cancelSending: 'Senden abbrechen'
+          cancelSending: 'Senden abbrechen',
+          typeText: 'Text eingeben…'
+        },
+        typeText: {
+          header: 'Text eingeben',
+          label: 'Text, den die Tastatur senden soll',
+          skippedOne: '{{char}} ist kein ASCII-Zeichen und wird übersprungen',
+          skippedMany:
+            '{{count}} Zeichen sind keine ASCII-Zeichen und werden übersprungen',
+          send: 'Senden',
+          cancel: 'Abbrechen'
         }
       },
       PULSE_BUTTON: {

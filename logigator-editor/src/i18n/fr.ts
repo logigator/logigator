@@ -323,7 +323,17 @@ const fr: TranslationSchema = {
             "{{count}} caractères n'étaient pas ASCII et ont été ignorés",
           truncated: 'Seuls les {{limit}} premiers caractères ont été envoyés',
           sending: 'Envoi : {{count}}…',
-          cancelSending: "Arrêter l'envoi"
+          cancelSending: "Arrêter l'envoi",
+          typeText: 'Saisir du texte…'
+        },
+        typeText: {
+          header: 'Saisir du texte',
+          label: 'Texte à envoyer au clavier',
+          skippedOne: "{{char}} n'est pas un caractère ASCII et sera ignoré",
+          skippedMany:
+            '{{count}} caractères ne sont pas ASCII et seront ignorés',
+          send: 'Envoyer',
+          cancel: 'Annuler'
         }
       },
       PULSE_BUTTON: {

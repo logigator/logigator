@@ -10,7 +10,8 @@ import {
   signal,
   viewChild
 } from '@angular/core';
-import { LgButton } from '@logigator/ui';
+import { DialogRef, DialogService, LgButton } from '@logigator/ui';
+import { DialogId } from '../../../analytics/analytics.mapping';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationService } from '../../../translation/translation.service';
 import {
@@ -21,6 +22,7 @@ import {
   textToCodes
 } from './ascii';
 import type { KeyboardInspection } from './keyboard-inspection';
+import { TypeTextDialogComponent } from './type-text-dialog.component';
 
 /**
  * The capture field's one character. A soft keyboard often sends nothing for
@@ -86,7 +88,8 @@ function isShortcut(e: KeyboardEvent): boolean {
  *   releases the key on `D`.
  *
  * After every input event the field holds only its one-character sentinel.
- * Opening the view focuses it.
+ * Opening the view focuses it. Type text… opens a dialog for a longer text,
+ * which goes out as taps once sent; the dialog closes with the view.
  */
 @Component({
   selector: 'app-keyboard-inspection',
@@ -173,6 +176,15 @@ function isShortcut(e: KeyboardEvent): boolean {
       </div>
 
       <div class="flex min-h-8.5 shrink-0 items-center gap-2 text-sm">
+        <button
+          lgButton
+          size="sm"
+          severity="secondary"
+          outlined
+          (onClick)="openTypeText()"
+        >
+          {{ t('components.def.KEYBOARD.window.typeText') }}
+        </button>
         <span class="grow"></span>
         @if (pending() > 0) {
           <span class="text-muted">
@@ -198,6 +210,7 @@ export class KeyboardInspectionComponent {
   public readonly inspection = input.required<KeyboardInspection>();
 
   private readonly translation = inject(TranslationService);
+  private readonly dialogs = inject(DialogService);
   private readonly field =
     viewChild.required<ElementRef<HTMLTextAreaElement>>('field');
 
@@ -206,6 +219,10 @@ export class KeyboardInspectionComponent {
   /** A skipped-characters notice, shown in place of the status for a while. */
   protected readonly notice = signal<string | null>(null);
   private noticeTimer: ReturnType<typeof setTimeout> | undefined;
+  private typeTextRef: DialogRef<
+    readonly number[],
+    TypeTextDialogComponent
+  > | null = null;
 
   protected readonly pending = computed(() => this.inspection().pending());
 
@@ -261,6 +278,7 @@ export class KeyboardInspectionComponent {
     inject(DestroyRef).onDestroy(() => {
       listeners.abort();
       clearTimeout(this.noticeTimer);
+      this.typeTextRef?.close();
       // The view can go while the inspection stays (a breakpoint flip moves
       // it to another frame); no keyup can reach this view any more.
       this.inspection().releaseHeld();
@@ -351,6 +369,28 @@ export class KeyboardInspectionComponent {
   protected onFocusOut(): void {
     this.focused.set(false);
     this.inspection().releaseHeld();
+  }
+
+  /**
+   * Opens the Type text dialog; what it closes with goes out as taps, and the
+   * focus comes back to the capture field either way.
+   */
+  public openTypeText(): void {
+    const ref = this.dialogs.open(TypeTextDialogComponent, {
+      header: this.translation.translate(
+        'components.def.KEYBOARD.typeText.header'
+      ),
+      width: '32rem',
+      modal: true,
+      closable: true,
+      telemetryId: DialogId.TypeText
+    });
+    this.typeTextRef = ref;
+    ref.onClose.subscribe((codes) => {
+      this.typeTextRef = null;
+      if (codes) this.inspection().type(codes);
+      this.field().nativeElement.focus({ preventScroll: true });
+    });
   }
 
   protected cancel(): void {

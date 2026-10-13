@@ -321,7 +321,16 @@ const en = {
           skippedMany: "{{count}} characters weren't ASCII and were skipped",
           truncated: 'Only the first {{limit}} characters were sent',
           sending: 'Sending {{count}}…',
-          cancelSending: 'Stop sending'
+          cancelSending: 'Stop sending',
+          typeText: 'Type text…'
+        },
+        typeText: {
+          header: 'Type text',
+          label: 'Text to send to the keyboard',
+          skippedOne: "{{char}} isn't ASCII and will be skipped",
+          skippedMany: "{{count}} characters aren't ASCII and will be skipped",
+          send: 'Send',
+          cancel: 'Cancel'
         }
       },
       PULSE_BUTTON: {

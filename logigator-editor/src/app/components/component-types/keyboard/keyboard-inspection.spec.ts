@@ -280,6 +280,47 @@ describe('KeyboardInspectionComponent capture', () => {
     ]);
   });
 
+  /** Opens Type text, enters `text` and returns the dialog's form. */
+  function typeTextDialog(text: string): HTMLFormElement {
+    fixture.componentInstance.openTypeText();
+    TestBed.inject(ApplicationRef).tick();
+    const dialogField =
+      document.querySelector<HTMLTextAreaElement>('#type-text-field')!;
+    dialogField.value = text;
+    dialogField.dispatchEvent(new Event('input', { bubbles: true }));
+    TestBed.inject(ApplicationRef).tick();
+    return dialogField.form!;
+  }
+
+  function submitButton(form: HTMLFormElement): HTMLButtonElement {
+    return form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+  }
+
+  it('sends the Type text dialog’s text as taps, read as a paste is', () => {
+    const form = typeTextDialog('h\r\nä!');
+    submitButton(form).click();
+    TestBed.inject(ApplicationRef).tick();
+
+    expect(route.sent).toEqual([
+      'press h',
+      'release',
+      'press LF',
+      'release',
+      'press !',
+      'release'
+    ]);
+    expect(document.querySelector('#type-text-field')).toBeNull();
+    expect(document.activeElement).toBe(field);
+  });
+
+  it('offers nothing to send for a text without an ASCII character', () => {
+    const form = typeTextDialog('äöü');
+
+    expect(submitButton(form).disabled).toBe(true);
+    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    expect(route.sent).toEqual([]);
+  });
+
   it('forgets the history and the held key once a stop rebuilds the engine', () => {
     key('keydown', 'KeyA', 'a');
     expect(inspection.history()).toHaveLength(1);
