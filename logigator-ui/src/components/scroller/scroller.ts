@@ -5,6 +5,7 @@ import {
   CdkVirtualScrollViewport
 } from '@angular/cdk/scrolling';
 import {
+  AfterViewInit,
   afterNextRender,
   Component,
   contentChild,
@@ -25,6 +26,7 @@ import {
  * two-axis scroll container — rows wider than it overflow horizontally
  * without growing it, since the CDK content wrapper is absolutely positioned.
  * A host driving that axis reads {@link scrolled} and {@link viewportElement}.
+ * A host that loads what its rows show reads {@link renderedRangeChange}.
  */
 @Component({
   selector: 'lg-scroller',
@@ -55,7 +57,7 @@ import {
     </cdk-virtual-scroll-viewport>
   `
 })
-export class LgScroller {
+export class LgScroller implements AfterViewInit {
   readonly items = input<readonly unknown[]>([]);
   readonly itemSize = input.required<number>();
   readonly scrollHeight = input<string>();
@@ -65,6 +67,12 @@ export class LgScroller {
   readonly tabindex = input<string | null>(null);
 
   readonly scrolled = output<Event>();
+  /**
+   * The item indexes `[start, end)` the viewport has rendered — the rows on
+   * screen plus the CDK's buffer — on every change: the first layout, a
+   * scroll, a resize, a change of items.
+   */
+  readonly renderedRangeChange = output<{ start: number; end: number }>();
 
   protected readonly itemTemplate = contentChild<TemplateRef<unknown>>('item');
   private readonly viewport = viewChild.required(CdkVirtualScrollViewport);
@@ -83,6 +91,14 @@ export class LgScroller {
       observer.observe(this.viewportElement);
       destroyRef.onDestroy(() => observer.disconnect());
     });
+  }
+
+  ngAfterViewInit(): void {
+    // Subscribed before the viewport's first layout, which runs on a
+    // microtask after its init. The stream completes with the viewport.
+    this.viewport().renderedRangeStream.subscribe(({ start, end }) =>
+      this.renderedRangeChange.emit({ start, end })
+    );
   }
 
   /** The scroll container element, for reading or driving the horizontal axis. */
