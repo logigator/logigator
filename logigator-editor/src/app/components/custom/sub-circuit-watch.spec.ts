@@ -20,6 +20,7 @@ import { GamepadComponent } from '../component-types/gamepad/gamepad.component';
 import { GamepadInspection } from '../component-types/gamepad/gamepad-inspection';
 import { KeyboardComponent } from '../component-types/keyboard/keyboard.component';
 import { KeyboardInspection } from '../component-types/keyboard/keyboard-inspection';
+import { codeFromBits } from '../component-types/keyboard/ascii';
 import { SwitchComponent } from '../component-types/switch/switch.component';
 import { outputComponentConfig } from '../component-types/output/output.config';
 import { Project } from '../../project/project';
@@ -33,7 +34,7 @@ import {
 } from '../../simulation/worker/simulation-worker.service';
 import { Wire } from '../../wires/wire';
 import { WindowService } from '@logigator/ui';
-import { WireDirection } from '@logigator/core';
+import { KEYBOARD_DATA_BITS, WireDirection } from '@logigator/core';
 import { OpenInspection } from '../../inspection/inspection-presenter';
 import { CustomComponentRegistry } from './custom-component-registry.service';
 import { CustomComponent } from './custom-component';
@@ -102,6 +103,16 @@ describe('SubCircuitWatch', () => {
     simulation.exit();
     project.destroy({ children: true });
   });
+
+  /**
+   * What the frames sent to `unit` set its output `pin` to, in order, the
+   * frames that leave the pin alone skipped.
+   */
+  const levelsOf = (unit: number, pin: number) =>
+    fakeWorker
+      .sentFrames()
+      .filter((frame) => frame.comp === unit && frame.state[pin] !== null)
+      .map((frame) => frame.state[pin]);
 
   /**
    * SwitchBox nested inside Outer; a placed Outer instance in the project.
@@ -203,8 +214,8 @@ describe('SubCircuitWatch', () => {
 
     expect((switchCopy as SwitchComponent).isActive(0)).toBe(true);
     // The flattened board's only unit is the inner switch — index 0.
-    expect(fakeWorker.sentWrites()).toEqual([
-      { kind: 'state', unit: 0, event: 0, state: true }
+    expect(fakeWorker.sentFrames()).toEqual([
+      { comp: 0, state: [true], coalesce: true }
     ]);
 
     watch.destroy();
@@ -224,12 +235,8 @@ describe('SubCircuitWatch', () => {
 
     afterEach(() => watch.destroy());
 
-    /** Cont events sent to the flattened board's only unit, the button. */
-    const levels = () =>
-      fakeWorker
-        .sentWrites()
-        .filter((write) => write.unit === 0 && write.event === 0)
-        .map((write) => write.state);
+    /** What the frames sent to the flattened board's only unit, the button, set. */
+    const levels = () => levelsOf(0, 0);
 
     it('is held for as long as its hold lasts', () => {
       const hold = watch.holdFor(buttonCopy)!;
@@ -281,27 +288,20 @@ describe('SubCircuitWatch', () => {
       route.release(0);
       expect(levels()).toEqual([true, false]);
 
-      route.send([
-        {
-          kind: 'event',
-          writes: [{ slot: 0, drive: 'level', value: true }],
-          counted: true
-        }
-      ]);
-      expect(fakeWorker.postedOfKind('queueFrames').at(-1)).toMatchObject({
-        queue: 0,
-        frames: [{ kind: 'event', units: [[0, 0, true]], counted: true }]
+      route.send([{ state: [true] }]);
+      expect(fakeWorker.submitted().at(-1)).toEqual({
+        comp: 0,
+        frames: [{ state: [true] }]
       });
       // Frames leave the copy's slot state alone.
       expect(buttonCopy.isActive(0)).toBe(false);
 
-      route.cancel({
-        kind: 'state',
-        writes: [{ slot: 0, drive: 'level', value: false }]
+      route.cancel({ state: [false], coalesce: true });
+      expect(fakeWorker.submitted().at(-1)).toEqual({
+        comp: 0,
+        frames: [{ state: [false], coalesce: true }],
+        replace: true
       });
-      expect(fakeWorker.postedOfKind('clearFrames')).toEqual([
-        expect.objectContaining({ queue: 0, reset: [[0, 0, false]] })
-      ]);
       expect(route.pending()).toBe(0);
     });
 
@@ -343,16 +343,9 @@ describe('SubCircuitWatch', () => {
 
     afterEach(() => inspections.closeAll());
 
-    /** Cont events sent to the unit of one of the copy's controls. */
-    const levelsOf = (control: string) =>
-      fakeWorker
-        .sentWrites()
-        .filter(
-          (write) =>
-            write.unit === base + padCopy.slotIds.indexOf(control as never) &&
-            write.event === 0
-        )
-        .map((write) => write.state);
+    /** What the frames sent to the copy's unit set one control's slot to. */
+    const levelsOfControl = (control: string) =>
+      levelsOf(base, padCopy.slotIds.indexOf(control as never));
 
     /** Stops the simulation and waits for the reset to land. */
     async function stop(): Promise<void> {
@@ -372,7 +365,7 @@ describe('SubCircuitWatch', () => {
 
       played.keyDown('a', 'KeyX');
 
-      expect(levelsOf('a')).toEqual([true]);
+      expect(levelsOfControl('a')).toEqual([true]);
       expect(padCopy.isActive(padCopy.slotIds.indexOf('a'))).toBe(true);
       expect(repaint).toHaveBeenCalledWith('single');
       expect([...played.pressed()]).toEqual(['a']);
@@ -392,12 +385,12 @@ describe('SubCircuitWatch', () => {
 
       watch.navigateTo(0);
 
-      expect(levelsOf('a')).toEqual([true, false]);
+      expect(levelsOfControl('a')).toEqual([true, false]);
       expect(inspections.open()).toEqual([watchEntry]);
 
       // Nothing is left tracked: a stop has no slot of the copy to reset.
       await stop();
-      expect(levelsOf('a')).toEqual([true, false]);
+      expect(levelsOfControl('a')).toEqual([true, false]);
     });
 
     it('sends one release per held slot when the watch closes under it', () => {
@@ -407,8 +400,8 @@ describe('SubCircuitWatch', () => {
 
       inspections.close(watchEntry);
 
-      expect(levelsOf('a')).toEqual([true, false]);
-      expect(levelsOf('up')).toEqual([true, false]);
+      expect(levelsOfControl('a')).toEqual([true, false]);
+      expect(levelsOfControl('up')).toEqual([true, false]);
       expect(inspections.open()).toEqual([]);
       expect(anyActive()).toBe(false);
     });
@@ -420,14 +413,14 @@ describe('SubCircuitWatch', () => {
 
       const posted = fakeWorker.posted;
       const reset = posted.findIndex((msg) => msg.kind === 'stop');
+      const slot = padCopy.slotIds.indexOf('a');
       const low = posted.findIndex(
         (msg) =>
-          msg.kind === 'queueFrames' &&
-          msg.frames.some((frame) =>
-            frame.units.some(
-              ([unit, , state]) =>
-                unit === base + padCopy.slotIds.indexOf('a') && !state
-            )
+          msg.kind === 'submitInput' &&
+          msg.writes.some(
+            (write) =>
+              write.comp === base &&
+              write.frames.some((frame) => frame.state[slot] === false)
           )
       );
       expect(reset).toBeGreaterThanOrEqual(0);
@@ -437,10 +430,10 @@ describe('SubCircuitWatch', () => {
 
       // The key the stop cut off lets go without a second release.
       played.keyUp('a', 'KeyX');
-      expect(levelsOf('a')).toEqual([true, false]);
+      expect(levelsOfControl('a')).toEqual([true, false]);
 
       played.keyDown('a', 'KeyX');
-      expect(levelsOf('a')).toEqual([true, false, true]);
+      expect(levelsOfControl('a')).toEqual([true, false, true]);
     });
   });
 
@@ -449,9 +442,9 @@ describe('SubCircuitWatch', () => {
     let watchEntry: OpenInspection;
     let watch: SubCircuitWatch;
     let keyboardCopy: KeyboardComponent;
-    /** The engine unit of the copy's `D0`. */
+    /** The engine unit of the copy. */
     let base: number;
-    /** The unit of the board's own keyboard's `D0`. */
+    /** The unit of the board's own keyboard. */
     let boardBase: number;
 
     beforeEach(async () => {
@@ -473,13 +466,11 @@ describe('SubCircuitWatch', () => {
 
     afterEach(() => inspections.closeAll());
 
-    /** The code on the copy's data units after the last tick. */
+    /** The code on the copy's data outputs after the last tick. */
     const copyCode = () =>
-      Array.from({ length: 7 }, (_, bit) =>
-        fakeWorker.engine.output(base + bit) ? 1 << bit : 0
-      ).reduce((code, bit) => code | bit, 0);
+      codeFromBits((bit) => fakeWorker.engine.output(base, bit));
 
-    it('opens its window on the copy, whose frames reach the copy’s units and not the board’s', () => {
+    it('opens its window on the copy, whose frames reach the copy’s unit and not the board’s', () => {
       watch.activate(keyboardCopy);
       const opened = inspections.open().at(-1)!;
       expect(opened.component).toBe(keyboardCopy);
@@ -488,18 +479,15 @@ describe('SubCircuitWatch', () => {
 
       typing.press('KeyA', 0x41);
 
-      const units = fakeWorker.sentWrites().map((write) => write.unit);
-      expect(new Set(units)).toEqual(
-        new Set(Array.from({ length: 8 }, (_, slot) => base + slot))
-      );
+      const units = fakeWorker.sentFrames().map((frame) => frame.comp);
+      expect(new Set(units)).toEqual(new Set([base]));
       expect(base).not.toBe(boardBase);
-      simulation.step();
       simulation.step();
       expect(copyCode()).toBe(0x41);
       expect(keyboardCopy.heldKey()).toEqual({ code: 0x41, key: 'KeyA' });
     });
 
-    it('sets the copy’s data units low when the watch closes under a held key', () => {
+    it('sets the copy’s data outputs low when the watch closes under a held key', () => {
       keyboardCopy.pressKey(
         { send: (frames) => watch.sendFrames(keyboardCopy, frames) },
         0x41
@@ -512,7 +500,7 @@ describe('SubCircuitWatch', () => {
         simulation.step();
         seen.push(copyCode());
       }
-      expect(seen).toEqual([0, 0x41, 0x41, 0]);
+      expect(seen).toEqual([0x41, 0x41, 0, 0]);
     });
 
     it('releases a key held from its window once when the watch closes', () => {
@@ -524,9 +512,10 @@ describe('SubCircuitWatch', () => {
       inspections.close(watchEntry);
 
       const releases = fakeWorker
-        .postedOfKind('queueFrames')
-        .flatMap((msg) => msg.frames)
-        .filter((frame) => frame.units.every(([, , state]) => !state));
+        .sentFrames()
+        .filter((frame) =>
+          frame.state.slice(0, KEYBOARD_DATA_BITS).every((bit) => bit === false)
+        );
       expect(releases).toHaveLength(1);
       for (let step = 0; step < 4; step++) {
         simulation.step();

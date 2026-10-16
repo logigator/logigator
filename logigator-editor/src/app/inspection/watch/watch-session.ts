@@ -129,7 +129,7 @@ export class WatchSession {
     this.unregister();
     // Every high `level` slot of a copy, and the key a keyboard copy holds,
     // is set low first: once the copy is gone, nothing is left to reset its
-    // engine units.
+    // engine input.
     const simulation = getStaticDI(SimulationService);
     this.components.forEach((component, index) => {
       const unitIndex = this.info.unitIndexFor(index);

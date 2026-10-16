@@ -536,7 +536,7 @@ describe('BoardCompilerService', () => {
 
     expect(board.diagnostics).toEqual([]);
     // All emit the engine's UserInput type (200); it rejects any other id.
-    // Which input it is only shows in the events sent at triggerInput time.
+    // Which input it is only shows in the frames sent to it.
     expect(board.descriptor).toEqual({
       links: 4,
       components: [
@@ -555,7 +555,42 @@ describe('BoardCompilerService', () => {
     );
   });
 
-  it('emits one single-output UserInput unit per port of a user input, contiguous from its base', () => {
+  /**
+   * Expects `component`'s one unit to be a UserInput unit whose output `i`
+   * drives the net on output port `i`, `negated` naming the ports a bubble
+   * negates, and returns the unit's index.
+   */
+  function expectOneInputUnit(
+    board: ReturnType<typeof compiler.compile>,
+    component: Component,
+    negated: number[]
+  ): number {
+    const index = board.userInputs.get(component.id)!;
+    const unit = board.descriptor.components[index];
+    expect(unit).toEqual({
+      type: 200,
+      inputs: [],
+      outputs: Array.from({ length: component.numOutputs }, () =>
+        expect.any(Number)
+      ),
+      ...(negated.length > 0 ? { negOutputs: negated } : {})
+    });
+    const targets = board.mapping.get(TOP_LEVEL_PATH)!;
+    unit.outputs.forEach((link, port) => {
+      expect(targets[link].ports).toContainEqual({
+        component,
+        portIndex: component.numInputs + port
+      });
+    });
+    expect(
+      board.descriptor.components.filter((other) =>
+        other.outputs.some((link) => unit.outputs.includes(link))
+      )
+    ).toEqual([unit]);
+    return index;
+  }
+
+  it('emits one UserInput unit for a user input, an output per port', () => {
     const and = place(makeAnd(2, undefined, 8, 0));
     const input = new FakeUserInput(3);
     input.setPortNegated('out', 1, true);
@@ -564,30 +599,13 @@ describe('BoardCompilerService', () => {
     const board = compiler.compile(project);
 
     expect(board.diagnostics).toEqual([]);
-    const base = board.userInputs.get(input.id)!;
     // Ids order emission: the AND's unit comes first.
-    expect(base).toBe(1);
-    expect(board.descriptor.components).toHaveLength(base + 3);
-    const targets = board.mapping.get(TOP_LEVEL_PATH)!;
-    for (let port = 0; port < 3; port++) {
-      const unit = board.descriptor.components[base + port];
-      // A bubble on port i negates unit i's only output, and no other.
-      expect(unit).toEqual({
-        type: 200,
-        inputs: [],
-        outputs: [expect.any(Number)],
-        ...(port === 1 ? { negOutputs: [0] } : {})
-      });
-      // Unit i drives the net on port i.
-      expect(targets[unit.outputs[0]].ports).toContainEqual({
-        component: input,
-        portIndex: port
-      });
-    }
+    expect(expectOneInputUnit(board, input, [1])).toBe(1);
+    expect(board.descriptor.components).toHaveLength(2);
     expect(board.userInputs.has(and.id)).toBe(false);
   });
 
-  it('compiles a gamepad to one single-output unit per control, a bubble negating only its own', () => {
+  it('compiles a gamepad to one unit, an output per control, a bubble negating only its own', () => {
     const pad = makeGamepad({ face: 4, shoulders: 2 });
     place(pad);
     const slotB = pad.slotIds.indexOf('b');
@@ -596,25 +614,12 @@ describe('BoardCompilerService', () => {
     const board = compiler.compile(project);
 
     expect(board.diagnostics).toEqual([]);
-    const base = board.userInputs.get(pad.id)!;
-    const units = board.descriptor.components.slice(base);
-    expect(units).toHaveLength(12);
-    const targets = board.mapping.get(TOP_LEVEL_PATH)!;
-    units.forEach((unit, slot) => {
-      expect(unit).toEqual({
-        type: 200,
-        inputs: [],
-        outputs: [expect.any(Number)],
-        ...(slot === slotB ? { negOutputs: [0] } : {})
-      });
-      expect(targets[unit.outputs[0]].ports).toContainEqual({
-        component: pad,
-        portIndex: slot
-      });
-    });
+    expect(pad.numOutputs).toBe(12);
+    expectOneInputUnit(board, pad, [slotB]);
+    expect(board.descriptor.components).toHaveLength(1);
   });
 
-  it('compiles a keyboard to one single-output unit per output, contiguous from its base, a bubble negating only its own', () => {
+  it('compiles a keyboard to one unit of eight outputs, D0 to D6 then STB, a bubble negating only its own', () => {
     place(makeAnd(2, undefined, 8, 0));
     const keyboard = place(makeKeyboard(0, 0));
     keyboard.setPortNegated('out', 3, true);
@@ -622,23 +627,9 @@ describe('BoardCompilerService', () => {
     const board = compiler.compile(project);
 
     expect(board.diagnostics).toEqual([]);
-    const base = board.userInputs.get(keyboard.id)!;
-    expect(base).toBe(1);
-    const units = board.descriptor.components.slice(base);
-    expect(units).toHaveLength(8);
-    const targets = board.mapping.get(TOP_LEVEL_PATH)!;
-    units.forEach((unit, port) => {
-      expect(unit).toEqual({
-        type: 200,
-        inputs: [],
-        outputs: [expect.any(Number)],
-        ...(port === 3 ? { negOutputs: [0] } : {})
-      });
-      expect(targets[unit.outputs[0]].ports).toContainEqual({
-        component: keyboard,
-        portIndex: port
-      });
-    });
+    expect(keyboard.numOutputs).toBe(8);
+    expect(expectOneInputUnit(board, keyboard, [3])).toBe(1);
+    expect(board.descriptor.components).toHaveLength(2);
   });
 
   it('compiles deterministically', () => {

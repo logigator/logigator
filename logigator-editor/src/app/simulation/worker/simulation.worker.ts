@@ -1,7 +1,6 @@
 import init, { Simulation } from '@logigator/sim/wasm';
-import type { InputEvent } from '@logigator/sim/wasm';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
-import { InputFrameQueues } from './input-frames';
+import { InputProgressReader } from './input-progress';
 import {
   nextPaceDelayMs,
   MIN_TARGET_HZ,
@@ -44,15 +43,8 @@ let paceStart = { tick: 0, time: 0 };
 
 const bufferPool: ArrayBuffer[] = [];
 
-// Only reached while `sim` is set: frames are queued and pumped behind a
-// `sim` check, and every rebuild drops the queues.
-const frames = new InputFrameQueues({
-  tick: () => sim!.getStatus().tick,
-  write: (unit, event, state) =>
-    sim!.triggerInput(unit, event as InputEvent, [state])
-});
-/** Pumps the queues while a continuous run holds frames not yet applied. */
-let framePumpTimer: ReturnType<typeof setTimeout> | null = null;
+/** Built with the descriptor; reset with every engine rebuilt from it. */
+let progress: InputProgressReader | null = null;
 
 // The emitted artifact path is relative to the build output root, where the
 // worker chunk also lives, so resolving against the script URL covers any
@@ -89,8 +81,8 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
     case 'init':
       descriptor = msg.descriptor;
       sim?.destroy();
-      frames.dropAll();
       sim = new Simulation(descriptor);
+      progress = new InputProgressReader(descriptor);
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     case 'start': {
@@ -101,7 +93,6 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
         runPromise = simulation.runAsync().catch((err: unknown) => {
           postMessage({ kind: 'error', reqId: null, message: String(err) });
         });
-        scheduleFramePump();
       } else {
         runMode = 'target';
         paceHz = Math.max(MIN_TARGET_HZ, msg.config.hz);
@@ -120,15 +111,14 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       break;
     case 'step':
       requireSim().tick();
-      frames.pump();
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     case 'stop': {
       // The engine has no reset: destroy and rebuild from the descriptor.
       await stopRun();
       requireSim().destroy();
-      frames.dropAll();
       sim = new Simulation(descriptor!);
+      progress?.reset();
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     }
@@ -136,15 +126,11 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
     // no ack, so a missing engine is dropped rather than reported — an
     // uncorrelated error would kill the session. The run controls above keep
     // `requireSim`, since their caller holds a promise to carry the failure.
-    case 'queueFrames':
+    // The engine sequences the frames inside its ticks, between `runAsync`
+    // batches as between steps, so nothing here waits for a tick.
+    case 'submitInput':
       if (!sim) break;
-      frames.enqueue(msg.queue, msg.frames);
-      scheduleFramePump();
-      postMessage({ kind: 'ok', reqId: msg.reqId });
-      break;
-    case 'clearFrames':
-      if (!sim) break;
-      frames.clear(msg.queue, msg.reset);
+      sim.submitInput(msg.writes);
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     case 'requestSnapshot':
@@ -185,10 +171,6 @@ async function stopRun(): Promise<void> {
     clearTimeout(paceTimer);
     paceTimer = null;
   }
-  if (framePumpTimer !== null) {
-    clearTimeout(framePumpTimer);
-    framePumpTimer = null;
-  }
   if (runPromise) {
     sim?.stop();
     await runPromise;
@@ -214,28 +196,7 @@ function paceLoop(): void {
     sim.run({ ticks: due, ms: PACE_BATCH_MS });
     ran = sim.getStatus().tick - currentTick;
   }
-  frames.pump();
   paceTimer = setTimeout(paceLoop, nextPaceDelayMs(due, ran));
-}
-
-/**
- * Keeps pumping the frame queues on a 0 ms timer while a continuous run is
- * active and a frame waits: the run yields to the event loop between batches,
- * so each timer turn finds the engine some ticks further on. Paused and
- * target-mode runs pump after their own ticks instead.
- */
-function scheduleFramePump(): void {
-  if (runMode !== 'continuous' || framePumpTimer !== null || !frames.pending) {
-    return;
-  }
-  framePumpTimer = setTimeout(() => {
-    framePumpTimer = null;
-    if (runMode !== 'continuous' || !sim) {
-      return;
-    }
-    frames.pump();
-    scheduleFramePump();
-  }, 0);
 }
 
 /**
@@ -256,7 +217,9 @@ function sendSnapshot(reqId: number, full: boolean): void {
       ? mem.subarray(view.valuesPtr, view.valuesPtr + view.valuesLen)
       : mem.subarray(view.ptr, view.ptr + view.len);
     const packed = packSnapshot(bufferPool.pop(), ids, values);
-    const queues = frames.countedRemaining();
+    // Read after the copy: `inputProgress` may allocate in linear memory,
+    // which would detach the views copied from.
+    const inputProgress = progress?.read(requireSim());
     postMessage(
       {
         kind: 'snapshot',
@@ -264,7 +227,7 @@ function sendSnapshot(reqId: number, full: boolean): void {
         tick: view.tick,
         isDelta: view.isDelta,
         ...packed,
-        ...(queues.length > 0 ? { queues } : {})
+        ...(inputProgress ? { inputProgress } : {})
       },
       [packed.buffer]
     );

@@ -5,8 +5,8 @@ import { LevelUserInput } from '../../user-input';
 import { switchComponentConfig, SwitchOptions } from './switch.config';
 
 /**
- * A latching switch (simulation user input, Cont event): a tap flips its
- * output. A {@link LevelUserInput} operated by `toggle`, one slot.
+ * A latching switch (simulation user input, a state per flip): a tap flips
+ * its output. A {@link LevelUserInput} operated by `toggle`, one slot.
  */
 export class SwitchComponent
   extends Component<SwitchOptions>

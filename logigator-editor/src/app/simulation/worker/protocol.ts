@@ -1,29 +1,5 @@
+import type { InputWrite } from '@logigator/sim/wasm';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
-
-// The WASM package exports `InputEvent`/`SimState` as types only (no runtime
-// values), so the wire values live here.
-/** Set-and-hold input event (switchComp). */
-export const INPUT_EVENT_CONT = 0;
-/** One-tick pulse input event (pulse button). */
-export const INPUT_EVENT_PULSE = 1;
-export type InputEventKind = typeof INPUT_EVENT_CONT | typeof INPUT_EVENT_PULSE;
-
-/** One engine write: the unit, how its state is applied, and the state. */
-export type UnitWrite = [unit: number, event: InputEventKind, state: boolean];
-
-/**
- * An input frame with its slots resolved to engine units: writes the worker
- * applies at one tick boundary, with no tick between them. An `event` frame
- * is on the outputs for at least one tick before the next frame of its queue
- * applies; a `state` frame merges into the queue's last frame while that one
- * is a `state` frame not yet applied. `counted` marks a frame the queue's
- * remainder in snapshots counts.
- */
-export interface UnitFrame {
-  kind: 'state' | 'event';
-  units: UnitWrite[];
-  counted: boolean;
-}
 
 /**
  * Worker-paced run modes. Sync-to-frame is not one: the bridge drives it with
@@ -43,12 +19,11 @@ export type MainToWorkerMessage =
   /** Destroy and rebuild from the kept descriptor; the engine has no reset. */
   | { kind: 'stop'; reqId: number }
   /**
-   * Appends frames to one input's queue, keyed by the input's first unit;
-   * each applies at a tick boundary of its own.
+   * Frames for the engine's inputs, handed to `submitInput` as they are: the
+   * engine queues and sequences them, and refuses the whole request on any
+   * error.
    */
-  | { kind: 'queueFrames'; reqId: number; queue: number; frames: UnitFrame[] }
-  /** Drops one input's queued frames and applies `reset` at once. */
-  | { kind: 'clearFrames'; reqId: number; queue: number; reset: UnitWrite[] }
+  | { kind: 'submitInput'; reqId: number; writes: InputWrite[] }
   /** `full` forces a full snapshot, seeding a fresh watch applier. */
   | { kind: 'requestSnapshot'; reqId: number; full?: boolean }
   | { kind: 'requestStatus'; reqId: number }
@@ -70,10 +45,11 @@ export interface SnapshotMessage {
   /** Transferred payload: ids at offset 0, values right after. */
   buffer: ArrayBuffer;
   /**
-   * `[queue, counted frames not yet applied]` for every queue holding one;
-   * absent while none does.
+   * `[unit, event frames not yet applied]` for every input holding one,
+   * present only when some input's count changed since the last snapshot —
+   * an empty list then means none holds one any more.
    */
-  queues?: [queue: number, counted: number][];
+  inputProgress?: [unit: number, pending: number][];
 }
 
 export type WorkerToMainMessage =

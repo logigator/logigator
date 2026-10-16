@@ -5,8 +5,8 @@ import { LevelUserInput } from '../../user-input';
 import { buttonComponentConfig, ButtonOptions } from './button.config';
 
 /**
- * A button (simulation user input, Cont event): its output is high for as long
- * as it is held. A {@link LevelUserInput} operated by `hold`, one slot.
+ * A button (simulation user input, an event per press and release): its
+ * output is high for as long as it is held. A {@link LevelUserInput} operated by `hold`, one slot.
  */
 export class ButtonComponent
   extends Component<ButtonOptions>

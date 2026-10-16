@@ -2,8 +2,9 @@ import { Component } from './component';
 
 /**
  * The members every user input shares. A component the user drives during
- * simulation has one or more **slots**: slot `i` is output port `i`, driven by
- * its own engine unit, so `inputSlots` equals the output count. Every slot
+ * simulation has one or more **slots**: slot `i` is output port `i`, output
+ * `i` of the input's one engine unit, so `inputSlots` equals the output
+ * count. Every slot
  * shares the component's `drive` (what the engine receives) and `gesture`
  * (how a pointer on the canvas or in a watch operates it). A slot's active
  * state (high, or flashing for a pulse) is transient sim visuals on the
@@ -16,13 +17,13 @@ interface UserInputBase {
   /** A stable id per slot, in slot order, for addressing one by name. */
   readonly slotIds?: readonly string[];
   isActive(slot: number): boolean;
-  /** Visual only: the engine unit is the simulation service's to drive. */
+  /** Visual only: the engine input is the simulation service's to drive. */
   setActive(slot: number, active: boolean): void;
 }
 
 /**
- * A slot whose unit holds a state until the next one: `hold` is high from
- * press to release, `toggle` flips on a tap.
+ * A slot that holds a state until the next one: `hold` is high from press to
+ * release, `toggle` flips on a tap.
  */
 export interface LevelUserInput extends UserInputBase {
   readonly drive: 'level';

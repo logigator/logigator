@@ -1,5 +1,5 @@
 import { KEYBOARD_DATA_BITS, KEYBOARD_STROBE_OUTPUT } from '@logigator/core';
-import type { InputFrame, SlotWrite } from '../../component-inspection';
+import type { InputFrame } from '../../component-inspection';
 
 /**
  * The readout name of every ASCII code that has no glyph: the C0 controls,
@@ -216,52 +216,89 @@ export function textToCodesStrict(text: string): StrictKeyboardText {
   return { kind: 'codes', codes };
 }
 
-/** The seven data slots, each set to its bit of `code`. */
-function dataWrites(code: number): SlotWrite[] {
-  const writes: SlotWrite[] = [];
+/**
+ * Ticks a code stays on `D` once pressed, the strobe high for the first: the
+ * press's two frames each hold one. A circuit sees every character for at
+ * least this long, its strobe for exactly one tick.
+ */
+const PRESS_FRAME_TICKS = 1;
+
+/**
+ * Ticks `D` stays zero after a release, or a cancel, before the next key's
+ * code may replace it, so a double letter still reads as two presses.
+ */
+const RELEASE_TICKS = 2;
+
+/**
+ * The event frames one key press is: what turns the route's pending count
+ * into characters. A release and a reset are states, so neither counts.
+ */
+const PRESS_EVENTS = 2;
+
+/**
+ * The keyboard's eight outputs for `code` on `D`, the strobe as `strobe`
+ * says: `D0` the least significant bit, `STB` last.
+ */
+function outputs(code: number, strobe: boolean | null): (boolean | null)[] {
+  const state: (boolean | null)[] = [];
   for (let bit = 0; bit < KEYBOARD_DATA_BITS; bit++) {
-    writes.push({
-      slot: bit,
-      drive: 'level',
-      value: ((code >> bit) & 1) === 1
-    });
+    state.push(((code >> bit) & 1) === 1);
   }
-  return writes;
+  state[KEYBOARD_STROBE_OUTPUT] = strobe;
+  return state;
 }
 
 /**
- * A key going down: `D` takes `code` and `STB` pulses, on one tick. Counted,
- * so the window can say how much is still to go out. A code outside
- * `1`…`0x7F` is refused: `0` on `D` means no key is held.
+ * A key going down, as two events: `D` takes `code` with `STB` high, then
+ * `STB` falls while `D` keeps the code. The engine has no pulse of its own,
+ * so the second frame is what ends the strobe. A code outside `1`…`0x7F` is
+ * refused: `0` on `D` means no key is held.
  */
-export function pressFrame(code: number): InputFrame {
+export function pressFrames(code: number): InputFrame[] {
   if (!Number.isInteger(code) || code < 1 || code > 0x7f) {
     throw new RangeError(`Not a code the keyboard sends: ${code}`);
   }
-  return {
-    kind: 'event',
-    counted: true,
-    writes: [
-      ...dataWrites(code),
-      { slot: KEYBOARD_STROBE_OUTPUT, drive: 'pulse', value: true }
-    ]
-  };
+  return [
+    { state: outputs(code, true), hold: PRESS_FRAME_TICKS },
+    { state: outputs(code, false), hold: PRESS_FRAME_TICKS }
+  ];
 }
 
-/** The key on `D` going up: every data slot low. */
+/**
+ * The key on `D` going up: every data bit low, held for
+ * {@link RELEASE_TICKS}. A state rather than an event, so it stays out of the
+ * pending count; it never merges, since it always follows a press.
+ */
 export function releaseFrame(): InputFrame {
-  return { kind: 'event', writes: dataWrites(0) };
+  return {
+    state: outputs(0, null),
+    hold: RELEASE_TICKS,
+    coalesce: true
+  };
 }
 
 /** Each code pressed and released, in order. */
 export function tapFrames(codes: readonly number[]): InputFrame[] {
-  return codes.flatMap((code) => [pressFrame(code), releaseFrame()]);
+  return codes.flatMap((code) => [...pressFrames(code), releaseFrame()]);
 }
 
 /**
- * Every data slot low at once, as a `state` frame: what a cancel applies
- * after dropping the frames still queued.
+ * Every output low, the strobe included, since the cancel it follows can cut
+ * a press short while `STB` is high.
  */
 export function resetFrame(): InputFrame {
-  return { kind: 'state', writes: dataWrites(0) };
+  return {
+    state: outputs(0, false),
+    hold: RELEASE_TICKS,
+    coalesce: true
+  };
+}
+
+/**
+ * How many characters are queued and not yet on `D`, from how many event
+ * frames the keyboard's input has not yet applied: a character whose press
+ * is half applied is on `D` already, so the count rounds down.
+ */
+export function pendingCharacters(pendingEvents: number): number {
+  return Math.floor(pendingEvents / PRESS_EVENTS);
 }

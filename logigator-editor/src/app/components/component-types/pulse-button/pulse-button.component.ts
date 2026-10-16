@@ -8,9 +8,9 @@ import {
 } from './pulse-button.config';
 
 /**
- * A pulse button (simulation user input, Pulse event): a click emits a single
- * one-tick pulse on its output, however long it is held, and its body flashes
- * pressed. A {@link PulseUserInput} operated by `tap`, one slot.
+ * A pulse button (simulation user input, an event per click): a click emits
+ * a single one-tick pulse on its output, however long it is held, and its
+ * body flashes pressed. A {@link PulseUserInput} operated by `tap`, one slot.
  */
 export class PulseButtonComponent
   extends Component<PulseButtonOptions>

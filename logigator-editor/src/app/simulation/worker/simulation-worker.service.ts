@@ -1,4 +1,5 @@
 import { inject, Injectable, InjectionToken, signal } from '@angular/core';
+import type { InputWrite } from '@logigator/sim/wasm';
 import { TranslationService } from '../../translation/translation.service';
 import { AnalyticsService } from '../../analytics/analytics.service';
 import { LoggingService } from '../../logging/logging.service';
@@ -8,8 +9,6 @@ import {
   MainRequest,
   MainToWorkerMessage,
   RunRequest,
-  UnitFrame,
-  UnitWrite,
   unpackSnapshot,
   WorkerToMainMessage
 } from './protocol';
@@ -111,8 +110,11 @@ export class SimulationWorkerService {
   private fullSnapshots = 0;
   private deltaSnapshots = 0;
   private lastStatus: { tick: number; at: number } | null = null;
-  /** Counted frames each queue held at the last snapshot; absent means none. */
-  private countedFrames = new Map<number, number>();
+  /**
+   * Event frames each input unit had not yet applied as of the last snapshot
+   * that reported a change; absent means none.
+   */
+  private inputProgress = new Map<number, number>();
 
   private readonly _measuredHz = signal(0);
   /** Measured simulation speed in ticks/s, computed from status-poll deltas. */
@@ -185,7 +187,7 @@ export class SimulationWorkerService {
     this.snapshotInFlight = false;
     this.wantFullSnapshot = false;
     this.lastStatus = null;
-    this.countedFrames.clear();
+    this.inputProgress.clear();
     this._measuredHz.set(0);
     this._tick.set(0);
     const error = new Error('Simulation session ended');
@@ -255,7 +257,7 @@ export class SimulationWorkerService {
     this._stopStatusPolling();
     this.runMode = 'idle';
     await this._request({ kind: 'stop' });
-    this.countedFrames.clear();
+    this.inputProgress.clear();
     this._measuredHz.set(0);
     this._tick.set(0);
     this.lastStatus = null;
@@ -275,32 +277,27 @@ export class SimulationWorkerService {
   }
 
   /**
-   * Appends input frames to the queue of the input whose first unit is
-   * `queue`; the worker applies each at a tick boundary of its own.
-   * Fire-and-forget — failures surface through the session error hook. While
-   * paused, a counted frame pulls a snapshot, which is what reports it in
-   * {@link pendingFrames}.
+   * Hands input frames to the engine, which queues and sequences them inside
+   * its ticks. Fire-and-forget — failures surface through the session error
+   * hook. While paused, a write that changes what the engine counts pulls a
+   * snapshot, which is what reports the count in {@link pendingEvents}.
    */
-  public queueFrames(queue: number, frames: UnitFrame[]): void {
+  public submitInput(writes: InputWrite[]): void {
     if (
-      this._post({ kind: 'queueFrames', queue, frames }) &&
+      this._post({ kind: 'submitInput', writes }) &&
       this.runMode === 'idle' &&
-      frames.some((frame) => frame.counted)
+      writes.some(
+        (write) =>
+          write.replace || write.frames.some((frame) => !frame.coalesce)
+      )
     ) {
       this._requestSnapshot();
     }
   }
 
-  /** Drops a queue's frames and applies `reset` at once. */
-  public clearFrames(queue: number, reset: UnitWrite[]): void {
-    if (this._post({ kind: 'clearFrames', queue, reset })) {
-      this.countedFrames.delete(queue);
-    }
-  }
-
-  /** Counted frames of a queue not yet applied, as of the last snapshot. */
-  public pendingFrames(queue: number): number {
-    return this.countedFrames.get(queue) ?? 0;
+  /** Event frames of an input unit not yet applied, as of the last snapshot. */
+  public pendingEvents(unit: number): number {
+    return this.inputProgress.get(unit) ?? 0;
   }
 
   private _startFrameLoop(): void {
@@ -456,7 +453,9 @@ export class SimulationWorkerService {
       case 'snapshot': {
         this.snapshotInFlight = false;
         this._tick.set(msg.tick);
-        this.countedFrames = new Map(msg.queues);
+        if (msg.inputProgress) {
+          this.inputProgress = new Map(msg.inputProgress);
+        }
         if (msg.isDelta) {
           this.deltaSnapshots++;
         } else {

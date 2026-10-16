@@ -17,40 +17,39 @@ import { LayoutService } from '../../../layout/layout.service';
 import { SimulationService } from '../../../simulation/simulation.service';
 import { WorkModeService } from '../../../work-mode/work-mode.service';
 import { InputFrame, InputRoute } from '../../component-inspection';
-import { readoutText, resetFrame } from './ascii';
+import { KEYBOARD_STROBE_OUTPUT } from '@logigator/core';
+import { codeFromBits, readoutText, resetFrame } from './ascii';
 import { KeyboardComponent } from './keyboard.component';
 import { KeyboardInspection } from './keyboard-inspection';
 import { KeyboardInspectionComponent } from './keyboard-inspection.component';
 
 /**
  * What a frame does to the keyboard's outputs, in words: `press A` for a
- * code with the strobe, `release` for every data bit low.
+ * code with the strobe, `release` for every data bit low. The frame that
+ * ends a press's strobe, the code kept, says nothing of its own.
  */
-function describeFrame(frame: InputFrame): string {
-  const strobe = frame.writes.some(
-    (write) => write.drive === 'pulse' && write.value
-  );
-  let code = 0;
-  for (const write of frame.writes) {
-    if (write.drive === 'level' && write.value) code |= 1 << write.slot;
+function describeFrame(frame: InputFrame): string | null {
+  const code = codeFromBits((bit) => frame.state[bit] === true);
+  if (frame.state[KEYBOARD_STROBE_OUTPUT] === true) {
+    return `press ${readoutText(code)}`;
   }
-  if (strobe) return `press ${readoutText(code)}`;
-  return code === 0 ? 'release' : `set ${readoutText(code)}`;
+  return code === 0 ? 'release' : null;
 }
 
 /** A route that records, in words, every frame sent through it. */
 function recordingRoute(): InputRoute & {
   sent: string[];
-  cancels: InputFrame[];
+  cancels: (InputFrame | undefined)[];
 } {
   const sent: string[] = [];
-  const cancels: InputFrame[] = [];
+  const cancels: (InputFrame | undefined)[] = [];
   return {
     sent,
     cancels,
     press: () => undefined,
     release: () => undefined,
-    send: (frames) => sent.push(...frames.map(describeFrame)),
+    send: (frames) =>
+      sent.push(...frames.flatMap((frame) => describeFrame(frame) ?? [])),
     cancel: (reset) => cancels.push(reset),
     pending: () => 0
   };
@@ -352,7 +351,7 @@ describe('KeyboardInspection', () => {
     keyboard.destroy({ children: true });
   });
 
-  it('cancels with every data bit low at once, forgetting the held key', () => {
+  it('cancels with every output low, forgetting the held key', () => {
     inspection.press('KeyA', 0x61);
     inspection.cancel();
     inspection.release('KeyA');

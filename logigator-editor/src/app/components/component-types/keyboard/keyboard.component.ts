@@ -19,7 +19,7 @@ import {
 } from '../../../rendering/graphics/keyboard.graphics';
 import {
   codeFromBits,
-  pressFrame,
+  pressFrames,
   readoutText,
   releaseFrame,
   resetFrame,
@@ -107,7 +107,7 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
     code: number,
     key: string | null = null
   ): void {
-    route.send([pressFrame(code)]);
+    route.send(pressFrames(code));
     this._held.set({ held: { code, key }, resets: this.sessionResets() });
   }
 
@@ -134,7 +134,10 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
     route.send(frames);
   }
 
-  /** Drops every frame `route` still has queued and sets `D` to zero at once. */
+  /**
+   * Drops every frame `route` still has queued and sets every output low on
+   * the next tick.
+   */
   public cancelKeys(route: Pick<InputRoute, 'cancel'>): void {
     this._held.set(null);
     route.cancel(resetFrame());

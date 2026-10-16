@@ -1,10 +1,10 @@
-import { initSync, InputEvent, Simulation } from '@logigator/sim/wasm';
-import { BoardDescriptor } from '../app/simulation/compiler/compiled-board.model';
-import { FrameEngine } from '../app/simulation/worker/input-frames';
-import { InputEventKind } from '../app/simulation/worker/protocol';
-
-/** Ticks after which every write issued so far has reached the outputs. */
-const SETTLE_TICKS = 3;
+import { initSync, Simulation } from '@logigator/sim/wasm';
+import type { InputWrite } from '@logigator/sim/wasm';
+import {
+  BoardDescriptor,
+  ENGINE_USER_INPUT_TYPE
+} from '../app/simulation/compiler/compiled-board.model';
+import { ProgressEngine } from '../app/simulation/worker/input-progress';
 
 let loaded = false;
 
@@ -22,50 +22,57 @@ function loadEngine(): void {
   loaded = true;
 }
 
-/** A board of `count` single-output user inputs, unit `i` driving link `i`. */
-export function userInputBoard(count: number): BoardDescriptor {
+/**
+ * A board of `count` user inputs of `width` outputs each, unit `i`'s output
+ * `pin` driving link `i * width + pin`.
+ */
+export function userInputBoard(count: number, width = 1): BoardDescriptor {
   return {
-    links: count,
+    links: count * width,
     components: Array.from({ length: count }, (_, unit) => ({
-      type: 200,
+      type: ENGINE_USER_INPUT_TYPE,
       inputs: [],
-      outputs: [unit]
+      outputs: Array.from({ length: width }, (_, pin) => unit * width + pin)
     }))
   };
 }
 
-interface IssuedWrite {
+interface Submission {
+  /** The tick count the request was submitted at. */
   tick: number;
-  unit: number;
-  event: InputEventKind;
-  state: boolean;
+  writes: InputWrite[];
 }
 
 /**
- * The real simulation engine as a {@link FrameEngine}, ticked by hand, so a
- * spec observes input timing exactly as the worker's engine applies it.
+ * The real simulation engine, ticked by hand, so a spec observes input timing
+ * exactly as the worker's engine applies it. Requests go through
+ * {@link submit}, which records them so {@link held} can look ahead.
  */
-export class SimEngine implements FrameEngine {
+export class SimEngine implements ProgressEngine {
   private sim: Simulation;
-  /** Every write, with the tick it was issued at. */
-  public readonly writes: IssuedWrite[] = [];
-  /** The writes issued since the engine was last built, for replay. */
-  private sinceBuild: IssuedWrite[] = [];
+  /** The requests submitted since the engine was last built, for replay. */
+  private sinceBuild: Submission[] = [];
+  /** Input `i`'s unit index, the engine's input numbering. */
+  private readonly inputUnits: number[] = [];
 
   constructor(private readonly descriptor: BoardDescriptor) {
     loadEngine();
     this.sim = new Simulation(descriptor);
+    descriptor.components.forEach((unit, index) => {
+      if (unit.type === ENGINE_USER_INPUT_TYPE) {
+        this.inputUnits.push(index);
+      }
+    });
   }
 
   public tick(): number {
     return this.sim.getStatus().tick;
   }
 
-  public write(unit: number, event: InputEventKind, state: boolean): void {
-    this.sim.triggerInput(unit, event as InputEvent, [state]);
-    const write = { tick: this.tick(), unit, event, state };
-    this.writes.push(write);
-    this.sinceBuild.push(write);
+  /** `submitInput`, which throws and queues nothing on an invalid request. */
+  public submit(writes: InputWrite[]): void {
+    this.sim.submitInput(writes);
+    this.sinceBuild.push({ tick: this.tick(), writes });
   }
 
   /** One tick. */
@@ -73,36 +80,62 @@ export class SimEngine implements FrameEngine {
     this.sim.tick();
   }
 
+  /** `count` ticks, one by one. */
+  public steps(count: number): void {
+    for (let i = 0; i < count; i++) {
+      this.sim.tick();
+    }
+  }
+
   /** Whether link `id` is powered after the last tick. */
   public link(id: number): boolean {
     return this.sim.link(id);
   }
 
-  /** Whether the link `unit`'s first output drives is powered. */
-  public output(unit: number): boolean {
-    return this.link(this.descriptor.components[unit].outputs[0]);
+  /** Whether the link `unit`'s output `pin` drives is powered. */
+  public output(unit: number, pin = 0): boolean {
+    return this.link(this.descriptor.components[unit].outputs[pin]);
+  }
+
+  /** How many event frames input `unit` has not yet applied. */
+  public pending(unit: number): number {
+    const progress = new Uint32Array(this.inputUnits.length);
+    this.sim.inputProgress(progress);
+    return progress[this.inputUnits.indexOf(unit)];
+  }
+
+  public inputProgress(out: Uint32Array): void {
+    this.sim.inputProgress(out);
   }
 
   /**
-   * What {@link output} reads for `unit` once every write issued so far has
-   * reached the outputs and any pulse among them has passed. Answered by
-   * replaying the writes on a second engine, so it holds no model of its own.
+   * What {@link output} reads for `unit`'s output `pin` once every frame
+   * submitted so far has been applied and its hold has run out. Answered by
+   * replaying the requests on a second engine, so it holds no model of its
+   * own.
    */
-  public held(unit: number): boolean {
+  public held(unit: number, pin = 0): boolean {
     const replay = new Simulation(this.descriptor);
     try {
-      const now = this.tick();
-      for (let tick = 0; tick <= now + SETTLE_TICKS; tick++) {
-        for (const write of this.sinceBuild) {
-          if (write.tick === tick) {
-            replay.triggerInput(write.unit, write.event as InputEvent, [
-              write.state
-            ]);
+      // No frame outlasts its hold plus the tick it waits to be applied.
+      let settle = 1;
+      for (const { writes } of this.sinceBuild) {
+        for (const write of writes) {
+          for (const frame of write.frames) {
+            settle += frame.hold ?? 1;
+          }
+        }
+      }
+      const until = this.tick() + settle;
+      for (let tick = 0; tick < until; tick++) {
+        for (const submission of this.sinceBuild) {
+          if (submission.tick === tick) {
+            replay.submitInput(submission.writes);
           }
         }
         replay.tick();
       }
-      return replay.link(this.descriptor.components[unit].outputs[0]);
+      return replay.link(this.descriptor.components[unit].outputs[pin]);
     } finally {
       replay.destroy();
     }

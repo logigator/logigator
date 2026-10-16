@@ -188,9 +188,9 @@ describe('BoardCompilerService watch index', () => {
     expect(innerInfo.unitIndexFor(1)).toBeUndefined();
   });
 
-  it('addresses an inner gamepad through its first unit, slot k driving unit base + k', () => {
-    // A switch ahead of the pad in the body, so the pad's units do not start
-    // at 0; only the pad's `start` output is wired to the plug.
+  it('addresses an inner gamepad through its one unit, slot k driving its output k', () => {
+    // A switch ahead of the pad in the body, so the pad's unit is not the
+    // first; only the pad's `start` output is wired to the plug.
     const lead = makeSwitch(0, 0);
     const pad = makeGamepad({ face: 4 }, 0, 2);
     const plug = makeOutPlug(0, [12, 0]);
@@ -220,25 +220,25 @@ describe('BoardCompilerService watch index', () => {
     const board = compiler.compile(project);
     const info = board.watch.infoFor(String(instance.id))!;
 
-    const base = info.unitIndexFor(1)!;
-    expect(base).toBe(info.unitIndexFor(0)! + 1);
+    const unit = info.unitIndexFor(1)!;
+    expect(unit).toBe(info.unitIndexFor(0)! + 1);
     const units = board.descriptor.components;
-    expect(units).toHaveLength(base + 10);
-    for (let slot = 0; slot < 10; slot++) {
-      const portNet = info.tables.portNets[1][slot];
-      expect(units[base + slot]).toEqual({
-        type: 200,
-        inputs: [],
-        outputs: [info.linkOfLocalNet[portNet]]
-      });
-    }
-    // The wired-out control's unit drives the plug's net.
-    expect(units[base + start].outputs[0]).toBe(
+    expect(units).toHaveLength(unit + 1);
+    expect(units[unit]).toEqual({
+      type: 200,
+      inputs: [],
+      outputs: Array.from(
+        { length: 10 },
+        (_, slot) => info.linkOfLocalNet[info.tables.portNets[1][slot]]
+      )
+    });
+    // The wired-out control's output drives the plug's net.
+    expect(units[unit].outputs[start]).toBe(
       info.linkOfLocalNet[info.tables.portNets[2][0]]
     );
   });
 
-  it('addresses an inner keyboard through its first unit, a bubble on port i negating unit base + i only', () => {
+  it('addresses an inner keyboard through its one unit, a bubble on port i negating its output i only', () => {
     const lead = makeSwitch(0, 0);
     const keyboard = makeKeyboard(0, 2);
     const plug = makeOutPlug(0, [12, 0]);
@@ -269,21 +269,21 @@ describe('BoardCompilerService watch index', () => {
     const board = compiler.compile(project);
     const info = board.watch.infoFor(String(instance.id))!;
 
-    const base = info.unitIndexFor(1)!;
-    expect(base).toBe(info.unitIndexFor(0)! + 1);
+    const unit = info.unitIndexFor(1)!;
+    expect(unit).toBe(info.unitIndexFor(0)! + 1);
     const units = board.descriptor.components;
-    expect(units).toHaveLength(base + 8);
-    for (let port = 0; port < 8; port++) {
-      const portNet = info.tables.portNets[1][port];
-      expect(units[base + port]).toEqual({
-        type: 200,
-        inputs: [],
-        outputs: [info.linkOfLocalNet[portNet]],
-        ...(port === 5 ? { negOutputs: [0] } : {})
-      });
-    }
-    // D0's unit drives the plug's net.
-    expect(units[base].outputs[0]).toBe(
+    expect(units).toHaveLength(unit + 1);
+    expect(units[unit]).toEqual({
+      type: 200,
+      inputs: [],
+      outputs: Array.from(
+        { length: 8 },
+        (_, port) => info.linkOfLocalNet[info.tables.portNets[1][port]]
+      ),
+      negOutputs: [5]
+    });
+    // D0 drives the plug's net.
+    expect(units[unit].outputs[0]).toBe(
       info.linkOfLocalNet[info.tables.portNets[2][0]]
     );
   });

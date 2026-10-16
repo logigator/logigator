@@ -1223,7 +1223,7 @@ export class AutomationApiService {
     await this.nextFrame();
   }
 
-  /** A keyboard copy of the visible watch level, with the route to its units. */
+  /** A keyboard copy of the visible watch level, with the route to its unit. */
   private requireWatchKeyboard(
     inspectionId: number,
     componentId: number

@@ -208,12 +208,12 @@ describe('SubCircuitWatchComponent', () => {
     canvas.dispatchEvent(pointer('pointerdown', ...clientAt(gx, gy)));
   }
 
-  /** Cont levels sent to one engine unit, in order. */
-  function levels(unit: number): boolean[] {
+  /** The levels the frames sent to a one-output engine unit set, in order. */
+  function levels(unit: number): (boolean | null)[] {
     return fakeWorker
-      .sentWrites()
-      .filter((write) => write.unit === unit && write.event === 0)
-      .map((write) => write.state);
+      .sentFrames()
+      .filter((frame) => frame.comp === unit)
+      .map((frame) => frame.state[0]);
   }
 
   function copyButton(): ButtonComponent {

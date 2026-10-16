@@ -1,4 +1,5 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import { KEYBOARD_STROBE_OUTPUT } from '@logigator/core';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
@@ -27,7 +28,7 @@ import { TOP_LEVEL_PATH } from '../simulation/compiler/compiled-board.model';
 import { InspectionService } from '../inspection/inspection.service';
 import { KeyboardComponent } from '../components/component-types/keyboard/keyboard.component';
 import { KeyboardInspection } from '../components/component-types/keyboard/keyboard-inspection';
-import { INPUT_EVENT_PULSE } from '../simulation/worker/protocol';
+import { codeFromBits } from '../components/component-types/keyboard/ascii';
 import {
   FRAME_SCHEDULER,
   SIMULATION_WORKER_FACTORY
@@ -64,6 +65,17 @@ describe('AutomationApiService simulation', () => {
     simulation.exit();
     project.destroy({ children: true });
   });
+
+  /** Every slot the frames sent to `unit` set, as `[slot, value]`, in order. */
+  const slotWrites = (unit: number) =>
+    fakeWorker
+      .sentFrames()
+      .filter((frame) => frame.comp === unit)
+      .flatMap((frame) =>
+        frame.state.flatMap((value, slot) =>
+          value === null ? [] : [[slot, value]]
+        )
+      );
 
   it('enter resolves once the engine is ready', async () => {
     project.addComponent(makeSwitch());
@@ -147,7 +159,7 @@ describe('AutomationApiService simulation', () => {
     await api.simSetInput(lever.id, true);
 
     expect(lever.isActive(0)).toBe(true);
-    expect(fakeWorker.sentWrites()).toHaveLength(1);
+    expect(fakeWorker.sentFrames()).toHaveLength(1);
   });
 
   it('setInput rejects a component that is not a user input', async () => {
@@ -169,9 +181,9 @@ describe('AutomationApiService simulation', () => {
 
     await api.simSetInput(button.id, false);
     expect(button.isActive(0)).toBe(false);
-    expect(fakeWorker.sentWrites().map((write) => write.state)).toEqual([
-      true,
-      false
+    expect(fakeWorker.sentFrames().map((frame) => frame.state)).toEqual([
+      [true],
+      [false]
     ]);
   });
 
@@ -186,20 +198,18 @@ describe('AutomationApiService simulation', () => {
       base = simulation.board!.userInputs.get(input.id)!;
     });
 
-    /** Cont events sent per unit, in order. */
-    const sent = () =>
-      fakeWorker.sentWrites().map((write) => [write.unit, write.state]);
+    const sent = () => slotWrites(base);
 
-    it('reaches the same unit by slot id and by index', async () => {
+    it('reaches the same slot by slot id and by index', async () => {
       await api.simSetInput(input.id, true, 'b');
       expect(input.isActive(2)).toBe(true);
-      expect(sent()).toEqual([[base + 2, true]]);
+      expect(sent()).toEqual([[2, true]]);
 
       await api.simSetInput(input.id, false, 2);
       expect(input.isActive(2)).toBe(false);
       expect(sent()).toEqual([
-        [base + 2, true],
-        [base + 2, false]
+        [2, true],
+        [2, false]
       ]);
     });
 
@@ -207,7 +217,7 @@ describe('AutomationApiService simulation', () => {
       await api.simSetInput(input.id, true);
 
       expect(input.isActive(0)).toBe(true);
-      expect(sent()).toEqual([[base, true]]);
+      expect(sent()).toEqual([[0, true]]);
     });
 
     it('rejects an address the input does not have, naming the valid ones', async () => {
@@ -232,25 +242,24 @@ describe('AutomationApiService simulation', () => {
       base = simulation.board!.userInputs.get(input.id)!;
     });
 
-    const sent = () =>
-      fakeWorker.sentWrites().map((write) => [write.unit, write.state]);
+    const sent = () => slotWrites(base);
 
     it('sets each slot absolutely, sending only for the ones that change', async () => {
       await api.simSetInput(input.id, [true, false, true]);
       expect(sent()).toEqual([
-        [base, true],
-        [base + 2, true]
+        [0, true],
+        [2, true]
       ]);
-      expect(fakeWorker.postedOfKind('queueFrames')).toHaveLength(1);
+      expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(1);
 
       await api.simSetInput(input.id, [true, false, true]);
       expect(sent()).toHaveLength(2);
 
       await api.simSetInput(input.id, [false, false, true]);
       expect(sent()).toEqual([
-        [base, true],
-        [base + 2, true],
-        [base, false]
+        [0, true],
+        [2, true],
+        [0, false]
       ]);
     });
 
@@ -282,15 +291,14 @@ describe('AutomationApiService simulation', () => {
 
     await api.simEnter();
     const base = simulation.board!.userInputs.get(pad.id)!;
-    const sent = () =>
-      fakeWorker.sentWrites().map((write) => [write.unit, write.state]);
+    const sent = () => slotWrites(base);
 
     // Addressed by id, never by the custom name; the ids follow the options.
     await api.simSetInput(pad.id, true, 'a');
     await api.simSetInput(pad.id, true, 'x');
     expect(sent()).toEqual([
-      [base + 4, true],
-      [base + 6, true]
+      [4, true],
+      [6, true]
     ]);
     await expect(api.simSetInput(pad.id, true, 'Jump')).rejects.toThrow(/"a"/);
 
@@ -298,10 +306,10 @@ describe('AutomationApiService simulation', () => {
     await api.simSetInput(pad.id, all);
     expect(pad.slotIds.map((_, slot) => pad.isActive(slot))).toEqual(all);
     expect(sent().slice(2)).toEqual([
-      [base, true],
-      [base + 4, false],
-      [base + 6, false],
-      [base + 9, true]
+      [0, true],
+      [4, false],
+      [6, false],
+      [9, true]
     ]);
   });
 
@@ -319,15 +327,19 @@ describe('AutomationApiService simulation', () => {
       pad.slotIds.map((_, slot) => slot % 2 === 1)
     );
 
-    const queued = fakeWorker.postedOfKind('queueFrames');
+    const queued = fakeWorker.postedOfKind('submitInput');
     expect(queued).toHaveLength(2);
-    expect(queued[1].frames).toEqual([
+    expect(queued[1].writes).toEqual([
       {
-        kind: 'state',
-        units: pad.slotIds
-          .map((_, slot) => [base + slot, 0, slot % 2 === 1])
-          .filter(([, , state], slot) => state || slot === 0),
-        counted: false
+        comp: base,
+        frames: [
+          {
+            state: pad.slotIds.map((_, slot) =>
+              slot === 0 ? false : slot % 2 === 1 ? true : null
+            ),
+            coalesce: true
+          }
+        ]
       }
     ]);
   });
@@ -340,7 +352,7 @@ describe('AutomationApiService simulation', () => {
     await api.simSetInput(lever.id, [true]);
 
     expect(lever.isActive(0)).toBe(true);
-    expect(fakeWorker.sentWrites()).toHaveLength(1);
+    expect(fakeWorker.sentFrames()).toHaveLength(1);
   });
 
   it('setInput rejects a slot past 0 on a lever', async () => {
@@ -359,32 +371,37 @@ describe('AutomationApiService simulation', () => {
     project.addComponent(button);
     await api.simEnter();
 
+    const unit = simulation.board!.userInputs.get(button.id)!;
+
     await api.simSetInput(button.id, [false]);
-    expect(fakeWorker.sentWrites()).toHaveLength(0);
+    expect(fakeWorker.sentFrames()).toHaveLength(0);
 
     await api.simSetInput(button.id, [true]);
-    expect(fakeWorker.sentWrites()).toEqual([
-      expect.objectContaining({ kind: 'state', event: 1, state: true })
+    expect(fakeWorker.sentFrames()).toEqual([
+      { comp: unit, state: [true] },
+      { comp: unit, state: [false], coalesce: true }
     ]);
   });
 
-  it('setInput pulses a pulse button', async () => {
+  it('setInput pulses a pulse button for the next step alone', async () => {
     const button = makePulseButton();
     project.addComponent(button);
     await api.simEnter();
+    const unit = simulation.board!.userInputs.get(button.id)!;
 
     await api.simSetInput(button.id, true);
 
-    expect(fakeWorker.sentWrites()[0]).toMatchObject({
-      kind: 'state',
-      event: 1,
-      state: true
-    });
+    const seen: boolean[] = [];
+    for (let step = 0; step < 3; step++) {
+      await api.simStep();
+      seen.push(fakeWorker.engine.output(unit));
+    }
+    expect(seen).toEqual([true, false, false]);
   });
 
   describe('a keyboard', () => {
     let keyboard: KeyboardComponent;
-    /** The unit of `D0`; `D0`…`D6` and `STB` follow it in port order. */
+    /** The keyboard's unit, its outputs `D0`…`D6` and `STB` in port order. */
     let base: number;
 
     beforeEach(async () => {
@@ -396,28 +413,19 @@ describe('AutomationApiService simulation', () => {
 
     afterEach(() => TestBed.inject(InspectionService).closeAll());
 
-    /** The code of every press queued so far, in order. */
+    /** The code of every press sent so far, the frames raising `STB`. */
     const pressed = () =>
       fakeWorker
-        .postedOfKind('queueFrames')
-        .flatMap((msg) => msg.frames)
-        .filter((frame) =>
-          frame.units.some(
-            ([unit, event, state]) =>
-              unit === base + 7 && event === INPUT_EVENT_PULSE && state
-          )
+        .sentFrames()
+        .filter(
+          (frame) =>
+            frame.comp === base && frame.state[KEYBOARD_STROBE_OUTPUT] === true
         )
-        .map((frame) =>
-          frame.units
-            .filter(([unit, , state]) => unit < base + 7 && state)
-            .reduce((code, [unit]) => code | (1 << (unit - base)), 0)
-        );
+        .map((frame) => codeFromBits((bit) => frame.state[bit] === true));
 
     /** The code on `D` after the last tick. */
     const onD = () =>
-      Array.from({ length: 7 }, (_, bit) =>
-        fakeWorker.engine.output(base + bit) ? 1 << bit : 0
-      ).reduce((code, bit) => code | bit, 0);
+      codeFromBits((bit) => fakeWorker.engine.output(base, bit));
 
     it('types a text as one tap per character, a CRLF as one LF', async () => {
       await api.simType(keyboard.id, 'a\r\nb');
@@ -430,7 +438,7 @@ describe('AutomationApiService simulation', () => {
         /"ä" \(U\+00E4\) at position 4/
       );
 
-      expect(fakeWorker.postedOfKind('queueFrames')).toEqual([]);
+      expect(fakeWorker.postedOfKind('submitInput')).toEqual([]);
     });
 
     it('presses a key setKey already holds once', async () => {
@@ -449,7 +457,24 @@ describe('AutomationApiService simulation', () => {
         await api.simStep();
         seen.push(onD());
       }
-      expect(seen).toEqual([0, 0x41, 0x41, 0]);
+      expect(seen).toEqual([0x41, 0x41, 0, 0]);
+    });
+
+    it('counts what a text still has to send in its window, one character per four steps', async () => {
+      api.inspectOpen(keyboard.id);
+      const window = TestBed.inject(InspectionService).open()[0]
+        .inspection as KeyboardInspection;
+
+      await api.simType(keyboard.id, 'abc');
+      expect(window.pending()).toBe(3);
+
+      const counts: number[] = [];
+      for (let step = 0; step < 12; step++) {
+        await api.simStep();
+        counts.push(window.pending());
+      }
+      // A character is no longer waiting from the step that puts it on D.
+      expect(counts).toEqual([2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0, 0]);
     });
 
     it('agrees with its window on the key held', async () => {
@@ -475,7 +500,7 @@ describe('AutomationApiService simulation', () => {
       await expect(api.simSetInput(keyboard.id, true)).rejects.toThrow(
         /is a keyboard — use sim\.type or sim\.setKey$/
       );
-      expect(fakeWorker.postedOfKind('queueFrames')).toEqual([]);
+      expect(fakeWorker.postedOfKind('submitInput')).toEqual([]);
     });
   });
 

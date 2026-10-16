@@ -206,7 +206,7 @@ describe('WatchSession', () => {
     session.onFrame();
     expect(copiedSwitch.isActive(0)).toBe(true);
     // The engine already holds it high.
-    expect(fakeWorker.postedOfKind('queueFrames')).toHaveLength(0);
+    expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(0);
 
     const reset = vi.spyOn(TestBed.inject(SimulationWorkerService), 'reset');
     simulation.stop();
@@ -215,12 +215,12 @@ describe('WatchSession', () => {
 
     // Set low against the rebuilt engine (the board's only unit is the
     // switch), and no longer tracked: a second stop sends nothing for it.
-    expect(fakeWorker.sentWrites()).toEqual([
-      { kind: 'state', unit: 0, event: 0, state: false }
+    expect(fakeWorker.sentFrames()).toEqual([
+      { comp: 0, state: [false], coalesce: true }
     ]);
     simulation.stop();
     await reset.mock.results[1].value;
-    expect(fakeWorker.sentWrites()).toHaveLength(1);
+    expect(fakeWorker.sentFrames()).toHaveLength(1);
     session.destroy();
   });
 

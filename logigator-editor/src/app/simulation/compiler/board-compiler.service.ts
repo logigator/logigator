@@ -18,6 +18,7 @@ import { Wire } from '../../wires/wire';
 import {
   BoardComponentDescriptor,
   CompiledBoard,
+  ENGINE_USER_INPUT_TYPE,
   LinkRenderTargets,
   TOP_LEVEL_PATH
 } from './compiled-board.model';
@@ -50,14 +51,6 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.DEMUX,
   BuiltInComponentType.ROM
 ]);
-
-/**
- * Every user input emits this type; the engine rejects any other id. Which
- * one it is — a `Pulse` or a `Cont` event, and when — is decided at
- * `triggerInput` time from the component's `drive`, not from the
- * descriptor.
- */
-const ENGINE_USER_INPUT_TYPE = 200;
 
 /** One emitted unit, pins as union-find node ids (link ids come later). */
 interface EmittedUnit {
@@ -118,8 +111,8 @@ interface EmitContext {
   units: EmittedUnit[];
   diagnostics: CompileDiagnostic[];
   /**
-   * Directly emitted user input: component id → its first unit's index in
-   * this pass.
+   * Directly emitted user input: component id → its unit's index in this
+   * pass.
    */
   userInputs: Map<number, number>;
   /** Directly placed custom instances, keyed by component id. */
@@ -225,8 +218,8 @@ export class BoardCompilerService {
     const portNets = buildPortNetLookup(nets);
 
     // Quad-tree iteration order is not stable — sort by id so submission
-    // order (and with it triggerInput comp ids and the getOutputs layout) is
-    // reproducible.
+    // order (and with it submitInput comp ids, the engine's input numbering
+    // and the getOutputs layout) is reproducible.
     const components = [...project.components].sort((a, b) => a.id - b.id);
     this._unionTunnelNets(components, portNets, netNodes, ctx.uf);
     for (const component of components) {
@@ -438,12 +431,14 @@ export class BoardCompilerService {
   }
 
   /**
-   * A user input or a keyboard: one single-output
-   * {@link ENGINE_USER_INPUT_TYPE} unit per output port, contiguously in port
-   * order, so slot `i` — output port `i` — is unit `first + i` from the index
-   * `userInputs` records. A bubble on output port `i` negates unit `i`'s only
-   * output. Both have no inputs, and a user input whose slot count is not its
-   * output count is a broken type, refused here rather than mis-wired.
+   * A user input or a keyboard: one {@link ENGINE_USER_INPUT_TYPE} unit with
+   * an output per output port, in port order, recorded in `userInputs`, so
+   * slot `i` — output port `i` — is the unit's output `i` and one frame sets
+   * every slot on one tick. What the outputs show over time — a pulse, a
+   * held level, a key — is the frames' to say, not the descriptor's. A bubble
+   * on output port `i` negates the unit's output `i`. Both have no inputs,
+   * and a user input whose slot count is not its output count is a broken
+   * type, refused here rather than mis-wired.
    */
   private _emitUserInput(
     component: Component,
@@ -460,14 +455,11 @@ export class BoardCompilerService {
       );
     }
     ctx.userInputs.set(component.id, ctx.units.length);
-    const negated = new Set(this._negationFor(component).negOutputs);
-    pinNodes.slice(component.numInputs).forEach((node, slot) => {
-      ctx.units.push({
-        type: ENGINE_USER_INPUT_TYPE,
-        inputs: [],
-        outputs: [node],
-        ...(negated.has(slot) ? { negOutputs: [0] } : {})
-      });
+    ctx.units.push({
+      type: ENGINE_USER_INPUT_TYPE,
+      inputs: [],
+      outputs: pinNodes.slice(component.numInputs),
+      ...this._negationFor(component)
     });
   }
 

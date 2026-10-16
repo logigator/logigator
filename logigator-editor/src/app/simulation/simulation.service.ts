@@ -1,7 +1,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { Component } from '../components/component';
-import { InputFrame, SlotWrite } from '../components/component-inspection';
+import type { InputFrame as EngineInputFrame } from '@logigator/sim/wasm';
+import { InputFrame } from '../components/component-inspection';
 import {
   isUserInput,
   LevelUserInput,
@@ -25,12 +26,6 @@ import { CompiledBoard, TOP_LEVEL_PATH } from './compiler/compiled-board.model';
 import { CompileDiagnostic } from './compiler/compile-error';
 import { LinkStateApplier, SnapshotApplier } from './state/link-state-applier';
 import { MIN_TARGET_HZ } from './worker/pacing';
-import {
-  INPUT_EVENT_CONT,
-  INPUT_EVENT_PULSE,
-  UnitFrame,
-  UnitWrite
-} from './worker/protocol';
 import {
   SimulationRunMode,
   SimulationWorkerService
@@ -112,7 +107,12 @@ export class SimulationService {
   // of them.
   private readonly _highLevels = new Map<
     Component & LevelUserInput,
-    { base: number | undefined; repaint: () => void; slots: Set<number> }
+    {
+      base: number | undefined;
+      width: number;
+      repaint: () => void;
+      slots: Set<number>;
+    }
   >();
 
   constructor() {
@@ -462,9 +462,9 @@ export class SimulationService {
    * Drives a user input whose engine unit index is already resolved: an inner
    * user input operated in a watch, where `component` is the watch's fresh
    * copy and `unitIndex` comes from `infoFor(path).unitIndexFor(bodyIndex)` —
-   * the input's first unit, which `slot` offsets. `phase` is read through the
-   * input's `gesture`, as a canvas operation is. `repaint` re-blits whatever
-   * canvas shows the component.
+   * the input's unit, whose output `slot` is driven. `phase` is read through
+   * the input's `gesture`, as a canvas operation is. `repaint` re-blits
+   * whatever canvas shows the component.
    */
   public triggerUnitInput(
     unitIndex: number,
@@ -480,9 +480,10 @@ export class SimulationService {
    * Drives one slot of a top-level user input to an **absolute** state,
    * which its `drive` alone decides: a `level` slot is set to `value` — one
    * already there is left alone, so repeating the call sends no further
-   * engine event — and a `pulse` slot pulses on `true` and ignores `false`,
-   * holding no state to clear. The write is a `state` frame. Reports whether
-   * the component is a user input of the running session with that slot.
+   * engine frame — and a `pulse` slot pulses on `true` and ignores `false`,
+   * holding no state to clear. A level goes out as a state frame. Reports
+   * whether the component is a user input of the running session with that
+   * slot.
    */
   public setUserInput(componentId: number, value: boolean, slot = 0): boolean {
     return this._setTopLevel(componentId, [{ slot, value }]);
@@ -490,7 +491,7 @@ export class SimulationService {
 
   /**
    * {@link setUserInput} for every slot at once, `values[i]` for slot `i`,
-   * sent as **one** `state` frame of the slots that change, so all of them
+   * sent as **one** frame of the slots that change, so all of them
    * land on the same tick. Refuses the whole call, writing nothing, unless
    * there is exactly one value per slot.
    */
@@ -537,12 +538,13 @@ export class SimulationService {
   }
 
   /**
-   * Queues input frames on the units of a top-level component whose units
-   * the session records as an input's (`CompiledBoard.userInputs`). The
-   * frames reach the engine as they are: no slot state of the component is
-   * read or set, so its visuals are the caller's. Refuses the whole call,
-   * sending nothing, when a write addresses a slot past the component's
-   * outputs. Frames sent before the engine is ready are dropped.
+   * Hands input frames to the engine input of a top-level component the
+   * session records as an input's (`CompiledBoard.userInputs`), queued behind
+   * the frames it still has. The frames reach the engine as they are: no slot
+   * state of the component is read or set, so its visuals are the caller's.
+   * Refuses the whole call, sending nothing, unless every frame has one entry
+   * per output of the component and a hold the engine takes. Frames sent
+   * before the engine is ready are dropped.
    */
   public sendFrames(
     componentId: number,
@@ -558,15 +560,15 @@ export class SimulationService {
   }
 
   /**
-   * {@link sendFrames} for a component whose first unit is already resolved
-   * — a copy in a watch, `unitIndex` coming from the watch index.
+   * {@link sendFrames} for a component whose unit is already resolved — a
+   * copy in a watch, `unitIndex` coming from the watch index.
    */
   public sendUnitFrames(
     unitIndex: number,
     component: Component,
     frames: readonly InputFrame[]
   ): boolean {
-    if (!frames.every((frame) => writesFit(component, frame.writes))) {
+    if (!frames.every((frame) => frameFits(component, frame))) {
       return false;
     }
     this._send(unitIndex, frames);
@@ -574,10 +576,11 @@ export class SimulationService {
   }
 
   /**
-   * Drops the frames still queued for a top-level component and applies
-   * `reset`'s writes at once. Refused like {@link sendFrames}.
+   * Drops the frames a top-level component's input still has queued, ending
+   * a hold still running, then applies `reset` on the next tick — or, without
+   * one, leaves the outputs as they are. Refused like {@link sendFrames}.
    */
-  public cancelFrames(componentId: number, reset: InputFrame): boolean {
+  public cancelFrames(componentId: number, reset?: InputFrame): boolean {
     const component = this._project?.getComponentById(componentId);
     const base = this._board?.userInputs.get(componentId);
     return (
@@ -587,36 +590,33 @@ export class SimulationService {
     );
   }
 
-  /** {@link cancelFrames} for a component whose first unit is resolved. */
+  /** {@link cancelFrames} for a component whose unit is resolved. */
   public cancelUnitFrames(
     unitIndex: number,
     component: Component,
-    reset: InputFrame
+    reset?: InputFrame
   ): boolean {
-    if (!writesFit(component, reset.writes)) {
+    if (reset && !frameFits(component, reset)) {
       return false;
     }
-    if (this.isReady()) {
-      this.workerService.clearFrames(
-        unitIndex,
-        unitWrites(unitIndex, reset.writes)
-      );
-    }
+    this._send(unitIndex, reset ? [reset] : [], true);
     return true;
   }
 
   /**
-   * How many `counted` frames a top-level component still has queued, as of
-   * the last applied snapshot.
+   * How many event frames a top-level component's input has not yet
+   * applied, as of the last snapshot that reported its count. What that is
+   * in the input's own terms — characters, presses — is for the caller to
+   * say.
    */
-  public pendingFrames(componentId: number): number {
+  public pendingEvents(componentId: number): number {
     const base = this._board?.userInputs.get(componentId);
-    return base === undefined ? 0 : this.pendingUnitFrames(base);
+    return base === undefined ? 0 : this.pendingUnitEvents(base);
   }
 
-  /** {@link pendingFrames} for a component whose first unit is resolved. */
-  public pendingUnitFrames(unitIndex: number): number {
-    return this.isReady() ? this.workerService.pendingFrames(unitIndex) : 0;
+  /** {@link pendingEvents} for a component whose unit is resolved. */
+  public pendingUnitEvents(unitIndex: number): number {
+    return this.isReady() ? this.workerService.pendingEvents(unitIndex) : 0;
   }
 
   private _setTopLevel(
@@ -633,7 +633,7 @@ export class SimulationService {
     );
   }
 
-  /** Absolute values through {@link _drive}, as one `state` frame. */
+  /** Absolute values through {@link _drive}, a level as a state frame. */
   private _setAbsolute(
     component: Component,
     base: number,
@@ -646,15 +646,15 @@ export class SimulationService {
     ) {
       return false;
     }
-    this._drive(component, base, values, 'state', repaint);
+    this._drive(component, base, values, true, repaint);
     return true;
   }
 
   /**
    * Records a `level` slot the engine already holds high — a watch copy posed
-   * from its output link — as active, sending no event, so a stop, an exit or
+   * from its output link — as active, sending no frame, so a stop, an exit or
    * the copy's teardown sets it low like any other. `unitIndex` is the
-   * input's first unit, as in {@link triggerUnitInput}.
+   * input's unit, as in {@link triggerUnitInput}.
    */
   public adoptHighLevel(
     unitIndex: number,
@@ -679,8 +679,8 @@ export class SimulationService {
    * A pointer operation on a slot, mapped through the input's `gesture`: a
    * `hold` slot is set high on press and low on release, a `toggle` slot
    * flips on a tap, a `tap` (pulse) slot pulses on a tap. A hold and a tap
-   * report events, so each goes out as an `event` frame; a toggle reports a
-   * position, a `state` frame. A phase the gesture does not use, and a slot
+   * report events, so each goes out as event frames; a toggle reports a
+   * position, a state frame. A phase the gesture does not use, and a slot
    * the input does not have, is ignored.
    */
   private _operate(
@@ -695,40 +695,46 @@ export class SimulationService {
     }
     if (component.drive === 'pulse') {
       if (phase === 'tap') {
-        this._drive(component, base, [{ slot, value: true }], 'event', repaint);
+        this._drive(component, base, [{ slot, value: true }], false, repaint);
       }
     } else if (component.gesture === 'hold') {
       if (phase !== 'tap') {
         const value = phase === 'press';
-        this._drive(component, base, [{ slot, value }], 'event', repaint);
+        this._drive(component, base, [{ slot, value }], false, repaint);
       }
     } else if (phase === 'tap') {
       const value = !component.isActive(slot);
-      this._drive(component, base, [{ slot, value }], 'state', repaint);
+      this._drive(component, base, [{ slot, value }], true, repaint);
     }
   }
 
   /**
-   * Drives slots of a user input to the given values, by its `drive`, and
-   * sends the writes that result as one frame of `kind`. A `level` slot
-   * already at its value is left alone, so the engine never sees the same
-   * state twice; setting one high obeys the readiness rule, while setting one
-   * low always clears the visual. A `pulse` slot pulses on `true` — obeying
-   * the readiness rule and flashing active for {@link PULSE_BUTTON_FLASH_MS}
-   * — and ignores `false`. `base` is the input's first unit.
+   * Drives slots of a user input to the given values, by its `drive`, as
+   * frames over its outputs that leave every other slot as it is. A `level`
+   * slot already at its value is left alone, so the engine never sees the
+   * same state twice; setting one high obeys the readiness rule, while
+   * setting one low always clears the visual. The slots that change go out
+   * as one frame, a state when `coalesce` is set and an event otherwise. A
+   * `pulse` slot pulses on `true` — obeying the readiness rule and flashing
+   * active for {@link PULSE_BUTTON_FLASH_MS} — and ignores `false`. The
+   * engine has no pulse of its own, so a pulse is always an event frame that
+   * sets the slots high followed by a state frame setting them low again:
+   * as an event it never merges into an earlier pulse, and the frame after
+   * it ends it a tick later. `base` is the input's unit.
    */
   private _drive(
     input: Component & UserInput,
     base: number | undefined,
     values: readonly SlotValue[],
-    kind: InputFrame['kind'],
+    coalesce: boolean,
     repaint: () => void
   ): void {
     // Inputs are live from the moment simulation mode is entered, while the
     // engine is still starting. The worker drops inputs from that window, so
     // changing the visuals would show a state the engine never received.
     const ready = this.isReady();
-    const writes: SlotWrite[] = [];
+    const state = new Array<boolean | null>(input.inputSlots).fill(null);
+    let changed = false;
     for (const { slot, value } of values) {
       if (input.drive === 'level') {
         if (input.isActive(slot) === value || (value && !ready)) {
@@ -740,16 +746,23 @@ export class SimulationService {
           this._forgetLevel(input, slot);
         }
         input.setActive(slot, value);
-        writes.push({ slot, drive: 'level', value });
+        state[slot] = value;
+        changed = true;
       } else if (value && ready) {
         this._flash(input, slot, repaint);
-        writes.push({ slot, drive: 'pulse', value });
+        state[slot] = true;
+        changed = true;
       }
     }
-    if (writes.length === 0) {
+    if (!changed) {
       return;
     }
-    this._send(base, [{ kind, writes }]);
+    this._send(
+      base,
+      input.drive === 'level'
+        ? [{ state, coalesce }]
+        : [{ state }, { state: lowered(state), coalesce: true }]
+    );
     repaint();
   }
 
@@ -769,28 +782,28 @@ export class SimulationService {
   }
 
   /**
-   * Resolves frames to units and queues them on the input whose first unit
-   * is `base`, which keys its queue. Nothing reaches the worker while the
-   * engine is not ready.
+   * Submits frames to the engine input `base`, `replace` dropping what it
+   * still has queued first. Nothing reaches the worker while the engine is
+   * not ready.
    */
-  private _send(base: number | undefined, frames: readonly InputFrame[]): void {
+  private _send(
+    base: number | undefined,
+    frames: readonly InputFrame[],
+    replace = false
+  ): void {
     if (base === undefined || !this.isReady()) {
       return;
     }
-    const unitFrames: UnitFrame[] = [];
-    for (const frame of frames) {
-      const units = unitWrites(base, frame.writes);
-      if (units.length > 0) {
-        unitFrames.push({
-          kind: frame.kind,
-          units,
-          counted: frame.counted === true
-        });
+    if (frames.length === 0 && !replace) {
+      return;
+    }
+    this.workerService.submitInput([
+      {
+        comp: base,
+        frames: frames.map(engineFrame),
+        ...(replace ? { replace } : {})
       }
-    }
-    if (unitFrames.length > 0) {
-      this.workerService.queueFrames(base, unitFrames);
-    }
+    ]);
   }
 
   private _trackLevel(
@@ -803,7 +816,12 @@ export class SimulationService {
     if (held) {
       held.slots.add(slot);
     } else {
-      this._highLevels.set(input, { base, repaint, slots: new Set([slot]) });
+      this._highLevels.set(input, {
+        base,
+        width: input.inputSlots,
+        repaint,
+        slots: new Set([slot])
+      });
     }
   }
 
@@ -816,29 +834,26 @@ export class SimulationService {
   }
 
   /**
-   * Sets every high `level` slot low, the engine's units included: one
-   * `state` frame per input.
+   * Sets every high `level` slot low, the engine's inputs included: one
+   * state frame per input.
    */
   private _resetLevels(): void {
-    for (const [input, { base, repaint, slots }] of [...this._highLevels]) {
+    for (const [input, { base, width, repaint, slots }] of [
+      ...this._highLevels
+    ]) {
       const values = [...slots].map((slot) => ({ slot, value: false }));
       if (!input.destroyed) {
-        this._drive(input, base, values, 'state', repaint);
+        this._drive(input, base, values, true, repaint);
         continue;
       }
       // A copy freed while high has nothing left to draw, but its engine
-      // units still read high.
+      // input still reads high.
       this._highLevels.delete(input);
-      this._send(base, [
-        {
-          kind: 'state',
-          writes: values.map(({ slot }) => ({
-            slot,
-            drive: 'level',
-            value: false
-          }))
-        }
-      ]);
+      const state = new Array<boolean | null>(width).fill(null);
+      for (const slot of slots) {
+        state[slot] = false;
+      }
+      this._send(base, [{ state, coalesce: true }]);
     }
   }
 }
@@ -858,34 +873,37 @@ function isSlotOf(input: UserInput, slot: number): boolean {
   return Number.isInteger(slot) && slot >= 0 && slot < input.inputSlots;
 }
 
-/** Whether every write addresses one of the component's output ports. */
-function writesFit(
-  component: Component,
-  writes: readonly SlotWrite[]
-): boolean {
-  return writes.every(
-    ({ slot }) =>
-      Number.isInteger(slot) && slot >= 0 && slot < component.numOutputs
+/** The largest hold the engine takes, a `u32`. */
+const MAX_HOLD_TICKS = 0xffff_ffff;
+
+/**
+ * Whether the engine takes `frame` for the component's input: one entry per
+ * output port, and a hold, where given, that is a whole number of ticks.
+ */
+function frameFits(component: Component, frame: InputFrame): boolean {
+  const { hold } = frame;
+  return (
+    frame.state.length === component.numOutputs &&
+    (hold === undefined ||
+      (Number.isInteger(hold) && hold >= 1 && hold <= MAX_HOLD_TICKS))
   );
 }
 
+/** `state` with every slot it drives set low, the rest left alone. */
+function lowered(state: readonly (boolean | null)[]): (boolean | null)[] {
+  return state.map((value) => (value === null ? null : false));
+}
+
 /**
- * Where a slot becomes an engine unit and a drive an engine event: an
- * input's units are contiguous from its first, `base`, slot `i` at
- * `base + i`. A `level` write is a `Cont` event carrying the value, a `pulse`
- * write on `true` a `Pulse`; a `pulse` write on `false` writes nothing.
- * Callers resolve and pass the base only.
+ * A frame as the engine reads it, with nothing set that the frame left at
+ * its default.
  */
-function unitWrites(base: number, writes: readonly SlotWrite[]): UnitWrite[] {
-  const units: UnitWrite[] = [];
-  for (const { slot, drive, value } of writes) {
-    if (drive === 'level') {
-      units.push([base + slot, INPUT_EVENT_CONT, value]);
-    } else if (value) {
-      units.push([base + slot, INPUT_EVENT_PULSE, true]);
-    }
-  }
-  return units;
+function engineFrame(frame: InputFrame): EngineInputFrame {
+  return {
+    state: [...frame.state],
+    ...(frame.hold !== undefined ? { hold: frame.hold } : {}),
+    ...(frame.coalesce ? { coalesce: true } : {})
+  };
 }
 
 function clockDelaysOf(board: CompiledBoard): number[] {

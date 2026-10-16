@@ -1,5 +1,4 @@
 import { Signal, Type } from '@angular/core';
-import { UserInputDrive } from './user-input';
 
 /** Size hints (px) for the desktop inspection window hosting the renderer. */
 export interface ComponentInspectionSizing {
@@ -16,45 +15,45 @@ export interface InspectionTitlePart {
 }
 
 /**
- * One write to a slot of an input: output port `slot`, driven as `drive`
- * says. A `level` write sets the slot to `value`; a `pulse` write pulses it
- * for one tick on `true`, and `false` writes nothing.
- */
-export interface SlotWrite {
-  slot: number;
-  drive: UserInputDrive;
-  value: boolean;
-}
-
-/**
- * Slot writes the engine receives at one tick boundary, with no tick between
- * them. An input reports either events or a state: an `event` frame queues
- * behind the input's earlier frames and is on the outputs for at least one
- * tick before the next one applies, so a press and its release both reach
- * the circuit however fast they came; a `state` frame merges into the
- * input's last frame while that one is a `state` frame not yet applied, so
- * the next tick sees the final state. `counted` marks a frame
- * {@link InputRoute.pending} counts.
+ * One timed step of an input's outputs, the engine's own frame: the engine
+ * queues an input's frames and applies them in order inside its ticks. A
+ * frame is on the outputs and their wires after the tick it is applied in,
+ * and the first one sent to an idle input is applied by the next tick.
+ *
+ * - `state` has one entry per output port, in port order: `true` and `false`
+ *   drive the port, `null` keeps what it shows when the frame is applied.
+ * - `hold` is how many ticks, at least, the frame stays before the input's
+ *   next frame replaces it; 1 when absent. The last frame stays.
+ * - `coalesce` says what the frame reports. Absent, it is an **event**, a
+ *   press or a release: never dropped or merged, so it reaches the circuit
+ *   however fast the next one follows, and {@link InputRoute.pending} counts
+ *   it until it is applied. `true` is a **state**, a position: it merges into
+ *   the input's last frame not yet applied while that one is a state too
+ *   (its non-`null` entries over the earlier ones), so a state changed twice
+ *   between two ticks reaches the circuit once, as its final value. A merge
+ *   never reaches an applied frame or passes a queued event.
  */
 export interface InputFrame {
-  kind: 'state' | 'event';
-  writes: readonly SlotWrite[];
-  counted?: boolean;
+  readonly state: readonly (boolean | null)[];
+  readonly hold?: number;
+  readonly coalesce?: boolean;
 }
 
 /**
  * Where an inspection sends what it is played with, so it never resolves an
  * engine unit itself: the top-level board, or the watch level its component
  * is a copy in. `press` and `release` operate one slot of a user input
- * through its gesture; `send` queues frames on the component's units
- * directly, `cancel` drops the frames still queued and applies `reset` at
- * once, and `pending` is how many counted frames are still queued.
+ * through its gesture; `send` queues frames on the component's input
+ * directly, `cancel` drops the frames it still has queued — ending a hold
+ * that is still running — and applies `reset` on the next tick, or keeps the
+ * outputs as they are without one, and `pending` is how many of its event
+ * frames are not yet applied.
  */
 export interface InputRoute {
   press(slot: number): void;
   release(slot: number): void;
   send(frames: readonly InputFrame[]): void;
-  cancel(reset: InputFrame): void;
+  cancel(reset?: InputFrame): void;
   pending(): number;
 }
 

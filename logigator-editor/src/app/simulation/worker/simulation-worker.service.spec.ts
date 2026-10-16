@@ -7,7 +7,7 @@ import {
 } from '../../../testing/fake-simulation-worker';
 import { AnalyticsService } from '../../analytics/analytics.service';
 import { LinkStateApplier } from '../state/link-state-applier';
-import { packSnapshot, UnitFrame } from './protocol';
+import { packSnapshot } from './protocol';
 import {
   FRAME_SCHEDULER,
   SIMULATION_WORKER_FACTORY,
@@ -312,24 +312,21 @@ describe('SimulationWorkerService', () => {
     expect(service.tick()).toBe(0);
   });
 
-  it('forwards input frames and clears fire-and-forget', async () => {
+  it('hands a request to the engine whole, every input of it applied by the next step', async () => {
     await service.startSession(DESCRIPTOR, hooks);
-    const frames: UnitFrame[] = [
-      { kind: 'event', units: [[3, 0, true]], counted: false }
-    ];
 
-    service.queueFrames(3, frames);
-    service.clearFrames(3, [[3, 0, false]]);
+    service.submitInput([
+      { comp: 3, frames: [{ state: [true] }] },
+      { comp: 5, frames: [{ state: [true], coalesce: true }] }
+    ]);
+    expect(fakeWorker.engine.output(3)).toBe(false);
+    await service.step();
 
-    expect(fakeWorker.postedOfKind('queueFrames')).toEqual([
-      expect.objectContaining({ queue: 3, frames })
-    ]);
-    expect(fakeWorker.postedOfKind('clearFrames')).toEqual([
-      expect.objectContaining({ queue: 3, reset: [[3, 0, false]] })
-    ]);
+    expect(fakeWorker.engine.output(3)).toBe(true);
+    expect(fakeWorker.engine.output(5)).toBe(true);
   });
 
-  it('reports the counted frames a queue holds as of the last snapshot', async () => {
+  it('keeps the input progress the last snapshot reporting it carried', async () => {
     autoRespond = false;
     const session = service.startSession(DESCRIPTOR, hooks);
     fakeWorker.emit({ kind: 'ready' });
@@ -341,48 +338,76 @@ describe('SimulationWorkerService', () => {
       reqId: fakeWorker.postedOfKind('init')[0].reqId
     });
     await session;
-    const snapshot = (reqId: number, queues?: [number, number][]) =>
+    const snapshot = (reqId: number, inputProgress?: [number, number][]) =>
       fakeWorker.emit({
         kind: 'snapshot',
         reqId,
         tick: reqId,
         isDelta: true,
         ...packSnapshot(undefined, new Uint8Array(0), new Uint8Array(0)),
-        ...(queues ? { queues } : {})
+        ...(inputProgress ? { inputProgress } : {})
       });
 
     snapshot(1, [
       [3, 12],
-      [9, 1]
+      [6, 1]
     ]);
-    expect(service.pendingFrames(3)).toBe(12);
-    expect(service.pendingFrames(9)).toBe(1);
-    expect(service.pendingFrames(4)).toBe(0);
+    expect(service.pendingEvents(3)).toBe(12);
+    expect(service.pendingEvents(6)).toBe(1);
+    expect(service.pendingEvents(4)).toBe(0);
 
-    // A snapshot without queues means none holds a counted frame.
+    // The worker reports progress only when it moved.
     snapshot(2);
-    expect(service.pendingFrames(3)).toBe(0);
+    expect(service.pendingEvents(3)).toBe(12);
 
     snapshot(3, [[3, 5]]);
-    service.clearFrames(3, []);
-    expect(service.pendingFrames(3)).toBe(0);
+    expect(service.pendingEvents(3)).toBe(5);
+    expect(service.pendingEvents(6)).toBe(0);
+
+    snapshot(4, []);
+    expect(service.pendingEvents(3)).toBe(0);
   });
 
-  it('pulls a snapshot for a counted frame queued while paused, so its count shows', async () => {
+  it("counts an input's event frames down to zero as the engine applies them", async () => {
+    const onFrame = vi.fn();
+    await service.startSession(DESCRIPTOR, { ...hooks, onFrame });
+
+    service.submitInput([
+      {
+        comp: 3,
+        frames: [
+          { state: [true], hold: 2 },
+          { state: [false], coalesce: true },
+          { state: [true] }
+        ]
+      }
+    ]);
+    // Paused, an event pulls a snapshot of its own, so its count shows.
+    await vi.waitFor(() => expect(service.pendingEvents(3)).toBe(2));
+
+    const counts: number[] = [];
+    for (let step = 0; step < 4; step++) {
+      await service.step();
+      await vi.waitFor(() => expect(onFrame).toHaveBeenCalledTimes(step + 2));
+      counts.push(service.pendingEvents(3));
+    }
+
+    // The second event waits out the first one's hold and the state frame
+    // between them, which is never counted.
+    expect(counts).toEqual([1, 1, 1, 0]);
+    expect(service.pendingEvents(4)).toBe(0);
+  });
+
+  it('pulls no snapshot for a state frame sent while paused', async () => {
     await service.startSession(DESCRIPTOR, hooks);
 
-    service.queueFrames(3, [
-      { kind: 'event', units: [[3, 0, true]], counted: false }
+    service.submitInput([
+      { comp: 3, frames: [{ state: [true], coalesce: true }] }
     ]);
     expect(fakeWorker.postedOfKind('requestSnapshot')).toHaveLength(0);
 
-    service.queueFrames(3, [
-      { kind: 'event', units: [[3, 0, true]], counted: true },
-      { kind: 'event', units: [[3, 0, false]], counted: true }
-    ]);
+    service.submitInput([{ comp: 3, frames: [], replace: true }]);
     expect(fakeWorker.postedOfKind('requestSnapshot')).toHaveLength(1);
-    // Both wait behind the frame applied on arrival at this tick.
-    await vi.waitFor(() => expect(service.pendingFrames(3)).toBe(2));
   });
 
   it('reports worker faults to error tracking, but not session teardown', async () => {
@@ -441,13 +466,10 @@ describe('SimulationWorkerService', () => {
 
     // A switch tapped before the engine is up: reaching the worker, it would
     // fail there uncorrelated and take the session down.
-    const frames: UnitFrame[] = [
-      { kind: 'state', units: [[3, 0, true]], counted: false }
-    ];
-    service.queueFrames(3, frames);
-    service.clearFrames(3, [[3, 0, false]]);
-    expect(fakeWorker.postedOfKind('queueFrames')).toHaveLength(0);
-    expect(fakeWorker.postedOfKind('clearFrames')).toHaveLength(0);
+    const writes = [{ comp: 3, frames: [{ state: [true], coalesce: true }] }];
+    service.submitInput(writes);
+    service.submitInput([{ comp: 3, frames: [], replace: true }]);
+    expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(0);
 
     fakeWorker.emit({
       kind: 'ok',
@@ -455,8 +477,8 @@ describe('SimulationWorkerService', () => {
     });
     await session;
 
-    service.queueFrames(3, frames);
-    expect(fakeWorker.postedOfKind('queueFrames')).toHaveLength(1);
+    service.submitInput(writes);
+    expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(1);
     expect(hooks.onError).not.toHaveBeenCalled();
   });
 

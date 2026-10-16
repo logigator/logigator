@@ -28,8 +28,8 @@ export interface WatchTemplateTables {
   /** Body component index → per-portIndex template-local net id. */
   portNets: Int32Array[];
   /**
-   * Body index of a direct user input → its first unit's template-local
-   * index; slot `i` is that plus `i`.
+   * Body index of a direct user input → its unit's template-local index;
+   * slot `i` is the unit's output `i`.
    */
   userInputs: ReadonlyMap<number, number>;
   /** Body component index of a direct nested custom → its bridge. */
@@ -52,8 +52,8 @@ export interface WatchLevelInfo {
   linkOfLocalNet: Int32Array;
   tables: WatchTemplateTables;
   /**
-   * Global index of a direct user input's first unit, by body component
-   * index; slot `i` is that plus `i`.
+   * Global index of a direct user input's unit, by body component index;
+   * slot `i` is the unit's output `i`.
    */
   unitIndexFor(bodyComponentIndex: number): number | undefined;
 }

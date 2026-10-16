@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { KEYBOARD_STROBE_OUTPUT } from '@logigator/core';
+import { KEYBOARD_DATA_BITS, KEYBOARD_STROBE_OUTPUT } from '@logigator/core';
+import type { InputFrame } from '../../component-inspection';
+import { SimEngine, userInputBoard } from '../../../../testing/sim-engine';
 import {
   ASCII_MNEMONICS,
   characterOfKey,
   codeFromBits,
-  pressFrame,
+  pendingCharacters,
+  pressFrames,
   readoutText,
   releaseFrame,
   resetFrame,
@@ -144,42 +147,193 @@ describe('keyboard ASCII', () => {
     }
     expect(textToCodes(all, Infinity).codes).not.toContain(0);
     expect(textToCodesStrict('\u0000').kind).toBe('unsendable');
-    expect(() => pressFrame(0)).toThrow(RangeError);
+    expect(() => pressFrames(0)).toThrow(RangeError);
+  });
+});
+
+/** What a keyboard's outputs show after one tick. */
+interface KeyboardSample {
+  code: number;
+  strobe: boolean;
+}
+
+/**
+ * The real engine running one keyboard input — the one unit of eight outputs
+ * the compiler emits for it, `D0`…`D6` then `STB` — with the frames this
+ * module builds sent as the keyboard sends them.
+ */
+class KeyboardOnEngine {
+  public readonly engine = new SimEngine(
+    userInputBoard(1, KEYBOARD_DATA_BITS + 1)
+  );
+
+  public send(frames: readonly InputFrame[], replace = false): void {
+    this.engine.submit([
+      {
+        comp: 0,
+        frames: frames.map((frame) => ({ ...frame, state: [...frame.state] })),
+        replace
+      }
+    ]);
+  }
+
+  /** One tick, and what the outputs show after it. */
+  public step(): KeyboardSample {
+    this.engine.step();
+    return this.sample();
+  }
+
+  public steps(count: number): KeyboardSample[] {
+    return Array.from({ length: count }, () => this.step());
+  }
+
+  public sample(): KeyboardSample {
+    return {
+      code: codeFromBits((bit) => this.engine.output(0, bit)),
+      strobe: this.engine.output(0, KEYBOARD_STROBE_OUTPUT)
+    };
+  }
+
+  /** The characters the window would say are still to go out. */
+  public pendingCharacters(): number {
+    return pendingCharacters(this.engine.pending(0));
+  }
+}
+
+/** The code on `D` at every rising edge of `STB`, as a latch reads it. */
+function latched(trace: readonly KeyboardSample[]): number[] {
+  return trace
+    .filter(({ strobe }, i) => strobe && !trace[i - 1]?.strobe)
+    .map(({ code }) => code);
+}
+
+describe('keyboard frames on the engine', () => {
+  const text = 'Hello,\n\tworld!! ~0x7F';
+  const codes = textToCodes(text).codes;
+
+  it('types a text a latch on the strobe reads back exactly, double letters included', () => {
+    const keyboard = new KeyboardOnEngine();
+    keyboard.send(tapFrames(codes));
+
+    const trace = keyboard.steps(codes.length * 4 + 4);
+
+    expect(String.fromCharCode(...latched(trace))).toBe(text);
+    expect(trace.at(-1)).toEqual({ code: 0, strobe: false });
   });
 
-  it('presses with all seven data bits and the strobe pulse in one counted event frame', () => {
-    const frame = pressFrame(0x55);
-    expect(frame.kind).toBe('event');
-    expect(frame.counted).toBe(true);
-    expect(frame.writes).toEqual([
-      { slot: 0, drive: 'level', value: true },
-      { slot: 1, drive: 'level', value: false },
-      { slot: 2, drive: 'level', value: true },
-      { slot: 3, drive: 'level', value: false },
-      { slot: 4, drive: 'level', value: true },
-      { slot: 5, drive: 'level', value: false },
-      { slot: 6, drive: 'level', value: true },
-      { slot: KEYBOARD_STROBE_OUTPUT, drive: 'pulse', value: true }
+  it('keeps every character on D two ticks, its strobe one, then D zero two ticks', () => {
+    const keyboard = new KeyboardOnEngine();
+    keyboard.send(tapFrames([0x6c, 0x6c]));
+
+    // Submitted at tick 0: each character takes four ticks from the next one.
+    expect(keyboard.steps(9)).toEqual([
+      { code: 0x6c, strobe: true },
+      { code: 0x6c, strobe: false },
+      { code: 0, strobe: false },
+      { code: 0, strobe: false },
+      { code: 0x6c, strobe: true },
+      { code: 0x6c, strobe: false },
+      { code: 0, strobe: false },
+      { code: 0, strobe: false },
+      { code: 0, strobe: false }
     ]);
   });
 
-  it('releases, and resets, with all seven data bits low and no strobe', () => {
-    const lows = Array.from({ length: 7 }, (_, slot) => ({
-      slot,
-      drive: 'level',
-      value: false
-    }));
-    expect(releaseFrame()).toEqual({ kind: 'event', writes: lows });
-    expect(releaseFrame().counted).toBeFalsy();
-    expect(resetFrame()).toEqual({ kind: 'state', writes: lows });
+  it('puts a key typed while paused on D after the next step', () => {
+    const keyboard = new KeyboardOnEngine();
+    keyboard.steps(5);
+
+    keyboard.send(pressFrames(0x41));
+
+    expect(keyboard.sample()).toEqual({ code: 0, strobe: false });
+    expect(keyboard.step()).toEqual({ code: 0x41, strobe: true });
   });
 
-  it('taps each code as its press followed by a release', () => {
-    expect(tapFrames([0x6c, 0x0a])).toEqual([
-      pressFrame(0x6c),
-      releaseFrame(),
-      pressFrame(0x0a),
-      releaseFrame()
+  it('holds a pressed key on D until its release, which waits for nothing else', () => {
+    const keyboard = new KeyboardOnEngine();
+    keyboard.send(pressFrames(0x61));
+    const held = keyboard.steps(10);
+    keyboard.send([releaseFrame()]);
+
+    expect(latched(held)).toEqual([0x61]);
+    expect(held.at(-1)).toEqual({ code: 0x61, strobe: false });
+    expect(keyboard.step()).toEqual({ code: 0, strobe: false });
+  });
+
+  it('strobes again for a key pressed over the held one, with no zero between', () => {
+    const keyboard = new KeyboardOnEngine();
+    keyboard.send(pressFrames(0x61));
+    keyboard.send(pressFrames(0x62));
+
+    const trace = keyboard.steps(5);
+
+    expect(latched(trace)).toEqual([0x61, 0x62]);
+    expect(trace.map(({ code }) => code)).not.toContain(0);
+  });
+
+  it('counts the characters not yet on D down to zero, a release never among them', () => {
+    const keyboard = new KeyboardOnEngine();
+    keyboard.send(tapFrames(codes));
+    const counts = [keyboard.pendingCharacters()];
+    const trace: KeyboardSample[] = [];
+    while (counts.at(-1)! > 0) {
+      trace.push(keyboard.step());
+      counts.push(keyboard.pendingCharacters());
+    }
+
+    // After each tick, the count is what has not yet been latched.
+    expect(counts[0]).toBe(codes.length);
+    trace.forEach((_, tick) => {
+      expect(counts[tick + 1]).toBe(
+        codes.length - latched(trace.slice(0, tick + 1)).length
+      );
+    });
+    // The last character is on D the moment the count reaches zero.
+    expect(trace.at(-1)).toEqual({ code: codes.at(-1), strobe: true });
+  });
+
+  it('counts a held key only until it is on D, and neither its release nor a reset', () => {
+    const keyboard = new KeyboardOnEngine();
+    keyboard.send(pressFrames(0x61));
+    expect(keyboard.pendingCharacters()).toBe(1);
+    keyboard.step();
+    expect(keyboard.pendingCharacters()).toBe(0);
+    keyboard.step();
+    expect(keyboard.engine.pending(0)).toBe(0);
+
+    keyboard.send([releaseFrame()]);
+    expect(keyboard.engine.pending(0)).toBe(0);
+    keyboard.send([resetFrame()], true);
+    expect(keyboard.engine.pending(0)).toBe(0);
+  });
+
+  it('cancels a text with a reset that drops the rest and ends a strobe cut short', () => {
+    const keyboard = new KeyboardOnEngine();
+    keyboard.send(tapFrames(codes));
+    expect(keyboard.step()).toEqual({ code: codes[0], strobe: true });
+
+    keyboard.send([resetFrame()], true);
+
+    expect(keyboard.pendingCharacters()).toBe(0);
+    const after = keyboard.steps(codes.length * 4);
+    expect(after.every((sample) => sample.code === 0 && !sample.strobe)).toBe(
+      true
+    );
+  });
+
+  it('waits out the reset before the next character, so it still strobes after a zero', () => {
+    const keyboard = new KeyboardOnEngine();
+    keyboard.send(pressFrames(0x61));
+    keyboard.step();
+    keyboard.send([resetFrame()], true);
+    keyboard.send(tapFrames([0x61]));
+
+    expect(keyboard.steps(5)).toEqual([
+      { code: 0, strobe: false },
+      { code: 0, strobe: false },
+      { code: 0x61, strobe: true },
+      { code: 0x61, strobe: false },
+      { code: 0, strobe: false }
     ]);
   });
 });

@@ -177,7 +177,7 @@ export class InspectionService {
   /**
    * The route of a top-level component: presses join the board's user-input
    * stream, as a press on the canvas does, and frames go to the component's
-   * own units.
+   * own engine input.
    */
   private _topLevelRoute(component: Component): InputRoute {
     return {
@@ -191,7 +191,7 @@ export class InspectionService {
           ?.emitUserInput(component, 'release', slot),
       send: (frames) => this.simulation.sendFrames(component.id, frames),
       cancel: (reset) => this.simulation.cancelFrames(component.id, reset),
-      pending: () => this.simulation.pendingFrames(component.id)
+      pending: () => this.simulation.pendingEvents(component.id)
     };
   }
 

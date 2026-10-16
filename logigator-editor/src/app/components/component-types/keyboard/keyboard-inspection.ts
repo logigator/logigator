@@ -3,6 +3,7 @@ import { TranslationService } from '../../../translation/translation.service';
 import { SimulationService } from '../../../simulation/simulation.service';
 import { getStaticDI } from '../../../utils/get-di';
 import { ComponentInspection, InputRoute } from '../../component-inspection';
+import { pendingCharacters } from './ascii';
 import type { KeyboardComponent, KeyboardHeldKey } from './keyboard.component';
 import { KeyboardInspectionComponent } from './keyboard-inspection.component';
 
@@ -24,8 +25,9 @@ interface PressedKey {
 
 /**
  * A keyboard typed into from its window. Every character goes out through
- * the {@link InputRoute} as frames: a key going down is a press frame, its
- * code on `D` and a strobe, and the key on `D` going up is a release frame.
+ * the {@link InputRoute} as frames: a key going down is two press frames,
+ * its code on `D` with a strobe and then without, and the key on `D` going
+ * up is a release frame.
  * Text that arrives without a key (a paste, a soft keyboard's word, the Type
  * text dialog) goes out as taps, a press and a release per character.
  *
@@ -118,7 +120,7 @@ export class KeyboardInspection extends ComponentInspection {
     this.record(codes);
   }
 
-  /** Drops every character still queued and sets `D` to zero at once. */
+  /** Drops every character still queued; `D` is zero after the next tick. */
   public cancel(): void {
     this.component.cancelKeys(this.route);
     this._pending.set(0);
@@ -151,6 +153,6 @@ export class KeyboardInspection extends ComponentInspection {
 
   private refresh(): void {
     this._code.set(this.component.readCode());
-    this._pending.set(this.route.pending());
+    this._pending.set(pendingCharacters(this.route.pending()));
   }
 }

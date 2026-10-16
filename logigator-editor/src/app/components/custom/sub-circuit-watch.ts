@@ -34,7 +34,7 @@ export interface WatchLevel {
  * Live view of a placed custom component's inner circuit during simulation.
  * Opens a fresh headless copy of the instance's frozen snapshot circuit, lit
  * from the running engine through a {@link WatchSession}. Fully interactive:
- * inner user inputs drive their engine units, nested customs drill
+ * inner user inputs drive their engine inputs, nested customs drill
  * down as breadcrumb levels, and inner inspectables open their regular data
  * inspectors on the watch copies. The renderer owns canvas and viewport; this
  * model owns the level stack.
@@ -183,7 +183,7 @@ export class SubCircuitWatch extends ComponentInspection {
 
   /**
    * {@link setInput} for every slot at once, `values[i]` for slot `i`, as one
-   * `state` frame, as `SimulationService.setUserInputs` does a top-level
+   * state frame, as `SimulationService.setUserInputs` does a top-level
    * input. Reports whether the component is one of the level's user inputs
    * with exactly that many slots.
    */
@@ -199,10 +199,10 @@ export class SubCircuitWatch extends ComponentInspection {
   }
 
   /**
-   * Queues input frames on the units of a component of the active level's
-   * copy, as `SimulationService.sendFrames` does a top-level one. Reports
-   * whether the component is one of the level's inputs and every write fits
-   * its outputs.
+   * Hands input frames to the engine input of a component of the active
+   * level's copy, as `SimulationService.sendFrames` does a top-level one.
+   * Reports whether the component is one of the level's inputs and every
+   * frame fits its outputs.
    */
   public sendFrames(
     component: Component,
@@ -291,7 +291,7 @@ export class SubCircuitWatch extends ComponentInspection {
     };
   }
 
-  /** The first engine unit of a user input of `level`'s copy. */
+  /** The engine unit of a user input of `level`'s copy. */
   private _unitIndexAt(
     level: WatchLevel,
     component: Component
@@ -338,7 +338,7 @@ export class SubCircuitWatch extends ComponentInspection {
 
   /**
    * An inspection's route into `level`: its presses hold the copy's slots,
-   * and its frames go to the copy's units, resolved on every call like the
+   * and its frames go to the copy's unit, resolved on every call like the
    * holds.
    */
   private _routeFor(level: WatchLevel, component: Component): InputRoute {
@@ -360,7 +360,7 @@ export class SubCircuitWatch extends ComponentInspection {
       },
       pending: () => {
         const base = unitIndex();
-        return base === undefined ? 0 : this.simulation.pendingUnitFrames(base);
+        return base === undefined ? 0 : this.simulation.pendingUnitEvents(base);
       }
     };
   }

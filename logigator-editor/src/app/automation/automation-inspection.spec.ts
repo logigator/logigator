@@ -351,7 +351,7 @@ describe('AutomationApiService inspection', () => {
       expect(pad.isActive(slotA)).toBe(true);
     });
 
-    it('types into and holds a key of an inner keyboard, reaching the copy’s units', async () => {
+    it('types into and holds a key of an inner keyboard, reaching the copy’s unit', async () => {
       // A keyboard on the board too, whose units the copy's frames must miss.
       const boardKeyboard = makeKeyboard(0, 20);
       project.addComponent(boardKeyboard);
@@ -369,20 +369,19 @@ describe('AutomationApiService inspection', () => {
       );
       const copy = level.session.components[index] as KeyboardComponent;
       const base = level.session.info.unitIndexFor(index)!;
-      const copyUnits = Array.from({ length: 8 }, (_, slot) => base + slot);
       const sentUnits = () =>
-        new Set(fakeWorker.sentWrites().map((write) => write.unit));
+        new Set(fakeWorker.sentFrames().map((frame) => frame.comp));
 
       await api.inspectType(id, copy.id, 'hi');
-      expect(sentUnits()).toEqual(new Set(copyUnits));
+      expect(sentUnits()).toEqual(new Set([base]));
       expect(simulation.board!.userInputs.get(boardKeyboard.id)).not.toBe(base);
 
-      const queued = fakeWorker.postedOfKind('queueFrames').length;
+      const queued = fakeWorker.postedOfKind('submitInput').length;
       await api.inspectSetKey(id, copy.id, 'A');
       await api.inspectSetKey(id, copy.id, 'A');
-      expect(fakeWorker.postedOfKind('queueFrames')).toHaveLength(queued + 1);
+      expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(queued + 1);
       expect(copy.heldKey()).toEqual({ code: 0x41, key: null });
-      expect(sentUnits()).toEqual(new Set(copyUnits));
+      expect(sentUnits()).toEqual(new Set([base]));
 
       await expect(api.inspectSetInput(id, copy.id, true)).rejects.toThrow(
         /is a keyboard — use inspect\.type or inspect\.setKey$/

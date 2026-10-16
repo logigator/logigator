@@ -1,12 +1,16 @@
-import { InputFrameQueues } from '../app/simulation/worker/input-frames';
+import type { InputFrame, InputWrite } from '@logigator/sim/wasm';
+import { InputProgressReader } from '../app/simulation/worker/input-progress';
 import {
-  InputEventKind,
   MainToWorkerMessage,
   packSnapshot,
-  UnitFrame,
   WorkerToMainMessage
 } from '../app/simulation/worker/protocol';
 import { SimEngine } from './sim-engine';
+
+/** One frame a `submitInput` carried, beside the input it was for. */
+export interface SentFrame extends InputFrame {
+  comp: number;
+}
 
 /**
  * Message-level stand-in for the simulation worker, structurally compatible
@@ -15,15 +19,16 @@ import { SimEngine } from './sim-engine';
  *
  * With `autoRespond` it behaves like a healthy worker: `ready` after
  * construction, `ok` for every correlated request, an empty-delta snapshot
- * carrying the queues' counted remainder per `requestSnapshot`, a `status`
- * with `statusTick` per `requestStatus` — all on microtasks, like real worker
- * messages. Turn it off to script the conversation manually.
+ * carrying the engine's input progress as the worker reports it per
+ * `requestSnapshot`, a `status` with `statusTick` per `requestStatus` — all
+ * on microtasks, like real worker messages. Turn it off to script the
+ * conversation manually.
  *
- * Whatever it responds, it runs the worker's input-frame queues against the
- * real engine ({@link SimEngine}) as each message is posted: `init` builds it
- * from the posted board, `step` ticks it and pumps, `stop` rebuilds it, and
- * both drop every queue. `engine` then answers what the circuit sees, tick by
- * tick. Frames posted before `init` are dropped, as the worker drops them.
+ * Whatever it responds, it runs the posted board on the real engine
+ * ({@link SimEngine}) as each message is posted: `init` builds it, `step`
+ * ticks it, `submitInput` submits to it and `stop` rebuilds it. `engine` then
+ * answers what the circuit sees, tick by tick. Input posted before `init` is
+ * dropped, as the worker drops it.
  */
 export class FakeSimulationWorker {
   public posted: MainToWorkerMessage[] = [];
@@ -34,7 +39,7 @@ export class FakeSimulationWorker {
   /** Tick reported by auto-responded status messages. */
   public statusTick = 0;
   private _engine: SimEngine | null = null;
-  private frames: InputFrameQueues | null = null;
+  private progress: InputProgressReader | null = null;
 
   /** The engine the posted board runs on; there is none before `init`. */
   public get engine(): SimEngine {
@@ -56,7 +61,7 @@ export class FakeSimulationWorker {
 
   public postMessage(msg: MainToWorkerMessage): void {
     this.posted.push(msg);
-    this.runFrames(msg);
+    this.runEngine(msg);
     if (!this.autoRespond || this.terminated) {
       return;
     }
@@ -66,14 +71,15 @@ export class FakeSimulationWorker {
       }
       switch (msg.kind) {
         case 'requestSnapshot': {
-          const queues = this.frames?.countedRemaining() ?? [];
+          const inputProgress =
+            this._engine && this.progress?.read(this._engine);
           this.emit({
             kind: 'snapshot',
             reqId: msg.reqId,
             tick: this.statusTick,
             isDelta: true,
             ...packSnapshot(undefined, new Uint8Array(0), new Uint8Array(0)),
-            ...(queues.length > 0 ? { queues } : {})
+            ...(inputProgress ? { inputProgress } : {})
           });
           break;
         }
@@ -106,53 +112,41 @@ export class FakeSimulationWorker {
     this.terminated = true;
   }
 
+  /** Every input request submitted, in posting order. */
+  public submitted(): InputWrite[] {
+    return this.postedOfKind('submitInput').flatMap((msg) => msg.writes);
+  }
+
   /**
-   * Every unit write of every queued frame, in posting order, beside its
-   * frame's kind — what was sent, whether or not the queue applied it yet.
+   * Every frame submitted, in posting order, beside its input — what was
+   * sent, whether or not the engine applied it yet.
    */
-  public sentWrites(): {
-    kind: UnitFrame['kind'];
-    unit: number;
-    event: InputEventKind;
-    state: boolean;
-  }[] {
-    return this.postedOfKind('queueFrames').flatMap((msg) =>
-      msg.frames.flatMap((frame) =>
-        frame.units.map(([unit, event, state]) => ({
-          kind: frame.kind,
-          unit,
-          event,
-          state
-        }))
-      )
+  public sentFrames(): SentFrame[] {
+    return this.submitted().flatMap(({ comp, frames }) =>
+      frames.map((frame) => ({ comp, ...frame }))
     );
   }
 
-  private runFrames(msg: MainToWorkerMessage): void {
+  private runEngine(msg: MainToWorkerMessage): void {
     if (msg.kind === 'init') {
       this._engine = new SimEngine(msg.descriptor);
-      this.frames = new InputFrameQueues(this._engine);
+      this.progress = new InputProgressReader(msg.descriptor);
       return;
     }
     const engine = this._engine;
-    const frames = this.frames;
-    if (!engine || !frames) {
+    if (!engine) {
       return;
     }
     switch (msg.kind) {
       case 'stop':
         engine.reset();
-        frames.dropAll();
+        this.progress?.reset();
         break;
       case 'step':
         engine.step();
-        frames.pump();
         break;
-      case 'queueFrames':
-        frames.enqueue(msg.queue, msg.frames);
-        break;
-      case 'clearFrames':
-        frames.clear(msg.queue, msg.reset);
+      case 'submitInput':
+        engine.submit(msg.writes);
         break;
     }
   }

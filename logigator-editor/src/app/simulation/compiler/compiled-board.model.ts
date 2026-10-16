@@ -3,6 +3,13 @@ import { Wire } from '../../wires/wire';
 import { CompileDiagnostic } from './compile-error';
 import { WatchIndex } from './watch-index';
 
+/**
+ * The engine's user-input type: a unit with no inputs whose outputs only
+ * `submitInput` drives. Input `i` of the engine's input numbering is the
+ * `i`-th unit of this type in the descriptor.
+ */
+export const ENGINE_USER_INPUT_TYPE = 200;
+
 /** One simulator unit: link ids per pin, in the component's pin order. */
 export interface BoardComponentDescriptor {
   type: number;
@@ -26,7 +33,8 @@ export interface BoardComponentDescriptor {
 /**
  * The WASM simulator's board format (JSON-ready). A link id indexes the
  * simulator's link state. The component order is the submission order that
- * defines `triggerInput` comp ids and the `getOutputs()` layout.
+ * defines `submitInput` comp ids, the input numbering of `inputProgress` and
+ * the `getOutputs()` layout.
  */
 export interface BoardDescriptor {
   links: number;
@@ -65,8 +73,8 @@ export interface CompiledBoard {
   descriptor: BoardDescriptor;
   mapping: LinkMapping;
   /**
-   * Top-level user input `Component.id` → its first unit's board submission
-   * index; slot `i` is that plus `i`.
+   * Top-level user input `Component.id` → its unit's board submission index;
+   * slot `i` is the unit's output `i`.
    */
   userInputs: ReadonlyMap<number, number>;
   diagnostics: CompileDiagnostic[];
