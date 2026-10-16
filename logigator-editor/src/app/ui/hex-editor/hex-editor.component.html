@@ -140,6 +140,7 @@
       [style]="{ 'scrollbar-gutter': 'stable' }"
       styleClass="w-full font-mono text-sm outline-none"
       (scrolled)="syncHeaderScroll()"
+      (renderedRangeChange)="renderedRows.set($event)"
     >
       <ng-template #item let-rowStart>
         <div
@@ -205,10 +206,14 @@
       </div>
       <div class="flex gap-1 max-w-full">
         <span class="text-muted">{{ t('hexEditor.value') }}:</span>
-        <span class="overflow-hidden font-mono text-ellipsis">{{
-          a.value
-        }}</span>
-        <span class="text-muted">({{ a.decimal }})</span>
+        @if (a.value !== null) {
+          <span class="overflow-hidden font-mono text-ellipsis">{{
+            a.value
+          }}</span>
+          <span class="text-muted">({{ a.decimal }})</span>
+        } @else {
+          <span class="text-muted">{{ t('hexEditor.notLoaded') }}</span>
+        }
       </div>
     } @else {
       <span class="text-muted">{{ t('hexEditor.noActiveCell') }}</span>

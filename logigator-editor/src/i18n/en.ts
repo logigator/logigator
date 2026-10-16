@@ -82,6 +82,7 @@ const en = {
     activeAddress: 'Address',
     value: 'Value',
     noActiveCell: 'No cell selected',
+    notLoaded: 'Not loaded',
     clear: 'Clear',
     copy: 'Copy',
     follow: 'Follow',

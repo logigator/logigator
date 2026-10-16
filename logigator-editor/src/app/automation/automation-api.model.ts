@@ -390,7 +390,10 @@ export interface InspectionInfo {
   /** The inspected component, in the project it is placed in. */
   componentId: number;
   componentType: number;
-  /** Inspection kind — `rom` for the data inspector, `watch` for a sub-circuit. */
+  /**
+   * Inspection kind — `rom` and `ram` for the memory views, `watch` for a
+   * sub-circuit, `gamepad` and `keyboard` for the input windows.
+   */
   kind: string;
   /**
    * Flat title, as the window reads it: a watch's breadcrumb trail joined,

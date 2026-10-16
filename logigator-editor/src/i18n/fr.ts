@@ -81,6 +81,7 @@ const fr: TranslationSchema = {
     activeAddress: 'Adresse',
     value: 'Valeur',
     noActiveCell: 'Aucune cellule sélectionnée',
+    notLoaded: 'Non chargée',
     clear: 'Effacer',
     copy: 'Copier',
     follow: 'Suivre',

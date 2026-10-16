@@ -244,6 +244,77 @@ describe('HexEditorComponent', () => {
     expect(comp.activeCell()).toBe(1); // word 3's byte
   });
 
+  it('shows a cell as not loaded unless every byte it touches is', () => {
+    // 12-bit words: word 1 is bytes 1–2, word 2 bytes 3–4, word 5 bytes 7–8,
+    // word 6 bytes 9–10.
+    seed(8, 12, Uint8Array.from([0, 0, 0, 0x21, 0x43, 0, 0, 0x65, 0x87]));
+    fixture.componentRef.setInput('readOnly', true);
+    fixture.componentRef.setInput('loadedRange', { start: 2, end: 9 });
+
+    expect(comp.cellValue(2)).toBe('321');
+    expect(comp.cellValue(5)).toBe('876');
+    expect(comp.cellValue(1)).toBe('···');
+    expect(comp.cellValue(6)).toBe('···');
+    comp.activeCell.set(1);
+    expect(comp.active()).toEqual({
+      address: '01',
+      value: null,
+      decimal: null
+    });
+
+    // In bytes, the range is the cells themselves.
+    comp.view.set('byte');
+    expect(comp.cellValue(1)).toBe('··');
+    expect(comp.cellValue(2)).toBe('00');
+    expect(comp.cellValue(8)).toBe('87');
+    expect(comp.cellValue(9)).toBe('··');
+  });
+
+  it('reports the bytes its rendered rows cover, in either view', () => {
+    // 64 words of 7 bits are 56 bytes: four rows of words, four of bytes.
+    seed(64, 7);
+    const shown: { start: number; end: number }[] = [];
+    fixture.componentInstance.shownBytes.subscribe((range) =>
+      shown.push(range)
+    );
+
+    comp.renderedRows.set({ start: 1, end: 3 });
+    fixture.detectChanges();
+    // Words 16–47 are bits 112–335.
+    expect(shown.at(-1)).toEqual({ start: 14, end: 42 });
+
+    comp.view.set('byte');
+    fixture.detectChanges();
+    expect(shown.at(-1)).toEqual({ start: 16, end: 48 });
+
+    // Rows past the end cover the bytes there are.
+    comp.renderedRows.set({ start: 3, end: 6 });
+    fixture.detectChanges();
+    expect(shown.at(-1)).toEqual({ start: 48, end: 56 });
+  });
+
+  it('keeps a viewer’s view, base and active cell across new contents', () => {
+    fixture.componentRef.setInput('readOnly', true);
+    seed(16, 8, Uint8Array.from([0x01]));
+    fixture.detectChanges();
+    comp.view.set('byte');
+    comp.radix.set('binary');
+    comp.activeCell.set(3);
+
+    const live = new Uint8Array(16);
+    live[3] = 0x0f;
+    fixture.componentRef.setInput('data', live);
+    fixture.detectChanges();
+
+    expect(comp.view()).toBe('byte');
+    expect(comp.radix()).toBe('binary');
+    expect(comp.active()).toEqual({
+      address: '03',
+      value: '00001111',
+      decimal: '15'
+    });
+  });
+
   it('spans the highlight across bytes for a straddling word', () => {
     seed(4, 12); // word 1 occupies bits 12..23 → bytes 1 and 2
     fixture.componentRef.setInput('highlightIndex', 1);

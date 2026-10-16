@@ -81,6 +81,7 @@ const es: TranslationSchema = {
     activeAddress: 'Dirección',
     value: 'Valor',
     noActiveCell: 'Ninguna celda seleccionada',
+    notLoaded: 'Sin cargar',
     clear: 'Vaciar',
     copy: 'Copiar',
     follow: 'Seguir',
