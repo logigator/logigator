@@ -63,7 +63,7 @@ api.camera.focus({ elementIds: [id] });
 await api.sim.enter(); // sim reads are async — this order is
 api.sim.pause(); // the deterministic recipe
 await api.sim.setInput(leverId, true);
-await api.sim.step(2); // taken up on the first tick, driven on the second
+await api.sim.step(2); // on the AND's input after one tick, its output after two
 const [readout] = await api.sim.readPorts([id]);
 ```
 
@@ -199,13 +199,13 @@ so read the returned `state`.
 
 - `setInput` is **absolute**, and what that means follows from the input's
   `drive` alone, whatever its gesture: a `level` slot (lever, button) is set to
-  `value` — one already there sends no engine event, and a button is held by
+  `value` — one already there sends no engine frame, and a button is held by
   `true` until a `false` releases it; a `pulse` slot (pulse button) pulses on
   `true` and ignores `false`. Never read-then-toggle.
 - `input` addresses one **slot** of the user input — output port `i` is slot
-  `i`, each its own engine unit — by index or by one of the component's slot
-  ids (`UserInput.slotIds`). It defaults to `0`, and a lever, button or pulse
-  button has only that one. A gamepad has one slot per control, its slot ids
+  `i`, output `i` of the input's one engine unit — by index or by one of the
+  component's slot ids (`UserInput.slotIds`). It defaults to `0`, and a lever,
+  button or pulse button has only that one. A gamepad has one slot per control, its slot ids
   being the control ids in port order (`up`, `down`, `left`, `right`, then
   whichever of `a`, `b`, `x`, `y`, `l`, `r`, `select`, `start` its options
   switch on), so a control's index moves with the options and its id does
@@ -224,14 +224,16 @@ so read the returned `state`.
   change, so an unchanged slot sends nothing and every changed one lands on
   the same tick, paused or running. That is what lets the recipe above set a
   whole input in one `setInput` before its `step`.
-- The engine takes an input write up on the next tick and drives it on the
-  tick after, so an input's own output port shows a write after **two**
-  steps, and a gate it feeds after three.
-- `setInput` writes are `state` frames: written twice while paused, the
+- The engine applies an input frame on its next tick, so an input's own
+  output port shows a write after **one** step, and a gate it feeds after
+  two — the same one tick per stage as every other component.
+- `setInput` writes a level as a state frame: written twice while paused, the
   circuit sees the last value and nothing in between. What a pointer does to a
-  button or a pulse button is an `event` instead, each reaching the outputs
-  before the next is written — so a button pressed and released while paused
-  is high after the second and third steps and low after the fourth.
+  button is an event frame instead, each on the outputs for at least a tick
+  before the next applies — so a button pressed and released while paused is
+  high after the next step and low after the one after it. A pulse, from a
+  pointer or from `setInput`, is always an event followed by the frame that
+  ends it: high after the next step, low after the second.
 - A **keyboard** is not a user input and `setInput` refuses it, naming `type`
   and `setKey`. Its calls build the frames its window sends, through the
   same `KeyboardComponent` methods, so both agree on the key held on `D`
@@ -239,19 +241,21 @@ so read the returned `state`.
   sends nothing on its keyup, and a key the window holds is one `setKey`
   already holds.
   - `type(id, text)` queues the text as taps, a press and a release per
-    character, each an `event` frame that reaches the outputs before the next
-    is written, so a character takes four steps while paused. It is **strict**, unlike a
-    paste: printable ASCII, `\n`, `\t`, `\b`, `\x1b` and `\x7f` only, CRLF
-    and CR reading as one `\n`, at most `KEYBOARD_TEXT_LIMIT` (10 000)
-    characters. Any other character is an error naming it, its code point
-    and its UTF-16 index in the text, and nothing is queued
-    (`textToCodesStrict`, beside the paste's `textToCodes` in `ascii.ts`). It
-    resolves once queued, not once typed.
+    character, at the keyboard's timing
+    ([simulation.md](simulation.md#run-controls-and-user-input)): each
+    character is on `D` after the next step and the one after, `D` is 0
+    for the two after that, so a character takes four steps while paused. It
+    is **strict**, unlike a paste: printable ASCII, `\n`, `\t`, `\b`, `\x1b`
+    and `\x7f` only, CRLF and CR reading as one `\n`, at most
+    `KEYBOARD_TEXT_LIMIT` (10 000) characters. Any other character is an
+    error naming it, its code point and its UTF-16 index in the text, and
+    nothing is queued (`textToCodesStrict`, beside the paste's `textToCodes`
+    in `ascii.ts`). It resolves once queued, not once typed.
   - `setKey(id, key)` presses the key for one such character — a no-op when
     that code is already on `D` — and `null` lets go — a no-op when no key
-    holds it. Both are `event` frames, never merged: `setKey('A')` then
-    `setKey(null)` while paused shows `A` after the second and third steps
-    and `0` after the fourth.
+    holds it. A press is never merged, so `setKey('A')` then `setKey(null)`
+    while paused shows `A` after the first and second steps, with `STB` high
+    after the first, and `0` from the third.
 - `step(count)` posts the ticks back to back and pulls **one** snapshot, so
   settling a circuit costs one round trip rather than one per tick.
 - `readPorts` builds a component → link-id reverse index once per compiled board
@@ -350,7 +354,7 @@ Its seven calls below all refuse a data inspection.
   with an error naming `type` and `setKey`.
 - `type(id, componentId, text)` / `setKey(id, componentId, key)` — `sim.type`
   and `sim.setKey` for an inner keyboard of the visible level, its frames
-  reaching the copy's own units. A key held here is let go of when its level
+  reaching the copy's own unit. A key held here is let go of when its level
   closes, whoever pressed it.
 - `navigateTo(id, level)` — pops every level deeper than `level`.
 - `camera.*` — `getViewport` / `pan` / `setCenter` / `setZoom` / `focus` against

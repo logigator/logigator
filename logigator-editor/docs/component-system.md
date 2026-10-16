@@ -85,7 +85,7 @@ the orbited position per entry.
 
 A component the user drives during simulation implements **`UserInput`**
 (`components/user-input.ts`; `isUserInput` is the guard): `inputSlots` — one
-per output port, each driven by its own engine unit — optional `slotIds` for
+per output port, all outputs of one engine unit — optional `slotIds` for
 addressing one by name, `isActive(slot)` / `setActive(slot, active)`, and two
 independent properties: `drive`, what the engine receives (`level` or
 `pulse`), and `gesture`, how a pointer operates it (`hold`, `toggle` or
@@ -118,11 +118,13 @@ operates no slot. The names option's key resolver is attached in the
 constructor, as `RomComponent` attaches its memory dimensions.
 
 The **keyboard** (`component-types/keyboard/`) drives outputs without being a
-`UserInput`: seven `level` data bits and a `pulse` strobe in one component,
+`UserInput`: seven data bits and a strobe, eight outputs of one engine input,
 and no pointer gesture, so no slot path, canvas session or `setInput` reaches
 it. Its keys go through the component itself — `pressKey`, `releaseKey`,
 `tapKeys`, `cancelKeys` — which send [input frames](simulation.md#input-frames)
-built by `ascii.ts` through the route they are handed, and keep the one record
+built by `ascii.ts` (their timing is in
+[simulation.md](simulation.md#run-controls-and-user-input)) through the route
+they are handed, and keep the one record
 of the key on `D` (`heldKey`, stamped with the session's reset count, so a stop
 outdates it). Its window and the automation API both call these, so they
 agree on the key on `D`: a window key that automation let go of sends nothing

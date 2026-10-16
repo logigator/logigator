@@ -31,11 +31,11 @@ itself. Where the component was opened decides the route: on the board it
 emits on the main project's `userInput$` (`emitUserInput(component, phase,
 slot)`), exactly as a press on the canvas does; in a watch it holds the copy's
 slot through that level (`SubCircuitWatch.holdFor`). Beside the presses, the
-route queues [input frames](simulation.md#input-frames) on the component's
-own units (`send(frames)`), drops the ones still queued while applying a reset
-(`cancel(reset)`), and counts the counted ones left (`pending()`) — through
-`SimulationService.sendFrames` and its siblings on the board, through
-`sendUnitFrames` with the copy's resolved first unit in a watch. The gamepad
+route hands [input frames](simulation.md#input-frames) to the component's own
+engine input (`send(frames)`), replaces the ones it still has queued with an
+optional reset (`cancel(reset?)`), and counts its event frames not yet applied
+(`pending()`) — through `SimulationService.sendFrames` and its siblings on the
+board, through `sendUnitFrames` with the copy's resolved unit in a watch. The gamepad
 plays its slots through `press` and `release`, the keyboard sends frames, and
 the ROM and the watch ignore the route.
 
@@ -137,7 +137,7 @@ slot)` is the absolute path automation drives.
   mis-lighting wires. Destroying one sets every high `level` slot of its
   copies low, held or toggled, and lets go of the key a keyboard copy holds
   (`KeyboardComponent.releaseKey`, queued behind what it still has to send),
-  which would otherwise leave their engine units high with no copy left to
+  which would otherwise leave their engine inputs high with no copy left to
   reset them. The session registers with the
   snapshot fan-out and requests a full seed snapshot, which also poses the
   copies' `toggle` slots from their output-link power — a powered one adopted
@@ -254,7 +254,7 @@ controller.
 **In a watch.** A tap on a gamepad copy opens its window through
 `SubCircuitWatch.activate`, with the level's route and the breadcrumb as its
 place, so the title reads _Outer › Inner › Gamepad_. Its presses hold the inner
-engine units (`holdFor`), light the copy and re-blit the level through the
+engine input's slots (`holdFor`), light the copy and re-blit the level through the
 level project's ticker. Keys and controllers reach it as they reach a
 top-level pad; only the route differs. Popping its level, navigating the
 breadcrumb above it or closing the watch closes the window first, and its
@@ -442,11 +442,13 @@ operations (`pressKey`, `releaseKey`, `tapKeys`, `cancelKeys`, see
 is a physical key going down, remembered by its `KeyboardEvent.code`;
 `release(key)` sends only for the key on `D`, matched by `code`, so a Shift let
 go of first still releases the letter; `releaseHeld()` is focus loss;
-`type(codes)` sends text that had no keys as taps; `cancel()` drops the
-route's queue and sets `D` low at once. The inspection keeps the last 64 codes
-sent (`KEYBOARD_HISTORY_LENGTH`) and which of them is held, and re-reads on
-every frame the code on `D` (`KeyboardComponent.readCode`, ahead of any
-bubble) and the route's `pending()`. A stop, seen as
+`type(codes)` sends text that had no keys as taps; `cancel()` replaces the
+route's queue with a reset, so `D` is low after the next tick. The inspection
+keeps the last 64 codes sent (`KEYBOARD_HISTORY_LENGTH`) and which of them is
+held, and re-reads on every frame the code on `D`
+(`KeyboardComponent.readCode`, ahead of any bubble) and the characters still
+to go out, the route's `pending()` events halved (`pendingCharacters`, see
+[simulation.md](simulation.md#run-controls-and-user-input)). A stop, seen as
 `SimulationService.resets()` moving, clears the history and the held entry.
 `destroy()` releases the held key, so closing the window leaves nothing on
 `D`. The title is the type's name.

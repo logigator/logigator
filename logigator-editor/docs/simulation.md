@@ -9,7 +9,7 @@ engine inside a Web Worker, and lights up the powered wires and ports. Owns the
 Project ──compile()──► CompiledBoard ─descriptor─► worker → WASM engine
                           │                                    │ snapshot (pulled per frame)
                           ├─ mapping (link id → wires + ports) ─┴─► SimulationWorkerService
-                          └─ userInputs (input → first unit)           │ applyDelta / applyFull
+                          └─ userInputs (input → its unit)             │ applyDelta / applyFull
                                                                        ▼
                                                                 LinkStateApplier
 ```
@@ -40,24 +40,25 @@ the live `Project` and instantiated snapshot bodies.
 ### Units and links
 
 Components are walked **sorted by id**: quad-tree order is not stable, and the
-submission order defines the engine's `triggerInput` indices and output layout.
+submission order defines the engine's `submitInput` comp ids, its input
+numbering and its output layout.
 
 - **`UNIT_TYPES`** (gates, `DELAY`, `CLOCK`, adders, flip-flops, `RNG`, `RAM`,
   coder/decoder, mux/demux, `ROM`) — one `EmittedUnit`, pins as union-find node
   ids.
 - **User inputs** — any component implementing `UserInput`
-  (`components/user-input.ts`; `BUTTON`, `PULSE_BUTTON`, `SWITCH`), recognised
-  by the `isUserInput` guard rather than by type id — one
-  `ENGINE_USER_INPUT_TYPE` (200) unit **per slot**, one output each,
-  contiguously in slot order (`_emitUserInput`). Slot `i` is output port `i` —
-  a type whose `inputSlots` differs from its output count is refused with an
-  error — and `userInputs` records the first unit, so slot `i` is that index
-  plus `i`. A bubble on port `i` becomes `negOutputs: [0]` on unit `i`. The
-  button, switch and pulse button have one slot, so one unit; the gamepad has
-  one per control.
+  (`components/user-input.ts`; `BUTTON`, `PULSE_BUTTON`, `SWITCH`, `GAMEPAD`),
+  recognised by the `isUserInput` guard rather than by type id — **one**
+  `ENGINE_USER_INPUT_TYPE` (200) unit with an output per slot, in slot order
+  (`_emitUserInput`), recorded in `userInputs`. Slot `i` is output port `i` and
+  the unit's output `i` — a type whose `inputSlots` differs from its output
+  count is refused with an error — and a bubble on port `i` is `negOutputs`
+  entry `i` of that unit. The engine keeps one frame queue per unit, so one
+  input is one queue, and one frame sets every slot of it on one tick: the
+  gamepad's twelve controls are twelve outputs of one unit.
 - **`KEYBOARD`** — takes the same branch without being a user input: one unit
-  per output port, `D0`…`D6` then `STB`, its first recorded in `userInputs`, so
-  the watch tables and `unitIndexFor` address it unchanged. The slot paths
+  of eight outputs, `D0`…`D6` then `STB`, recorded in `userInputs`, so the
+  watch tables and `unitIndexFor` address it like any input. The slot paths
   refuse it, since `isUserInput` is false; its frames arrive through
   `sendFrames` / `sendUnitFrames` instead.
 - **`LED_MATRIX`** — a unit whose cell outputs sit on no net: fresh nodes per
@@ -117,7 +118,7 @@ open time from a fresh `instantiateBody` run.
 
 Per-template tables (`wireNets`, `portNets`, `userInputs`, `children`) are keyed
 by **element position in the body arrays**, `userInputs` holding each input's
-first unit as the top-level map does, deterministic across
+unit as the top-level map does, deterministic across
 `instantiateBody` runs where live ids are session-assigned. Template compression
 gives **every** net class a local id so every wire is addressable: unit pins and
 plug bindings first, since their ids feed emission and must stay deterministic,
@@ -155,59 +156,71 @@ The engine runs inside the worker; the main thread **samples** it.
 ### Input frames
 
 Every write a user input makes to the engine goes out as an **input frame**
-(`InputFrame` in `components/component-inspection.ts`): a set of slot writes
-(`SlotWrite` — slot, `drive`, value) the worker applies at one tick boundary,
-with no tick between them. There are two kinds, because inputs report two
-different things:
+(`InputFrame` in `components/component-inspection.ts`), which is the engine's
+own frame: a full vector over the input's outputs — `true`/`false` drive one,
+`null` leaves it as it is — with a `hold` and a `coalesce` flag. The engine
+queues an input's frames and applies them in order **inside its ticks**, so
+sequencing is a property of the tick count, never of when the worker gets
+control: the same frames give the same trace paused, stepped, paced or free
+running, and a long paste goes out as fast as the circuit ticks. The worker
+only forwards (`submitInput`); nothing on either thread waits for a tick.
 
-- **`event`** — queued in order, and each reaches the outputs before the next
-  frame of its queue is written. A press and its release both reach the
-  circuit however fast they came: a button tapped while paused is high after
-  the second and third steps and low after the fourth, and two pulse-button
-  taps between ticks give two pulses.
-- **`state`** — a position, not a happening. It merges into the queue's last
-  frame when that one is a `state` frame not yet applied (the later write per
-  unit wins, two pulses on one unit stay one), and one arriving after an
-  applied `state` frame lands at that same boundary. A switch flipped on, off
-  and on while paused, or `setInput` called twice, reaches the circuit as the
-  final state and nothing in between. It never merges into an applied
-  frame or past a queued `event` frame, so it cannot reorder anything.
+The timing is the engine's (its D1 contract): a frame submitted at tick count
+_t_ to an idle input is on the outputs and their wires after tick _t + 1_, the
+one tick every other component takes too — a gate fed by it answers after
+_t + 2_. The next frame of that input is applied _hold_ ticks later (1 when
+unset), or on the tick after it arrives if that is later; the last frame stays.
+Inputs are independent: one input's hold never delays another's frames.
 
-`counted` marks a frame `pending()` counts, for an input that reports how much
-it still has to send.
+There are two kinds, because inputs report two different things:
 
-The service resolves a frame to units (`UnitFrame`: `[unit, event, state]`
-writes) and posts it as `queueFrames`, keyed by the input's **first unit**, so
-every input — and every watch copy, flattened to its own units — has its own
-queue and one never waits on another. `clearFrames` drops a queue and applies
-its `reset` writes at once. The merge happens in the worker, the only place
-that knows whether a frame has been applied.
+- **Event** (`coalesce` unset) — never dropped or merged. A press and its
+  release both reach the circuit however fast they came: a button pressed and
+  let go while paused is high after the next step and low after the one after
+  it, and two pulse-button taps between ticks give two pulses.
+- **State** (`coalesce: true`) — a position, not a happening. It merges into
+  the input's last frame not yet applied while that one is a state too (its
+  non-`null` entries over the earlier ones, its own hold kept), so a switch
+  flipped on, off and on while paused, or `setInput` called twice, reaches the
+  circuit as the final state and nothing in between. It never merges into an
+  applied frame or past a queued event, so it cannot reorder anything.
 
-The spacing comes from how the engine applies input: a write is taken up on
-the next tick and driven on the tick after, and a second write to the same
-unit taken up before then replaces the first, so the first never reaches the
-outputs (a pulse excepted, which still fires). Frames of one queue are
-therefore written two ticks apart (`FRAME_SPACING_TICKS`); one tick apart, a
-keyboard's release would overwrite its data bits while its strobe still
-pulsed.
+The engine has **no pulse**: a pulse button's tap is an event setting the slot
+high followed by a state setting it low again, which ends the pulse a tick
+later and, as a state, never merges with the next tap's event. Where a gesture
+writes one slot of a multi-slot input, the frame carries `null` for every
+other slot, so the gamepad's controls never write over one another.
 
-The worker's queues are `InputFrameQueues` (`input-frames.ts`), pure and
-engine-agnostic. Specs run them against the real engine:
-`src/testing/sim-engine.ts` wraps the WASM build (whose bytes
-`vitest.setup.ts` reads) as a hand-ticked `FrameEngine`, and
-`FakeSimulationWorker` runs the posted board on it, so a spec observes input
-timing exactly as the worker's engine applies it. Each queue keeps a FIFO and
-the tick its last frame applied at; the pump applies a head frame only once
-`getStatus().tick` is two past that tick (the `state`-after-`state` case
-aside), calling `triggerInput` for every write in one synchronous run. It runs when frames are queued, after a `step`, after each
-pace iteration in `target` mode, and on a 0 ms timer while a `continuous` run
-is active and a queue holds a frame — the run yields to the event loop between
-batches. A frame for an empty queue therefore applies as soon as it arrives,
-and while paused each `step` consumes at most one frame per queue. `init` and
-`stop` drop every queue. While any queue holds a counted frame, snapshots carry
-`queues: [queue, countedRemaining][]`, which the bridge keeps for
-`pendingFrames`; a counted frame queued while paused pulls a snapshot so its
-count shows.
+`SimulationService` builds the frames — `_drive` for the slot paths, and
+`sendFrames` / `sendUnitFrames` pass a component's own frames through after
+checking each has one entry per output and a whole `hold` — and posts them as
+`submitInput` with `{ comp: unit, frames }`. `cancelFrames` /
+`cancelUnitFrames` send `replace: true`: the engine drops what the input still
+has queued, ends a hold still running, then applies the given reset on the next
+tick, or with no reset leaves the outputs as they are. The engine validates a
+request as a whole and queues nothing from one it refuses; the worker forwards
+it unchanged, so a refused request comes back as an uncorrelated error and
+ends the session — which is why the service checks the shape first and
+refuses the call instead.
+
+**Progress.** The engine counts, per input, the event frames not yet applied;
+a state frame never counts, and neither does a frame whose hold is still
+running. `InputProgressReader` (`worker/input-progress.ts`) reads that with
+`inputProgress` into a `Uint32Array` it keeps for the session, maps input _i_
+— the _i_-th user-input unit of the descriptor — back to its unit index, and
+compares it with what it last reported, so a snapshot carries
+`inputProgress: [unit, pending][]` only when some count moved, an empty list
+once the last one ran out. The bridge keeps the last report for
+`pendingEvents(unit)`; an event sent while paused, or a `replace`, pulls a
+snapshot so the count shows before the next step. What an input's count means
+in its own terms is the input's to say: a keyboard character is two events, so
+the window divides (`pendingCharacters` in `ascii.ts`).
+
+Specs run against the real engine: `src/testing/sim-engine.ts` wraps the WASM
+build (whose bytes `vitest.setup.ts` reads) as a hand-ticked `SimEngine`, and
+`FakeSimulationWorker` runs the posted board on it, reporting progress through
+the same `InputProgressReader`, so a spec observes input timing exactly as the
+worker's engine applies it.
 
 Independently the bridge pulls **one snapshot per `requestAnimationFrame`**, at
 most one in flight, so a slow worker answers late rather than piling up a queue.
@@ -232,8 +245,8 @@ input arriving then has no promise to fail, so the worker's error would come
 back uncorrelated and kill a session that was about to work. Hence the gate
 here, a matching drop in the worker for the advisory kinds, and the
 `isReady()` guard in `_drive` and `_send` so a dropped input cannot leave a
-slot showing a state the engine never received. Such inputs are dropped rather than queued:
-they have no tick to apply at. `requestSnapshot` is the exception —
+slot showing a state the engine never received. Such inputs are dropped rather
+than queued: they have no tick to apply at. `requestSnapshot` is the exception —
 `wantFullSnapshot` survives the drop and is reissued once `init` acks.
 
 Worker faults also reach error tracking as real `$exception`s: they are internal
@@ -346,16 +359,18 @@ at; the popover's slider stops, speed parsing and formatting are the pure
 
 Every user input is a **`UserInput`** (`components/user-input.ts`, see
 [component-system.md](component-system.md)), and the service knows it by that
-interface alone, never by class. It has **slots**, one per output port and
-engine unit (see [Units and links](#units-and-links)); the button, switch and
-pulse button have the one slot `0`, the gamepad one per control. Two independent properties describe it:
+interface alone, never by class. It has **slots**, one per output port, all
+outputs of its one engine unit (see [Units and links](#units-and-links)); the
+button, switch and pulse button have the one slot `0`, the gamepad one per
+control. Two independent properties describe it:
 
 - **`drive`** — what the engine receives. `_drive` sets slots to values and
-  sends the writes that result as one [input frame](#input-frames): a `level`
-  slot (button, switch) is written as `INPUT_EVENT_CONT` with its new state,
-  which latches until the next one, and is idempotent per slot — a slot
-  already there writes nothing; a `pulse` slot (pulse button) is written as
-  `INPUT_EVENT_PULSE` (one tick) and flashes active for
+  sends the result as [input frames](#input-frames) over the input's outputs,
+  `null` for every slot it leaves alone: a `level` slot (button, switch) is
+  set to its new state in one frame, which stays until the next one, and is
+  idempotent per slot — a slot already there writes nothing; a `pulse` slot
+  (pulse button) is an event frame setting it high and a state frame setting
+  it low again, one tick later, and flashes active for
   `PULSE_BUTTON_FLASH_MS`. Setting a level high and pulsing obey the readiness
   rule; setting a level low always clears the visual and reaches the engine
   whenever one is up. The visuals change when the frame is sent, so while
@@ -363,7 +378,7 @@ pulse button have the one slot `0`, the gamepad one per control. Two independent
 - **`gesture`** — how a pointer operates it, mapped onto a value and a frame
   kind in one place, `_operate`: `hold` (button) is high on `press` and low on
   `release`, `tap` (pulse button) is `true` on a `tap` — both reported as
-  `event` frames — and `toggle` (switch) flips on a `tap`, a `state` frame.
+  events — and `toggle` (switch) flips on a `tap`, a state.
   Any other phase is ignored.
 
 Only three pairs exist, and only they type-check: `UserInput` is the union of
@@ -392,43 +407,64 @@ ignored.
 The service keeps every high `level` slot — toggled and held alike, per
 input, the board's and a watch's copies — so nothing outlives the session
 holding it high. `stop()` sets them low against the rebuilt engine once the
-reset lands, one `state` frame per input, which also catches a press or toggle that reached the engine
-while the reset was in flight; `exit()` clears them visually, the engine being
+reset lands, one state frame per input, which also catches a press or toggle
+that reached the engine while the reset was in flight; `exit()` clears them
+visually, the engine being
 gone. A hold still open afterwards releases nothing further. A watch copy
 whose `toggle` slot is posed high from its link on open is entered through
-`adoptHighLevel`, which tracks it without an engine event — the engine already
+`adoptHighLevel`, which tracks it without an engine frame — the engine already
 holds it — so it is reset like any other.
 
-Callers pass an input's **first** unit and slots, and the service is the one
-place that turns `base + slot` and a `drive` into a unit and an engine event
-(`unitWrites`). Top-level first units come from `CompiledBoard.userInputs`
-(`Component.id` → submission index); inner inputs operated in a watch arrive
-through `triggerUnitInput` with the first unit already resolved by the watch
-index and the phase read through the same gesture mapping. The automation
+Callers pass an input's unit and slots, and the service is the one place that
+turns slots and a `drive` into frames (`_drive`). Top-level units come from
+`CompiledBoard.userInputs` (`Component.id` → submission index); inner inputs
+operated in a watch arrive through `triggerUnitInput` with the unit already
+resolved by the watch index and the phase read through the same gesture
+mapping. The automation
 API's `setUserInput` (and `setUnitInput`, its watch counterpart) drives one
 slot to an **absolute** state, which follows from the drive alone: a `level`
 slot is set to `value`, one already there being left alone, and a `pulse` slot
 pulses on `true` and ignores `false`, holding no state to clear.
 `setUserInputs` (and `setUnitInputs`) takes one value per slot and sends
-**one** `state` frame of the slots that change, so all of them land on the
+**one** state frame of the slots that change, so all of them land on the
 same tick. All of them report `false` for a slot the input does not have, the
 array forms for a list that is not one value per slot.
 
 Beside the slot paths, `sendFrames(componentId, frames)` and
-`sendUnitFrames(unitIndex, component, frames)` queue frames on a component's
-units as they are, reading and setting no slot state — the component's
-visuals are the caller's. `cancelFrames` / `cancelUnitFrames` drop the frames
-still queued and apply a reset frame's writes at once, and `pendingFrames` /
-`pendingUnitFrames` report the counted frames still queued as of the last
-snapshot. A write addressing a slot past the component's outputs refuses the
-whole call. An inspection reaches all of them through its `InputRoute`
-(`send`, `cancel`, `pending` beside `press` and `release`), so it never
-resolves a unit itself. The keyboard is what uses them: it has no slots here,
-and its window and the automation API send its press, release and tap frames
-through these calls (`KeyboardComponent`, see
-[component-system.md](component-system.md)). A press frame writes the code's
-seven bits and pulses `STB`, `counted` so the window's _Sending N…_ can count
-characters; a release frame writes the seven bits low.
+`sendUnitFrames(unitIndex, component, frames)` hand a component's frames to its
+unit as they are, reading and setting no slot state — the component's visuals
+are the caller's. `cancelFrames` / `cancelUnitFrames` replace what the input
+still has queued with an optional reset frame, and `pendingEvents` /
+`pendingUnitEvents` report its event frames not yet applied as of the last
+snapshot that reported them. A frame without exactly one entry per output, or
+with a hold that is not a whole number of ticks, refuses the whole call. An
+inspection reaches all of them through its `InputRoute` (`send`, `cancel`,
+`pending` beside `press` and `release`), so it never resolves a unit itself.
+The keyboard is what uses them: it has no slots here, and its window and the
+automation API send its press, release and tap frames through these calls
+(`KeyboardComponent`, see [component-system.md](component-system.md)).
+
+The keyboard's frames (`ascii.ts`) give the timing the user docs state:
+
+| Frame                    | `D0`…`D6` | `STB` | Kind  | Hold |
+| ------------------------ | --------- | ----- | ----- | ---- |
+| press, 1 (`pressFrames`) | code      | 1     | event | 1    |
+| press, 2                 | code      | 0     | event | 1    |
+| release (`releaseFrame`) | 0         | kept  | state | 2    |
+| reset (`resetFrame`)     | 0         | 0     | state | 2    |
+
+A tap is the three in order, so a character submitted at tick count _t_ is on
+`D` with `STB` after tick _t + 1_, on `D` alone after _t + 2_, and `D` is 0
+after _t + 3_ and _t + 4_; the next character follows after _t + 5_ — four
+ticks per character, a strobe of exactly one tick, at least two ticks of 0
+before the next code, so a double letter still reads as two presses. A key
+pressed over the held one goes straight from one code to the next, its own
+strobe telling them apart. The release and the reset are states so that the
+progress count is two events per character exactly, and the window's
+_Sending N…_ is `⌊pending / 2⌋` — a character whose first press frame is
+applied is on `D` already. Neither merges: a release always follows a press,
+and a reset replaces the queue. The reset lowers `STB` too, because the cancel
+it follows can cut a press short while the strobe is high.
 
 ---
 
