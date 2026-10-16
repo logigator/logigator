@@ -145,7 +145,8 @@ a dialog lands on an uncovered board.
 - `SourceIndicatorComponent` — provenance chip or tile badge for the five
   states (`server`, `browser`, `draft`, `share`, `embedded`).
 - `HexEditorComponent` — generic packed-buffer editor, also the read-only live
-  ROM viewer during inspection. `SimulationControlsComponent` is shared by the
+  ROM and RAM viewer during inspection (`loadedRange` marks the bytes a
+  partly read memory holds, `shownBytes` reports the ones its rows show). `SimulationControlsComponent` is shared by the
   desktop tool bar and the mobile sim bar; `MinimapComponent` and
   `FpsCounterComponent` are board overlays.
 

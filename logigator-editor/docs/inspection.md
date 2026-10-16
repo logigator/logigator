@@ -2,10 +2,11 @@
 
 Tapping an inspectable component in `SIMULATION` mode opens a live view of it:
 a floating window over the board on desktop; on compact, the shared non-modal
-bottom sheet, or a fullscreen takeover for canvas-hosting views. Four content
-kinds exist — the ROM's data inspector, the custom component's
-[watch](#the-custom-component-watch), the [gamepad](#the-gamepad)'s
-controller and the [keyboard](#the-keyboard)'s typing window.
+bottom sheet, or a fullscreen takeover for canvas-hosting views. Five content
+kinds exist — the ROM's and the RAM's [memory views](#the-memory-inspections),
+the custom component's [watch](#the-custom-component-watch), the
+[gamepad](#the-gamepad)'s controller and the [keyboard](#the-keyboard)'s
+typing window.
 
 ## The Model: `ComponentInspection`
 
@@ -37,7 +38,14 @@ optional reset (`cancel(reset?)`), and counts its event frames not yet applied
 (`pending()`) — through `SimulationService.sendFrames` and its siblings on the
 board, through `sendUnitFrames` with the copy's resolved unit in a watch. The gamepad
 plays its slots through `press` and `release`, the keyboard sends frames, and
-the ROM and the watch ignore the route.
+the ROM, the RAM and the watch ignore the route.
+
+Beside it, the context's **`StateRoute`** is where the inspection reads its
+component's [engine state](simulation.md#component-state):
+`watch(onRead)` starts a `StateWatch` over the component's unit — through
+`SimulationService.watchState` on the board, `watchUnitState` with the unit
+from the watch index's `stateUnitFor` for a copy in a watch — or answers
+`null` for a component with no state the session reads. Only the RAM uses it.
 
 ## Orchestration: `InspectionService`
 
@@ -46,10 +54,10 @@ it must live from startup. It subscribes to the active project's
 `inspectRequest$` while the mode is `SIMULATION` (leaving it closes everything),
 opens at most one inspection per component instance — a second tap focuses the
 existing view — and fans `SimulationService.frame$` out to every open
-inspection's `onFrame()`. `openFor(component, { input, place })` takes the
-route the factory receives, defaulting to the top-level one, and the **place**
-of a watch's copy: the names of the watch levels down to the one holding it.
-The entry keeps the place, and `entryTitle` / `entryTitleParts`
+inspection's `onFrame()`. `openFor(component, { input, state, place })` takes
+the routes the factory receives, each defaulting to the top-level one, and the
+**place** of a watch's copy: the names of the watch levels down to the one
+holding it. The entry keeps the place, and `entryTitle` / `entryTitleParts`
 (`inspection-presenter.ts`) put it ahead of the inspection's own title, so a
 view opened from a watch reads _Outer › Inner › ROM_ in its window's title
 bar, the sheet's header and automation's `title`; a sheet tab keeps the short
@@ -88,15 +96,46 @@ changes; watches keep their window entry, re-rendered by the other outlet.
   window as an outlet-filling takeover (no drag/resize, back button instead of
   ✕), opaque and stacked by z-index, so back reveals the one beneath.
 
-## The ROM Inspection
+## The Memory Inspections
 
-`components/component-types/rom/rom-inspection.ts`. Contents are static and
-already on the main thread (the `data` option's packed blob); only the address
-is live. The engine addresses `Σ inᵢ << i`, so input port `i` (label `A(i+1)`)
-is address bit `i`, and `onFrame` folds `isPortPowered(0..addressSize-1)` into
-an `address` signal. The renderer is the hex editor (`ui/hex-editor/`) in
-`readOnly` viewer mode; `highlightIndex` makes the addressed word the active
-cell, so the status box reads out the live address and value.
+The ROM and the RAM share one model and one renderer
+(`inspection/memory/`): `MemoryInspection` holds the table's shape (frozen at
+open time; editing is locked during simulation), `bytes` and `loaded` signals,
+and the live address. Both address `Σ inᵢ << i`, so input port `i` (label
+`A(i+1)`) is address bit `i`, and `onFrame` folds
+`isPortPowered(0..addressSize-1)` into an `address` signal.
+`MemoryInspectionComponent` is the hex editor (`ui/hex-editor/`) in `readOnly`
+viewer mode; `highlightIndex` makes the addressed word the active cell, so
+the status box reads out the live address and value.
+
+**ROM** (`rom/rom-inspection.ts`) — the contents are static and already on
+the main thread (the `data` option's packed blob): `bytes` is that blob sized
+to the table, `loaded` is `null` (all of it), and only the address is live.
+
+**RAM** (`ram/ram-inspection.ts`) — the memory is the engine's, read through
+the context's `StateRoute` into a buffer the size of the table, and only where
+the view shows it. The hex editor reports the bytes its rendered rows cover
+(`shownBytes`, off `LgScroller`'s `renderedRangeChange`: the rows on screen
+plus the CDK's buffer) and the renderer forwards them to `showBytes`, `null`
+when the view is destroyed — a closed window, a sheet tab in the background —
+which stops the watch. A memory of at most `RAM_WHOLE_READ_BYTES` (4 KiB) is
+read whole whenever a view shows any of it: a screen of 64-bit words with its
+margin is about that already, so a range would save nothing and cost a round
+trip per scroll. A larger one (up to 512 KiB) is read over the rows shown plus
+as many again on either side, and moved only once the view leaves that range.
+The engine sends a range only when the RAM's version moved, so a paused RAM,
+or one the circuit does not write, costs nothing per frame.
+
+Every read is copied into the buffer and `bytes` is set to a fresh
+`subarray(0)` of it — a new reference over the same bytes, which is what moves
+a signal and an input binding without copying 512 KiB a frame; a viewer reads
+a right-sized `data` in place, and a data change re-seeds the viewer without
+resetting its view, base or active cell. `loaded` is the range last read,
+current as of the last snapshot; the hex editor draws a cell with any byte
+outside it as `·` digits in muted ink (Copy writes the same), and the status
+box reads _Not loaded_ for its value. On a stop (`SimulationService.resets`)
+the inspection zeroes the buffer and keeps `loaded`: the rebuilt engine's
+memory is all zero, and the worker sends nothing until it is written again.
 
 A new inspection is a `ComponentInspection` subclass, a renderer taking
 `inspection = input.required<...>()` with host class `h-full` so it fills window
@@ -113,8 +152,9 @@ circuit**, split between the component layer and `inspection/watch/`:
   stack** of `WatchLevel`s (last one visible, title their joined names) and
   routes clicks on the visible copy through `activate(component)`: a nested
   custom pushes a level; any other component that declares an inspection opens
-  it **on the watch copy**, with an `InputRoute` bound to the level and the
-  breadcrumb as its place — checked
+  it **on the watch copy**, with an `InputRoute` and a `StateRoute` bound to
+  the level and the breadcrumb as its place — a RAM copy reads its unit's
+  memory, resolved by `stateUnitFor` — checked
   before anything would trigger it as a user input, so an input played in its
   own inspection is opened rather than pressed — tracked per level and closed
   with it; any other user input operated on the canvas — one slot, no

@@ -9,7 +9,8 @@ engine inside a Web Worker, and lights up the powered wires and ports. Owns the
 Project ──compile()──► CompiledBoard ─descriptor─► worker → WASM engine
                           │                                    │ snapshot (pulled per frame)
                           ├─ mapping (link id → wires + ports) ─┴─► SimulationWorkerService
-                          └─ userInputs (input → its unit)             │ applyDelta / applyFull
+                          ├─ userInputs (input → its unit)             │ applyDelta / applyFull
+                          └─ stateUnits (RAM → its unit)               │ + watched state ranges
                                                                        ▼
                                                                 LinkStateApplier
 ```
@@ -45,7 +46,8 @@ numbering and its output layout.
 
 - **`UNIT_TYPES`** (gates, `DELAY`, `CLOCK`, adders, flip-flops, `RNG`, `RAM`,
   coder/decoder, mux/demux, `ROM`) — one `EmittedUnit`, pins as union-find node
-  ids.
+  ids. A `STATE_TYPES` unit (`RAM`), whose engine state the editor reads, is
+  also recorded in `stateUnits`, by component, as an input is in `userInputs`.
 - **User inputs** — any component implementing `UserInput`
   (`components/user-input.ts`; `BUTTON`, `PULSE_BUTTON`, `SWITCH`, `GAMEPAD`),
   recognised by the `isUserInput` guard rather than by type id — **one**
@@ -116,9 +118,11 @@ open mid-session; recompiling would restart the engine. It holds **integer
 tables only** — render targets need live objects, and a watch builds its own at
 open time from a fresh `instantiateBody` run.
 
-Per-template tables (`wireNets`, `portNets`, `userInputs`, `children`) are keyed
-by **element position in the body arrays**, `userInputs` holding each input's
-unit as the top-level map does, deterministic across
+Per-template tables (`wireNets`, `portNets`, `userInputs`, `stateUnits`,
+`children`) are keyed by **element position in the body arrays**, `userInputs`
+and `stateUnits` holding each input's and each RAM's unit as the top-level maps
+do (`unitIndexFor` / `stateUnitFor` add the level's unit base), deterministic
+across
 `instantiateBody` runs where live ids are session-assigned. Template compression
 gives **every** net class a local id so every wire is addressable: unit pins and
 plug bindings first, since their ids feed emission and must stay deterministic,
@@ -229,6 +233,46 @@ Simulation rate and render rate are fully decoupled.
 the frame loop, seeding a freshly registered watch applier that would otherwise
 accumulate future deltas over darkness.
 
+### Component state
+
+What a component holds inside — a RAM's memory — never reaches a link, so
+the engine exposes it as **state**: per unit, a byte layout its type documents
+(a RAM's is its words bit-packed LSB-first, the layout of a ROM's `ops` and of
+`utils/packed-buffer.ts`) and a `u32` **version** that moves on every write
+changing a stored bit. Reads never change state, and on WASM a read between
+ticks belongs to the tick a snapshot taken there shows.
+
+The main thread watches **ranges**, not units:
+`SimulationWorkerService.watchState(unit, onRead)` hands out a `StateWatch`
+whose `setRange` posts `watchState` with its own id, unit, offset and length
+(`unwatchState` for `null`, and on `close`), so two views of one unit are two
+watches. `StateReader` (`worker/state-reads.ts`)
+keeps them on the worker side: beside every snapshot, after the link bytes are
+copied, one `stateVersions` call polls every watched unit into a
+`Uint32Array` it keeps until the watch set changes, and a range is read
+(`readState`, the engine's own copy) only when its unit's version moved since
+it was last read, or when it was just started or moved. The reads ride on the
+snapshot as `state: [{ id, offset, bytes }]`, their buffers transferred; with
+nothing watched the engine is not called, and with nothing moved nothing is
+read or sent. The bridge hands each read to its watch's `onRead` **before**
+`onFrame`, so an inspection shows memory of the same tick as the board.
+
+Watches are main-thread state that outlives what the worker knows: posted
+before `init` acks they are dropped like any advisory message and posted again
+once the engine is up, and setting a range while paused pulls a snapshot —
+behind the one in flight, if there is one — so the bytes need no step. A stop
+rebuilds the engine at the board's initial state, all zero, with versions
+starting over: `StateReader.reset` takes every version to 0, so nothing is sent
+until the RAM is written again, and the inspection zeroes its own copy off
+`resets`. A watch does not survive the session. `SimulationService.watchState`
+resolves a top-level component through `CompiledBoard.stateUnits` and
+`watchUnitState` takes a watch copy's unit from `stateUnitFor`; an inspection
+reaches both through its `StateRoute` (see `inspection.md`).
+
+`FakeSimulationWorker` runs the same `StateReader` over the real engine,
+reading at the point a snapshot is requested, as the worker does between
+ticks, and keeps every snapshot it sent in `snapshots`.
+
 ### Request correlation
 
 Every main→worker message carries a `reqId`: `_request()` resolves on the
@@ -266,7 +310,9 @@ the `u32` view stays aligned), transferred to the main thread and handed back
 via `returnBuffer` after applying.
 
 An **empty delta** means nothing changed and is skipped; falling through to
-`applyFull` would read an empty buffer and clear every link. The engine has no
+`applyFull` would read an empty buffer and clear every link. Input progress and
+the watched [state](#component-state) are read after the copy, since either
+call may allocate in linear memory and detach the views it was made from. The engine has no
 reset, so `stop` is destroy + rebuild from the descriptor kept at `init`.
 
 ---

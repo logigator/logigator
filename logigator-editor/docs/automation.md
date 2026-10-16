@@ -324,8 +324,8 @@ a cut: the inside pieces are **new** wires with fresh ids.
 
 ### Inspection
 
-The live views a tap opens while the simulation runs — the ROM data inspector
-and the custom-component **watch**. Opening is refused outside simulation and
+The live views a tap opens while the simulation runs — the ROM's and the
+RAM's memory views, the custom-component **watch** and the input windows. Opening is refused outside simulation and
 for a component whose config declares no inspection.
 
 `inspect.open(componentId)` opens or focuses one and returns an
