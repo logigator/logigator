@@ -87,7 +87,7 @@ The arrow keys, function keys, `Home`, `End`, `Page Up`, `Page Down` and `Insert
 
 A paste sends the pasted text one character at a time. Type text…, at the bottom of the window, opens a dialog where you can write or paste a longer text, a program for example, and says how many of its characters will be skipped before you send it. Line breaks are sent as LF, and one paste or one Send takes up to 10,000 characters. Each character stays on D for at least two ticks and is followed by at least two ticks of 0, so a double letter still arrives as two presses. While characters are waiting, the window shows Sending with the number left and a ✕ that drops the rest. You also see it when you type faster than the simulation runs, at a low fixed speed for example.
 
-While the simulation is paused, keys wait for Step. A key you press and let go reaches D on the second step, is still there after the third and is gone after the fourth, so a pasted text takes four steps per character.
+While the simulation is paused, keys wait for Step. A key you press and let go is on D after the next step, is still there after the second and is gone after the third. The next character follows after the fifth, so a pasted text takes four steps per character.
 
 Closing the window, clicking outside it and switching to another tab let go of the held key. Stop clears the characters in the field. A keyboard inside a custom component is typed into from a [watch](docs:inspection#watches). On a phone or tablet, the window opens in the sheet at the bottom of the screen (see [Phones and tablets](docs:phones-and-tablets#simulation-and-inspection)).
 
