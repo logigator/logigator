@@ -77,6 +77,11 @@ export interface CompiledBoard {
    * slot `i` is the unit's output `i`.
    */
   userInputs: ReadonlyMap<number, number>;
+  /**
+   * Top-level `Component.id` → its unit's board submission index, for every
+   * component whose engine state the editor reads (a RAM's memory).
+   */
+  stateUnits: ReadonlyMap<number, number>;
   diagnostics: CompileDiagnostic[];
   /** Path-addressable watch data for live inner-circuit views. */
   watch: WatchIndex;

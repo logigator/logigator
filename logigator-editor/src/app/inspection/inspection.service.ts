@@ -2,7 +2,7 @@ import { effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { Component } from '../components/component';
-import { InputRoute } from '../components/component-inspection';
+import { InputRoute, StateRoute } from '../components/component-inspection';
 import { LayoutService } from '../layout/layout.service';
 import { ToastService } from '../logging/toast.service';
 import { ProjectService } from '../project/project.service';
@@ -67,13 +67,18 @@ export class InspectionService {
 
   /**
    * Opens (or focuses) the inspection for an inspectable component. `input`
-   * routes the presses played in it; without one they go to the top-level
-   * board, as a press on the canvas does. `place` names the watch levels a
-   * copy lives in, which lead its title.
+   * routes the presses played in it, and `state` the engine state it reads;
+   * without them both go to the top-level board, as a press on the canvas
+   * does. `place` names the watch levels a copy lives in, which lead its
+   * title.
    */
   public openFor(
     component: Component,
-    context?: { input?: InputRoute; place?: readonly string[] }
+    context?: {
+      input?: InputRoute;
+      state?: StateRoute;
+      place?: readonly string[];
+    }
   ): void {
     const existing = this._open().find(
       (entry) => entry.component === component
@@ -89,7 +94,10 @@ export class InspectionService {
     let inspection;
     try {
       inspection = factory(component, {
-        input: context?.input ?? this._topLevelRoute(component)
+        input: context?.input ?? this._topLevelRoute(component),
+        state: context?.state ?? {
+          watch: (onRead) => this.simulation.watchState(component.id, onRead)
+        }
       });
     } catch (err) {
       // A watch can legitimately fail to open (the definition no longer

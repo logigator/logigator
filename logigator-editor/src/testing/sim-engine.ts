@@ -5,6 +5,7 @@ import {
   ENGINE_USER_INPUT_TYPE
 } from '../app/simulation/compiler/compiled-board.model';
 import { ProgressEngine } from '../app/simulation/worker/input-progress';
+import { StateEngine } from '../app/simulation/worker/state-reads';
 
 let loaded = false;
 
@@ -48,7 +49,7 @@ interface Submission {
  * exactly as the worker's engine applies it. Requests go through
  * {@link submit}, which records them so {@link held} can look ahead.
  */
-export class SimEngine implements ProgressEngine {
+export class SimEngine implements ProgressEngine, StateEngine {
   private sim: Simulation;
   /** The requests submitted since the engine was last built, for replay. */
   private sinceBuild: Submission[] = [];
@@ -106,6 +107,19 @@ export class SimEngine implements ProgressEngine {
 
   public inputProgress(out: Uint32Array): void {
     this.sim.inputProgress(out);
+  }
+
+  public stateVersions(compIds: Uint32Array, out: Uint32Array): void {
+    this.sim.stateVersions(compIds, out);
+  }
+
+  public readState(compId: number, offset: number, length: number): Uint8Array {
+    return this.sim.readState(compId, offset, length);
+  }
+
+  /** The whole of `unit`'s state, as `readState` reads it. */
+  public state(unit: number): Uint8Array {
+    return this.sim.readState(unit, 0, this.sim.stateLength(unit));
   }
 
   /**

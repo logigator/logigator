@@ -1,6 +1,7 @@
 import init, { Simulation } from '@logigator/sim/wasm';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
 import { InputProgressReader } from './input-progress';
+import { StateReader } from './state-reads';
 import {
   nextPaceDelayMs,
   MIN_TARGET_HZ,
@@ -45,6 +46,8 @@ const bufferPool: ArrayBuffer[] = [];
 
 /** Built with the descriptor; reset with every engine rebuilt from it. */
 let progress: InputProgressReader | null = null;
+/** The main thread's state watches; they outlive a rebuild. */
+const stateReader = new StateReader();
 
 // The emitted artifact path is relative to the build output root, where the
 // worker chunk also lives, so resolving against the script URL covers any
@@ -119,6 +122,7 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       requireSim().destroy();
       sim = new Simulation(descriptor!);
       progress?.reset();
+      stateReader.reset();
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     }
@@ -132,6 +136,14 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       if (!sim) break;
       sim.submitInput(msg.writes);
       postMessage({ kind: 'ok', reqId: msg.reqId });
+      break;
+    // Watches are bookkeeping read on the next snapshot, so they need no
+    // engine yet and get no ack.
+    case 'watchState':
+      stateReader.watch(msg.watch);
+      break;
+    case 'unwatchState':
+      stateReader.unwatch(msg.id);
       break;
     case 'requestSnapshot':
       if (!sim) break;
@@ -217,9 +229,16 @@ function sendSnapshot(reqId: number, full: boolean): void {
       ? mem.subarray(view.valuesPtr, view.valuesPtr + view.valuesLen)
       : mem.subarray(view.ptr, view.ptr + view.len);
     const packed = packSnapshot(bufferPool.pop(), ids, values);
-    // Read after the copy: `inputProgress` may allocate in linear memory,
-    // which would detach the views copied from.
+    // Read after the copy: `inputProgress` and the state reads may allocate
+    // in linear memory, which would detach the views copied from. No tick
+    // runs in between, so the state read is the snapshot's tick.
     const inputProgress = progress?.read(requireSim());
+    const state = stateReader.read(requireSim());
+    const transfer: Transferable[] = [packed.buffer];
+    for (const read of state ?? []) {
+      // `readState` hands out a copy of its own, never a view into memory.
+      transfer.push(read.bytes.buffer as ArrayBuffer);
+    }
     postMessage(
       {
         kind: 'snapshot',
@@ -227,9 +246,10 @@ function sendSnapshot(reqId: number, full: boolean): void {
         tick: view.tick,
         isDelta: view.isDelta,
         ...packed,
-        ...(inputProgress ? { inputProgress } : {})
+        ...(inputProgress ? { inputProgress } : {}),
+        ...(state ? { state } : {})
       },
-      [packed.buffer]
+      transfer
     );
   } finally {
     view.free();

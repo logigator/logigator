@@ -17,6 +17,8 @@ import { PulseButtonComponent } from '../app/components/component-types/pulse-bu
 import { SwitchComponent } from '../app/components/component-types/switch/switch.component';
 import { RomComponent } from '../app/components/component-types/rom/rom.component';
 import { romComponentConfig } from '../app/components/component-types/rom/rom.config';
+import { RamComponent } from '../app/components/component-types/ram/ram.component';
+import { ramComponentConfig } from '../app/components/component-types/ram/ram.config';
 import { LedComponent } from '../app/components/component-types/led/led.component';
 import { ClockComponent } from '../app/components/component-types/clock/clock.component';
 import { clockComponentConfig } from '../app/components/component-types/clock/clock.config';
@@ -104,6 +106,21 @@ export function makeRom(
   });
   rom.position.set(px, py);
   return rom;
+}
+
+/** RamComponent with the given table shape and grid position. */
+export function makeRam(
+  addressSize = 2,
+  wordSize = 4,
+  px = 0,
+  py = 0
+): RamComponent {
+  const ram = new RamComponent({
+    wordSize: ramComponentConfig.options.wordSize.clone(wordSize),
+    addressSize: ramComponentConfig.options.addressSize.clone(addressSize)
+  });
+  ram.position.set(px, py);
+  return ram;
 }
 
 /** ClockComponent with the given delay in ticks, at a grid position. */

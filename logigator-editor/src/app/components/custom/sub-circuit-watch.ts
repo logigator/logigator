@@ -5,7 +5,8 @@ import {
   ComponentInspection,
   InputFrame,
   InputRoute,
-  InspectionTitlePart
+  InspectionTitlePart,
+  StateRoute
 } from '../component-inspection';
 import { isUserInput, UserInput } from '../user-input';
 import { InspectionService } from '../../inspection/inspection.service';
@@ -105,11 +106,11 @@ export class SubCircuitWatch extends ComponentInspection {
 
   /**
    * Routes a click on a component of the active level's fresh copy. A
-   * component that declares an inspection opens it, with a route bound to
-   * this level and the breadcrumb leading its title, before anything would
-   * trigger it as a user input. A user
-   * input operated on the canvas gets a tap on its one slot, which a `hold`
-   * input ignores; a multi-slot one without an inspection gets nothing.
+   * component that declares an inspection opens it, with input and state
+   * routes bound to this level and the breadcrumb leading its title, before
+   * anything would trigger it as a user input. A user input operated on the
+   * canvas gets a tap on its one slot, which a `hold` input ignores; a
+   * multi-slot one without an inspection gets nothing.
    */
   public activate(component: Component): void {
     const level = this.activeLevel();
@@ -124,6 +125,7 @@ export class SubCircuitWatch extends ComponentInspection {
     if (component.config.inspection) {
       getStaticDI(InspectionService).openFor(component, {
         input: this._routeFor(level, component),
+        state: this._stateRouteFor(level, bodyIndex),
         place: this._levels().map((each) => each.name)
       });
       this._spawned.push({ depth: this._levels().length - 1, component });
@@ -361,6 +363,21 @@ export class SubCircuitWatch extends ComponentInspection {
       pending: () => {
         const base = unitIndex();
         return base === undefined ? 0 : this.simulation.pendingUnitEvents(base);
+      }
+    };
+  }
+
+  /**
+   * An inspection's state route into `level`: the copy's engine state is its
+   * unit's, resolved through the watch index.
+   */
+  private _stateRouteFor(level: WatchLevel, bodyIndex: number): StateRoute {
+    return {
+      watch: (onRead) => {
+        const unit = level.session.info.stateUnitFor(bodyIndex);
+        return unit === undefined
+          ? null
+          : this.simulation.watchUnitState(unit, onRead);
       }
     };
   }

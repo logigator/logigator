@@ -6,13 +6,18 @@ import {
   makeButton,
   makeGamepad,
   makeKeyboard,
+  makeRam,
   makeSwitch
 } from '../../../testing/factories';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { outputComponentConfig } from '../../components/component-types/output/output.config';
-import { SerializedCircuitBody, WireDirection } from '@logigator/core';
+import {
+  BuiltInComponentType,
+  SerializedCircuitBody,
+  WireDirection
+} from '@logigator/core';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
 import { BoardCompilerService } from './board-compiler.service';
@@ -286,6 +291,41 @@ describe('BoardCompilerService watch index', () => {
     expect(units[unit].outputs[0]).toBe(
       info.linkOfLocalNet[info.tables.portNets[2][0]]
     );
+  });
+
+  it('addresses the state of a board RAM and of each placement’s inner RAM by its own unit', () => {
+    const box = registry.registerSnapshot({
+      kind: 'snapshot',
+      source: 'browser',
+      name: 'RamBox',
+      symbol: 'RB',
+      description: '',
+      numInputs: 0,
+      numOutputs: 0,
+      labels: [],
+      circuit: liveToBody([makeSwitch(0, 0), makeRam(2, 4, 4, 0)], [])
+    });
+    const first = placeByType(box, [0, 0]);
+    const ram = makeRam(3, 8, 0, 10);
+    project.addComponent(ram);
+    const second = placeByType(box, [0, 20]);
+
+    const board = compiler.compile(project);
+    const units = board.descriptor.components;
+    const firstUnit = board.watch.infoFor(String(first.id))!.stateUnitFor(1)!;
+    const secondUnit = board.watch.infoFor(String(second.id))!.stateUnitFor(1)!;
+    const boardUnit = board.stateUnits.get(ram.id)!;
+
+    expect(new Set([firstUnit, secondUnit, boardUnit]).size).toBe(3);
+    for (const unit of [firstUnit, secondUnit, boardUnit]) {
+      expect(units[unit].type).toBe(BuiltInComponentType.RAM);
+    }
+    expect(units[boardUnit].outputs).toHaveLength(8);
+    // Only the board's own RAM is the board's; the switch holds no state.
+    expect([...board.stateUnits.keys()]).toEqual([ram.id]);
+    expect(
+      board.watch.infoFor(String(first.id))!.stateUnitFor(0)
+    ).toBeUndefined();
   });
 
   it('gives a wire-only inner net a local id but no link', () => {

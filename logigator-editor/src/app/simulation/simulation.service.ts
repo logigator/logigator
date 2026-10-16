@@ -2,7 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { Component } from '../components/component';
 import type { InputFrame as EngineInputFrame } from '@logigator/sim/wasm';
-import { InputFrame } from '../components/component-inspection';
+import { InputFrame, StateWatch } from '../components/component-inspection';
 import {
   isUserInput,
   LevelUserInput,
@@ -617,6 +617,31 @@ export class SimulationService {
   /** {@link pendingEvents} for a component whose unit is resolved. */
   public pendingUnitEvents(unitIndex: number): number {
     return this.isReady() ? this.workerService.pendingEvents(unitIndex) : 0;
+  }
+
+  /**
+   * Watches a range of a top-level component's engine state, read beside
+   * the snapshots whose tick changed it (see
+   * `SimulationWorkerService.watchState`). `null` for a component that has
+   * no state the session reads, the compiled board's `stateUnits`.
+   */
+  public watchState(
+    componentId: number,
+    onRead: (offset: number, bytes: Uint8Array) => void
+  ): StateWatch | null {
+    const unit = this._board?.stateUnits.get(componentId);
+    return unit === undefined ? null : this.watchUnitState(unit, onRead);
+  }
+
+  /**
+   * {@link watchState} for a component whose unit is resolved — a copy in a
+   * watch, `unit` coming from the watch index's `stateUnitFor`.
+   */
+  public watchUnitState(
+    unit: number,
+    onRead: (offset: number, bytes: Uint8Array) => void
+  ): StateWatch {
+    return this.workerService.watchState(unit, onRead);
   }
 
   private _setTopLevel(

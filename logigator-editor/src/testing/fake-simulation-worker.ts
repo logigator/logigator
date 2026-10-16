@@ -3,8 +3,11 @@ import { InputProgressReader } from '../app/simulation/worker/input-progress';
 import {
   MainToWorkerMessage,
   packSnapshot,
+  SnapshotMessage,
+  StateRead,
   WorkerToMainMessage
 } from '../app/simulation/worker/protocol';
+import { StateReader } from '../app/simulation/worker/state-reads';
 import { SimEngine } from './sim-engine';
 
 /** One frame a `submitInput` carried, beside the input it was for. */
@@ -20,8 +23,11 @@ export interface SentFrame extends InputFrame {
  * With `autoRespond` it behaves like a healthy worker: `ready` after
  * construction, `ok` for every correlated request, an empty-delta snapshot
  * carrying the engine's input progress as the worker reports it per
- * `requestSnapshot`, a `status` with `statusTick` per `requestStatus` — all
- * on microtasks, like real worker messages. Turn it off to script the
+ * `requestSnapshot` — the watched state ranges read beside it through the
+ * worker's own `StateReader`, at the point the request was posted, as the
+ * worker reads them between ticks — and a `status` with `statusTick` per
+ * `requestStatus` — all on microtasks, like real worker messages. Every
+ * snapshot it sends is kept in `snapshots`. Turn it off to script the
  * conversation manually.
  *
  * Whatever it responds, it runs the posted board on the real engine
@@ -38,8 +44,11 @@ export class FakeSimulationWorker {
   public terminated = false;
   /** Tick reported by auto-responded status messages. */
   public statusTick = 0;
+  /** Every snapshot auto-responded, in sending order. */
+  public readonly snapshots: SnapshotMessage[] = [];
   private _engine: SimEngine | null = null;
   private progress: InputProgressReader | null = null;
+  private readonly stateReader = new StateReader();
 
   /** The engine the posted board runs on; there is none before `init`. */
   public get engine(): SimEngine {
@@ -65,6 +74,11 @@ export class FakeSimulationWorker {
     if (!this.autoRespond || this.terminated) {
       return;
     }
+    // Read now: a step posted before the microtask runs would tick first.
+    const state =
+      msg.kind === 'requestSnapshot' && this._engine
+        ? this.stateReader.read(this._engine)
+        : undefined;
     queueMicrotask(() => {
       if (this.terminated) {
         return;
@@ -73,14 +87,17 @@ export class FakeSimulationWorker {
         case 'requestSnapshot': {
           const inputProgress =
             this._engine && this.progress?.read(this._engine);
-          this.emit({
+          const snapshot: SnapshotMessage = {
             kind: 'snapshot',
             reqId: msg.reqId,
             tick: this.statusTick,
             isDelta: true,
             ...packSnapshot(undefined, new Uint8Array(0), new Uint8Array(0)),
-            ...(inputProgress ? { inputProgress } : {})
-          });
+            ...(inputProgress ? { inputProgress } : {}),
+            ...(state ? { state } : {})
+          };
+          this.snapshots.push(snapshot);
+          this.emit(snapshot);
           break;
         }
         case 'requestStatus':
@@ -93,6 +110,8 @@ export class FakeSimulationWorker {
           });
           break;
         case 'returnBuffer':
+        case 'watchState':
+        case 'unwatchState':
           break;
         default:
           this.emit({ kind: 'ok', reqId: msg.reqId });
@@ -127,7 +146,21 @@ export class FakeSimulationWorker {
     );
   }
 
+  /** Every state range the snapshots carried, in sending order. */
+  public stateReads(): StateRead[] {
+    return this.snapshots.flatMap((snapshot) => snapshot.state ?? []);
+  }
+
   private runEngine(msg: MainToWorkerMessage): void {
+    // The worker keeps its watches with or without an engine.
+    if (msg.kind === 'watchState') {
+      this.stateReader.watch(msg.watch);
+      return;
+    }
+    if (msg.kind === 'unwatchState') {
+      this.stateReader.unwatch(msg.id);
+      return;
+    }
     if (msg.kind === 'init') {
       this._engine = new SimEngine(msg.descriptor);
       this.progress = new InputProgressReader(msg.descriptor);
@@ -141,6 +174,7 @@ export class FakeSimulationWorker {
       case 'stop':
         engine.reset();
         this.progress?.reset();
+        this.stateReader.reset();
         break;
       case 'step':
         engine.step();

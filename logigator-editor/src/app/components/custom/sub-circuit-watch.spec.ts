@@ -277,6 +277,7 @@ describe('SubCircuitWatch', () => {
 
       expect(openFor).toHaveBeenCalledWith(buttonCopy, {
         input: expect.anything(),
+        state: expect.anything(),
         place: ['Outer', 'SwitchBox']
       });
       expect(levels()).toEqual([]);

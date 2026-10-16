@@ -32,6 +32,11 @@ export interface WatchTemplateTables {
    * slot `i` is the unit's output `i`.
    */
   userInputs: ReadonlyMap<number, number>;
+  /**
+   * Body index of a direct component whose engine state the editor reads →
+   * its unit's template-local index.
+   */
+  stateUnits: ReadonlyMap<number, number>;
   /** Body component index of a direct nested custom → its bridge. */
   children: ReadonlyMap<number, WatchChildBridge>;
 }
@@ -56,6 +61,11 @@ export interface WatchLevelInfo {
    * slot `i` is the unit's output `i`.
    */
   unitIndexFor(bodyComponentIndex: number): number | undefined;
+  /**
+   * Global index of the unit of a direct component whose engine state the
+   * editor reads, by body component index.
+   */
+  stateUnitFor(bodyComponentIndex: number): number | undefined;
 }
 
 /**
@@ -134,6 +144,10 @@ export class WatchIndex {
       tables,
       unitIndexFor: (bodyComponentIndex) => {
         const local = tables.userInputs.get(bodyComponentIndex);
+        return local === undefined ? undefined : base + local;
+      },
+      stateUnitFor: (bodyComponentIndex) => {
+        const local = tables.stateUnits.get(bodyComponentIndex);
         return local === undefined ? undefined : base + local;
       }
     };

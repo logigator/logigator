@@ -57,10 +57,43 @@ export interface InputRoute {
   pending(): number;
 }
 
+/** A byte range `[start, end)`. */
+export interface ByteRange {
+  readonly start: number;
+  readonly end: number;
+}
+
+/**
+ * A live read of one range of a component's engine state — a RAM's memory,
+ * in the layout its type documents. The bytes arrive through the callback
+ * the watch was started with, as `(offset, bytes)` read beside the snapshot
+ * just applied and before the frame's `onFrame`: once after the range is set
+ * or moved, then whenever the component's state changed. A stop rebuilds the
+ * engine at the board's initial state and reports nothing; the inspection
+ * reads it off `SimulationService.resets`.
+ */
+export interface StateWatch {
+  /** The range read from now on; `null` reads nothing until the next one. */
+  setRange(range: ByteRange | null): void;
+  close(): void;
+}
+
+/**
+ * Where an inspection reads its component's engine state, so it never
+ * resolves an engine unit itself: the top-level board, or the watch level its
+ * component is a copy in. `watch` is `null` for a component with no state the
+ * session reads.
+ */
+export interface StateRoute {
+  watch(onRead: (offset: number, bytes: Uint8Array) => void): StateWatch | null;
+}
+
 /** What an inspection is opened with, beside its component. */
 export interface InspectionContext {
   /** The route for the component's own presses, bound where it was opened. */
   readonly input: InputRoute;
+  /** The route for its engine state, bound where it was opened. */
+  readonly state: StateRoute;
 }
 
 /**

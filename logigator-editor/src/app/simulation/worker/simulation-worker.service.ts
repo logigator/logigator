@@ -3,6 +3,7 @@ import type { InputWrite } from '@logigator/sim/wasm';
 import { TranslationService } from '../../translation/translation.service';
 import { AnalyticsService } from '../../analytics/analytics.service';
 import { LoggingService } from '../../logging/logging.service';
+import { ByteRange, StateWatch } from '../../components/component-inspection';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
 import { SnapshotApplier } from '../state/link-state-applier';
 import {
@@ -57,6 +58,13 @@ export interface SimulationSessionHooks {
 
 const STATUS_POLL_MS = 1000;
 
+/** One state watch the bridge keeps, and posts again to a new engine. */
+interface StateWatchEntry {
+  readonly unit: number;
+  range: ByteRange | null;
+  readonly onRead: (offset: number, bytes: Uint8Array) => void;
+}
+
 interface PendingRequest {
   resolve(): void;
   reject(err: Error): void;
@@ -107,6 +115,8 @@ export class SimulationWorkerService {
   private statusTimer: ReturnType<typeof setInterval> | null = null;
   private snapshotInFlight = false;
   private wantFullSnapshot = false;
+  /** A snapshot wanted while idle, behind the one in flight. */
+  private wantSnapshot = false;
   private fullSnapshots = 0;
   private deltaSnapshots = 0;
   private lastStatus: { tick: number; at: number } | null = null;
@@ -115,6 +125,9 @@ export class SimulationWorkerService {
    * that reported a change; absent means none.
    */
   private inputProgress = new Map<number, number>();
+  private nextWatchId = 1;
+  /** State watches by the id the worker knows them under. */
+  private readonly stateWatches = new Map<number, StateWatchEntry>();
 
   private readonly _measuredHz = signal(0);
   /** Measured simulation speed in ticks/s, computed from status-poll deltas. */
@@ -168,9 +181,16 @@ export class SimulationWorkerService {
     }
     await this._request({ kind: 'init', descriptor });
     this.ready = true;
-    // `_post` drops a snapshot request made before the engine is up; serve it
-    // now, so a watch registered during startup isn't left dark.
-    if (this.wantFullSnapshot) {
+    // `_post` drops what was sent before the engine is up: a snapshot
+    // request, and the state watches of inspections opened meanwhile. Send
+    // them now, so neither is left dark.
+    let watching = false;
+    for (const [id, entry] of this.stateWatches) {
+      if (entry.range) {
+        watching = this._postStateWatch(id, entry) || watching;
+      }
+    }
+    if (this.wantFullSnapshot || watching) {
       this._requestSnapshot();
     }
   }
@@ -186,8 +206,10 @@ export class SimulationWorkerService {
     this.runMode = 'idle';
     this.snapshotInFlight = false;
     this.wantFullSnapshot = false;
+    this.wantSnapshot = false;
     this.lastStatus = null;
     this.inputProgress.clear();
+    this.stateWatches.clear();
     this._measuredHz.set(0);
     this._tick.set(0);
     const error = new Error('Simulation session ended');
@@ -300,6 +322,51 @@ export class SimulationWorkerService {
     return this.inputProgress.get(unit) ?? 0;
   }
 
+  /**
+   * Starts a watch over a range of an engine unit's state, reading nothing
+   * until its range is set. The worker reads the range beside each snapshot
+   * whose tick moved the unit's state version, and once after the range is
+   * set or moved; the bytes reach `onRead` ahead of the session's `onFrame`.
+   * While paused, setting a range pulls a snapshot, so the bytes come
+   * without waiting for a step. A watch does not survive the session.
+   */
+  public watchState(
+    unit: number,
+    onRead: (offset: number, bytes: Uint8Array) => void
+  ): StateWatch {
+    const id = this.nextWatchId++;
+    const entry: StateWatchEntry = { unit, range: null, onRead };
+    this.stateWatches.set(id, entry);
+    return {
+      setRange: (range) => {
+        const next = range && range.end > range.start ? range : null;
+        if (
+          this.stateWatches.get(id) !== entry ||
+          (next?.start === entry.range?.start && next?.end === entry.range?.end)
+        ) {
+          return;
+        }
+        entry.range = next;
+        if (
+          this._postStateWatch(id, entry) &&
+          next &&
+          this.runMode === 'idle'
+        ) {
+          this._requestSnapshotSoon();
+        }
+      },
+      close: () => {
+        if (this.stateWatches.get(id) !== entry) {
+          return;
+        }
+        this.stateWatches.delete(id);
+        if (entry.range) {
+          this._post({ kind: 'unwatchState', id });
+        }
+      }
+    };
+  }
+
   private _startFrameLoop(): void {
     if (this.frameHandle === null) {
       this.frameHandle = this.frameScheduler.request(this._frame);
@@ -341,6 +408,31 @@ export class SimulationWorkerService {
     }
     this.snapshotInFlight = true;
     this.wantFullSnapshot = false;
+  }
+
+  /** {@link _requestSnapshot}, or the next one once the one in flight lands. */
+  private _requestSnapshotSoon(): void {
+    if (this.snapshotInFlight) {
+      this.wantSnapshot = true;
+    } else {
+      this._requestSnapshot();
+    }
+  }
+
+  /** Tells the worker a watch's range: one to read, or none. */
+  private _postStateWatch(id: number, entry: StateWatchEntry): boolean {
+    const { unit, range } = entry;
+    return range
+      ? this._post({
+          kind: 'watchState',
+          watch: {
+            id,
+            unit,
+            offset: range.start,
+            length: range.end - range.start
+          }
+        })
+      : this._post({ kind: 'unwatchState', id });
   }
 
   private _startStatusPolling(): void {
@@ -461,6 +553,10 @@ export class SimulationWorkerService {
         } else {
           this.fullSnapshots++;
         }
+        // Before `onFrame`, where the frame's inspections show it.
+        for (const read of msg.state ?? []) {
+          this.stateWatches.get(read.id)?.onRead(read.offset, read.bytes);
+        }
         const applier = this.hooks?.applier;
         if (applier) {
           const { ids, values } = unpackSnapshot(msg);
@@ -479,8 +575,12 @@ export class SimulationWorkerService {
         if (this.runMode === 'idle') {
           this.hooks?.repaint();
         }
-        // A full-snapshot request that arrived while this one was in flight.
-        if (this.wantFullSnapshot) {
+        // A full-snapshot request that arrived while this one was in flight,
+        // or a state watch moved while paused. A run pulls the next frame's
+        // snapshot anyway.
+        const wanted = this.wantSnapshot && this.runMode === 'idle';
+        this.wantSnapshot = false;
+        if (this.wantFullSnapshot || wanted) {
           this._requestSnapshot();
         }
         break;

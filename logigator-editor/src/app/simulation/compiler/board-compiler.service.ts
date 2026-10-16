@@ -52,6 +52,12 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.ROM
 ]);
 
+/**
+ * Unit types whose engine state the editor reads beside snapshots — a RAM's
+ * memory — so their units are recorded by component.
+ */
+const STATE_TYPES: ReadonlySet<number> = new Set([BuiltInComponentType.RAM]);
+
 /** One emitted unit, pins as union-find node ids (link ids come later). */
 interface EmittedUnit {
   type: number;
@@ -115,6 +121,11 @@ interface EmitContext {
    * pass.
    */
   userInputs: Map<number, number>;
+  /**
+   * Directly emitted unit of a {@link STATE_TYPES} type: component id → its
+   * unit's index in this pass.
+   */
+  stateUnits: Map<number, number>;
   /** Directly placed custom instances, keyed by component id. */
   instances: Map<number, EmittedInstance>;
   /**
@@ -206,6 +217,7 @@ export class BoardCompilerService {
       units: [],
       diagnostics: [],
       userInputs: new Map<number, number>(),
+      stateUnits: new Map<number, number>(),
       instances: new Map<number, EmittedInstance>(),
       displays: []
     };
@@ -304,6 +316,7 @@ export class BoardCompilerService {
       descriptor: { links, components: descriptorComponents },
       mapping: new Map([[TOP_LEVEL_PATH, targets]]),
       userInputs: ctx.userInputs,
+      stateUnits: ctx.stateUnits,
       diagnostics: ctx.diagnostics,
       watch: new WatchIndex(instances, templateTables)
     };
@@ -393,6 +406,9 @@ export class BoardCompilerService {
     }
 
     if (UNIT_TYPES.has(type)) {
+      if (STATE_TYPES.has(type)) {
+        ctx.stateUnits.set(component.id, ctx.units.length);
+      }
       ctx.units.push({
         type,
         inputs: pinNodes.slice(0, component.numInputs),
@@ -570,6 +586,7 @@ export class BoardCompilerService {
         units: [],
         diagnostics: [],
         userInputs: new Map<number, number>(),
+        stateUnits: new Map<number, number>(),
         instances: new Map<number, EmittedInstance>(),
         displays: []
       };
@@ -676,6 +693,10 @@ export class BoardCompilerService {
       for (const [id, unitIndex] of ctx.userInputs) {
         userInputs.set(indexOfId.get(id)!, unitIndex);
       }
+      const stateUnits = new Map<number, number>();
+      for (const [id, unitIndex] of ctx.stateUnits) {
+        stateUnits.set(indexOfId.get(id)!, unitIndex);
+      }
       const children = new Map<number, WatchChildBridge>();
       for (const [id, instance] of ctx.instances) {
         children.set(indexOfId.get(id)!, {
@@ -692,7 +713,13 @@ export class BoardCompilerService {
         inputBindings,
         outputBindings,
         diagnostics: ctx.diagnostics,
-        watch: { wireNets, portNets: watchPortNets, userInputs, children }
+        watch: {
+          wireNets,
+          portNets: watchPortNets,
+          userInputs,
+          stateUnits,
+          children
+        }
       };
     } finally {
       for (const component of components) {

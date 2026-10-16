@@ -24,11 +24,41 @@ export type MainToWorkerMessage =
    * error.
    */
   | { kind: 'submitInput'; reqId: number; writes: InputWrite[] }
+  /**
+   * Starts reading a range of a unit's engine state with every snapshot, or
+   * moves the range of a watch already started under the same id.
+   */
+  | { kind: 'watchState'; reqId: number; watch: StateWatchRequest }
+  /** Stops a watch; an id the worker does not hold is ignored. */
+  | { kind: 'unwatchState'; reqId: number; id: number }
   /** `full` forces a full snapshot, seeding a fresh watch applier. */
   | { kind: 'requestSnapshot'; reqId: number; full?: boolean }
   | { kind: 'requestStatus'; reqId: number }
   /** Pool refill: hands a transferred snapshot buffer back to the worker. */
   | { kind: 'returnBuffer'; buffer: ArrayBuffer };
+
+/**
+ * A byte range of one engine unit's state the main thread watches, under an
+ * id of its own: two views of one unit are two watches.
+ */
+export interface StateWatchRequest {
+  id: number;
+  /** The unit's board submission index, the engine's component id. */
+  unit: number;
+  /** The range `[offset, offset + length)` of the unit's state bytes. */
+  offset: number;
+  length: number;
+}
+
+/**
+ * A watched range read beside a snapshot, so the bytes belong to the tick the
+ * snapshot shows. `bytes` is the engine's own copy, its buffer transferred.
+ */
+export interface StateRead {
+  id: number;
+  offset: number;
+  bytes: Uint8Array;
+}
 
 export interface SnapshotMessage {
   kind: 'snapshot';
@@ -50,6 +80,11 @@ export interface SnapshotMessage {
    * an empty list then means none holds one any more.
    */
   inputProgress?: [unit: number, pending: number][];
+  /**
+   * The watched ranges whose unit's state version moved since each was last
+   * sent, or that were started or moved since; absent when there are none.
+   */
+  state?: StateRead[];
 }
 
 export type WorkerToMainMessage =
