@@ -31,7 +31,7 @@ Après une copie, la barre reste affichée avec Coller, même sans sélection. S
 
 Le bouton lecture en haut démarre la simulation. Les commandes apparaissent alors dans une barre le long du bord inférieur, et en haut le bouton pour quitter remplace Annuler, Rétablir et Enregistrer.
 
-Un appui sur une ROM ouvre son affichage dans un panneau en bas de l'écran. Le plan de travail au-dessus reste utilisable, et plusieurs affichages partagent le panneau sous forme d'onglets. La surveillance d'un composant personnalisé occupe tout l'écran, et sa flèche de retour ramène au plan de travail. Voir [Inspection et surveillances](docs:inspection).
+Un appui sur une ROM ou une RAM ouvre son affichage dans un panneau en bas de l'écran. Le plan de travail au-dessus reste utilisable, et plusieurs affichages partagent le panneau sous forme d'onglets. La surveillance d'un composant personnalisé occupe tout l'écran, et sa flèche de retour ramène au plan de travail. Voir [Inspection et surveillances](docs:inspection).
 
 La fenêtre d'un clavier s'ouvre dans le même panneau. Touchez son champ de saisie, qui indique « Touchez ici pour taper », pour faire apparaître le clavier virtuel ; le panneau remonte et reste au-dessus de lui. Le texte que le clavier virtuel insère d'un coup, comme un mot suggéré, est envoyé caractère par caractère, comme un collage. La façon dont les touches atteignent le circuit est décrite dans [Simulation](docs:simulation#taper-sur-un-clavier).
 

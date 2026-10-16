@@ -8,7 +8,7 @@
 
 La simulación siempre ejecuta el proyecto principal. Si la pestaña de un componente personalizado está abierta, el editor vuelve antes al proyecto principal.
 
-Mientras se ejecuta, el tablero está bloqueado. Puedes desplazar la vista y hacer zoom, usar las entradas e [inspeccionar](docs:inspection) ROMs y componentes personalizados, pero no colocar, mover, cablear ni eliminar nada. «Salir de la simulación», `Enter` o `Escape` vuelve a la edición con la herramienta Desplazar.
+Mientras se ejecuta, el tablero está bloqueado. Puedes desplazar la vista y hacer zoom, usar las entradas e [inspeccionar](docs:inspection) ROMs, RAMs y componentes personalizados, pero no colocar, mover, cablear ni eliminar nada. «Salir de la simulación», `Enter` o `Escape` vuelve a la edición con la herramienta Desplazar.
 
 Con «Iniciar la simulación automáticamente» activado (lo predeterminado), el circuito arranca en cuanto entras. Desactivado, la simulación espera en pausa en el tick 0 para que avances paso a paso desde el principio.
 
@@ -103,7 +103,7 @@ Corrige el componente indicado y vuelve a empezar. Si el mensaje dice que el mot
 
 ## Ver también
 
-- [Inspección y monitores](docs:inspection): contenido de ROMs y monitores
+- [Inspección y monitores](docs:inspection): contenido de ROMs y RAMs, y monitores
 - [Componentes y opciones](docs:components-and-options): qué hace cada entrada y pantalla
 - [Ajustes](docs:settings): el inicio automático de la simulación
 - [Móviles y tabletas](docs:phones-and-tablets): los controles en la vista táctil

@@ -8,7 +8,7 @@
 
 La simulation exécute toujours le projet principal. Si l'onglet d'un composant personnalisé est ouvert, l'éditeur revient d'abord au projet principal.
 
-Pendant qu'elle tourne, le plan de travail est verrouillé. Vous pouvez déplacer la vue et zoomer, utiliser les entrées et [inspecter](docs:inspection) les ROM et les composants personnalisés, mais pas placer, déplacer, câbler ou supprimer quoi que ce soit. « Quitter la simulation », `Enter` ou `Escape` ramène à l'édition avec l'outil Déplacement.
+Pendant qu'elle tourne, le plan de travail est verrouillé. Vous pouvez déplacer la vue et zoomer, utiliser les entrées et [inspecter](docs:inspection) les ROM, les RAM et les composants personnalisés, mais pas placer, déplacer, câbler ou supprimer quoi que ce soit. « Quitter la simulation », `Enter` ou `Escape` ramène à l'édition avec l'outil Déplacement.
 
 Avec « Démarrage automatique de la simulation » activé (par défaut), le circuit démarre dès que vous entrez. Désactivé, la simulation attend en pause au tick 0 pour que vous avanciez pas à pas depuis le début.
 
@@ -103,7 +103,7 @@ Corrigez le composant nommé et relancez. Si le message indique que le moteur de
 
 ## Voir aussi
 
-- [Inspection et surveillances](docs:inspection) : contenu des ROM et surveillances
+- [Inspection et surveillances](docs:inspection) : contenu des ROM et des RAM, et surveillances
 - [Composants et options](docs:components-and-options) : ce que fait chaque entrée et affichage
 - [Paramètres](docs:settings) : le démarrage automatique de la simulation
 - [Téléphones et tablettes](docs:phones-and-tablets) : les commandes en disposition tactile

@@ -8,7 +8,7 @@ Start simulation, at the right end of the toolbar, powers the circuit: powered w
 
 The simulation always runs the main project. If a custom component's tab is open, the editor switches back to Main project first.
 
-While it runs, the board is locked. You can pan and zoom, operate inputs and [inspect](docs:inspection) ROMs and custom components, but not place, move, wire or delete anything. Exit simulation, `Enter` or `Escape` returns to editing with the Pan tool.
+While it runs, the board is locked. You can pan and zoom, operate inputs and [inspect](docs:inspection) ROMs, RAMs and custom components, but not place, move, wire or delete anything. Exit simulation, `Enter` or `Escape` returns to editing with the Pan tool.
 
 With the Auto-start simulation setting on (the default), the circuit starts running as soon as you enter. With it off, the simulation waits paused at tick 0 so you can step from the start.
 
@@ -103,7 +103,7 @@ Fix the named component and start again. If the message says the simulation engi
 
 ## See also
 
-- [Inspection and watches](docs:inspection): ROM contents and watches
+- [Inspection and watches](docs:inspection): ROM and RAM contents, and watches
 - [Components and options](docs:components-and-options): what each input and display does
 - [Settings](docs:settings): Auto-start simulation
 - [Phones and tablets](docs:phones-and-tablets): the run controls in the touch layout

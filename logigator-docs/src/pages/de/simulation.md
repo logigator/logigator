@@ -8,7 +8,7 @@
 
 Die Simulation läuft immer mit dem Hauptprojekt. Ist der Tab einer benutzerdefinierten Komponente offen, wechselt der Editor vorher zurück zum Hauptprojekt.
 
-Während sie läuft, ist die Arbeitsfläche gesperrt. Du kannst die Ansicht verschieben und zoomen, Eingaben bedienen und ROMs und benutzerdefinierte Komponenten [inspizieren](docs:inspection), aber nichts platzieren, verschieben, verdrahten oder löschen. „Simulation verlassen“, `Enter` oder `Escape` führt mit dem Werkzeug Schwenken zurück zum Bearbeiten.
+Während sie läuft, ist die Arbeitsfläche gesperrt. Du kannst die Ansicht verschieben und zoomen, Eingaben bedienen und ROMs, RAMs und benutzerdefinierte Komponenten [inspizieren](docs:inspection), aber nichts platzieren, verschieben, verdrahten oder löschen. „Simulation verlassen“, `Enter` oder `Escape` führt mit dem Werkzeug Schwenken zurück zum Bearbeiten.
 
 Ist „Simulation automatisch starten“ an (Standard), läuft die Schaltung los, sobald du die Simulation betrittst. Ist die Einstellung aus, wartet sie pausiert bei Tick 0, sodass du von Anfang an schrittweise vorgehen kannst.
 
@@ -103,7 +103,7 @@ Behebe das bei der genannten Komponente und starte erneut. Sagt die Meldung, das
 
 ## Siehe auch
 
-- [Inspektion und Beobachtungen](docs:inspection): ROM-Inhalte und Beobachtungen
+- [Inspektion und Beobachtungen](docs:inspection): ROM- und RAM-Inhalte und Beobachtungen
 - [Komponenten und Optionen](docs:components-and-options): was jede Eingabe und Anzeige tut
 - [Einstellungen](docs:settings): „Simulation automatisch starten“
 - [Smartphones und Tablets](docs:phones-and-tablets): die Steuerung in der Touch-Ansicht
