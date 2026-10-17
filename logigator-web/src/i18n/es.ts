@@ -229,28 +229,36 @@ const es: TranslationSchema = {
       title: 'Construye y Simula Circuitos Lógicos en Línea',
       hero: {
         headline:
-          'Construye, simula y comparte circuitos lógicos complejos de forma gratuita.',
-        lede: 'Coloca compuertas, traza cables y observa cómo fluyen las señales por ellos, directamente en tu navegador.',
+          'Construye, simula y comparte circuitos lógicos de forma gratuita.',
+        lede: 'Empieza con una sola puerta y un LED, o llega hasta construir tu propia CPU.',
         cta: 'Empezar a construir',
         ctaSecondary: 'Ver ejemplos'
       },
       features: {
         title: 'Características',
-        performance: {
-          title: 'Rendimiento',
-          body: 'La simulación corre sobre WebAssembly y la placa se dibuja en la GPU, así que incluso los proyectos más grandes se mantienen fluidos.'
+        stepping: {
+          title: 'Sigue cada señal',
+          body: 'Los cables con señal se iluminan. Pausa la simulación y avanza tick a tick.'
+        },
+        inspection: {
+          title: 'Mira dentro de tus componentes',
+          body: 'Durante la simulación, haz clic en un componente personalizado para ver su circuito interno, o sigue lo que una ROM o una RAM lee y escribe.'
         },
         components: {
-          title: 'Componentes Personalizados',
-          body: 'Convierte cualquier circuito en un componente y colócalo como subcircuito dentro de otros más grandes. Construye un sumador completo una vez y úsalo ocho veces.'
+          title: 'Crea tus propios componentes',
+          body: 'Convierte un circuito en un componente y reutilízalo en otros más grandes. Construye un sumador completo una vez y úsalo ocho veces.'
+        },
+        io: {
+          title: 'Mucho con lo que jugar',
+          body: 'Controla tu circuito con interruptores, botones, el teclado o un mando, y míralo funcionar en LEDs, displays de segmentos, una matriz de LEDs y mucho más.'
         },
         share: {
-          title: 'Compartir Proyectos',
-          body: 'Comparte tus circuitos con otros usuarios para que puedan aprender de tu trabajo.'
+          title: 'Comparte lo que construyes',
+          body: 'Envía un enlace o publica en la comunidad. También puedes exportar un proyecto como archivo, o la placa como imagen para presentaciones y hojas de trabajo.'
         },
-        images: {
-          title: 'Exportar Imágenes',
-          body: 'Exporta la placa como PNG, JPEG o WebP en alta resolución, para presentaciones, hojas de trabajo o documentación.'
+        browser: {
+          title: 'Nada que instalar',
+          body: 'Solo necesitas una cuenta para guardar en la nube. El editor funciona en el navegador, también en tabletas y móviles.'
         }
       },
       examples: {
@@ -276,7 +284,7 @@ const es: TranslationSchema = {
       community: {
         projectsTitle: 'Proyectos de la Comunidad',
         projectsDescription:
-          'Todos los circuitos que la comunidad ha publicado.',
+          'Los circuitos publicados con más estrellas. Abre uno para ver cómo funciona, o haz una copia y continúa a partir de ella.',
         moreProjects: 'Todos los proyectos de la comunidad',
         projectsEmptyHeading: 'Todavía no hay proyectos públicos',
         projectsEmptyBody:
@@ -284,7 +292,7 @@ const es: TranslationSchema = {
         projectsFailed: 'No se pudieron cargar los proyectos',
         componentsTitle: 'Componentes de la Comunidad',
         componentsDescription:
-          'Bloques reutilizables publicados por la comunidad.',
+          'Bloques listos para usar, creados por otras personas. Copia uno a tu biblioteca y colócalo en tus propios circuitos.',
         moreComponents: 'Todos los componentes de la comunidad',
         componentsEmptyHeading: 'Todavía no hay componentes públicos',
         componentsEmptyBody:

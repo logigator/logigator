@@ -227,28 +227,36 @@ const fr: TranslationSchema = {
       title: 'Construisez et simulez des circuits logiques en ligne',
       hero: {
         headline:
-          'Construisez, simulez et partagez des circuits logiques complexes gratuitement.',
-        lede: 'Placez des portes, tracez des fils et regardez les signaux les parcourir, directement dans votre navigateur.',
+          'Construisez, simulez et partagez des circuits logiques gratuitement.',
+        lede: 'Commencez avec une seule porte et une LED, ou allez jusqu’à construire votre propre processeur.',
         cta: 'Commencer à construire',
         ctaSecondary: 'Voir les exemples'
       },
       features: {
         title: 'Fonctionnalités',
-        performance: {
-          title: 'Performance',
-          body: 'La simulation tourne sur WebAssembly et la carte est dessinée par le GPU : même les plus grands projets restent fluides.'
+        stepping: {
+          title: 'Suivez chaque signal',
+          body: 'Les fils sous tension s’allument. Mettez la simulation en pause et avancez tick par tick.'
+        },
+        inspection: {
+          title: 'Regardez dans vos composants',
+          body: 'Pendant la simulation, cliquez sur un composant personnalisé pour voir son circuit interne, ou suivez ce qu’une ROM ou une RAM lit et écrit.'
         },
         components: {
-          title: 'Composants personnalisés',
-          body: 'Transformez n’importe quel circuit en composant et placez-le comme sous-circuit dans des circuits plus grands. Construisez un additionneur complet une fois, puis utilisez-le huit fois.'
+          title: 'Créez vos propres composants',
+          body: 'Transformez un circuit en composant et réutilisez-le dans de plus grands. Construisez un additionneur complet une fois, puis utilisez-le huit fois.'
+        },
+        io: {
+          title: 'Plein de choses à essayer',
+          body: 'Pilotez votre circuit avec des interrupteurs, des boutons, le clavier ou une manette, et suivez-le sur des LED, des afficheurs à segments, une matrice de LED et bien plus.'
         },
         share: {
-          title: 'Partager des Projets',
-          body: "Partagez vos circuits avec d'autres utilisateurs, afin qu'ils puissent apprendre de votre travail."
+          title: 'Partagez vos créations',
+          body: 'Envoyez un lien ou publiez dans la communauté. Un projet s’exporte aussi en fichier, et le circuit en image pour vos présentations et fiches d’exercices.'
         },
-        images: {
-          title: 'Exporter des Images',
-          body: 'Exportez la carte en PNG, JPEG ou WebP en haute résolution, pour des présentations, des fiches d’exercices ou de la documentation.'
+        browser: {
+          title: 'Rien à installer',
+          body: 'Un compte n’est nécessaire que pour enregistrer dans le cloud. L’éditeur fonctionne dans le navigateur, aussi sur tablette et smartphone.'
         }
       },
       examples: {
@@ -273,14 +281,15 @@ const fr: TranslationSchema = {
       },
       community: {
         projectsTitle: 'Projets Communautaires',
-        projectsDescription: 'Tous les circuits publiés par la communauté.',
+        projectsDescription:
+          'Les circuits publiés qui ont reçu le plus d’étoiles. Ouvrez-en un pour voir comment il fonctionne, ou faites-en une copie pour le compléter.',
         moreProjects: 'Tous les projets de la communauté',
         projectsEmptyHeading: 'Pas encore de projets publics',
         projectsEmptyBody: "Rien n'a encore été partagé avec la communauté.",
         projectsFailed: "Les projets n'ont pas pu être chargés",
         componentsTitle: 'Composants Communautaires',
         componentsDescription:
-          'Des blocs réutilisables publiés par la communauté.',
+          'Des blocs prêts à l’emploi, créés par d’autres. Copiez-en un dans votre bibliothèque et placez-le dans vos propres circuits.',
         moreComponents: 'Tous les composants de la communauté',
         componentsEmptyHeading: 'Pas encore de composants publics',
         componentsEmptyBody: "Rien n'a encore été partagé avec la communauté.",

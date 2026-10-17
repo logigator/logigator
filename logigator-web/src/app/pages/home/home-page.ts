@@ -41,9 +41,14 @@ import { VideoEmbed } from './video-embed';
 export class HomePage {
   protected readonly FEATURES = [
     {
-      key: 'performance',
-      title: 'pages.home.features.performance.title',
-      body: 'pages.home.features.performance.body'
+      key: 'stepping',
+      title: 'pages.home.features.stepping.title',
+      body: 'pages.home.features.stepping.body'
+    },
+    {
+      key: 'inspection',
+      title: 'pages.home.features.inspection.title',
+      body: 'pages.home.features.inspection.body'
     },
     {
       key: 'components',
@@ -51,14 +56,19 @@ export class HomePage {
       body: 'pages.home.features.components.body'
     },
     {
+      key: 'io',
+      title: 'pages.home.features.io.title',
+      body: 'pages.home.features.io.body'
+    },
+    {
       key: 'share',
       title: 'pages.home.features.share.title',
       body: 'pages.home.features.share.body'
     },
     {
-      key: 'images',
-      title: 'pages.home.features.images.title',
-      body: 'pages.home.features.images.body'
+      key: 'browser',
+      title: 'pages.home.features.browser.title',
+      body: 'pages.home.features.browser.body'
     }
   ] as const;
 

@@ -236,28 +236,36 @@ const en = {
     home: {
       title: 'Build and Simulate Logic Circuits Online',
       hero: {
-        headline: 'Build, simulate and share complex logic circuits for free.',
-        lede: 'Place gates, draw wires and watch the signals flow through them, right in your browser.',
+        headline: 'Build, simulate and share logic circuits for free.',
+        lede: 'Start with a single gate and an LED, or go as far as building your own CPU.',
         cta: 'Start building',
         ctaSecondary: 'Browse examples'
       },
       features: {
         title: 'Features',
-        performance: {
-          title: 'Performance',
-          body: 'The simulation runs on WebAssembly and the board is drawn on the GPU, so even the largest projects stay smooth.'
+        stepping: {
+          title: 'Follow every signal',
+          body: 'Powered wires light up as the circuit runs. Pause it and step through one tick at a time.'
+        },
+        inspection: {
+          title: 'See inside your components',
+          body: 'Click a custom component during a simulation to watch its inner circuit, or follow what a ROM or RAM reads and writes.'
         },
         components: {
-          title: 'Custom components',
-          body: 'Turn any circuit into a component and place it as a subcircuit inside bigger ones. Build a full adder once, then use it eight times.'
+          title: 'Build your own components',
+          body: 'Turn a circuit into a component and reuse it in bigger ones. Make a full adder once, then use it eight times.'
+        },
+        io: {
+          title: 'Plenty to play around with',
+          body: 'Drive a circuit with switches, buttons, a keyboard or a gamepad, and watch it work on LEDs, segment displays, an LED matrix and more.'
         },
         share: {
-          title: 'Share Projects',
-          body: 'Share your circuits with other users, so they can learn from your work.'
+          title: 'Share what you build',
+          body: 'Send a link or publish to the community. You can also export a project as a file, or the board as an image for slides and worksheets.'
         },
-        images: {
-          title: 'Export Images',
-          body: 'Export the board as PNG, JPEG or WebP in high resolution, for slides, worksheets or documentation.'
+        browser: {
+          title: 'Nothing to install',
+          body: 'You only need an account to save to the cloud. The editor runs in your browser, on tablets and phones too.'
         }
       },
       examples: {
@@ -282,14 +290,15 @@ const en = {
       },
       community: {
         projectsTitle: 'Community Projects',
-        projectsDescription: 'Every circuit the community has published.',
+        projectsDescription:
+          'The most-starred circuits other people have published. Open one to see how it works, or make a copy and build on it.',
         moreProjects: 'All community projects',
         projectsEmptyHeading: 'No public projects yet',
         projectsEmptyBody: 'Nothing has been shared with the community so far.',
         projectsFailed: 'Projects could not be loaded',
         componentsTitle: 'Community Components',
         componentsDescription:
-          'Reusable building blocks the community has published.',
+          'Ready-made building blocks from other people. Copy one into your library and place it in your own circuits.',
         moreComponents: 'All community components',
         componentsEmptyHeading: 'No public components yet',
         componentsEmptyBody:

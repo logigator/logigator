@@ -234,29 +234,36 @@ const de: TranslationSchema = {
     home: {
       title: 'Logikschaltungen online bauen und simulieren',
       hero: {
-        headline:
-          'Baue, simuliere und teile komplexe Logikschaltungen – kostenlos.',
-        lede: 'Setze Gatter, zieh Leitungen und sieh zu, wie die Signale durch sie fließen, direkt im Browser.',
+        headline: 'Baue, simuliere und teile Logikschaltungen kostenlos.',
+        lede: 'Fang mit einem einzelnen Gatter und einer LED an und mach weiter bis zur eigenen CPU.',
         cta: 'Zum Editor',
         ctaSecondary: 'Beispiele ansehen'
       },
       features: {
         title: 'Features',
-        performance: {
-          title: 'Performance',
-          body: 'Die Simulation läuft auf WebAssembly und das Board wird auf der GPU gezeichnet, so bleiben auch die größten Projekte flüssig.'
+        stepping: {
+          title: 'Folge jedem Signal',
+          body: 'Leitungen mit Signal leuchten auf. Halte die Simulation an und geh Tick für Tick weiter.'
+        },
+        inspection: {
+          title: 'Schau in deine Komponenten',
+          body: 'Klick während der Simulation auf eine eigene Komponente, um ihre innere Schaltung zu sehen, oder verfolge, was ein ROM oder RAM liest und schreibt.'
         },
         components: {
-          title: 'Eigene Komponenten',
-          body: 'Mach aus jeder Schaltung eine Komponente und setze sie als Unterschaltung in größere ein. Einen Volladdierer baust du einmal und verwendest ihn achtmal.'
+          title: 'Baue eigene Komponenten',
+          body: 'Mach aus einer Schaltung eine Komponente und nutze sie in größeren. Einen Volladdierer baust du einmal und verwendest ihn achtmal.'
+        },
+        io: {
+          title: 'Jede Menge zum Ausprobieren',
+          body: 'Steuere deine Schaltung mit Schaltern, Tastern, Tastatur oder Gamepad und sieh das Ergebnis auf LEDs, Segmentanzeigen, einer LED-Matrix und mehr.'
         },
         share: {
-          title: 'Projekte teilen',
-          body: 'Teile deine Schaltungen mit anderen Benutzern, damit sie von deiner Arbeit lernen können.'
+          title: 'Teile, was du baust',
+          body: 'Schick einen Link oder veröffentliche in der Community. Ein Projekt lässt sich auch als Datei exportieren, das Board als Bild für Folien und Arbeitsblätter.'
         },
-        images: {
-          title: 'Bilder exportieren',
-          body: 'Exportiere das Board als PNG, JPEG oder WebP in hoher Auflösung, für Folien, Arbeitsblätter oder Dokumentation.'
+        browser: {
+          title: 'Nichts zu installieren',
+          body: 'Ein Konto brauchst du erst zum Speichern in der Cloud. Der Editor läuft im Browser, auch auf Tablets und Handys.'
         }
       },
       examples: {
@@ -282,13 +289,14 @@ const de: TranslationSchema = {
       community: {
         projectsTitle: 'Community erstellte Projekte',
         projectsDescription:
-          'Alle Schaltungen, die die Community veröffentlicht hat.',
+          'Die Schaltungen mit den meisten Sternen. Öffne eine, um zu sehen, wie sie funktioniert, oder leg dir eine Kopie an und bau darauf auf.',
         moreProjects: 'Alle Community-Projekte',
         projectsEmptyHeading: 'Noch keine öffentlichen Projekte',
         projectsEmptyBody: 'Bisher wurde nichts mit der Community geteilt.',
         projectsFailed: 'Projekte konnten nicht geladen werden',
         componentsTitle: 'Community erstellte Komponenten',
-        componentsDescription: 'Wiederverwendbare Bausteine aus der Community.',
+        componentsDescription:
+          'Fertige Bausteine von anderen. Kopier einen in deine Bibliothek und setze ihn in deine eigenen Schaltungen ein.',
         moreComponents: 'Alle Community-Komponenten',
         componentsEmptyHeading: 'Noch keine öffentlichen Komponenten',
         componentsEmptyBody: 'Bisher wurde nichts mit der Community geteilt.',
