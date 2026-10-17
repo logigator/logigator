@@ -6,6 +6,7 @@ import {
 } from '@logigator/contract';
 import { EXAMPLES_ACCOUNT_ID } from '@logigator/core';
 import type { CommunityKind } from './app/api/services/community-api.service';
+import { documentIsIndexable } from './app/pages/community/search-indexing';
 import { apiOrigin } from './api-origin';
 import type { SitemapPage } from './sitemap';
 
@@ -14,12 +15,13 @@ import type { SitemapPage } from './sitemap';
 const PAGE_SIZE = 100;
 
 /**
- * How many pages of one listing are read. A guard against a `total` that
- * disagrees with what the endpoint returns rather than a product limit: at this
- * size it is 5 000 documents per table, well past the point at which the
- * sitemap has to become a sitemap index anyway.
+ * How many pages of one listing a walk will read: 100 000 documents per table.
+ * A guard against a `total` no listing could really have rather than a product
+ * limit, and one that **throws** when reached — reading only this far would be
+ * a sitemap silently naming fewer documents than there are, the outcome the
+ * walk otherwise fails whole to avoid. Raise it before the community nears it.
  */
-const MAX_PAGES = 50;
+const MAX_PAGES = 1_000;
 
 /**
  * How many of those requests are in flight at once. Bounded rather than all of
@@ -53,20 +55,27 @@ const LISTINGS = {
   components: communityComponentPageSchema
 } satisfies Record<CommunityKind, unknown>;
 
-let cached: { pages: SitemapPage[]; expiresAt: number } | null = null;
-let inFlight: Promise<SitemapPage[]> | null = null;
+/** The community's sitemap entries, one section per table. */
+export type CommunitySitemap = Record<CommunityKind, SitemapPage[]>;
+
+let cached: { pages: CommunitySitemap; expiresAt: number } | null = null;
+let inFlight: Promise<CommunitySitemap> | null = null;
 
 /**
- * Everything the community has published, as sitemap entries: one per document
- * and one per member who published something.
+ * The community's published documents that pass the indexing rule
+ * (`search-indexing.ts`), as sitemap entries. A page that fails it carries
+ * `noindex`, and naming it here would be a contradiction a crawler reports.
+ * No profile is named — the rows carry no bio, which is what the profile rule
+ * reads, so a profile that qualifies is found through its documents' author
+ * links instead.
  *
  * Held for as long as the response it goes into may be, and **deduplicated
- * while in flight**: the walk is up to a hundred requests, and two crawlers
+ * while in flight**: the walk is a request per hundred documents, and crawlers
  * arriving together would otherwise each start their own. A walk that fails
  * caches nothing — by decision the sitemap fails whole rather than naming
  * fewer documents than there are.
  */
-export function communityPages(): Promise<SitemapPage[]> {
+export function communityPages(): Promise<CommunitySitemap> {
   if (cached && cached.expiresAt > Date.now()) {
     return Promise.resolve(cached.pages);
   }
@@ -87,12 +96,8 @@ export function communityPages(): Promise<SitemapPage[]> {
  * be a second definition of what `public` means. The browse listings leave the
  * examples account out, so its own profile listings are walked beside them:
  * an example is as public as anything the community published.
- *
- * A member's profile is derived from the authors that came back rather than
- * listed separately: the authors of the documents above are exactly the set of
- * profiles with anything on them.
  */
-async function readCommunityPages(): Promise<SitemapPage[]> {
+async function readCommunityPages(): Promise<CommunitySitemap> {
   const origin = apiOrigin();
   const examples = `users/${EXAMPLES_ACCOUNT_ID}`;
   const [community, communityComponents, exampleProjects, exampleComponents] =
@@ -102,26 +107,13 @@ async function readCommunityPages(): Promise<SitemapPage[]> {
       listAll(origin, 'projects', examples),
       listAll(origin, 'components', examples)
     ]);
-  const projects = [...community, ...exampleProjects];
-  const components = [...communityComponents, ...exampleComponents];
-
-  const authors = new Map<string, string>();
-  for (const { author, lastEditedAt } of [...projects, ...components]) {
-    const seen = authors.get(author.id);
-    if (!seen || seen < lastEditedAt) {
-      authors.set(author.id, lastEditedAt);
-    }
-  }
-
-  return [
-    ...toPages(projects, 'projects'),
-    ...toPages(components, 'components'),
-    ...[...authors].map(([id, lastModified]) => ({
-      path: `/community/users/${id}`,
-      lastModified,
-      priority: 0.3
-    }))
-  ];
+  return {
+    projects: toPages([...community, ...exampleProjects], 'projects'),
+    components: toPages(
+      [...communityComponents, ...exampleComponents],
+      'components'
+    )
+  };
 }
 
 /**
@@ -142,7 +134,12 @@ async function listAll(
 ): Promise<CommunityRow[]> {
   const read = (page: number) => readPage(origin, kind, page, owner);
   const first = await read(0);
-  const pages = Math.min(Math.ceil(first.total / PAGE_SIZE), MAX_PAGES);
+  const pages = Math.ceil(first.total / PAGE_SIZE);
+  if (pages > MAX_PAGES) {
+    throw new Error(
+      `${kind} listing reports ${first.total} documents, past the ${MAX_PAGES * PAGE_SIZE} a walk reads`
+    );
+  }
 
   const rest: CommunityRow[] = [];
   for (let from = 1; from < pages; from += CONCURRENCY) {
@@ -181,12 +178,15 @@ async function readPage(
   return LISTINGS[kind].parse(await response.json());
 }
 
-/** Documents as entries, each stamped with when it was last written. */
+/**
+ * The documents worth indexing as entries, each stamped with when it was last
+ * written.
+ */
 function toPages(
   entries: readonly CommunityRow[],
   kind: CommunityKind
 ): SitemapPage[] {
-  return entries.map((entry) => ({
+  return entries.filter(documentIsIndexable).map((entry) => ({
     path: `/community/${kind}/${entry.link}`,
     lastModified: entry.lastEditedAt,
     priority: 0.5

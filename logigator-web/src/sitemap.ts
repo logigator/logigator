@@ -61,9 +61,9 @@ export const STATIC_PAGES: readonly SitemapPage[] = [
  * them: that reciprocal set is what marks the five as translations rather than
  * duplicates.
  *
- * A sitemap holds 50 000 URLs. Four languages per page puts the ceiling at
- * 12 500 documents, past which this has to become a sitemap index — a change to
- * make when the number is in sight rather than a structure to carry until then.
+ * One file of a set rather than the whole site: {@link sitemapFiles} cuts the
+ * pages into files that stay inside a crawler's limits, and
+ * {@link renderSitemapIndex} names them.
  */
 export function renderSitemap(
   origin: string,
@@ -108,5 +108,88 @@ function renderUrl(
     `    <priority>${page.priority.toFixed(1)}</priority>`,
     alternates,
     '  </url>'
+  ].join('\n');
+}
+
+/**
+ * How many pages one file of the set holds: 40 000 URLs at four languages,
+ * under the 50 000 a sitemap may name. Short of the limit rather than at it,
+ * because the other limit is 50 MB uncompressed, and an entry carrying its five
+ * alternates measured about 870 bytes — a full file is 35 MB, which leaves room
+ * for a longer origin than the one it was measured on.
+ */
+export const PAGES_PER_SITEMAP = 10_000;
+
+/** One file of the sitemap set, as the index names it. */
+export interface SitemapFile {
+  /** `static`, or a section and its 1-based part: `projects-2`. */
+  name: string;
+  pages: readonly SitemapPage[];
+}
+
+/**
+ * A section of the site as files of at most {@link PAGES_PER_SITEMAP} pages.
+ * `static` is never cut and keeps its bare name; any other section is
+ * numbered from 1, so a second file appearing does not rename the first, and a
+ * section with nothing to name is no file rather than an empty one.
+ */
+export function sitemapFiles(
+  section: string,
+  pages: readonly SitemapPage[]
+): SitemapFile[] {
+  if (section === 'static') {
+    return [{ name: section, pages }];
+  }
+  const files: SitemapFile[] = [];
+  for (let from = 0; from < pages.length; from += PAGES_PER_SITEMAP) {
+    files.push({
+      name: `${section}-${files.length + 1}`,
+      pages: pages.slice(from, from + PAGES_PER_SITEMAP)
+    });
+  }
+  return files;
+}
+
+/** Where a file of the set is answered, relative to the origin. */
+export function sitemapFilePath(name: string): string {
+  return `/sitemaps/${name}.xml`;
+}
+
+/**
+ * The sitemap index `/sitemap.xml` answers, which is what `robots.txt` names.
+ * The community alone outgrew one file's limits, and a file over them is
+ * rejected whole rather than read partway. A set also lets Search Console
+ * report each section's coverage on its own, the community's apart from the
+ * pages the site wrote.
+ *
+ * Each file's `<lastmod>` is the newest of its pages', where any has one —
+ * which is what tells a crawler that a file is worth fetching again.
+ */
+export function renderSitemapIndex(
+  origin: string,
+  files: readonly SitemapFile[]
+): string {
+  const entries = files.map((file) => {
+    const lastModified = file.pages.reduce<string | undefined>(
+      (newest, { lastModified }) =>
+        lastModified && (!newest || lastModified > newest)
+          ? lastModified
+          : newest,
+      undefined
+    );
+    return [
+      '  <sitemap>',
+      `    <loc>${escapeXml(origin + sitemapFilePath(file.name))}</loc>`,
+      ...(lastModified ? [`    <lastmod>${lastModified}</lastmod>`] : []),
+      '  </sitemap>'
+    ].join('\n');
+  });
+
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...entries,
+    '</sitemapindex>',
+    ''
   ].join('\n');
 }

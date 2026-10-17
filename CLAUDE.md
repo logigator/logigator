@@ -478,13 +478,21 @@ path behaves the same in development).
   **never answers non-200**: a `5xx` there is read as "crawl nothing", so a host
   `requestOrigin` will not vouch for costs the `Sitemap:` line rather than the answer. The sitemap
   is the opposite — it fails whole rather than answering the static half, a sitemap that stops
-  naming documents saying those URLs are gone — and emits **one `<url>` per language**, each its own
-  canonical carrying all four alternates plus `x-default`; the unprefixed URL is the negotiating
-  `302` and so is never a `<loc>`. The community half is walked through the public listings ordered
-  by `latest` (trending re-ranks between requests), read with bounded concurrency once the first
-  response's `total` says how many pages there are, validated against the contract, and **held for
-  the same 300s the response declares, with in-flight requests deduplicated** — the walk is up to a
-  hundred requests, and two crawlers arriving together would otherwise each start their own.
+  naming documents saying those URLs are gone. `/sitemap.xml` is a **sitemap index** naming
+  `/sitemaps/static.xml`, `projects-N.xml` and `components-N.xml`, each cut at 10 000 pages, since
+  a file past a crawler's 50 000 URLs is rejected whole. Each file emits **one `<url>` per
+  language**, each its own canonical carrying all four alternates plus `x-default`; the unprefixed
+  URL is the negotiating `302` and so is never a `<loc>`. **Only what the indexing rule accepts is
+  named** — `pages/community/search-indexing.ts`, which the document page's `noindex` reads too, so
+  the sitemap never names a page that refuses the index: at least six components, a wire, and a
+  description or a star. **No profile is named**: a profile is indexed only once its member wrote a
+  bio, and the listing rows the walk reads carry none. The community half is walked through the
+  public listings ordered by `latest` (trending re-ranks between requests), read with bounded
+  concurrency once the first response's `total` says how many pages there are, validated against
+  the contract, and **held for the same 300s the response declares, with in-flight requests
+  deduplicated** — the index and every file are answered from one walk, and crawlers arriving
+  together would otherwise each start their own. A `total` past the walk's page cap throws rather
+  than truncating.
   `legacy-redirects.ts` is a pure function over an unprefixed path: the server strips the language
   segment, looks up, and puts it back, so one entry covers all five forms of a legacy URL, and a
   URL that carried no prefix takes two hops rather than one `301` whose target depends on the

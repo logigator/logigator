@@ -5,10 +5,7 @@ import {
   type TestRequest
 } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
-import type {
-  CommunityProjectDetail,
-  DocumentVisibility
-} from '@logigator/contract';
+import type { CommunityProjectDetail } from '@logigator/contract';
 import {
   communityRow,
   EMPTY_PAGE,
@@ -18,15 +15,29 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import { PageMeta } from '../../seo/seo.service';
 import { communityRoutes } from './community-routes';
 import { CommunityDocumentService } from './community-document.service';
+import { ProfileService } from './profile.service';
+import { MIN_INDEXED_COMPONENTS } from './search-indexing';
 
 const USER = '33333333-3333-4333-8333-333333333333';
 const LINK = '11111111-1111-4111-8111-111111111111';
 
-/** One detail row, as the guard's read answers it. */
-function detail(patch: {
-  visibility: DocumentVisibility;
-}): CommunityProjectDetail {
-  return { ...communityRow('Half adder', LINK, patch), forkedFrom: null };
+/**
+ * One detail row, as the guard's read answers it: by default a public circuit
+ * the indexing rule accepts, so a spec states only what it takes away.
+ */
+function detail(
+  patch: Partial<CommunityProjectDetail> = {}
+): CommunityProjectDetail {
+  return {
+    ...communityRow('Half adder', LINK, {
+      componentCount: MIN_INDEXED_COMPONENTS,
+      wireCount: 6,
+      description: 'Adds two bits.',
+      stars: 0,
+      ...patch
+    }),
+    forkedFrom: null
+  };
 }
 
 /**
@@ -40,6 +51,17 @@ function documentRouteNoindex(): () => boolean {
   );
   const noindex = (route?.data as { seo?: PageMeta } | undefined)?.seo?.noindex;
   expect(noindex, 'the document route declares no noindex').toBeDefined();
+  return noindex!;
+}
+
+/** The `noindex` a profile tab declares, read off the tree the same way. */
+function profileRouteNoindex(): () => boolean {
+  const profile = communityRoutes.find(
+    (candidate) => candidate.path === 'community/users/:id'
+  );
+  const tab = profile?.children?.find((candidate) => candidate.path === '');
+  const noindex = (tab?.data as { seo?: PageMeta } | undefined)?.seo?.noindex;
+  expect(noindex, 'the profile tab declares no noindex').toBeDefined();
   return noindex!;
 }
 
@@ -274,6 +296,49 @@ describe('the community routes', () => {
       .flush(detail({ visibility: 'private' }));
     await priv;
     expect(TestBed.runInInjectionContext(noindex)).toBe(true);
+  });
+
+  /**
+   * A public document is offered to an index only where it passes the rule
+   * the sitemap applies too: a real circuit somebody wrote about or starred.
+   * The page itself stays exactly as public either way.
+   */
+  it('keeps a thin public document out of the index', async () => {
+    const noindex = documentRouteNoindex();
+    const content = TestBed.inject(CommunityDocumentService);
+    const indexed = async (patch: Partial<CommunityProjectDetail>) => {
+      const resolved = content.resolve('projects', LINK);
+      http
+        .expectOne(`/api/community/projects/${LINK}`)
+        .flush(detail({ visibility: 'public', ...patch }));
+      await resolved;
+      return !TestBed.runInInjectionContext(noindex);
+    };
+
+    expect(await indexed({})).toBe(true);
+    expect(await indexed({ description: '', stars: 1 })).toBe(true);
+    expect(await indexed({ componentCount: MIN_INDEXED_COMPONENTS - 1 })).toBe(
+      false
+    );
+    expect(await indexed({ wireCount: 0 })).toBe(false);
+    // Whitespace is not something written about the circuit.
+    expect(await indexed({ description: '  \n', stars: 0 })).toBe(false);
+  });
+
+  it('indexes a member’s page only once they have written a bio', async () => {
+    const noindex = profileRouteNoindex();
+    const profiles = TestBed.inject(ProfileService);
+    const indexed = async (bio: string) => {
+      const resolved = profiles.resolveProfile(USER);
+      http
+        .expectOne(`/api/community/users/${USER}`)
+        .flush(publicProfile({ id: USER, bio }));
+      await resolved;
+      return !TestBed.runInInjectionContext(noindex);
+    };
+
+    expect(await indexed('')).toBe(false);
+    expect(await indexed('I build CPUs out of NAND gates.')).toBe(true);
   });
 
   /**

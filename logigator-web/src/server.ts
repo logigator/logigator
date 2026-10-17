@@ -25,7 +25,13 @@ import { canonicalPath } from './canonical-path';
 import { legacyRedirect } from './legacy-redirects';
 import { renderRobotsTxt } from './robots';
 import { communityPages } from './community-sitemap';
-import { renderSitemap, STATIC_PAGES } from './sitemap';
+import {
+  renderSitemap,
+  renderSitemapIndex,
+  sitemapFiles,
+  STATIC_PAGES,
+  type SitemapFile
+} from './sitemap';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -119,10 +125,32 @@ app.get('/robots.txt', (req, res) => {
 });
 
 /**
- * Every page this site has, in every language, plus what the community has
- * published — read through the same public listings the browse pages use, so
- * the file is a view of the database rather than a list somebody maintains. The
- * legacy sitemap was hand-written and never named a single document.
+ * Every file of the sitemap set: the site's own pages, then what the community
+ * published that is worth indexing, each cut to a crawler's limits.
+ *
+ * The community half is read through the same public listings the browse pages
+ * use, so the set is a view of the database rather than a list somebody
+ * maintains. The legacy sitemap was hand-written and never named a single
+ * document.
+ */
+async function sitemapSet(): Promise<SitemapFile[]> {
+  const published = await communityPages();
+  return [
+    ...sitemapFiles('static', STATIC_PAGES),
+    ...sitemapFiles('projects', published.projects),
+    ...sitemapFiles('components', published.components)
+  ];
+}
+
+/** Answers one rendering of the set, as XML a crawler may hold briefly. */
+function sendSitemapXml(res: express.Response, xml: string): void {
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.setHeader('Cache-Control', `public, max-age=${MUTABLE_ASSET_MAX_AGE}`);
+  res.send(xml);
+}
+
+/**
+ * The sitemap index, naming each file of the set — the URL `robots.txt` names.
  *
  * A read that fails takes the whole response with it rather than answering the
  * static half: a sitemap that stops naming every document says those URLs are
@@ -135,14 +163,41 @@ app.get('/sitemap.xml', (req, res, next) => {
     next();
     return;
   }
-  communityPages()
-    .then((published) => {
-      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-      res.setHeader(
-        'Cache-Control',
-        `public, max-age=${MUTABLE_ASSET_MAX_AGE}`
-      );
-      res.send(renderSitemap(origin, [...STATIC_PAGES, ...published]));
+  sitemapSet()
+    .then((files) => sendSitemapXml(res, renderSitemapIndex(origin, files)))
+    .catch(next);
+});
+
+/** `/sitemaps/<file>.xml`, one file of the set the index names. */
+const SITEMAP_FILE_PATH = /^\/sitemaps\/([a-z0-9-]+)\.xml$/;
+
+/**
+ * One file of the set, read from the same walk the index was — it is held for
+ * as long as either response may be, so a crawler following the index within
+ * that window reads the files it was told about.
+ *
+ * A name the set does not have is a plain `404` rather than a page: a file the
+ * set no longer needs is one a crawler should drop, and the language redirect
+ * would hand it a rendered 404 one hop later.
+ */
+app.use((req, res, next) => {
+  const match =
+    req.method === 'GET' || req.method === 'HEAD'
+      ? SITEMAP_FILE_PATH.exec(req.path)
+      : null;
+  const origin = match && requestOrigin(req);
+  if (!match || !origin) {
+    next();
+    return;
+  }
+  sitemapSet()
+    .then((files) => {
+      const file = files.find(({ name }) => name === match[1]);
+      if (!file) {
+        res.sendStatus(404);
+        return;
+      }
+      sendSitemapXml(res, renderSitemap(origin, file.pages));
     })
     .catch(next);
 });

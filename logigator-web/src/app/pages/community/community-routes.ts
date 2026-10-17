@@ -22,6 +22,7 @@ import {
   ProfileRouteData
 } from './profile.guard';
 import { ProfileService } from './profile.service';
+import { documentIsIndexable, profileIsIndexable } from './search-indexing';
 import { StargazersPage } from './stargazers-page';
 import { stargazersGuard } from './stargazers.guard';
 
@@ -53,14 +54,27 @@ const documentCard = (): string | null => {
  * the answer is the document's visibility and not the route's: an unlisted
  * document's page is reached by whoever was handed its link, and its owner's
  * preview of a private one is reached by nobody else — neither belongs in an
- * index, and both are the same URL as the one that does.
+ * index, and both are the same URL as the one that does. A public one is
+ * indexed where it passes the rule the sitemap applies too.
  *
  * `noindex` rather than a `robots.txt` rule, which is the only lever that works
  * on a URL arrived at by links: a crawler is never told to skip what it is
  * forbidden to fetch, and a listed-by-URL page is the outcome that prevents.
  */
-const documentNoindex = (): boolean =>
-  inject(CommunityDocumentService).document()?.visibility !== 'public';
+const documentNoindex = (): boolean => {
+  const document = inject(CommunityDocumentService).document();
+  return document?.visibility !== 'public' || !documentIsIndexable(document);
+};
+
+/**
+ * Whether a member's page may be indexed, for all four tabs alike: they share
+ * the header the rule reads. A link naming no member renders the 404, which
+ * is no index entry either way.
+ */
+const profileNoindex = (): boolean => {
+  const profile = inject(ProfileService).profile();
+  return !profile || !profileIsIndexable(profile);
+};
 
 /**
  * Whether the stargazer page exists for the document a guard resolved — the
@@ -146,6 +160,7 @@ function profileTab(
               )
             : null;
         },
+        noindex: profileNoindex,
         jsonLd: profileJsonLd
       } satisfies PageMeta
     } satisfies ProfileRouteData & { seo: PageMeta }
