@@ -202,10 +202,21 @@ checking each has one entry per output and a whole `hold` — and posts them as
 `cancelUnitFrames` send `replace: true`: the engine drops what the input still
 has queued, ends a hold still running, then applies the given reset on the next
 tick, or with no reset leaves the outputs as they are. The engine validates a
-request as a whole and queues nothing from one it refuses; the worker forwards
-it unchanged, so a refused request comes back as an uncorrelated error and
-ends the session — which is why the service checks the shape first and
-refuses the call instead.
+request as a whole and queues nothing from one it refuses, so the service
+checks what it can first and refuses the call instead: the shape, and the
+**queue limit**. An input holds at most 65 536 pending event frames
+(`INPUT_QUEUE_LIMIT` in `component-inspection.ts`, the engine's own limit);
+`fitsInputQueue(pending, frames)` — the pending bound below plus the frames'
+events — is the one check, made by `sendUnitFrames` and, ahead of it, by the
+keyboard, which has to say why. States never count, so a release or a
+cancel's reset always fits. The slot paths (`_drive`) are not checked: a
+button would need tens of thousands of presses queued while paused.
+
+A request the engine refuses anyway — a race past the check, or an editor
+bug — is no session failure. `submitInput` is tracked by its `reqId`
+(`submissions`); the worker posts the engine's throw as an `error` under that
+id, and the bridge logs it, reports it as an `inputRefused` fault and carries
+on, nothing of the request queued.
 
 **Progress.** The engine counts, per input, the event frames not yet applied;
 a state frame never counts, and neither does a frame whose hold is still
@@ -214,17 +225,25 @@ running. `InputProgressReader` (`worker/input-progress.ts`) reads that with
 — the _i_-th user-input unit of the descriptor — back to its unit index, and
 compares it with what it last reported, so a snapshot carries
 `inputProgress: [unit, pending][]` only when some count moved, an empty list
-once the last one ran out. The bridge keeps the last report for
-`pendingEvents(unit)`; an event sent while paused, or a `replace`, pulls a
-snapshot so the count shows before the next step. What an input's count means
+once the last one ran out. The bridge keeps the last report, and
+`pendingEvents(unit)` adds every request submitted after that snapshot was
+taken — the worker handles messages in order, so snapshot `R` counts exactly
+the requests below `R`, and `submissions` keeps the rest — a `replace`
+setting the count to its own events. The engine only applies frames
+meanwhile, so the result is an **upper bound**, never short of what the
+engine holds: two pastes in one frame see each other, and what fits behind
+the bound fits. An event sent while paused, or a `replace`, pulls a
+snapshot so the count settles before the next step. What an input's count means
 in its own terms is the input's to say: a keyboard character is two events, so
 the window divides (`pendingCharacters` in `ascii.ts`).
 
 Specs run against the real engine: `src/testing/sim-engine.ts` wraps the WASM
 build (whose bytes `vitest.setup.ts` reads) as a hand-ticked `SimEngine`, and
 `FakeSimulationWorker` runs the posted board on it, reporting progress through
-the same `InputProgressReader`, so a spec observes input timing exactly as the
-worker's engine applies it.
+the same `InputProgressReader`, read when the snapshot is requested, so a spec
+observes input timing exactly as the worker's engine applies it; a request the
+engine refuses comes back as an `error` under its `reqId`, as the worker
+sends it.
 
 Independently the bridge pulls **one snapshot per `requestAnimationFrame`**, at
 most one in flight, so a slow worker answers late rather than piling up a queue.
@@ -277,9 +296,10 @@ ticks, and keeps every snapshot it sent in `snapshots`.
 
 Every main→worker message carries a `reqId`: `_request()` resolves on the
 worker's `ok` and rejects on the correlated `error`, while `_post()` is
-fire-and-forget. An uncorrelated `error`, an unreadable message or a
-`worker.onerror` is fatal — `_fail()` rejects everything pending and calls the
-session's `onError` hook.
+fire-and-forget. An `error` under a `submitInput`'s id is a refused input (see
+Input frames), logged and reported and nothing more. Any other uncorrelated
+`error`, an unreadable message or a `worker.onerror` is fatal — `_fail()`
+rejects everything pending and calls the session's `onError` hook.
 
 Fire-and-forget messages are **dropped until the session is ready** — the window
 between spawning the worker and its `init` ack, in which the worker holds no
@@ -481,9 +501,10 @@ Beside the slot paths, `sendFrames(componentId, frames)` and
 unit as they are, reading and setting no slot state — the component's visuals
 are the caller's. `cancelFrames` / `cancelUnitFrames` replace what the input
 still has queued with an optional reset frame, and `pendingEvents` /
-`pendingUnitEvents` report its event frames not yet applied as of the last
-snapshot that reported them. A frame without exactly one entry per output, or
-with a hold that is not a whole number of ticks, refuses the whole call. An
+`pendingUnitEvents` report its event frames not yet applied, at most (the
+last snapshot's count plus what was sent since). A frame without exactly one
+entry per output, or with a hold that is not a whole number of ticks, refuses
+the whole call, and so do frames that do not fit behind that count. An
 inspection reaches all of them through its `InputRoute` (`send`, `cancel`,
 `pending` beside `press` and `release`), so it never resolves a unit itself.
 The keyboard is what uses them: it has no slots here, and its window and the
@@ -508,7 +529,9 @@ pressed over the held one goes straight from one code to the next, its own
 strobe telling them apart. The release and the reset are states so that the
 progress count is two events per character exactly, and the window's
 _Sending N…_ is `⌊pending / 2⌋` — a character whose first press frame is
-applied is on `D` already. Neither merges: a release always follows a press,
+applied is on `D` already. The same two events make the queue limit 32 768
+characters (`charactersThatFit` is what is left of it): three full sends of
+10 000 and most of a fourth. Neither merges: a release always follows a press,
 and a reset replaces the queue. The reset lowers `STB` too, because the cancel
 it follows can cut a press short while the strobe is high.
 

@@ -483,12 +483,20 @@ is a physical key going down, remembered by its `KeyboardEvent.code`;
 `release(key)` sends only for the key on `D`, matched by `code`, so a Shift let
 go of first still releases the letter; `releaseHeld()` is focus loss;
 `type(codes)` sends text that had no keys as taps; `cancel()` replaces the
-route's queue with a reset, so `D` is low after the next tick. The inspection
+route's queue with a reset, so `D` is low after the next tick. `press` and
+`type` report whether what they sent fit behind the characters still queued:
+the input holds at most `INPUT_QUEUE_LIMIT` event frames (32 768 characters,
+see [simulation.md](simulation.md#input-frames)), and a key or a text that
+does not fit is refused whole by the component — a text is never cut — sending
+nothing, recording nothing and leaving `D` as it was. The inspection
 keeps the last 64 codes sent (`KEYBOARD_HISTORY_LENGTH`) and which of them is
 held, and re-reads on every frame the code on `D`
 (`KeyboardComponent.readCode`, ahead of any bubble) and the characters still
 to go out, the route's `pending()` events halved (`pendingCharacters`, see
-[simulation.md](simulation.md#run-controls-and-user-input)). A stop, seen as
+[simulation.md](simulation.md#run-controls-and-user-input)), and `room()`, how
+many more fit (`charactersThatFit`); both are re-read after every send too.
+`pending()` is an upper bound that counts what was sent since the last
+snapshot, so two pastes in one frame see each other. A stop, seen as
 `SimulationService.resets()` moving, clears the history and the held entry.
 `destroy()` releases the held key, so closing the window leaves nothing on
 `D`. The title is the type's name.
@@ -523,12 +531,17 @@ stopped there.
 
 The status line reads _Typing into the circuit · Shift+Tab to leave_ while the
 field has the focus and _Click here to type_ otherwise; a skipped-characters
-notice replaces it for 4 s. _Sending N…_ and its cancel button show while
+notice replaces it for 4 s, and so does _Nothing was sent: wait for the
+characters still being sent_ for a key, a paste or a send refused for room.
+_Sending N…_ and its cancel button show while
 `pending()` is above zero. A `mousedown` anywhere in the view outside a
 control focuses the field. _Type text…_ opens `TypeTextDialogComponent`, a
 modal textarea capped at the limit that shows the skip count as it is edited
 and closes with the codes to send as taps; the focus returns to the field
-either way, and the dialog closes with the view.
+either way, and the dialog closes with the view. It is handed the
+inspection's `room` signal, and while the text is longer it says to wait for
+the characters still being sent and disables _Send_, which comes back on its
+own as they go out.
 
 The view focuses the field once rendered, except on a touch device in the
 compact layout (`LayoutService.isCompact()` and `isTouch()`): an OS keyboard

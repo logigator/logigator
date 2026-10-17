@@ -250,12 +250,17 @@ so read the returned `state`.
     `KEYBOARD_TEXT_LIMIT` (10 000) characters. Any other character is an
     error naming it, its code point and its UTF-16 index in the text, and
     nothing is queued (`textToCodesStrict`, beside the paste's `textToCodes`
-    in `ascii.ts`). It resolves once queued, not once typed.
+    in `ascii.ts`). So is a text that does not fit behind the characters
+    the keyboard is still sending — its input holds 32 768 at once
+    ([simulation.md](simulation.md#input-frames)) — with an error naming
+    both counts; a text is never cut. It resolves once queued, not once
+    typed.
   - `setKey(id, key)` presses the key for one such character — a no-op when
     that code is already on `D` — and `null` lets go — a no-op when no key
     holds it. A press is never merged, so `setKey('A')` then `setKey(null)`
     while paused shows `A` after the first and second steps, with `STB` high
-    after the first, and `0` from the third.
+    after the first, and `0` from the third. A press with no room left is an
+    error like `type`'s and changes nothing; a release always fits.
 - `step(count)` posts the ticks back to back and pulls **one** snapshot, so
   settling a circuit costs one round trip rather than one per tick.
 - `readPorts` builds a component → link-id reverse index once per compiled board
