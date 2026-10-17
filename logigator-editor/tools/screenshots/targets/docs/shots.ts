@@ -443,7 +443,7 @@ export const SHOTS: Shot[] = [
   {
     // A keyboard whose window has two words typed and the last key still
     // held, so the strip's highlighted character, On D and the readout on the
-    // board all show the same code.
+    // board all show the same code, and the readout's box is lit by KD.
     name: 'keyboard-window',
     async run(ed) {
       const type = await ed.typeOf('KBD');
@@ -475,8 +475,8 @@ export const SHOTS: Shot[] = [
       await ed.page.keyboard.press('Enter');
       await ed.page.keyboard.type('worl');
       await ed.page.keyboard.down('d');
-      // Paused, every character takes four steps, three on D and one of 0:
-      // ten taps, then the held key's three press frames.
+      // Paused, every character takes four steps, three with KD high and one
+      // with it low: ten taps, then the held key's three press frames.
       await ed.runUntilSettled(43);
 
       // The status line truncates in a language longer than the window's
