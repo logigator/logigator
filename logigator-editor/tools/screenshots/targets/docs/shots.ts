@@ -475,9 +475,9 @@ export const SHOTS: Shot[] = [
       await ed.page.keyboard.press('Enter');
       await ed.page.keyboard.type('worl');
       await ed.page.keyboard.down('d');
-      // Paused, every character takes four steps, two on D and two of 0:
-      // ten taps, then the held key's two press frames.
-      await ed.runUntilSettled(42);
+      // Paused, every character takes four steps, three on D and one of 0:
+      // ten taps, then the held key's three press frames.
+      await ed.runUntilSettled(43);
 
       // The status line truncates in a language longer than the window's
       // initial width allows; the window grows by what it overflows.
