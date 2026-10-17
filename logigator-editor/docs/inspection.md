@@ -176,8 +176,9 @@ slot)` is the absolute path automation drives.
   tables are keyed by body-array position, so a shape mismatch means the
   definition changed under the session: construction **throws** rather than
   mis-lighting wires. Destroying one sets every high `level` slot of its
-  copies low, held or toggled, and lets go of the key a keyboard copy holds
-  (`KeyboardComponent.releaseKey`, queued behind what it still has to send),
+  copies low, held or toggled, and lets go of every key a keyboard copy holds
+  down (`KeyboardComponent.releaseKeys`, queued behind what it still has to
+  send),
   which would otherwise leave their engine inputs high with no copy left to
   reset them. The session registers with the
   snapshot fan-out and requests a full seed snapshot, which also poses the
@@ -491,20 +492,27 @@ least) on desktop and a sheet tab on compact. The config's factory throws
 without an `InspectionContext`: a keyboard without a route could send nothing.
 
 **`KeyboardInspection`** turns what the view reports into the component's key
-operations (`pressKey`, `releaseKey`, `tapKeys`, `cancelKeys`, see
-[component-system.md](component-system.md)) over its route. `press(key, code)`
-is a physical key going down, remembered by its `KeyboardEvent.code`;
-`release(key)` sends only for the key on `D`, matched by `code`, so a Shift let
-go of first still releases the letter; `releaseHeld()` is focus loss;
-`type(codes)` sends text that had no keys as taps; `cancel()` replaces the
-route's queue with a reset, so `D` is low after the next tick. `press` and
+operations (`pressKey`, `releaseKey`, `releaseKeys`, `tapKeys`, `cancelKeys`,
+see [component-system.md](component-system.md)) over its route.
+`press(key, code)` is a physical key going down, remembered by its
+`KeyboardEvent.code` among the keys down, whether or not another one is;
+`release(key)` lets go of that key, matched by `code`, so a Shift let go of
+first still releases the letter, and sends the release (`KD` low) only when
+no other key is down; `releaseHeld()` is focus loss and lets go of every
+physical key, leaving a key automation holds; `type(codes)` sends text that
+had no keys as taps; `cancel()` replaces the route's queue with the cancel
+frames, so `STB` is low after the next tick and `KD` after the one after, `D`
+keeping its code. `press` and
 `type` report whether what they sent fit behind the characters still queued:
 the input holds at most `INPUT_QUEUE_LIMIT` event frames (21 845 characters,
 see [simulation.md](simulation.md#input-frames)), and a key or a text that
 does not fit is refused whole by the component — a text is never cut — sending
 nothing, recording nothing and leaving `D` as it was. The inspection
 keeps the last 64 codes sent (`KEYBOARD_HISTORY_LENGTH`) and which of them is
-held, and re-reads on every frame the code on `D`
+on `D` while a key is down (`heldEntry`, the window's own press that
+`KeyboardComponent.heldKey` still names: under rollover the newest key, and
+still that key's while an earlier one stays down after it went up), and
+re-reads on every frame the code on `D`
 (`KeyboardComponent.readCode`, ahead of any bubble) and the characters still
 to go out, the route's `pending()` events in threes (`pendingCharacters`, see
 [simulation.md](simulation.md#run-controls-and-user-input)), and `room()`, how
@@ -512,16 +520,18 @@ many more fit (`charactersThatFit`); both are re-read after every send too.
 `pending()` is an upper bound that counts what was sent since the last
 snapshot, so two pastes in one frame see each other. A stop, seen as
 `SimulationService.resets()` moving, clears the history and the held entry.
-`destroy()` releases the held key, so closing the window leaves nothing on
-`D`. The title is the type's name.
+`destroy()` lets go of every physical key down, so closing the window leaves
+`KD` low unless automation holds a key. The title is the type's name.
 
 **`KeyboardInspectionComponent`** is the window body. A hidden `<textarea>`
 over the history strip is the capture field, and every event is handled on it:
 
 - `keydown`: a key whose character is still being composed (`isComposing`,
   or `key` is `Process`, `Unidentified` or `Dead`) passes through, its text
-  arriving as an input event. A repeat is consumed and sends nothing, which is
-  what ignores OS auto-repeat. Ctrl, Meta, or Alt without AltGraph passes
+  arriving as an input event. A repeat (`KeyboardEvent.repeat`) is consumed
+  and sends nothing, which is what ignores OS auto-repeat: a held key strobes
+  once, and with another key pressed over it, the newer key's repeats do not
+  strobe either. Ctrl, Meta, or Alt without AltGraph passes
   through, so the browser's own shortcuts work, and so does Shift+Tab, so the
   focus can leave the field. A key `characterOfKey` (`ascii.ts`) knows is
   consumed: an ASCII one is pressed, any other reported as skipped. Escape also
@@ -533,8 +543,8 @@ over the history strip is the capture field, and every event is handled on it:
   `compositionend` carry text without a keydown of its own. `textToCodes`
   normalizes it — CRLF and CR to LF, non-ASCII skipped and counted, at most
   `KEYBOARD_TEXT_LIMIT` (10 000) characters — and it goes out through `type`.
-- `focusout`, a `window` blur and `visibilitychange` to hidden release the
-  held key.
+- `focusout`, a `window` blur and `visibilitychange` to hidden let go of
+  every key down.
 
 After every input event the field holds a one-character sentinel with the
 caret behind it, because a soft keyboard often sends nothing for Backspace in
@@ -564,12 +574,12 @@ reads _Tap to type_ until the field has the focus, and a tap on the strip
 lands on the field itself. The sheet stays above the OS keyboard because
 `lg-drawer` follows the visual viewport, and the inspection sheet sizes its
 panel rather than the view, so the view shrinks with it. The view going away
-while the inspection lives on — a tab switch, a breakpoint flip — releases the
-held key, since no keyup can reach it any more.
+while the inspection lives on — a tab switch, a breakpoint flip — lets go of
+every key down, since no keyup can reach the view any more.
 
 **In a watch.** A tap on a keyboard copy opens the window through
 `SubCircuitWatch.activate` with the level's route and the breadcrumb as its
 place (_Outer › Inner › Keyboard_). Its frames reach the copy's own units
 through `sendUnitFrames`, the copy's readout follows its links like the rest
-of the level, and the level's teardown lets go of the key the copy holds (see
-The Custom-Component Watch).
+of the level, and the level's teardown lets go of every key the copy holds
+down (see The Custom-Component Watch).

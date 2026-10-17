@@ -195,6 +195,7 @@ so read the returned `state`.
 | `setInput(id, value, input?)` | drive a lever, button, pulse button or gamepad    |
 | `type(id, text)`              | type a text into a keyboard                       |
 | `setKey(id, key)`             | hold a keyboard key down, or `null` to let go     |
+| `cancelKeys(id)`              | drop what a keyboard still has to send            |
 | `readPorts(ids?)`             | per-port powered booleans, `inputs` and `outputs` |
 
 - `setInput` is **absolute**, and what that means follows from the input's
@@ -241,16 +242,18 @@ so read the returned `state`.
   one of them delivered.
 - A **keyboard** is not a user input and `setInput` refuses it, naming `type`
   and `setKey`. Its calls build the frames its window sends, through the
-  same `KeyboardComponent` methods, so both agree on the key held on `D`
-  (`KeyboardComponent.heldKey`): a window key that automation let go of
-  sends nothing on its keyup, and a key the window holds is one `setKey`
-  already holds.
+  same `KeyboardComponent` methods, so both agree on the keys down and the
+  press on `D` (`KeyboardComponent.heldKey`): a window key that automation
+  let go of sends nothing on its keyup, and a key the window holds on `D` is
+  one `setKey` already holds. `D` keeps the last character; `KD` is high
+  while a key is down.
   - `type(id, text)` queues the text as taps, a press and a release per
     character, at the keyboard's timing
     ([simulation.md](simulation.md#run-controls-and-user-input)): each
-    character is on `D` after the next three steps, `STB` high after the
-    second of them, and `D` is 0 after the fourth, so a character takes four
-    steps while paused. It is **strict**, unlike a paste: printable ASCII,
+    character is on `D` with `KD` high after the next three steps, `STB`
+    high after the second of them, and `KD` low after the fourth, `D`
+    keeping the character, so a character takes four steps while paused and
+    `KD` pulses once for each. It is **strict**, unlike a paste: printable ASCII,
     `\n`, `\t`, `\b`, `\x1b` and `\x7f` only, CRLF and CR reading as one
     `\n`, at most `KEYBOARD_TEXT_LIMIT` (10 000) characters. Any other
     character is an error naming it, its code point and its UTF-16 index in
@@ -260,13 +263,23 @@ so read the returned `state`.
     once ([simulation.md](simulation.md#input-frames)) — with an error
     naming both counts; a text is never cut. It resolves once queued, not
     once typed.
-  - `setKey(id, key)` presses the key for one such character — a no-op when
-    that code is already on `D` — and `null` lets go — a no-op when no key
-    holds it. A press is never merged, so `setKey('A')` then `setKey(null)`
-    while paused shows `A` after the first, second and third steps, with
-    `STB` high after the second, and `0` from the fourth. A press with no
+  - `setKey(id, key)` presses the key for one such character, `KD` high —
+    a no-op when that code is on `D` already while a key is down, which
+    `setKey` then holds too (`KeyboardComponent.holdKey`) — and `null` lets
+    go of every key down, `KD` low — a no-op when none is. A key `setKey`
+    holds stays down while the window's keys come and go, and the window
+    losing the focus lets go of its own keys only. A press is never merged,
+    so `setKey('A')` then `setKey(null)` while paused shows `A` with `KD`
+    high after the first, second and third steps, with `STB` high after the
+    second, and `KD` low from the fourth, `A` staying on `D`. A press with no
     room left is an error like `type`'s and changes nothing; a release always
     fits.
+  - `cancelKeys(id)` is the window's ✕ (`KeyboardComponent.cancelKeys`): it
+    drops every character still queued and lets go of every key down. `STB`
+    is low after the next step — a character whose strobe was high keeps its
+    code on `D` for that step, as an uncut press does — and `KD` after the
+    one after, `D` keeping its code. It always fits and counts as no
+    character still being sent.
 - `step(count)` posts the ticks back to back and pulls **one** snapshot, so
   settling a circuit costs one round trip rather than one per tick.
 - `readPorts` builds a component → link-id reverse index once per compiled board
@@ -363,10 +376,11 @@ Its seven calls below all refuse a data inspection.
   one is also released when its level closes (breadcrumb navigation, the watch
   closing). Anything but a user input of that level is refused, a keyboard
   with an error naming `type` and `setKey`.
-- `type(id, componentId, text)` / `setKey(id, componentId, key)` — `sim.type`
-  and `sim.setKey` for an inner keyboard of the visible level, its frames
-  reaching the copy's own unit. A key held here is let go of when its level
-  closes, whoever pressed it.
+- `type(id, componentId, text)` / `setKey(id, componentId, key)` /
+  `cancelKeys(id, componentId)` — `sim.type`, `sim.setKey` and
+  `sim.cancelKeys` for an inner keyboard of the visible level, its frames
+  reaching the copy's own unit. Every key held here is let go of when its
+  level closes, whoever pressed it.
 - `navigateTo(id, level)` — pops every level deeper than `level`.
 - `camera.*` — `getViewport` / `pan` / `setCenter` / `setZoom` / `focus` against
   the visible level. A level fits its circuit once, when it first shows; a write

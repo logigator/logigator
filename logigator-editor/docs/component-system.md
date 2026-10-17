@@ -118,24 +118,28 @@ operates no slot. The names option's key resolver is attached in the
 constructor, as `RomComponent` attaches its memory dimensions.
 
 The **keyboard** (`component-types/keyboard/`) drives outputs without being a
-`UserInput`: seven data bits and a strobe, eight outputs of one engine input,
-and no pointer gesture, so no slot path, canvas session or `setInput` reaches
-it. Its keys go through the component itself — `pressKey`, `releaseKey`,
+`UserInput`: seven data bits, a strobe and key down (`KD`), nine outputs of
+one engine input, and no pointer gesture, so no slot path, canvas session or
+`setInput` reaches it. `D` is latched — it keeps the last code until the next
+press — and `KD` is high while any key is down. Its keys go through the
+component itself — `pressKey`, `holdKey`, `releaseKey`, `releaseKeys`,
 `tapKeys`, `cancelKeys` — which send [input frames](simulation.md#input-frames)
 built by `ascii.ts` (their timing is in
 [simulation.md](simulation.md#run-controls-and-user-input)) through the route
-they are handed, and keep the one record
-of the key on `D` (`heldKey`, stamped with the session's reset count, so a stop
-outdates it). Its window and the automation API both call these, so they
-agree on the key on `D`: a window key that automation let go of sends nothing
-on its keyup. The body has the
-gamepad's layout, a 3-cell glyph column beside a 1-cell label column (its
-`portLabelRoom`): a static keycap glyph above a readout box. The readout shows
-the code on `D0`…`D6` read through `isOutputHigh`, each output ahead of its
-bubble, so it is the code the keyboard sends, and it follows the link state
-tick by tick (`setPortPowered`). A new code assigns the `BitmapText`'s text and
-scale and the box's alphas, never a context; only the readout is a
-rotation-counter container.
+they are handed, and keep the one record of the keys down and of the press on
+`D` (`heldKey`, stamped with the session's reset count, so a stop outdates
+it). A press adds its key to the set, a key going up sends the release only
+when it was the last one, and a tap or a cancel lets go of them all. Its
+window and the automation API both call these, so they agree on the keys
+down: a window key that automation let go of sends nothing on its keyup. The
+body has the gamepad's layout, a 3-cell glyph column beside a 1-cell label
+column (its `portLabelRoom`): a static keycap glyph above a readout box,
+centred on the nine rows. The readout shows the code on `D0`…`D6` read through
+`isOutputHigh`, each output ahead of its bubble, so it is the code the
+keyboard sends, and the box's fill lights while `KD` reads high; both follow
+the link state tick by tick (`setPortPowered`). A new code assigns the
+`BitmapText`'s text and scale and the box outline's alpha, `KD` the fill's,
+never a context; only the readout is a rotation-counter container.
 
 Also worth knowing: `ignoresWireCollision` (only `TextComponent`; wires may pass
 through), the per-side negation sets (out-of-range entries ignored on read and

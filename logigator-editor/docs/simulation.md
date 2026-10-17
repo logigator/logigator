@@ -59,7 +59,7 @@ numbering and its output layout.
   input is one queue, and one frame sets every slot of it on one tick: the
   gamepad's twelve controls are twelve outputs of one unit.
 - **`KEYBOARD`** — takes the same branch without being a user input: one unit
-  of eight outputs, `D0`…`D6` then `STB`, recorded in `userInputs`, so the
+  of nine outputs, `D0`…`D6`, `STB`, then `KD`, recorded in `userInputs`, so the
   watch tables and `unitIndexFor` address it like any input. The slot paths
   refuse it, since `isUserInput` is false; its frames arrive through
   `sendFrames` / `sendUnitFrames` instead.
@@ -202,16 +202,19 @@ other slot, so the gamepad's controls never write over one another.
 checking each has one entry per output and a whole `hold` — and posts them as
 `submitInput` with `{ comp: unit, frames }`. `cancelFrames` /
 `cancelUnitFrames` send `replace: true`: the engine drops what the input still
-has queued, ends a hold still running, then applies the given reset on the next
-tick, or with no reset leaves the outputs as they are. The engine validates a
+has queued, ends a hold still running, then queues the given frames in its
+place, the first applied on the next tick, or with none leaves the outputs as
+they are. The engine validates a
 request as a whole and queues nothing from one it refuses, so the service
 checks what it can first and refuses the call instead: the shape, and the
 **queue limit**. An input holds at most 65 536 pending event frames
 (`INPUT_QUEUE_LIMIT` in `component-inspection.ts`, the engine's own limit);
 `fitsInputQueue(pending, frames)` — the pending bound below plus the frames'
 events — is the one check, made by `sendUnitFrames` and, ahead of it, by the
-keyboard, which has to say why. States never count, so a release or a
-cancel's reset always fits. The slot paths (`_drive`) are not checked: a held
+keyboard, which has to say why. States never count, so a release always
+fits, and a cancel counts only its own events, since the engine drops what it
+replaces first (`cancelUnitFrames` checks them against an empty queue). The
+slot paths (`_drive`) are not checked: a held
 input keeps at most three events pending, and a pulse button would need tens of
 thousands of taps queued while paused.
 
@@ -553,7 +556,7 @@ Beside the slot paths, `sendFrames(componentId, frames)` and
 `sendUnitFrames(unitIndex, component, frames)` hand a component's frames to its
 unit as they are, reading and setting no slot state — the component's visuals
 are the caller's. `cancelFrames` / `cancelUnitFrames` replace what the input
-still has queued with an optional reset frame, and `pendingEvents` /
+still has queued with the frames given, if any, and `pendingEvents` /
 `pendingUnitEvents` report its event frames not yet applied, at most (the
 last snapshot's count plus what was sent since). A frame without exactly one
 entry per output, or with a hold that is not a whole number of ticks, refuses
@@ -566,39 +569,82 @@ automation API send its press, release and tap frames through these calls
 
 The keyboard's frames (`ascii.ts`) give the timing the user docs state:
 
-| Frame                    | `D0`…`D6` | `STB` | Kind  | Hold |
-| ------------------------ | --------- | ----- | ----- | ---- |
-| press, 1 (`pressFrames`) | code      | 0     | event | 1    |
-| press, 2                 | code      | 1     | event | 1    |
-| press, 3                 | code      | 0     | event | 1    |
-| release (`releaseFrame`) | 0         | kept  | state | 1    |
-| reset (`resetFrame`)     | 0         | 0     | state | 1    |
+| Frame                      | `D0`…`D6` | `STB` | `KD` | Kind  | Hold |
+| -------------------------- | --------- | ----- | ---- | ----- | ---- |
+| press, 1 (`pressFrames`)   | code      | 0     | 1    | event | 1    |
+| press, 2                   | code      | 1     | 1    | event | 1    |
+| press, 3                   | code      | 0     | 1    | event | 1    |
+| release (`releaseFrame`)   | kept      | 0     | 0    | state | 1    |
+| cancel, 1 (`cancelFrames`) | kept      | 0     | kept | event | 1    |
+| cancel, 2                  | kept      | 0     | 0    | state | 1    |
 
-A tap is the four in order, so a character submitted at tick count _t_ is on
-`D` after tick _t + 1_, with `STB` after _t + 2_, on `D` alone again after
-_t + 3_, and `D` is 0 after _t + 4_; the next character follows after
-_t + 5_ — four ticks per character, a strobe of exactly one tick inside three
-of the code, and a tick of 0 before the next code, so a double letter still
-reads as two presses. The code's tick before the strobe rises and its tick
-after the strobe falls are setup and hold: a latch whose data path has one
-gate more than its strobe path, or its strobe path one more than its data
-path, still reads every code (`ascii.spec.ts` latches a text through D
-flip-flops wired each way on the engine). A held key keeps its code on `D`
-after the third press frame until its release. A key pressed over the held one
-goes straight from one code to the next, its own strobe telling them apart.
-The release and the reset are states so that the progress count is three
-events per character exactly, and the window's _Sending N…_ is
-`⌊pending / 3⌋` — a character whose first press frame is applied is on `D`
-already. The same three events make the queue limit 21 845 characters
-(`charactersThatFit` is what is left of it): two full sends of 10 000 and
-1 845 more, leaving the input one event short of full. Neither merges: a
-release always follows a press, and a reset replaces the queue. The reset
-lowers `STB` too, because the cancel it follows can cut a press short while
-the strobe is high, and holds one tick like a release: the cancel ends the
-hold that was running, so the next character's first frame follows the reset
-a tick later at the earliest — `D` is 0 for that tick, as between two
-characters, and `STB`, which a press raises only with its second frame, is
-low for at least two.
+`D` is latched: it keeps the last code until the next press replaces it, and
+only a stop's rebuilt engine zeroes it. `KD` says a key is down. A tap is the
+four in order, so a character submitted at tick count _t_ is on `D` with `KD`
+after tick _t + 1_, with `STB` after _t + 2_, on `D` alone again after
+_t + 3_, and `KD` is low after _t + 4_; the next character follows after
+_t + 5_:
+
+| After tick | `D`        | `STB` | `KD` |
+| ---------- | ---------- | ----- | ---- |
+| _t + 1_    | code       | 0     | 1    |
+| _t + 2_    | code       | 1     | 1    |
+| _t + 3_    | code       | 0     | 1    |
+| _t + 4_    | code, kept | 0     | 0    |
+| _t + 5_    | next code  | 0     | 1    |
+
+Four ticks per character, a strobe of exactly one tick inside three of `KD`,
+and a tick of `KD` low before the next press raises it, so a double letter is
+two strobes and two `KD` pulses — a counter on `KD` counts characters
+exactly. The code's tick before the strobe rises and its tick after the
+strobe falls are setup and hold: a latch whose data path has one gate more
+than its strobe path, or its strobe path one more than its data path, still
+reads every code (`ascii.spec.ts` latches a text through D flip-flops wired
+each way on the engine).
+
+**Held keys.** `KD` follows every key down, not just the one on `D`: the
+component keeps the set of keys down (`KeyboardComponent`, the window's by
+`KeyboardEvent.code`, automation's as `null`). A press sends the three press
+frames whether or not a key is down already — a key pressed over a held one
+goes straight from one code to the next on `D`, its own strobe telling them
+apart, `KD` high throughout with no tick low — and a key going up sends the
+release only when it was the last one down:
+
+| Event, at tick count _t_ | `D` after _t + 1_ … | `STB`   | `KD` |
+| ------------------------ | ------------------- | ------- | ---- |
+| A down                   | A                   | 0, 1, 0 | 1    |
+| B down, A still down     | B                   | 0, 1, 0 | 1    |
+| A up, B still down       | B (nothing sent)    | 0       | 1    |
+| B up                     | B, kept             | 0       | 0    |
+
+**Cancel.** `cancelKeys` replaces the queue with the two cancel frames and
+lets go of every key. The first lowers `STB` and keeps `D` and `KD`, as the
+third press frame does: on the tick after the cancel, a character whose
+strobe had already risen gets the same tick of hold as an uncut press, and a
+latch whose strobe path has a gate more than its data path still stores it —
+a one-step reset to 0 lost it there. It is an event so that the second frame,
+a state, cannot merge into it and take that tick away, and neither can a
+release sent after the cancel. The second lowers `KD` like a release and
+holds as long as one, so the next press's first frame follows a tick later at
+the earliest. A cancel on the tick the strobe is high therefore reads exactly
+like a finished tap:
+
+| After tick | `D`        | `STB` | `KD` |
+| ---------- | ---------- | ----- | ---- |
+| _t_        | code       | 1     | 1    |
+| _t + 1_    | code       | 0     | 1    |
+| _t + 2_    | code, kept | 0     | 0    |
+
+The release and the cancel's second frame are states, and the cancel's first
+is the input's only event besides presses, so the window's _Sending N…_ is
+`⌊pending / 3⌋`: a character whose first press frame is applied is on `D`
+already, and the cancel's one event, alone or ahead of whole presses, rounds
+away (a `replace` drops whatever partial press preceded it, so at most one
+such event is ever pending). The same three events make the queue limit 21 845
+characters (`charactersThatFit` is what is left of it): two full sends of
+10 000 and 1 845 more, leaving the input one event short of full. A cancel
+always fits, its one event being all the engine counts after it drops the
+queue. Nothing merges into a press, which ends in an event.
 
 ---
 
