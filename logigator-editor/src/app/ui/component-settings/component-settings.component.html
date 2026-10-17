@@ -12,9 +12,15 @@
          component's description is a member's text and needs it, and one
          renderer keeps the two kinds looking alike in the same slot. It also
          parses synchronously, so switching selection never shows the old
-         description for a frame. -->
+         description for a frame. Capped and scrolled on its own, since an
+         author's description has no length limit and would otherwise push the
+         options off the top of the screen. The padding is pulled out into the
+         card's own by an equal negative margin, so the text keeps its width
+         and the gap only shows once a scrollbar sits beside it. -->
     <ng-template #subtitle>
-      <lg-markdown [data]="text(settings.description)" userContent />
+      <div class="-mr-2 max-h-56 overflow-y-auto overscroll-contain pr-2">
+        <lg-markdown [data]="text(settings.description)" userContent />
+      </div>
     </ng-template>
     <form class="flex flex-col gap-2">
       <div class="flex gap-4 items-center justify-between">
