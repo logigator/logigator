@@ -9,6 +9,7 @@ import { PreviewService } from './preview.service';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 import { RenormalizeService } from './renormalize.service';
+import { SeedExamplesService } from './seed-examples.service';
 
 /**
  * Stored circuits: the caller's own projects and library components.
@@ -31,14 +32,16 @@ import { RenormalizeService } from './renormalize.service';
     PreviewService,
     ProjectsService,
     ComponentsService,
-    RenormalizeService
+    RenormalizeService,
+    SeedExamplesService
   ],
   exports: [
     CircuitDocumentService,
     DependenciesService,
     ProjectsService,
     ComponentsService,
-    RenormalizeService
+    RenormalizeService,
+    SeedExamplesService
   ]
 })
 export class DocumentsModule {}

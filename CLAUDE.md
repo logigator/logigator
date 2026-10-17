@@ -117,7 +117,10 @@ diffs the Drizzle schema into a new SQL migration under `logigator-api/drizzle/`
 validates the migration history, `db:migrate` applies pending migrations through the bundled runner
 — the same function the E2E harness and a release call, so no path applies DDL that CI has not.
 `db:renormalize` re-normalizes documents an older format version wrote; with `--all`, it re-extracts
-every derived row from the documents they came from.
+every derived row from the documents they came from. `db:seed-examples` writes the checked-in
+examples (`logigator-api/examples/`: a manifest, each document, its two preview renders) into the
+seed account the site's examples are read from — idempotent, so a second run writes nothing, and
+with `--previews` it re-uploads every preview after a re-capture.
 
 `@logigator/ui` has no build script. The ng-packagr target in `angular.json` stays for an eventual
 publish and because the unit-test builder reads its build options from it; nothing in CI runs it.
@@ -810,6 +813,12 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
   both replaced together; not an edit, so no version bump). `RenormalizeService` is the format-bump
   and re-extract job — keyset-paginated, one transaction per row, idempotent; it does not bump
   `version` but does put it in the `WHERE`, so a row a save reached first is skipped.
+  `SeedExamplesService` makes the seed account match `examples/` through the same `ingest`: fixed
+  ids and links (the legacy site's where it had the example, so its share URLs keep resolving), components before the
+  projects that embed them, a version bump only for a real edit, and the projects' edit times
+  restamped in manifest order whenever one is written, the listings running down that column. The
+  account is core's `EXAMPLES_ACCOUNT_ID`, created verified and with no credential; a run keeps its
+  username and address in step with the manifest and touches nothing else on it.
 - `sharing/` — reading a document by its link, the card it unfurls as, and cloning it. The link is
   the document's **address**, one per document, and what it resolves to is the state its owner set.
   Every read here — the community page's own detail read included — carries the one predicate
@@ -842,7 +851,9 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
   deletes the directory it names.
 - `community/` — the public half: listings, stars, stargazers, public profiles. **Every listing
   predicate carries `visibility = 'public'`**, which is why these queries live apart from the
-  owner-scoped ones. The two detail reads are the exception, answering through the same
+  owner-scoped ones. The two browse listings also leave out `EXAMPLES_ACCOUNT_ID`: the examples are
+  public — indexed, starrable, on their account's profile — without being community work, so the
+  site's sitemap walks that account's listings beside the browse ones. The two detail reads are the exception, answering through the same
   `linkResolvesFor` the share reads use, because a document's page is served to whoever its link
   resolves for — its owner included, which is the preview the share dialog promises before anything
   is published. **Stars stay public-only**: a link is not a way to star. Star counts and "did the
@@ -916,7 +927,7 @@ ESM-only `@nestjs/*` packages; the settings mirror the CLI builder's own ESM bra
   `FONTCONFIG_FILE` is set to the `fonts.conf` among them at module scope — fontconfig reads the
   variable once, when libvips first initialises it, which any image decode may trigger. libvips
   brings its own fontconfig, pango and rsvg, so the runtime image needs no font packages.
-- **`migrate` and `renormalize` are the second and third Rspack entries**; a `CopyRspackPlugin` puts
+- **`migrate`, `renormalize` and `seed-examples` are the other three Rspack entries**; a `CopyRspackPlugin` puts
   the migrations' `migration.sql` files in `dist/logigator-api/drizzle/`, since the runner reads them
   from disk and a release applies migrations with plain `node` — and so does the server's startup
   gate, which is why the folder is resolved in one place (`defaultMigrationsFolder`) rather than
@@ -924,6 +935,8 @@ ESM-only `@nestjs/*` packages; the settings mirror the CLI builder's own ESM bra
   generating the next migration, and drizzle-kit only ever _generates_ them. Unlike the migration
   runner, `renormalize` boots the real application container: rewriting documents through the same
   parse-and-extract path every other write uses is what keeps the derived tables from drifting.
+  `seed-examples` boots it for the same reason, and a second `CopyRspackPlugin` ships `examples/`
+  beside the bundle, resolved once in `defaultExamplesFolder`.
 - Drizzle is pinned to an exact `1.0.0-rc` build. RQBv2 `defineRelations`, the DDL-snapshot migration
   format and the consolidated zod integration are 1.0-only surfaces with no compat path from 0.45;
   bump the pin when 1.0 stable ships. Relations name their columns explicitly and through-relations

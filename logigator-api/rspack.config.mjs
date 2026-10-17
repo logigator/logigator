@@ -17,12 +17,14 @@ export default {
   // ESM output: every `@nestjs/*` package ships as ESM, and the source is
   // ESM-authored.
   experiments: { outputModule: true, topLevelAwait: true },
-  // The server, the migration runner and the document re-normalizer. Bundling
-  // all three keeps deploys free of drizzle-kit and of any TypeScript loader.
+  // The server, the migration runner, the document re-normalizer and the
+  // example seed. Bundling all four keeps deploys free of drizzle-kit and of
+  // any TypeScript loader.
   entry: {
     main: './src/main.ts',
     migrate: './src/database/migrate.main.ts',
-    renormalize: './src/database/renormalize.main.ts'
+    renormalize: './src/database/renormalize.main.ts',
+    'seed-examples': './src/database/seed-examples.main.ts'
   },
   output: {
     // Every artifact in the workspace lands in the root dist/ under its name.
@@ -85,7 +87,8 @@ export default {
     emitModuleTypeMarker,
     copyMigrations(),
     pruneStaleMigrations,
-    copyCardFonts()
+    copyCardFonts(),
+    copyExamples()
   ],
   // Nest reflects on class and function names, so mangling breaks DI, and a
   // long-running server gains nothing from minification anyway.
@@ -142,6 +145,23 @@ function copyCardFonts() {
         context: `${here}src/storage/share-card/fonts`,
         from: '*',
         to: 'fonts'
+      }
+    ]
+  });
+}
+
+/**
+ * Ships the seed account's examples beside the bundle — the manifest, each
+ * document and its two preview renders — so a deployment seeds from the set
+ * it was built with, through plain `node`, as it migrates.
+ */
+function copyExamples() {
+  return new CopyRspackPlugin({
+    patterns: [
+      {
+        context: `${here}examples`,
+        from: '*.{json,webp}',
+        to: 'examples'
       }
     ]
   });

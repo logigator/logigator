@@ -5,6 +5,7 @@ import {
   desc,
   eq,
   gt,
+  ne,
   sql,
   type Column,
   type SQL
@@ -21,6 +22,7 @@ import type {
   PublicProfile,
   StarResponse
 } from '@logigator/contract';
+import { EXAMPLES_ACCOUNT_ID } from '@logigator/core';
 import { ApiException } from '../common/api-exception';
 import { DB, type Database } from '../database/database.module';
 import {
@@ -85,7 +87,10 @@ type StarTable = typeof projectStars | typeof componentStars;
  * Two predicates, and nothing else. The **listings** — the browse pages, a
  * profile's tabs and counts, the starred tabs — carry {@link listed}: a
  * published document with something on it is the only kind a stranger is told
- * about (a star and its stargazers ask only that it be published). A **read
+ * about (a star and its stargazers ask only that it be published). The browse
+ * pages also leave out the examples account, whose public documents are the
+ * site's examples rather than community work: its profile, its documents'
+ * pages and a member's starred tab still show them. A **read
  * addressed by a link** carries `linkResolvesFor`, which answers an unlisted
  * document for whoever holds the URL and a private one for its owner alone.
  * The two are separate questions about the same rows, which is why these
@@ -107,6 +112,7 @@ export class CommunityService {
   ): Promise<Page<CommunityProject>> {
     const where = and(
       listed(projects),
+      ne(projects.userId, EXAMPLES_ACCOUNT_ID),
       nameMatches(projects.name, query.search)
     );
     return this.projectPage(where, query, callerId, this.projectRanking(query));
@@ -118,6 +124,7 @@ export class CommunityService {
   ): Promise<Page<CommunityComponent>> {
     const where = and(
       listed(components),
+      ne(components.userId, EXAMPLES_ACCOUNT_ID),
       nameMatches(components.name, query.search)
     );
     return this.componentPage(
