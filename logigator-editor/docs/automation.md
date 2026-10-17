@@ -177,6 +177,13 @@ a region out of where elements are. It renders the live scene graph offscreen, s
 ignores the camera and the docked controls and includes a simulation's state as
 it stands. A multiplier past the export's 8192 px cap is refused, not clamped.
 
+`renderPreviews()` resolves the active circuit's two previews — `{ light, dark }`,
+each a base64 PNG with its pixel size — rendered by the `BoardSnapshotService`
+path a cloud save uploads: square, transparent, both themes in one call
+whatever the live one is. An empty board is refused, since a save clears its
+preview rather than drawing one. It is what lets a script produce the previews
+of documents it writes to the API without an editor saving them.
+
 ### Simulation
 
 `sim.enter()` compiles and boots the engine, resolving once it is up — or with

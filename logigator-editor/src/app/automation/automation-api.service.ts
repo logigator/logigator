@@ -46,6 +46,7 @@ import { ThemingService } from '../theming/theming.service';
 import { TranslationService } from '../translation/translation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
+import { bytesToBase64 } from '../utils/packed-buffer';
 import { Wire } from '../wires/wire';
 import {
   ApiInfo,
@@ -70,6 +71,7 @@ import {
   PortReadout,
   ProjectState,
   RenderedImage,
+  RenderedPreviews,
   RenderImageOptions,
   ScreenPoint,
   ScreenRect,
@@ -201,6 +203,7 @@ export class AutomationApiService {
       newProject: (): ProjectState => this.newProject(),
       renderImage: (opts: RenderImageOptions): Promise<RenderedImage> =>
         this.renderImage(opts),
+      renderPreviews: (): Promise<RenderedPreviews> => this.renderPreviews(),
       sim: Object.freeze({
         enter: (): Promise<SimStatus> => this.simEnter(),
         exit: (): void => this.simulation.exit(),
@@ -559,6 +562,29 @@ export class AutomationApiService {
       height: canvas.height,
       png: png.slice(png.indexOf(',') + 1)
     };
+  }
+
+  /**
+   * The active circuit's two previews, rendered by the path a cloud save
+   * uploads them through — square, transparent, one per theme — so what a
+   * caller stores is what the editor would have stored. An empty board is
+   * refused: a save clears the preview instead of drawing one.
+   */
+  public async renderPreviews(): Promise<RenderedPreviews> {
+    const project = this.requireProject();
+    if (project.isEmpty) {
+      throw new Error('logigator: renderPreviews has no circuit to draw');
+    }
+    await this.snapshot.whenAvailable();
+    const previews = await this.snapshot.generatePreviews(project);
+    if (!previews) {
+      throw new Error('logigator: renderPreviews found no renderer');
+    }
+    const [light, dark] = await Promise.all([
+      toRenderedImage(previews.light),
+      toRenderedImage(previews.dark)
+    ]);
+    return { light, dark };
   }
 
   // -- Simulation ----------------------------------------------------------
@@ -1668,6 +1694,15 @@ function unionRect(a: Rectangle, b: Rectangle): Rectangle {
     Math.max(a.right, b.right) - x,
     Math.max(a.bottom, b.bottom) - y
   );
+}
+
+/** A rendered PNG → the base64 picture the contract carries, with its size. */
+async function toRenderedImage(png: Blob): Promise<RenderedImage> {
+  const bitmap = await createImageBitmap(png);
+  const { width, height } = bitmap;
+  bitmap.close();
+  const bytes = new Uint8Array(await png.arrayBuffer());
+  return { width, height, png: bytesToBase64(bytes) };
 }
 
 /** Pixi `Rectangle` → the JSON rect the contract uses. */

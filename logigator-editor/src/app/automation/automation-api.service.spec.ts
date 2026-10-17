@@ -240,6 +240,12 @@ describe('AutomationApiService', () => {
     });
   });
 
+  describe('renderPreviews', () => {
+    it('refuses an empty board, which a save clears instead of drawing', async () => {
+      await expect(api.renderPreviews()).rejects.toThrow(/no circuit/);
+    });
+  });
+
   describe('install', () => {
     it('publishes a frozen facade whose methods survive destructuring', () => {
       api.install();

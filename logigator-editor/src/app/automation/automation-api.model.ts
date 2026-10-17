@@ -290,6 +290,12 @@ export interface RenderedImage {
   png: string;
 }
 
+/** What `renderPreviews` renders: one picture per theme, as a save uploads them. */
+export interface RenderedPreviews {
+  light: RenderedImage;
+  dark: RenderedImage;
+}
+
 // -- Simulation ------------------------------------------------------------
 
 export interface SimStatus {
@@ -477,6 +483,8 @@ export interface LogigatorAutomationApi {
 
   // image — the picture File → Export image downloads, as it would be now
   renderImage(opts: RenderImageOptions): Promise<RenderedImage>;
+  // preview — the pair a save to the cloud uploads, both themes at once
+  renderPreviews(): Promise<RenderedPreviews>;
 
   // simulation
   sim: {
