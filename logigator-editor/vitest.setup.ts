@@ -1,4 +1,17 @@
 import 'vitest-canvas-mock';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+// The simulation engine's WASM binary, for specs that run the real engine
+// (`src/testing/sim-engine.ts`). The spec bundles carry their own copy of the
+// engine's JS glue, so the bytes cross over on a global rather than through a
+// shared module.
+(globalThis as { __LOGIGATOR_SIM_WASM__?: Uint8Array }).__LOGIGATOR_SIM_WASM__ =
+  readFileSync(
+    createRequire(import.meta.url).resolve(
+      '@logigator/sim/wasm/sim_wasm_bg.wasm'
+    )
+  );
 
 // jsdom lacks ResizeObserver, which BoardComponent uses to re-measure the
 // canvas. A no-op stub keeps board instantiation from throwing in tests.

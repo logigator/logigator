@@ -1,8 +1,10 @@
 import init, { Simulation } from '@logigator/sim/wasm';
-import type { InputEvent } from '@logigator/sim/wasm';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
+import { InputProgressReader } from './input-progress';
+import { StateReader } from './state-reads';
 import {
   nextPaceDelayMs,
+  MIN_TARGET_HZ,
   PACE_BATCH_MS,
   PACE_INTERVAL_MS,
   ticksDue
@@ -24,7 +26,7 @@ const addEventListener = self.addEventListener as (
   listener: (event: MessageEvent<MainToWorkerMessage>) => void
 ) => void;
 
-/** Changed-link fraction above which the engine falls back to a full snapshot. */
+/** Changed-link fraction above which the engine sends a full snapshot. */
 const DELTA_THRESHOLD = 0.2;
 
 const BUFFER_POOL_LIMIT = 4;
@@ -42,8 +44,13 @@ let paceStart = { tick: 0, time: 0 };
 
 const bufferPool: ArrayBuffer[] = [];
 
+/** Built with the descriptor; reset with every engine rebuilt from it. */
+let progress: InputProgressReader | null = null;
+/** The main thread's state watches; they outlive a rebuild. */
+const stateReader = new StateReader();
+
 // The emitted artifact path is relative to the build output root, where the
-// worker chunk also lives — resolving against the script URL covers any
+// worker chunk also lives, so resolving against the script URL covers any
 // base href.
 void init({
   module_or_path: new URL(wasmUrl, self.location.href)
@@ -78,6 +85,7 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       descriptor = msg.descriptor;
       sim?.destroy();
       sim = new Simulation(descriptor);
+      progress = new InputProgressReader(descriptor);
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     case 'start': {
@@ -90,7 +98,7 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
         });
       } else {
         runMode = 'target';
-        paceHz = Math.max(1, msg.config.hz);
+        paceHz = Math.max(MIN_TARGET_HZ, msg.config.hz);
         paceStart = {
           tick: simulation.getStatus().tick,
           time: performance.now()
@@ -109,23 +117,35 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     case 'stop': {
-      // The engine has no reset: stopping for good = destroy and rebuild
-      // from the kept descriptor.
+      // The engine has no reset: destroy and rebuild from the descriptor.
       await stopRun();
       requireSim().destroy();
       sim = new Simulation(descriptor!);
+      progress?.reset();
+      stateReader.reset();
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     }
     // Inputs, snapshots and status polls are advisory: the main thread awaits
-    // no ack, so a missing engine has nothing to fail and is dropped instead of
-    // reported. Reporting would come back uncorrelated and kill the session —
-    // the run controls above keep `requireSim`, since their caller holds a
-    // promise that can carry the failure.
-    case 'triggerInput':
+    // no ack, so a missing engine is dropped rather than reported — an
+    // uncorrelated error would kill the session. The run controls above keep
+    // `requireSim`, since their caller holds a promise to carry the failure.
+    // The engine sequences the frames inside its ticks, between `runAsync`
+    // batches as between steps, so nothing here waits for a tick. A request
+    // it refuses throws, and goes back as an error under its own `reqId`,
+    // which the bridge knows as a refused input rather than a failure.
+    case 'submitInput':
       if (!sim) break;
-      sim.triggerInput(msg.componentIndex, msg.event as InputEvent, msg.state);
+      sim.submitInput(msg.writes);
       postMessage({ kind: 'ok', reqId: msg.reqId });
+      break;
+    // Watches are bookkeeping read on the next snapshot, so they need no
+    // engine yet and get no ack.
+    case 'watchState':
+      stateReader.watch(msg.watch);
+      break;
+    case 'unwatchState':
+      stateReader.unwatch(msg.id);
       break;
     case 'requestSnapshot':
       if (!sim) break;
@@ -175,12 +195,8 @@ async function stopRun(): Promise<void> {
 /**
  * Target-Hz pacing: each iteration runs the ticks the wall clock says are due
  * since the run started. Batches are bounded by wall-clock time, not tick
- * count: at a high target rate a tick-count cap would block the worker for
- * hundreds of ms in one synchronous `run`, starving the per-frame snapshot
- * pull — the `ms` bound returns control to the message pump after a few ms so
- * inputs and snapshots interleave. When a batch is cut short by the budget the
- * target is unreachable on this machine, so the next batch runs back-to-back
- * rather than idling an interval.
+ * count — a tick-count cap would block the worker in one synchronous `run` and
+ * starve the per-frame snapshot pull.
  */
 function paceLoop(): void {
   if (runMode !== 'target' || !sim) {
@@ -215,15 +231,27 @@ function sendSnapshot(reqId: number, full: boolean): void {
       ? mem.subarray(view.valuesPtr, view.valuesPtr + view.valuesLen)
       : mem.subarray(view.ptr, view.ptr + view.len);
     const packed = packSnapshot(bufferPool.pop(), ids, values);
+    // Read after the copy: `inputProgress` and the state reads may allocate
+    // in linear memory, which would detach the views copied from. No tick
+    // runs in between, so the state read is the snapshot's tick.
+    const inputProgress = progress?.read(requireSim());
+    const state = stateReader.read(requireSim());
+    const transfer: Transferable[] = [packed.buffer];
+    for (const read of state ?? []) {
+      // `readState` hands out a copy of its own, never a view into memory.
+      transfer.push(read.bytes.buffer as ArrayBuffer);
+    }
     postMessage(
       {
         kind: 'snapshot',
         reqId,
         tick: view.tick,
         isDelta: view.isDelta,
-        ...packed
+        ...packed,
+        ...(inputProgress ? { inputProgress } : {}),
+        ...(state ? { state } : {})
       },
-      [packed.buffer]
+      transfer
     );
   } finally {
     view.free();

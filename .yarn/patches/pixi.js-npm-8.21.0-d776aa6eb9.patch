@@ -1,0 +1,40 @@
+diff --git a/lib/scene/container/RenderGroupSystem.js b/lib/scene/container/RenderGroupSystem.js
+index 34bc2e1a46b87158de8fb9b7064cca6715bf17b5..994144b2048d77d296f5e26e1e2254e7cb6b7b33 100644
+--- a/lib/scene/container/RenderGroupSystem.js
++++ b/lib/scene/container/RenderGroupSystem.js
+@@ -110,7 +110,14 @@ class RenderGroupSystem {
+     renderer.renderPipes.batch.upload(renderGroup.instructionSet);
+     if (renderGroup.isCachedAsTexture && !renderGroup.textureNeedsUpdate) return;
+     for (let i = 0; i < renderGroup.renderGroupChildren.length; i++) {
+-      this._updateRenderGroups(renderGroup.renderGroupChildren[i]);
++      const child = renderGroup.renderGroupChildren[i];
++      // logigator patch: a child group the parent will not collect (its root
++      // culled, invisible or unrenderable, as of the parent's transform pass
++      // just above) is left untouched with its descendants. Its pending
++      // structure/transform/renderable updates stay queued and are applied on
++      // the first visit after it becomes drawable again.
++      if (child.root.globalDisplayStatus < 7) continue;
++      this._updateRenderGroups(child);
+     }
+   }
+   _updateRenderables(renderGroup) {
+diff --git a/lib/scene/container/RenderGroupSystem.mjs b/lib/scene/container/RenderGroupSystem.mjs
+index 97235174f7c4e8a5716a948ea075484737390296..e9415527f5f4783995905f4564fdfafb760a5401 100644
+--- a/lib/scene/container/RenderGroupSystem.mjs
++++ b/lib/scene/container/RenderGroupSystem.mjs
+@@ -108,7 +108,14 @@ class RenderGroupSystem {
+     renderer.renderPipes.batch.upload(renderGroup.instructionSet);
+     if (renderGroup.isCachedAsTexture && !renderGroup.textureNeedsUpdate) return;
+     for (let i = 0; i < renderGroup.renderGroupChildren.length; i++) {
+-      this._updateRenderGroups(renderGroup.renderGroupChildren[i]);
++      const child = renderGroup.renderGroupChildren[i];
++      // logigator patch: a child group the parent will not collect (its root
++      // culled, invisible or unrenderable, as of the parent's transform pass
++      // just above) is left untouched with its descendants. Its pending
++      // structure/transform/renderable updates stay queued and are applied on
++      // the first visit after it becomes drawable again.
++      if (child.root.globalDisplayStatus < 7) continue;
++      this._updateRenderGroups(child);
+     }
+   }
+   _updateRenderables(renderGroup) {

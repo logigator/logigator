@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Component, input, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { LgDrawer } from './drawer';
@@ -9,7 +9,7 @@ import { LgDrawer } from './drawer';
     <lg-drawer
       [visible]="visible()"
       (visibleChange)="onVisibleChange($event)"
-      position="bottom"
+      [position]="position()"
       header="Palette"
       styleClass="h-[90vh]!"
       [modal]="modal()"
@@ -20,6 +20,7 @@ import { LgDrawer } from './drawer';
 })
 class HostComponent {
   readonly modal = input(true);
+  readonly position = input<'bottom' | 'left'>('bottom');
   readonly visible = signal(false);
   readonly changes: boolean[] = [];
 
@@ -130,5 +131,82 @@ describe('LgDrawer', () => {
     f.componentInstance.visible.set(true);
     f.detectChanges();
     expect(panel()).not.toBeNull();
+  });
+
+  describe('over an on-screen keyboard', () => {
+    let viewport: EventTarget & {
+      height: number;
+      offsetTop: number;
+      scale: number;
+    };
+
+    beforeEach(() => {
+      viewport = Object.assign(new EventTarget(), {
+        height: 800,
+        offsetTop: 0,
+        scale: 1
+      });
+      Object.defineProperty(window, 'visualViewport', {
+        configurable: true,
+        value: viewport
+      });
+    });
+
+    afterEach(() => {
+      delete (window as { visualViewport?: unknown }).visualViewport;
+    });
+
+    /** Opens the drawer in a layout viewport 800px tall. */
+    function open(position: 'bottom' | 'left') {
+      const f = setup();
+      f.componentRef.setInput('modal', false);
+      f.componentRef.setInput('position', position);
+      f.componentInstance.visible.set(true);
+      f.detectChanges();
+      Object.defineProperty(container(), 'clientHeight', { value: 800 });
+      return f;
+    }
+
+    function resize(height: number, offsetTop = 0): void {
+      viewport.height = height;
+      viewport.offsetTop = offsetTop;
+      viewport.dispatchEvent(new Event('resize'));
+    }
+
+    it('lifts a bottom sheet above the keyboard and caps it to what stays visible', () => {
+      const f = open('bottom');
+      resize(480);
+      f.detectChanges();
+      expect(panel()!.style.marginBottom).toBe('320px');
+      expect(panel()!.style.maxHeight).toBe('calc(480px - 2.5rem)');
+
+      resize(800);
+      f.detectChanges();
+      expect(panel()!.style.marginBottom).toBe('');
+      expect(panel()!.style.maxHeight).toBe('');
+    });
+
+    it('measures the viewport afresh each time it opens', () => {
+      const f = open('bottom');
+      resize(480);
+      f.componentInstance.visible.set(false);
+      f.detectChanges();
+      resize(800);
+      f.componentInstance.visible.set(true);
+      f.detectChanges();
+      expect(panel()!.style.marginBottom).toBe('');
+
+      resize(480);
+      f.detectChanges();
+      expect(panel()!.style.marginBottom).toBe('320px');
+    });
+
+    it('leaves a side drawer where it is', () => {
+      const f = open('left');
+      resize(480);
+      f.detectChanges();
+      expect(panel()!.style.marginBottom).toBe('');
+      expect(panel()!.style.maxHeight).toBe('');
+    });
   });
 });

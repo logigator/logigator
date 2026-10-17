@@ -1,0 +1,35 @@
+<lg-user-control
+  *webTranslate="let t"
+  [username]="session.user()?.username"
+  [signedOutLabel]="t('header.notSignedIn')"
+  [image]="avatar()"
+  [model]="rows()"
+  [ariaLabel]="t('header.userMenu')"
+>
+  <ng-template #sections>
+    <lg-user-panel-section [label]="t('header.theme')">
+      <lg-select-button
+        optionLabel="label"
+        optionValue="value"
+        optionIcon="icon"
+        fluid
+        [ariaLabel]="t('header.theme')"
+        [options]="themeOptions()"
+        [ngModel]="theming.theme()"
+        (ngModelChange)="theming.setTheme($event)"
+      />
+    </lg-user-panel-section>
+
+    <lg-user-panel-section [label]="t('header.language')">
+      <lg-select
+        optionLabel="label"
+        optionValue="id"
+        fluid
+        [ariaLabel]="t('header.language')"
+        [options]="languages"
+        [ngModel]="activeLang()"
+        (ngModelChange)="switchLanguage($event)"
+      />
+    </lg-user-panel-section>
+  </ng-template>
+</lg-user-control>

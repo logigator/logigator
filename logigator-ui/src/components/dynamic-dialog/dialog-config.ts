@@ -1,16 +1,11 @@
 import { InputSignalWithTransform, Signal } from '@angular/core';
 
 /**
- * The value an `input()` signal field `F` accepts (its write / transform-input
- * type, matching what `ComponentRef.setInput` takes), or `never` for any field
- * that is not an input signal.
- *
- * The `any` mirrors Angular's own `ɵUnwrapInputSignalWriteType`:
- * `InputSignalWithTransform`'s type parameters sit in invariant/contravariant
- * positions (via its `[SIGNAL]` node), so a concrete `InputSignal<number>` is
- * *not* assignable to an `<unknown, unknown>` probe — only the bivariant `any`
- * matches every input signal. `InputSignal<T>` is `InputSignalWithTransform<T,
- * T>`, so both plain and transformed inputs are covered.
+ * The value an `input()` signal field `F` accepts, or `never` when `F` is not
+ * an input signal. The `any` mirrors Angular's own
+ * `ɵUnwrapInputSignalWriteType`: `InputSignalWithTransform`'s parameters are
+ * invariant, so a concrete `InputSignal<number>` is *not* assignable to an
+ * `<unknown, unknown>` probe and only the bivariant `any` matches.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type InputValue<F> =
@@ -19,9 +14,7 @@ type InputValue<F> =
 
 /**
  * The `input()` signal members of a component `C`, mapped to the value each
- * accepts, so {@link DialogConfig.inputValues} is checked against the opened
- * component's inputs. Non-input members (outputs, plain fields, methods) are
- * dropped.
+ * accepts. Non-input members are dropped.
  */
 export type DialogInputs<C> = {
   [K in keyof C as [InputValue<C[K]>] extends [never] ? never : K]?: InputValue<
@@ -30,13 +23,11 @@ export type DialogInputs<C> = {
 };
 
 /**
- * Configuration for an imperatively-opened dialog ({@link DialogService.open}).
- * Provided in the child component's injector so the opened component can read
- * `inject(DialogConfig).data`.
+ * Configuration for an imperatively-opened dialog, provided in the child
+ * component's injector so it can read `inject(DialogConfig).data`.
  *
- * `D` is the `data` payload type; `C` the opened component, which types
- * `inputValues` against that component's `input()` signals. Both default to
- * loose types for injection sites that read the config back generically.
+ * `D` is the `data` payload type, `C` the opened component that types
+ * `inputValues`. Both default loose, for sites reading the config generically.
  */
 export class DialogConfig<D = unknown, C = unknown> {
   header?: string;
@@ -50,21 +41,19 @@ export class DialogConfig<D = unknown, C = unknown> {
   dismissableMask?: boolean;
   style?: Record<string, string>;
   /**
-   * Renders the dialog as a viewport-filling takeover instead of a centred
-   * card; `width`/`style` sizing is ignored while active. A `Signal` keeps the
-   * presentation live, so an open dialog switches between card and takeover
-   * when the signal flips (e.g. a layout-breakpoint signal on device rotation).
+   * Renders a viewport-filling takeover instead of a centred card, ignoring
+   * `width`/`style`. A `Signal` keeps it live, so an open dialog switches
+   * presentation when the signal flips.
    */
   fullscreen?: boolean | Signal<boolean>;
   /**
-   * Replaces the body region's default scroll + padding classes
-   * (`overflow-auto` + padding), for content that manages its own scrolling
-   * and insets. The body always keeps its flex sizing (`min-h-0 grow`).
+   * Overrides the body's default scroll and padding classes, for content that
+   * manages its own. Its flex sizing (`min-h-0 grow`) always stays.
    */
   bodyClass?: string;
   /**
-   * Opaque identifier reported to an {@link LgDialogTelemetry} observer on open
-   * and close. Omit it and the dialog is not reported at all.
+   * Opaque identifier reported to an {@link LgDialogTelemetry} observer on
+   * open and close. Omit it and the dialog is not reported at all.
    */
   telemetryId?: string;
 }

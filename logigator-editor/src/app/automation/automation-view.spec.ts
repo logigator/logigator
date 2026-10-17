@@ -13,12 +13,11 @@ import { setStaticDIInjector } from '../utils/get-di';
 import { environment } from '../../environments/environment';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { BuiltInComponentType, WireDirection } from '@logigator/core';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { serializeProjectBody } from '../persistence/snapshots';
 import { BoardSurfaceService } from '../rendering/board-surface.service';
-import { BuiltInComponentType } from '../components/component-type.enum';
 import { AutomationApiService } from './automation-api.service';
 
 const VIEWPORT_GRID_WIDTH = 40;
@@ -134,8 +133,8 @@ describe('AutomationApiService camera and selection', () => {
   });
 
   describe('grid ↔ screen', () => {
-    // The board's page box is a DOM fact the camera does not own; a stub
-    // stands in for the canvas so the conversions have one to add.
+    // The board's page box is a DOM fact the camera does not own, so a stub
+    // stands in for the canvas.
     const surface = {
       getBoundingClientRect: () => ({
         ...BOARD_OFFSET,
@@ -363,9 +362,8 @@ describe('AutomationApiService camera and selection', () => {
       project.addComponent(and);
       const workMode = TestBed.inject(WorkModeService);
       workMode.setMode(WorkMode.PAN);
-      // The board drops the live selection as it swaps tools, from an effect on
-      // the work mode (WorkModeRouter.setMode). A selection made before that
-      // effect ran would be wiped by it a frame later.
+      // The board drops the live selection from an effect as it swaps tools, so
+      // a selection made before that effect ran would be wiped a frame later.
       const injector = TestBed.inject(Injector);
       runInInjectionContext(injector, () => {
         effect(() => {

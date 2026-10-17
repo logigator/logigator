@@ -4,7 +4,7 @@ import { makeRom } from '../../../../testing/factories';
 import { bytesToBase64 } from '../../../utils/packed-buffer';
 import { RomComponent } from './rom.component';
 import { RomInspection } from './rom-inspection';
-import { RomInspectionComponent } from './rom-inspection.component';
+import { MemoryInspectionComponent } from '../../../inspection/memory/memory-inspection.component';
 
 describe('RomInspection', () => {
   let rom: RomComponent;
@@ -23,10 +23,11 @@ describe('RomInspection', () => {
     const inspection = new RomInspection(rom);
     expect(inspection.wordSize).toBe(8);
     expect(inspection.wordCount).toBe(8);
-    expect(Array.from(inspection.bytes)).toEqual([
+    expect(Array.from(inspection.bytes())).toEqual([
       0x11, 0x22, 0x33, 0, 0, 0, 0, 0
     ]);
-    expect(inspection.renderer).toBe(RomInspectionComponent);
+    expect(inspection.loaded()).toBeNull();
+    expect(inspection.renderer).toBe(MemoryInspectionComponent);
     expect(inspection.title()).toBeTruthy();
   });
 

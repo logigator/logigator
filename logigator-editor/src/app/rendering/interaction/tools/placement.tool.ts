@@ -5,33 +5,30 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
 import { WorkMode } from '../../../work-mode/work-mode.enum';
 import { WorkModeService } from '../../../work-mode/work-mode.service';
 import { getStaticDI } from '../../../utils/get-di';
-import { roundToGrid } from '../../../utils/grid';
 import { PlacementGhost } from '../../placement-ghost';
 import { ComponentPlacementSession } from '../../sessions/component-placement.session';
 import { PointerInput } from '../pointer-input';
 import { BoardTool, ToolHost } from './board-tool';
 
 /**
- * The placement tool: hovers the component the next press would place and
- * opens the placement session when the press lands. Which config to place
- * comes from the palette via {@link setConfig}.
+ * Hovers the component the next press would place and opens the placement
+ * session when the press lands. The config comes from the palette via
+ * {@link setConfig}.
  */
 export class PlacementTool implements BoardTool {
   private readonly _customComponents = getStaticDI(CustomComponentService);
 
   private _config: ComponentConfig | null = null;
 
-  // Hover preview: the component the next press would place, following the
-  // cursor before any press. Torn down whenever its context changes
-  // (mode/project/palette selection) or a session takes over.
+  // Torn down whenever its context changes (mode, project, palette
+  // selection) or a session takes over.
   private _hoverGhost: PlacementGhost | null = null;
   private _hoverGhostConfig: ComponentConfig | null = null;
   private _hoverGhostProject: Project | null = null;
 
   public setConfig(value: ComponentConfig | null): void {
     if (value !== this._hoverGhostConfig) {
-      // The palette selection changed under the preview — the next hover
-      // rebuilds the ghost from the new config.
+      // The next hover rebuilds the ghost from the new config.
       this._destroyHoverGhost();
     }
     this._config = value;
@@ -39,20 +36,14 @@ export class PlacementTool implements BoardTool {
 
   public down(project: Project, input: PointerInput, host: ToolHost): void {
     if (!this._config) return;
-    void this._beginPlacement(
-      project,
-      this._config,
-      roundToGrid(input.grid, true),
-      host
-    );
+    // Copied: the placement may open after an await, past this input's life.
+    void this._beginPlacement(project, this._config, input.grid.clone(), host);
   }
 
   /**
-   * Follows the cursor with the component the next press would place —
-   * the same ghost (selection look, invalid tint on collision) the placement
-   * session shows once the press lands, so the handoff is seamless. Rebuilt
-   * when the palette selection changes; skipped while any session is active
-   * (its own ghosts own the preview then).
+   * Follows the cursor with the same ghost the placement session shows once
+   * the press lands, so the handoff is seamless. Skipped while a session is
+   * active, since its own ghosts own the preview.
    */
   public hover(project: Project, input: PointerInput, host: ToolHost): void {
     const config = this._config;
@@ -60,7 +51,6 @@ export class PlacementTool implements BoardTool {
       this._destroyHoverGhost();
       return;
     }
-    const snapped = roundToGrid(input.grid, true);
     if (this._hoverGhost) {
       // The settings panel may have written the sticky direction since this
       // ghost was built; it follows on the next move rather than waiting for
@@ -68,15 +58,15 @@ export class PlacementTool implements BoardTool {
       this._hoverGhost.setDirection(
         getStaticDI(WorkModeService).placementDirectionFor(config.type)
       );
-      this._hoverGhost.moveTo(snapped);
+      this._hoverGhost.moveTo(input.grid);
     } else {
-      // A master previews from its own config — snapshotting stays a
+      // A master previews from its own config; snapshotting stays a
       // commit-time effect of the placement session.
       this._hoverGhost = new PlacementGhost(
         project,
         project.floatingLayer.dragLayer,
         config,
-        snapped
+        input.grid
       );
       this._hoverGhostConfig = config;
       this._hoverGhostProject = project;
@@ -112,19 +102,16 @@ export class PlacementTool implements BoardTool {
   }
 
   /**
-   * Opens the placement session, ensuring a cloud custom master's circuit is
-   * loaded first — the load is deferred to place-time, not palette-select.
-   * The ensure is a microtask no-op for built-ins, browser masters, and
-   * already-loaded masters, so the session opens before any pointer-up; only
-   * a first, uncached cloud master actually awaits a request. If the gesture
-   * ends or the context changes during that await, the host's gesture stamp
-   * (bumped on pointer-up / cancel / context switches) keeps the stale load
+   * Opens the placement session, loading a cloud custom master's circuit
+   * first — deferred to place-time rather than palette-select. The ensure is
+   * a microtask no-op for everything already cached, so only a first,
+   * uncached cloud master awaits. The host's gesture stamp keeps a stale load
    * from opening a session with no pointer to drive it.
    */
   private async _beginPlacement(
     project: Project,
     config: ComponentConfig,
-    startGrid: Point,
+    startCursor: Point,
     host: ToolHost
   ): Promise<void> {
     const seq = host.bumpGestureSeq();
@@ -142,7 +129,7 @@ export class PlacementTool implements BoardTool {
       new ComponentPlacementSession(
         project,
         project.floatingLayer.dragLayer,
-        startGrid,
+        startCursor,
         config
       )
     );

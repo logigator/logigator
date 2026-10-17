@@ -5,9 +5,13 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
+  makeGamepad,
+  makeKeyboard,
+  makePulseButton,
   makeSwitch,
   makeNot
 } from '../../../testing/factories';
+import { FakeUserInput } from '../../../testing/fake-user-input';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
@@ -19,11 +23,11 @@ import { clockComponentConfig } from '../../components/component-types/clock/clo
 import { tunnelComponentConfig } from '../../components/component-types/tunnel/tunnel.config';
 import { ledMatrixComponentConfig } from '../../components/component-types/led-matrix/led-matrix.config';
 import { bytesToBase64 } from '../../utils/packed-buffer';
-import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
+import { SerializedCircuitBody, WireDirection } from '@logigator/core';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
 import { BoardCompilerService } from './board-compiler.service';
+import { TOP_LEVEL_PATH } from './compiled-board.model';
 
 /** Wire spanning the two given half-grid termination points (axis-aligned). */
 function wireBetween(a: Point, b: Point): Wire {
@@ -115,7 +119,7 @@ describe('BoardCompilerService', () => {
     return place(Component.deserialize({ pos, options: {} }, config));
   }
 
-  /** Registers a snapshot wrapping a single NOT behind one in and one out plug. */
+  /** Registers a snapshot wrapping a NOT behind an in and an out plug. */
   function registerWrapNot(): number {
     const inPlug = makePlug('input', 0, [0, 0]);
     const not = makeNot();
@@ -147,8 +151,8 @@ describe('BoardCompilerService', () => {
 
     const board = compiler.compile(project);
 
-    // Emission order is ascending component id (creation order here); link
-    // ids are dense in pin-visit order: NOT.in, NOT.out, AND.in1, AND.out.
+    // Emission order is ascending component id; link ids are dense in
+    // pin-visit order: NOT.in, NOT.out, AND.in1, AND.out.
     expect(board.descriptor).toEqual({
       links: 4,
       components: [
@@ -260,8 +264,8 @@ describe('BoardCompilerService', () => {
     const andUnit = board.descriptor.components.find((c) => c.type === 2)!;
     expect(andUnit.inputs[0]).toBe(notUnit.outputs[0]);
 
-    // Both tunnel stubs render from the shared link; the lone tunnel's net
-    // has no unit pin, so it gets no link at all.
+    // Both tunnel stubs render from the shared link; the lone tunnel's net has
+    // no unit pin, so it gets no link at all.
     const targets = board.mapping.get('')!;
     expect(targets[notUnit.outputs[0]].ports).toEqual(
       expect.arrayContaining([
@@ -358,7 +362,7 @@ describe('BoardCompilerService', () => {
       ]
     });
 
-    // The template is built once and cached for the session.
+    // Built once, cached for the session.
     expect(
       getDefinition.mock.calls.filter(([typeId]) => typeId === wrapNot)
     ).toHaveLength(1);
@@ -382,7 +386,7 @@ describe('BoardCompilerService', () => {
   it('expands customs nested inside customs', () => {
     const wrapNot = registerWrapNot();
 
-    // A second snapshot whose circuit places a WrapNot instance between plugs.
+    // A snapshot placing a WrapNot instance between plugs.
     const inPlug = makePlug('input', 0, [0, 0]);
     const inner = Component.deserialize(
       { pos: [4, 0], options: {} },
@@ -513,10 +517,11 @@ describe('BoardCompilerService', () => {
     });
   });
 
-  it('emits button/switch units and registers them as user inputs', () => {
+  it('emits every user input as a UserInput unit and registers it', () => {
     // The example-board shape (gate subset): user input feeding gates.
     const switchComp = place(makeSwitch(0, 0));
-    const button = place(makeButton(0, 4));
+    const button = place(makePulseButton(0, 4));
+    const held = place(makeButton(0, 8));
     const and = makeAnd(2, undefined, 8, 0);
     place(and);
     placeWire(switchComp.connectionPoints[0], and.connectionPoints[0]);
@@ -530,22 +535,101 @@ describe('BoardCompilerService', () => {
     const board = compiler.compile(project);
 
     expect(board.diagnostics).toEqual([]);
-    // Both switch and button emit the engine's UserInput type (200); the engine
-    // rejects any other id. Button vs. switch is a triggerInput-time distinction.
+    // All emit the engine's UserInput type (200); it rejects any other id.
+    // Which input it is only shows in the frames sent to it.
     expect(board.descriptor).toEqual({
-      links: 3,
+      links: 4,
       components: [
         { type: 200, inputs: [], outputs: [0] },
         { type: 200, inputs: [], outputs: [1] },
-        { type: 2, inputs: [0, 1], outputs: [2] }
+        { type: 200, inputs: [], outputs: [2] },
+        { type: 2, inputs: [0, 1], outputs: [3] }
       ]
     });
     expect(board.userInputs).toEqual(
       new Map([
         [switchComp.id, 0],
-        [button.id, 1]
+        [button.id, 1],
+        [held.id, 2]
       ])
     );
+  });
+
+  /**
+   * Expects `component`'s one unit to be a UserInput unit whose output `i`
+   * drives the net on output port `i`, `negated` naming the ports a bubble
+   * negates, and returns the unit's index.
+   */
+  function expectOneInputUnit(
+    board: ReturnType<typeof compiler.compile>,
+    component: Component,
+    negated: number[]
+  ): number {
+    const index = board.userInputs.get(component.id)!;
+    const unit = board.descriptor.components[index];
+    expect(unit).toEqual({
+      type: 200,
+      inputs: [],
+      outputs: Array.from({ length: component.numOutputs }, () =>
+        expect.any(Number)
+      ),
+      ...(negated.length > 0 ? { negOutputs: negated } : {})
+    });
+    const targets = board.mapping.get(TOP_LEVEL_PATH)!;
+    unit.outputs.forEach((link, port) => {
+      expect(targets[link].ports).toContainEqual({
+        component,
+        portIndex: component.numInputs + port
+      });
+    });
+    expect(
+      board.descriptor.components.filter((other) =>
+        other.outputs.some((link) => unit.outputs.includes(link))
+      )
+    ).toEqual([unit]);
+    return index;
+  }
+
+  it('emits one UserInput unit for a user input, an output per port', () => {
+    const and = place(makeAnd(2, undefined, 8, 0));
+    const input = new FakeUserInput(3);
+    input.setPortNegated('out', 1, true);
+    place(input);
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    // Ids order emission: the AND's unit comes first.
+    expect(expectOneInputUnit(board, input, [1])).toBe(1);
+    expect(board.descriptor.components).toHaveLength(2);
+    expect(board.userInputs.has(and.id)).toBe(false);
+  });
+
+  it('compiles a gamepad to one unit, an output per control, a bubble negating only its own', () => {
+    const pad = makeGamepad({ face: 4, shoulders: 2 });
+    place(pad);
+    const slotB = pad.slotIds.indexOf('b');
+    pad.setPortNegated('out', slotB, true);
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    expect(pad.numOutputs).toBe(12);
+    expectOneInputUnit(board, pad, [slotB]);
+    expect(board.descriptor.components).toHaveLength(1);
+  });
+
+  it('compiles a keyboard to one unit of nine outputs, D0 to D6, STB then KD, a bubble negating only its own', () => {
+    place(makeAnd(2, undefined, 8, 0));
+    const keyboard = place(makeKeyboard(0, 0));
+    keyboard.setPortNegated('out', 3, true);
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    expect(keyboard.numOutputs).toBe(9);
+    expect(expectOneInputUnit(board, keyboard, [3])).toBe(1);
+    expect(board.descriptor.components).toHaveLength(2);
   });
 
   it('compiles deterministically', () => {

@@ -1,17 +1,32 @@
 import { Point } from 'pixi.js';
 import { PointerInput } from '../app/rendering/interaction/pointer-input';
 import { Wire } from '../app/wires/wire';
-import { WireDirection } from '../app/wires/wire-direction.enum';
+import {
+  Direction,
+  NameMap,
+  SegmentBase,
+  WireDirection
+} from '@logigator/core';
 import { AndComponent } from '../app/components/component-types/and/and.component';
 import { andComponentConfig } from '../app/components/component-types/and/and.config';
 import { NotComponent } from '../app/components/component-types/not/not.component';
 import { InputComponent } from '../app/components/component-types/input/input.component';
 import { inputComponentConfig } from '../app/components/component-types/input/input.config';
 import { ButtonComponent } from '../app/components/component-types/button/button.component';
+import { PulseButtonComponent } from '../app/components/component-types/pulse-button/pulse-button.component';
 import { SwitchComponent } from '../app/components/component-types/switch/switch.component';
 import { RomComponent } from '../app/components/component-types/rom/rom.component';
 import { romComponentConfig } from '../app/components/component-types/rom/rom.config';
-import { Direction } from '../app/utils/direction';
+import { RamComponent } from '../app/components/component-types/ram/ram.component';
+import { ramComponentConfig } from '../app/components/component-types/ram/ram.config';
+import { LedComponent } from '../app/components/component-types/led/led.component';
+import { ClockComponent } from '../app/components/component-types/clock/clock.component';
+import { clockComponentConfig } from '../app/components/component-types/clock/clock.config';
+import { SegmentDisplayComponent } from '../app/components/component-types/segment-display/segment-display.component';
+import { segmentDisplayComponentConfig } from '../app/components/component-types/segment-display/segment-display.config';
+import { GamepadComponent } from '../app/components/component-types/gamepad/gamepad.component';
+import { gamepadComponentConfig } from '../app/components/component-types/gamepad/gamepad.config';
+import { KeyboardComponent } from '../app/components/component-types/keyboard/keyboard.component';
 
 /** AndComponent with the given port count, rotation, and grid position. */
 export function makeAnd(
@@ -62,6 +77,13 @@ export function makeButton(px = 0, py = 0): ButtonComponent {
   return button;
 }
 
+/** PulseButtonComponent at the given grid position. */
+export function makePulseButton(px = 0, py = 0): PulseButtonComponent {
+  const button = new PulseButtonComponent({});
+  button.position.set(px, py);
+  return button;
+}
+
 /** SwitchComponent at the given grid position. */
 export function makeSwitch(px = 0, py = 0): SwitchComponent {
   const switchComp = new SwitchComponent({});
@@ -84,6 +106,85 @@ export function makeRom(
   });
   rom.position.set(px, py);
   return rom;
+}
+
+/** RamComponent with the given table shape and grid position. */
+export function makeRam(
+  addressSize = 2,
+  wordSize = 4,
+  px = 0,
+  py = 0
+): RamComponent {
+  const ram = new RamComponent({
+    wordSize: ramComponentConfig.options.wordSize.clone(wordSize),
+    addressSize: ramComponentConfig.options.addressSize.clone(addressSize)
+  });
+  ram.position.set(px, py);
+  return ram;
+}
+
+/** ClockComponent with the given delay in ticks, at a grid position. */
+export function makeClock(speed = 1, px = 0, py = 0): ClockComponent {
+  const clock = new ClockComponent({
+    speed: clockComponentConfig.options.speed.clone(speed)
+  });
+  clock.position.set(px, py);
+  return clock;
+}
+
+/** LedComponent at the given grid position. */
+export function makeLed(px = 0, py = 0): LedComponent {
+  const led = new LedComponent({});
+  led.position.set(px, py);
+  return led;
+}
+
+/** SegmentDisplayComponent with the given input count, base and position. */
+export function makeSegmentDisplay(
+  numInputs = 4,
+  base: SegmentBase = SegmentBase.DEC,
+  px = 0,
+  py = 0
+): SegmentDisplayComponent {
+  const display = new SegmentDisplayComponent({
+    numInputs: segmentDisplayComponentConfig.options.numInputs.clone(numInputs),
+    base: segmentDisplayComponentConfig.options.base.clone(base)
+  });
+  display.position.set(px, py);
+  return display;
+}
+
+/**
+ * GamepadComponent with the given group options (the defaults where omitted:
+ * two face buttons, no shoulders, Select + Start) and custom names, at a grid
+ * position.
+ */
+export function makeGamepad(
+  options: {
+    face?: number;
+    shoulders?: number;
+    menu?: number;
+    names?: NameMap;
+  } = {},
+  px = 0,
+  py = 0
+): GamepadComponent {
+  const defaults = gamepadComponentConfig.options;
+  const pad = new GamepadComponent({
+    face: defaults.face.clone(options.face),
+    shoulders: defaults.shoulders.clone(options.shoulders),
+    menu: defaults.menu.clone(options.menu),
+    names: defaults.names.clone(options.names)
+  });
+  pad.position.set(px, py);
+  return pad;
+}
+
+/** KeyboardComponent at a grid position. */
+export function makeKeyboard(px = 0, py = 0): KeyboardComponent {
+  const keyboard = new KeyboardComponent({});
+  keyboard.position.set(px, py);
+  return keyboard;
 }
 
 /**

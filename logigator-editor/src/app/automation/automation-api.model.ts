@@ -1,30 +1,31 @@
 /**
- * The `window.__logigator` contract: every argument and every result here is
- * structured-cloneable, so a driver (Playwright/CDP `evaluate`, a future MCP
- * bridge) can transport them verbatim. No live editor object ever crosses the
- * boundary — elements are addressed by their numeric project ids, coordinates
- * are always **grid units**.
- *
- * Circuit bodies deliberately reuse `SerializedComponentBody` /
- * `SerializedWireBody` (the native persistence body) with the element's id
- * attached, so the shape an agent reads is the shape it writes back.
+ * The `window.__logigator` contract. Everything here is structured-cloneable
+ * and no live editor object crosses the boundary: elements are addressed by
+ * their numeric project ids, coordinates are grid units unless named `screen`.
+ * Circuit bodies reuse the native persistence bodies, so the shape an agent
+ * reads is the shape it writes back.
  */
 
-import {
-  SerializedComponentBody,
-  SerializedWireBody
-} from '../persistence/serialized-circuit';
+import { SerializedComponentBody, SerializedWireBody } from '@logigator/core';
 
-/**
- * Contract version, bumped on any breaking change to the shapes in this file.
- * Independent of the editor's release version.
- */
+/** Contract version, independent of the editor's release version. */
 export const AUTOMATION_API_VERSION = 1;
 
+/**
+ * Which slot of a user input a write drives: a slot index, or one of the
+ * component's slot ids. Slot `i` is output port `i`; a lever, button or pulse
+ * button has the one slot `0`.
+ */
+export type InputSlot = number | string;
+
+/**
+ * What a user-input write sets: one slot's state, or every slot's at once —
+ * element `i` for slot `i`, as many elements as the input has slots.
+ */
+export type InputValue = boolean | readonly boolean[];
+
 export interface ApiInfo {
-  /** Version of this contract — see {@link AUTOMATION_API_VERSION}. */
   apiVersion: number;
-  /** Editor release version (package.json). */
   editorVersion: string;
   /** Git short SHA the bundle was built from; empty in a dev build. */
   buildCommit: string;
@@ -44,11 +45,7 @@ export interface GridRect {
   height: number;
 }
 
-/**
- * A point in **viewport CSS px** — the browser's own coordinate space, what a
- * driver hands to `page.mouse` or a screenshot clip. The only place the
- * contract leaves grid units, and always named `screen`.
- */
+/** A point in viewport CSS px; the contract's only non-grid coordinate. */
 export interface ScreenPoint {
   x: number;
   y: number;
@@ -64,11 +61,7 @@ export interface ScreenRect {
 
 // -- Catalog ---------------------------------------------------------------
 
-/**
- * One option of a component type. `kind` discriminates on the option class, so
- * the constraints an agent must respect (a number's range, a select's allowed
- * values, a text field's cap) are always in the payload.
- */
+/** One option of a component type; `kind` carries its value constraints. */
 export type OptionDescriptor = {
   key: string;
   label: string;
@@ -86,6 +79,20 @@ export type OptionDescriptor = {
   | { kind: 'textarea'; default: string; maxLength: number }
   /** Word-addressed memory contents as a base64 bit-packed blob. */
   | { kind: 'memory'; default: string }
+  /**
+   * Custom names keyed by `keys`, as a plain object. A key left out, or named
+   * `''`, keeps its default name.
+   */
+  | {
+      kind: 'name-map';
+      default: Record<string, string>;
+      /** The only keys a name may be set for. */
+      keys: string[];
+      /** Longest name allowed for any one key. */
+      maxLength: number;
+      /** Source of the character class no name may contain, if any. */
+      forbiddenChars?: string;
+    }
   | { kind: 'unknown'; default: unknown }
 );
 
@@ -96,15 +103,19 @@ export interface CatalogEntry {
   category: string;
   symbol: string;
   name: string;
+  /** Markdown, as the settings card renders it. */
   description: string;
   /** Custom components only: which library the master lives in. */
   source?: 'server' | 'browser';
+  /** Port counts of a default instance; an option drives adjustable ones. */
+  ports: { inputs: number; outputs: number };
   /**
-   * Port counts of a default instance. Adjustable types drive these from an
-   * option (a `number` descriptor whose range is the allowed span); absent when
-   * the type could not be instantiated for probing.
+   * Whether a `setPortNegation` op may put a bubble on this type's ports.
+   * False for the plugs and the tunnel, whose signal the simulation never
+   * sees, and for every custom component, whose bubbles are its definition's.
+   * Clearing one is accepted either way.
    */
-  ports?: { inputs: number; outputs: number };
+  negatable: boolean;
   options: OptionDescriptor[];
 }
 
@@ -122,11 +133,9 @@ export interface ElementList {
 }
 
 /**
- * Filters for {@link ElementList} reads; omitting everything returns the whole
- * circuit. Filters combine (AND): `bounds` keeps only elements intersecting the
- * rectangle, `types` keeps only components of those type ids. Naming ids of one
- * kind restricts the read to that kind — `{ componentIds }` alone returns no
- * wires rather than every wire.
+ * Filters for an {@link ElementList} read; they AND, and omitting all of them
+ * returns the whole circuit. Naming ids of one kind restricts the read to that
+ * kind — `{ componentIds }` alone returns no wires.
  */
 export interface ElementQuery {
   componentIds?: number[];
@@ -156,10 +165,7 @@ export interface ProjectState {
   elements: ElementList;
 }
 
-/**
- * Why the editor refuses a mutation: a drag session holds project state
- * mid-mutation, the circuit is running, or no project is open at all.
- */
+/** Why the editor refuses a mutation. */
 export type BusyReason = 'session-active' | 'simulation' | 'no-project';
 
 // -- Edits -----------------------------------------------------------------
@@ -210,6 +216,10 @@ export interface SetOptionOp {
   value: unknown;
 }
 
+/**
+ * Adds or clears one port's negation bubble. Adding is refused where the
+ * catalog reports `negatable: false`; clearing is always accepted.
+ */
 export interface SetPortNegationOp {
   op: 'setPortNegation';
   id: number;
@@ -235,10 +245,7 @@ export interface PerOpError {
   message: string;
 }
 
-/**
- * Outcome of an `applyEdit` batch — all-or-nothing: `ok: false` means the
- * project was not touched at all.
- */
+/** Outcome of an `applyEdit` batch; `ok: false` means nothing was touched. */
 export type EditResult =
   | {
       ok: true;
@@ -260,6 +267,33 @@ export interface CompileDiagnosticReport {
     componentType: number;
     componentId?: number;
   }[];
+}
+
+// -- Image -----------------------------------------------------------------
+
+/** What `renderImage` renders — the image export's own options. */
+export interface RenderImageOptions {
+  /** Output px per grid unit = the grid size (16) × `multiplier`. */
+  multiplier: number;
+  /** Theme color + dot grid (`true`, the default) or transparent. */
+  background?: boolean;
+  /** What to cover, as `camera.focus` names it; the whole content by default. */
+  region?: FocusTarget;
+  /** Grid units kept around it; defaults to the export's margin. */
+  margin?: number;
+}
+
+export interface RenderedImage {
+  width: number;
+  height: number;
+  /** The PNG, base64-encoded: a string crosses every driver's serializer. */
+  png: string;
+}
+
+/** What `renderPreviews` renders: one picture per theme, as a save uploads them. */
+export interface RenderedPreviews {
+  light: RenderedImage;
+  dark: RenderedImage;
 }
 
 // -- Simulation ------------------------------------------------------------
@@ -334,17 +368,12 @@ export type SelectRegion = { bounds: GridRect } | { elementIds: number[] };
 
 export interface SelectOptions {
   /**
-   * Scissor the selection: wires crossing the rectangle's edge are cut there
-   * and only the inside pieces join the selection — the held-scissor-key
-   * marquee. Rectangle regions only; a cut registers a provisional history
-   * entry that the following move or delete folds into itself.
+   * Scissor the marquee: wires crossing its edge are cut and only the inside
+   * pieces join the selection. Rectangle regions only. The cut registers a
+   * provisional history entry the following move or delete folds into itself.
    */
   cut?: boolean;
-  /**
-   * Whether the selection keeps a persistent grab rect (default `true`).
-   * `false` selects without drawing one, like a single click — grabbing then
-   * falls back to the elements' own bounds.
-   */
+  /** Keep a persistent grab rect (default `true`), else select like a click. */
   rect?: boolean;
 }
 
@@ -361,16 +390,22 @@ export interface SelectionState {
 
 // -- Inspection ------------------------------------------------------------
 
-/** One open live inspection, as opened by tapping a component while running. */
+/** One open live inspection — what tapping a component while running opens. */
 export interface InspectionInfo {
   /** Handle for the calls below; unique for the session, never reused. */
   id: number;
   /** The inspected component, in the project it is placed in. */
   componentId: number;
   componentType: number;
-  /** Inspection kind — `rom` for the data inspector, `watch` for a sub-circuit. */
+  /**
+   * Inspection kind — `rom` and `ram` for the memory views, `watch` for a
+   * sub-circuit, `gamepad` and `keyboard` for the input windows.
+   */
   kind: string;
-  /** Flat title (the watch's breadcrumb trail joined). */
+  /**
+   * Flat title, as the window reads it: a watch's breadcrumb trail joined,
+   * and for a view opened from a watch, that watch's levels ahead of its own.
+   */
   title: string;
   /** Watches: one label per open level, the visible one last. */
   trail?: string[];
@@ -430,6 +465,8 @@ export interface LogigatorAutomationApi {
   // read
   getProject(): ProjectState;
   getElements(query?: ElementQuery): ElementList;
+  /** The grid rectangle a target covers, `null` when it covers nothing. */
+  getBounds(target: FocusTarget): GridRect | null;
 
   // write — one batch is one undo step
   applyEdit(ops: EditOp[]): EditResult;
@@ -443,6 +480,11 @@ export interface LogigatorAutomationApi {
   exportProject(): string;
   importProject(json: string): Promise<ProjectState>;
   newProject(): ProjectState;
+
+  // image — the picture File → Export image downloads, as it would be now
+  renderImage(opts: RenderImageOptions): Promise<RenderedImage>;
+  // preview — the pair a save to the cloud uploads, both themes at once
+  renderPreviews(): Promise<RenderedPreviews>;
 
   // simulation
   sim: {
@@ -459,8 +501,48 @@ export interface LogigatorAutomationApi {
     stop(): void;
     status(): SimStatus;
     setTarget(value: number, unit: 'Hz' | 'kHz' | 'MHz'): void;
-    /** Lever: absolute set. Button: pulse on `true`, ignored on `false`. */
-    setInput(componentId: number, value: boolean): Promise<void>;
+    /**
+     * Lever: absolute set. Button: absolute too — held by `true` until a
+     * `false` releases it, each written as a press or release is: `true` then
+     * `false` between two steps is high for one tick, and writes past one
+     * pending press and release replace the older ones (a gamepad slot alike).
+     * Pulse button: pulse on `true`, ignored on `false`, every one delivered.
+     * A boolean sets the one slot `input` addresses (default `0`); an array
+     * sets every slot, element `i` for slot `i`, and takes no `input`. A
+     * keyboard is refused: it takes `type`, `setKey` and `cancelKeys`.
+     */
+    setInput(
+      componentId: number,
+      value: InputValue,
+      input?: InputSlot
+    ): Promise<void>;
+    /**
+     * Keyboard: queues `text` as taps, a press and a release per character:
+     * each character on `D` with `KD` high for three ticks, `STB` high for
+     * the middle one, then `KD` low for one with `D` kept — four steps per
+     * character while paused. `D` keeps the last character. Strict:
+     * printable ASCII, `\n`, `\t`, `\b`, `\x1b` and `\x7f` only (CRLF and CR
+     * read as `\n`), at most 10 000 characters; any other character is an
+     * error naming it and its position, and nothing is queued. Resolves once
+     * queued.
+     */
+    type(componentId: number, text: string): Promise<void>;
+    /**
+     * Keyboard: holds the key for one character down, `KD` high (a no-op
+     * when that character is on `D` already while a key is down), or with
+     * `null` lets go of every key down, `KD` low (a no-op when none is).
+     * Never merged, so `setKey('A')` then `setKey(null)` while paused shows
+     * `A` with `KD` high after the next three steps and then `KD` low, `D`
+     * keeping `A`.
+     */
+    setKey(componentId: number, key: string | null): Promise<void>;
+    /**
+     * Keyboard: drops every character it still has to send and lets go of
+     * every key down, as its window's ✕ does: `STB` low after the next step
+     * (a character whose strobe was high keeps `D` for it), `KD` low after
+     * the one after, `D` kept. Resolves once queued.
+     */
+    cancelKeys(componentId: number): Promise<void>;
     readPorts(componentIds?: number[]): Promise<PortReadout[]>;
   };
 
@@ -496,10 +578,9 @@ export interface LogigatorAutomationApi {
   ): WorkModeState;
 
   /**
-   * Live inspections — what tapping an inspectable component while the
-   * simulation runs opens. `getElements`/`activate`/`navigateTo`/`camera`
-   * address a **watch**: its levels are fresh copies of the inner circuit, so
-   * their element ids are the copy's, not the placed instance's.
+   * Live inspections. `getElements`/`activate`/`setInput`/`type`/`setKey`/`cancelKeys`/`navigateTo`/`camera` address a
+   * **watch**, whose levels are fresh copies of the inner circuit — their
+   * element ids are the copy's, not the placed instance's.
    */
   inspect: {
     open(componentId: number): InspectionInfo;
@@ -514,17 +595,45 @@ export interface LogigatorAutomationApi {
     /** The visible watch level's circuit copy. */
     getElements(inspectionId: number, query?: ElementQuery): ElementList;
     /**
-     * Taps a component inside the visible watch level — the one gesture the
-     * watch has: drives an inner lever/button, drills into a nested custom, or
-     * opens an inner component's own inspection.
+     * Taps a component inside the visible watch level: drives an inner
+     * lever/pulse button, drills into a nested custom, or opens its own
+     * inspection. A tap cannot hold a button, so a button is refused — that
+     * is `setInput`.
      */
     activate(inspectionId: number, componentId: number): InspectionInfo;
+    /**
+     * `sim.setInput` for a user input inside the visible watch level, with
+     * the same absolute semantics, values and slot address. A button held
+     * here is released when its level closes.
+     */
+    setInput(
+      inspectionId: number,
+      componentId: number,
+      value: InputValue,
+      input?: InputSlot
+    ): Promise<void>;
+    /**
+     * `sim.type` for a keyboard inside the visible watch level. A key held
+     * here is let go of when its level closes.
+     */
+    type(
+      inspectionId: number,
+      componentId: number,
+      text: string
+    ): Promise<void>;
+    /** `sim.setKey` for a keyboard inside the visible watch level. */
+    setKey(
+      inspectionId: number,
+      componentId: number,
+      key: string | null
+    ): Promise<void>;
+    /** `sim.cancelKeys` for a keyboard inside the visible watch level. */
+    cancelKeys(inspectionId: number, componentId: number): Promise<void>;
     /** Breadcrumb navigation: pops every level deeper than `level`. */
     navigateTo(inspectionId: number, level: number): InspectionInfo;
     /**
-     * The watch's camera — the same operations as the board's. A level fits
-     * its circuit once, when it first shows; a write here takes that turn
-     * instead of being overwritten by it on the next frame.
+     * The watch's camera. A level fits its circuit once when it first shows; a
+     * write here takes that turn instead of being overwritten by it.
      */
     camera: {
       getViewport(inspectionId: number): ViewportInfo;
@@ -551,10 +660,9 @@ export interface LogigatorAutomationApi {
   library: {
     list(): LibraryEntry[];
     /**
-     * Opens a custom component's circuit in its own tab. Takes a master's type
-     * id or a **placed instance's** — an instance whose master is gone (its
-     * circuit only embedded) is restored into the browser library first, like
-     * the settings card's Edit / Restore & edit button.
+     * Opens a custom component's circuit in its own tab, by master type id or
+     * placed-instance type id. An instance whose master is gone is restored
+     * into the browser library first.
      */
     edit(type: number): Promise<TabInfo>;
   };

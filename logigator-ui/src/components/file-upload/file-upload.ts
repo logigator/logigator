@@ -1,20 +1,17 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { IconSlot } from '../../internal/icon';
 
-/** Emitted when the user picks file(s). */
 export interface LgFileSelectEvent {
   files: File[];
 }
 
 /**
- * A file drop zone fronting a hidden native `<input type="file">`: drag files
- * onto the dashed area, or click it (or Enter/Space) to open the native picker.
- * `chooseLabel` is the prompt line, `chooseIcon` the glyph above it, projected
- * content a muted hint line below. Dropped files are filtered against `accept`
- * and capped at `fileLimit`.
+ * A file drop zone fronting a hidden native `<input type="file">`. Projected
+ * content is a muted hint line under `chooseLabel`; dropped files are filtered
+ * against `accept` and capped at `fileLimit`.
  *
- * Selection-only (no HTTP/auto-upload, no file list); emits `onSelect` and
- * resets the input so re-picking the same file fires again.
+ * Selection-only — no HTTP, no auto-upload, no file list. It emits `onSelect`
+ * and resets the input, so re-picking the same file fires again.
  */
 @Component({
   selector: 'lg-file-upload',

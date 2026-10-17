@@ -7,15 +7,13 @@ import { SerializedAction } from '../serialized-action.model';
 export class AddWiresAction extends Action {
   private readonly _wires: SerializedWire[];
 
-  constructor(...wires: Wire[]);
-  constructor(...wires: SerializedWire[]);
-  constructor(...wires: Wire[] | SerializedWire[]) {
+  constructor(wires: readonly Wire[] | readonly SerializedWire[]) {
     super();
 
     if (wires.length > 0 && wires[0] instanceof Wire) {
       this._wires = wires.map((wire) => Wire.serialize(wire as Wire));
     } else {
-      this._wires = wires as SerializedWire[];
+      this._wires = (wires as readonly SerializedWire[]).slice();
     }
   }
 

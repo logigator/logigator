@@ -9,20 +9,10 @@ import {
 } from '../../internal/overlay';
 
 /**
- * Thin injectable over the library's connected/global overlay helpers.
- *
- * The CDK wiring — flexible connected positioning with `withPush`, a viewport
- * margin, and a repositioning scroll strategy for anchored overlays; centred or
- * edge-pinned placement for global ones — already lives in `internal/overlay`,
- * shared by the library's own overlay-backed components. This service exposes
- * that same substrate so consumers can imperatively anchor a floating panel to
- * any element and keep it repositioned, without re-implementing the wiring.
- *
- * It only builds the {@link OverlayRef}; attaching a portal, drawing any caret,
- * and wiring dismissal stay with the caller (those differ per consumer). The
- * library's existing overlay components are deliberately **not** migrated onto
- * it — what remains per component is divergent dismiss/keyboard/caret behaviour,
- * not boilerplate a service could absorb.
+ * Thin injectable over the CDK wiring in `internal/overlay`, so a consumer can
+ * imperatively anchor a floating panel to any element and keep it
+ * repositioned. It only builds the {@link OverlayRef}: the portal, any caret,
+ * and dismissal stay with the caller, since those differ per consumer.
  */
 @Injectable({ providedIn: 'root' })
 export class LgOverlayService {
@@ -31,9 +21,9 @@ export class LgOverlayService {
 
   /**
    * Anchored overlay tracking `origin`, repositioned on scroll/resize. The
-   * anchor's registered scrollable ancestors are resolved here, so
-   * `originVisibilityChanges` reports when the anchor scrolls out of them —
-   * they feed CDK's visibility reporting only, never its positioning.
+   * anchor's scrollable ancestors are resolved here so
+   * `originVisibilityChanges` reports when it scrolls out of them; they feed
+   * CDK's visibility reporting only, never its positioning.
    */
   public connected(options: ConnectedOverlayOptions): OverlayRef {
     return createConnectedOverlay(this.overlay, {

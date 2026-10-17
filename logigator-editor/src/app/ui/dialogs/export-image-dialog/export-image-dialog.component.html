@@ -75,18 +75,22 @@
     </div>
   }
   <div class="flex justify-end gap-2">
-    <lg-button
+    <button
+      lgButton
       type="button"
       severity="secondary"
       [outlined]="true"
-      [label]="t('imageExport.cancel')"
       (onClick)="cancel()"
-    />
-    <lg-button
+    >
+      {{ t('imageExport.cancel') }}
+    </button>
+    <button
+      lgButton
       type="submit"
-      [label]="t('imageExport.export')"
       [disabled]="!canExport"
       [loading]="exporting()"
-    />
+    >
+      {{ t('imageExport.export') }}
+    </button>
   </div>
 </form>

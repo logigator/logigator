@@ -1,0 +1,36 @@
+/* Type-check config for logigator-api. Rspack does the emitting (see
+   rspack.config.mjs), so tsc only checks types here.
+
+   `paths` maps the two packages the API may import — the same mapping the
+   bundler reads. That mapping is not the layering fence, though: `rootDir` has
+   to be the repo (the program contains sibling source), so a relative escape
+   into another package still type-checks, and every workspace member is
+   symlinked into the root `node_modules`. `eslint.config.mjs` is the fence;
+   tsc only stops what has no resolvable entry point (`@logigator/ui`) or no
+   `exports` opening (the editor declares `"exports": {}` for that reason).
+
+   Decorator metadata stays on for Nest's type-based DI, matching the SWC
+   loader's transform. */
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    // The program legitimately contains the shared packages' source, so the
+    // source root is the repo. Inert with `noEmit` (Rspack owns the output), but
+    // tsc validates the inferred root regardless.
+    "rootDir": "..",
+    "emitDecoratorMetadata": true,
+    "types": ["node"],
+    // Declared here rather than inherited from the workspace config: Rspack's
+    // resolver reads `baseUrl` relative to the tsconfig it is pointed at, so the
+    // mapping below has to be anchored in this file to work for the bundler as
+    // well as for tsc. Both then resolve to the same files.
+    "baseUrl": "..",
+    "paths": {
+      "@logigator/core": ["logigator-core/src/public-api.ts"],
+      "@logigator/contract": ["logigator-contract/src/public-api.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
+}

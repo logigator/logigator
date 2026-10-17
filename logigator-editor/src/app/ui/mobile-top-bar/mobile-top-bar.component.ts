@@ -12,10 +12,9 @@ import { OnboardTargetDirective } from '../../onboarding/onboard-target.directiv
 import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
- * Compact top bar (`isCompact`): avatar → account/settings sheet, the
- * truncated project name → editor menu sheet, and the high-traffic actions
- * (undo/redo/save/run). In SIMULATION the run button becomes exit and the
- * edit actions disable, mirroring the tool bar.
+ * Compact top bar: avatar to the account sheet, project name to the editor menu
+ * sheet, and the high-traffic actions. In SIMULATION the run button becomes
+ * exit and the edit actions disable, mirroring the tool bar.
  */
 @Component({
   selector: 'app-mobile-top-bar',
@@ -54,42 +53,47 @@ import { TranslateDirective } from '../../translation/translate.directive';
         </button>
       </h1>
       @if (isSimulation()) {
-        <lg-button
+        <button
+          lgButton
           icon="ph ph-sign-out"
           severity="secondary"
           text
           [ariaLabel]="t('toolBar.exitSim')"
           (onClick)="exitSimulation()"
-        ></lg-button>
+        ></button>
       } @else {
-        <lg-button
+        <button
+          lgButton
           icon="ph ph-arrow-u-up-left"
           severity="secondary"
           text
           [ariaLabel]="t('toolBar.undo')"
           (onClick)="undo()"
-        ></lg-button>
-        <lg-button
+        ></button>
+        <button
+          lgButton
           icon="ph ph-arrow-u-up-right"
           severity="secondary"
           text
           [ariaLabel]="t('toolBar.redo')"
           (onClick)="redo()"
-        ></lg-button>
-        <lg-button
+        ></button>
+        <button
+          lgButton
           icon="ph ph-floppy-disk"
           severity="secondary"
           text
           [ariaLabel]="t('toolBar.save')"
           (onClick)="save()"
-        ></lg-button>
-        <lg-button
+        ></button>
+        <button
+          lgButton
           appOnboardTarget="sim-start"
           icon="ph ph-play"
           severity="secondary"
           [ariaLabel]="t('toolBar.startSim')"
           (onClick)="startSimulation()"
-        ></lg-button>
+        ></button>
       }
     </div>
   `

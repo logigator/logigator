@@ -2,33 +2,29 @@ import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { LgSeverity } from '../../tokens/severity';
 
-/** A one-click follow-up offered by a toast. */
 export interface ToastAction {
   label: string;
   /** Runs on click; the toast dismisses itself afterwards. */
   handler: () => void;
 }
 
-/** A toast notification handed to {@link ToastService.add}. */
 export interface ToastMessage {
-  /** Severity → themed colour and icon; an omitted severity renders as `info`. */
+  /** Picks the colour and icon; omitted renders as `info`. */
   severity?: LgSeverity;
   summary?: string;
   detail?: string;
-  /** Auto-dismiss delay in ms. */
   life?: number;
   /**
    * Turns the toast into an offer: a button below the message runs `handler`
-   * and dismisses. Pair with `life: 0` — an offer that expires before it is
-   * read is worse than one the user closes.
+   * and dismisses. Pair with `life: 0`, since an offer that expires before it
+   * is read is worse than one the user closes.
    */
   action?: ToastAction;
 }
 
 /**
- * Pushes toast notifications imperatively. `add()` emits onto
- * {@link messageObserver}, which the `<lg-toast>` outlet renders. `root`-provided,
- * so no provider wiring is needed at call sites.
+ * Pushes toast notifications imperatively: `add()` emits onto
+ * {@link messageObserver}, which the `<lg-toast>` outlet renders.
  */
 @Injectable({ providedIn: 'root' })
 export class ToastService {

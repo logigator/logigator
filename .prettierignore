@@ -1,3 +1,13 @@
+# Packages with their own toolchain (own lockfile, own prettier config)
+logigator-backend
+logigator-editor-legacy
+
+# Untracked planning / scratch files and local tool state
+plans
+todo.md
+data
+.claude
+
 # Dependencies
 **/node_modules
 .yarn

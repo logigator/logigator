@@ -16,16 +16,16 @@ export class AddComponentsAction extends Action {
 
   private readonly logging = getStaticDI(LoggingService);
 
-  constructor(...components: Component[]);
-  constructor(...components: SerializedComponent[]);
-  constructor(...components: Component[] | SerializedComponent[]) {
+  constructor(
+    components: readonly Component[] | readonly SerializedComponent[]
+  ) {
     super();
     if (components.length > 0 && components[0] instanceof Component) {
       this._components = (components as Component[]).map((component) =>
         Component.serialize(component)
       );
     } else {
-      this._components = components as SerializedComponent[];
+      this._components = (components as readonly SerializedComponent[]).slice();
     }
   }
 

@@ -5,12 +5,10 @@ import {
 } from '../../../utils/packed-buffer';
 
 /**
- * ROM-specific encoding of a memory's contents. The contents are a plain
- * bit-packed byte buffer (see `utils/packed-buffer.ts`); this module only adds
- * the ROM semantics: how the address size maps to a word count, and how the
- * buffer is handed to the `@logigator/sim` ROM (type 12) as its `ops` table.
- * The blob is persisted as base64 — the legacy v0 `s` slot and the editor's
- * native file format both carry it verbatim.
+ * The ROM semantics on top of a plain bit-packed byte buffer: how the address
+ * size maps to a word count, and how the buffer reaches the `@logigator/sim`
+ * ROM (type 12) as its `ops` table. Persisted as base64, verbatim in both the
+ * legacy v0 `s` slot and the native format.
  */
 
 /** Number of addressable words for an `addressSize`-bit address. */

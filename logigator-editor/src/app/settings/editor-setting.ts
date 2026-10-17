@@ -2,9 +2,9 @@ import { signal, Signal, WritableSignal } from '@angular/core';
 import { TranslationKey } from '../translation/translation-key.model';
 
 /**
- * A single boolean editor preference. Holds its value as a signal and reports
- * changes through `onChange`; persistence is centralized in
- * `EditorSettingsService` so all settings share one storage entry.
+ * A single boolean editor preference, held as a signal and reporting changes
+ * through `onChange`. `EditorSettingsService` owns persistence, so all settings
+ * share one storage entry.
  */
 export class EditorSetting {
   private readonly _value: WritableSignal<boolean>;

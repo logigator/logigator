@@ -1,0 +1,83 @@
+{
+  "account": {
+    "username": "Logigator",
+    "email": "support@logigator.com"
+  },
+  "components": [
+    {
+      "slug": "full-adder-component",
+      "id": "66a70f58-ffde-43bd-90ec-4396176fb6ec",
+      "link": "c3238648-60f4-42f5-b341-2fbeb56d8a83",
+      "name": "Full Adder",
+      "symbol": "FA",
+      "description": "Implements a full adder.",
+      "visibility": "public",
+      "createdAt": "2021-03-27T23:21:14.761Z"
+    }
+  ],
+  "projects": [
+    {
+      "slug": "basic-gates",
+      "id": "00000000-18b7-4ba7-a2ec-4455a7609a40",
+      "link": "84c816f5-3514-4c2e-a749-5b5c6c15a07b",
+      "name": "Basic Gates",
+      "description": "Shows the most basic components for building logic circuits like AND, OR, XOR or NOT.\n\nYou can use the switches to control the inputs.",
+      "visibility": "public",
+      "createdAt": "2021-03-27T23:21:14.447Z"
+    },
+    {
+      "slug": "half-adder",
+      "id": "00000001-1f9b-4a74-bc2f-da4ca49c4d60",
+      "link": "45176ad4-0b89-4326-9a60-18d75d1566fe",
+      "name": "Half Adder",
+      "description": "A half adder adds two binary bits.\n\nSum is the single digit sum of the addition. Carry represents the overflow. You can build a half adder yourself using basic gates or you can just use the built-in half adder.",
+      "visibility": "public",
+      "createdAt": "2021-03-27T23:21:14.517Z"
+    },
+    {
+      "slug": "full-adder",
+      "id": "00000002-f9d0-43eb-8217-0a302091c720",
+      "link": "2c8462f6-bcf4-436a-838e-b927af143f08",
+      "name": "Full Adder",
+      "description": "The full adder does the same as the half adder, but with 3 bits.\n\nYou can build it with basic gates or use the built-in element.",
+      "visibility": "public",
+      "createdAt": "2021-03-27T23:21:14.579Z"
+    },
+    {
+      "slug": "flip-flops",
+      "id": "00000003-b410-4b20-9a3e-079e69c11626",
+      "link": "03b04e81-2bb1-4ed0-a2bd-9983c7138d60",
+      "name": "Flip Flops",
+      "description": "Flip Flops are used to save a state.\n\nThere are several different flip flops in Logigator. You can learn more on how they behave and how to use them by reading the help pages found in the editor.",
+      "visibility": "public",
+      "createdAt": "2021-03-27T23:21:14.625Z"
+    },
+    {
+      "slug": "4-bit-counter",
+      "id": "00000004-ba68-4718-a79d-d5dcd16cd368",
+      "link": "acefd06a-38f6-47b5-b90b-ad17e3d9915c",
+      "name": "4 Bit Counter",
+      "description": "An example implementation for a 4 bit binary counter.\n\nIncreases the output by one every time the button gets pressed.",
+      "visibility": "public",
+      "createdAt": "2021-03-27T23:21:14.671Z"
+    },
+    {
+      "slug": "4-bit-adder",
+      "id": "00000005-fdbe-4368-9780-7d776e4d6f3f",
+      "link": "7e6a2c5b-9cc3-4b23-a19d-e9e879b672d5",
+      "name": "4 Bit Adder",
+      "description": "Adds two 4-bit numbers.\n\nIt works by passing the carry bit from the last full adder to the carry in from the next full adder.\n\nOn the left, it is implemented with the built-in full adders, on the right, a custom component is used.\n\nYou can click on it during simulation to see what's happening in there.",
+      "visibility": "public",
+      "createdAt": "2021-03-27T23:21:14.715Z"
+    },
+    {
+      "slug": "logigator-marquee",
+      "id": "039c9918-e609-4512-b2f1-c9ad8116c202",
+      "link": "732ad275-6cd4-42a5-a5ef-763ab5b9dece",
+      "name": "Logigator Marquee",
+      "description": "Scrolls the word LOGIGATOR across three 16×16 LED matrices.\n\nA clock drives a counter built from JK flip-flops. The counter addresses a ROM holding the letters and a RAM holding the picture on the display, which is read, shifted by one column and written back row by row.\n\nStart the simulation to watch it scroll.",
+      "visibility": "public",
+      "createdAt": "2026-10-17T00:00:00.000Z"
+    }
+  ]
+}

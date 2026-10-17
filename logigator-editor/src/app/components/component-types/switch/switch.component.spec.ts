@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { makeSwitch } from '../../../../testing/factories';
-import { BuiltInComponentType } from '../../component-type.enum';
-import { Direction } from '../../../utils/direction';
+import { BuiltInComponentType, Direction } from '@logigator/core';
 import { switchComponentConfig } from './switch.config';
 
 describe('SwitchComponent', () => {
@@ -22,16 +21,16 @@ describe('SwitchComponent', () => {
     switchComp.destroy({ children: true });
   });
 
-  it('starts off and toggles', () => {
+  it('starts off and switches on and off', () => {
     const switchComp = makeSwitch();
-    expect(switchComp.isOn).toBe(false);
+    expect(switchComp.isActive(0)).toBe(false);
 
-    switchComp.toggle();
-    expect(switchComp.isOn).toBe(true);
+    switchComp.setActive(0, true);
+    expect(switchComp.isActive(0)).toBe(true);
     expect(switchComp.children.length).toBeGreaterThan(0);
 
-    switchComp.toggle();
-    expect(switchComp.isOn).toBe(false);
+    switchComp.setActive(0, false);
+    expect(switchComp.isActive(0)).toBe(false);
 
     switchComp.destroy({ children: true });
   });
@@ -51,8 +50,8 @@ describe('SwitchComponent', () => {
       switchComp.direction = dir;
 
       // The body graphics is the first child drawn; its counter-rotation must
-      // cancel the container rotation so the square (and its on/off bar) renders
-      // upright on screen in every direction.
+      // cancel the container rotation so the square and its on/off bar render
+      // upright in every direction.
       const worldRotation =
         switchComp.children[0].rotation + switchComp.rotation;
       expect(Math.sin(worldRotation)).toBeCloseTo(0);
@@ -78,11 +77,11 @@ describe('SwitchComponent', () => {
 
   it('clearSimState resets the on state', () => {
     const switchComp = makeSwitch();
-    switchComp.setOn(true);
+    switchComp.setActive(0, true);
 
     switchComp.clearSimState();
 
-    expect(switchComp.isOn).toBe(false);
+    expect(switchComp.isActive(0)).toBe(false);
     switchComp.destroy({ children: true });
   });
 });

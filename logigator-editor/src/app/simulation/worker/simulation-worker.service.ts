@@ -1,11 +1,16 @@
 import { inject, Injectable, InjectionToken, signal } from '@angular/core';
+import type { InputWrite } from '@logigator/sim/wasm';
+import {
+  ByteRange,
+  eventFrames,
+  StateWatch
+} from '../../components/component-inspection';
 import { TranslationService } from '../../translation/translation.service';
 import { AnalyticsService } from '../../analytics/analytics.service';
 import { LoggingService } from '../../logging/logging.service';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
 import { SnapshotApplier } from '../state/link-state-applier';
 import {
-  InputEventKind,
   MainRequest,
   MainToWorkerMessage,
   RunRequest,
@@ -13,7 +18,7 @@ import {
   WorkerToMainMessage
 } from './protocol';
 
-/** Worker construction, injectable so specs can substitute a message-level fake. */
+/** Worker construction, injectable so specs can substitute a fake. */
 export const SIMULATION_WORKER_FACTORY = new InjectionToken<() => Worker>(
   'SIMULATION_WORKER_FACTORY',
   {
@@ -55,8 +60,14 @@ export interface SimulationSessionHooks {
   onError(message: string): void;
 }
 
-/** Status polling rate for the measured-Hz readout. */
 const STATUS_POLL_MS = 1000;
+
+/** One state watch the bridge keeps, and posts again to a new engine. */
+interface StateWatchEntry {
+  readonly unit: number;
+  range: ByteRange | null;
+  readonly onRead: (offset: number, bytes: Uint8Array) => void;
+}
 
 interface PendingRequest {
   resolve(): void;
@@ -64,10 +75,32 @@ interface PendingRequest {
 }
 
 /**
+ * What one write of a `submitInput` does to its input's pending count:
+ * adds `events`, or with `replace` sets it to `events`.
+ */
+interface SubmittedEvents {
+  readonly unit: number;
+  readonly events: number;
+  readonly replace: boolean;
+}
+
+/**
+ * Machine-readable context on a worker fault. The reported `Error` carries only
+ * the translated toast text, so what identifies the failure lives here.
+ */
+interface FaultContext {
+  source: 'workerError' | 'workerCrash' | 'messageError' | 'inputRefused';
+  /** Set when the worker had a translatable message; `detail` is then the raw
+   * counterpart. */
+  code?: string;
+  detail?: string;
+}
+
+/**
  * Main-thread bridge to the simulation worker: owns the `Worker`, the
  * request/response correlation map, and the per-frame snapshot pull loop.
- * Snapshots apply straight to the session's {@link LinkStateApplier} (hot
- * path — no Observables); measured speed and tick count surface as signals.
+ * Snapshots apply straight to the session's {@link LinkStateApplier} — a hot
+ * path, no Observables. Measured speed and tick count surface as signals.
  *
  * Pacing is a pull model with a single in-flight snapshot request per frame;
  * payload buffers are pooled worker-side and returned after applying.
@@ -84,7 +117,7 @@ export class SimulationWorkerService {
 
   private worker: Worker | null = null;
   /** True between the `init` ack and {@link endSession} — the window in which
-   * the worker actually holds a `Simulation`. */
+   * the worker holds a `Simulation`. */
   private ready = false;
   private hooks: SimulationSessionHooks | null = null;
   private nextReqId = 1;
@@ -96,11 +129,28 @@ export class SimulationWorkerService {
   private statusTimer: ReturnType<typeof setInterval> | null = null;
   private snapshotInFlight = false;
   private wantFullSnapshot = false;
-  // Debug tallies of snapshots applied this session, by kind (empty deltas
-  // included). Read via {@link snapshotCounts}; reset per session.
+  /** A snapshot wanted while idle, behind the one in flight. */
+  private wantSnapshot = false;
   private fullSnapshots = 0;
   private deltaSnapshots = 0;
   private lastStatus: { tick: number; at: number } | null = null;
+  /**
+   * Event frames each input unit had not yet applied as of the last snapshot
+   * that reported a change; absent means none.
+   */
+  private inputProgress = new Map<number, number>();
+  /**
+   * Every `submitInput` by request id, until the worker answers it and,
+   * where it moves a pending count, until a snapshot taken after it: the
+   * worker handles messages in order, so snapshot `R` counts exactly the
+   * requests below `R`. Those above it are what {@link pendingEvents} adds,
+   * and an `error` under one of these ids is a refused input, never a
+   * session failure.
+   */
+  private readonly submissions = new Map<number, readonly SubmittedEvents[]>();
+  private nextWatchId = 1;
+  /** State watches by the id the worker knows them under. */
+  private readonly stateWatches = new Map<number, StateWatchEntry>();
 
   private readonly _measuredHz = signal(0);
   /** Measured simulation speed in ticks/s, computed from status-poll deltas. */
@@ -111,18 +161,16 @@ export class SimulationWorkerService {
   public readonly tick = this._tick.asReadonly();
 
   /**
-   * Snapshots applied since the session started, split by kind (`full` counts
-   * engine delta→full fallbacks and seed/reset fulls alike; `delta` counts
-   * empty deltas too). A debug readout — reset on every {@link startSession}.
+   * Debug tallies of snapshots applied since the session started: `full` counts
+   * engine delta→full fallbacks and seed/reset fulls alike, `delta` counts
+   * empty deltas too. Reset on every {@link startSession}.
    */
   public get snapshotCounts(): { full: number; delta: number } {
     return { full: this.fullSnapshots, delta: this.deltaSnapshots };
   }
 
-  /**
-   * Spawns the worker, waits for the WASM engine to come up, and builds the
-   * simulation from the descriptor. Resolves once the session can run.
-   */
+  /** Spawns the worker, waits for the engine, and builds the simulation.
+   * Resolves once the session can run. */
   public async startSession(
     descriptor: BoardDescriptor,
     hooks: SimulationSessionHooks
@@ -141,13 +189,14 @@ export class SimulationWorkerService {
       this._onMessage(event.data);
     worker.onerror = (event: ErrorEvent) =>
       this._fail(
-        event.message || this.translation.translate('simulation.workerCrashed')
+        event.message || this.translation.translate('simulation.workerCrashed'),
+        { source: 'workerCrash', detail: event.message || undefined }
       );
-    // A message that can't be deserialized never reaches onmessage — route it
-    // into the same failure path as onerror.
+    // A message that can't be deserialized never reaches onmessage.
     worker.onmessageerror = () =>
       this._fail(
-        this.translation.translate('simulation.workerMessageUnreadable')
+        this.translation.translate('simulation.workerMessageUnreadable'),
+        { source: 'messageError' }
       );
     await ready;
     if (this.worker !== worker) {
@@ -155,15 +204,20 @@ export class SimulationWorkerService {
     }
     await this._request({ kind: 'init', descriptor });
     this.ready = true;
-    // A snapshot asked for while the engine was still coming up was dropped
-    // rather than queued (see `_post`); serve it now that there is state to
-    // read, so a watch registered during startup isn't left dark.
-    if (this.wantFullSnapshot) {
+    // `_post` drops what was sent before the engine is up: a snapshot
+    // request, and the state watches of inspections opened meanwhile. Send
+    // them now, so neither is left dark.
+    let watching = false;
+    for (const [id, entry] of this.stateWatches) {
+      if (entry.range) {
+        watching = this._postStateWatch(id, entry) || watching;
+      }
+    }
+    if (this.wantFullSnapshot || watching) {
       this._requestSnapshot();
     }
   }
 
-  /** Terminates the worker and discards all session state. */
   public endSession(): void {
     this._stopFrameLoop();
     this._stopStatusPolling();
@@ -175,7 +229,11 @@ export class SimulationWorkerService {
     this.runMode = 'idle';
     this.snapshotInFlight = false;
     this.wantFullSnapshot = false;
+    this.wantSnapshot = false;
     this.lastStatus = null;
+    this.inputProgress.clear();
+    this.submissions.clear();
+    this.stateWatches.clear();
     this._measuredHz.set(0);
     this._tick.set(0);
     const error = new Error('Simulation session ended');
@@ -191,7 +249,7 @@ export class SimulationWorkerService {
       return;
     }
     if (mode === 'sync') {
-      // The worker idles in sync mode — the frame loop drives the ticks. An
+      // The frame loop drives the ticks in sync mode; the worker idles, so an
       // active worker-paced run must stop first.
       await this._request({ kind: 'pause' });
     } else {
@@ -203,7 +261,9 @@ export class SimulationWorkerService {
       return;
     }
     this.runMode = mode;
+    // A rate measured under the previous pacing says nothing about this one.
     this.lastStatus = null;
+    this._measuredHz.set(0);
     this._startFrameLoop();
     this._startStatusPolling();
   }
@@ -232,9 +292,8 @@ export class SimulationWorkerService {
   }
 
   /**
-   * Resets the simulation to tick 0 (worker-side destroy + rebuild). The
-   * caller resets the applier and sim visuals — the engine's next snapshot
-   * is a full one against a fresh baseline.
+   * Resets the simulation to tick 0 (worker-side destroy + rebuild). The caller
+   * resets the applier and sim visuals; the next snapshot is a full one.
    */
   public async reset(): Promise<void> {
     if (!this.worker) {
@@ -243,18 +302,21 @@ export class SimulationWorkerService {
     this._stopFrameLoop();
     this._stopStatusPolling();
     this.runMode = 'idle';
+    // The rebuilt engine has none of the input sent before the stop; what
+    // came after it may already be queued there, so it still counts.
+    const stopId = this.nextReqId;
     await this._request({ kind: 'stop' });
+    this.inputProgress.clear();
+    this._settleSubmissions(stopId);
     this._measuredHz.set(0);
     this._tick.set(0);
     this.lastStatus = null;
   }
 
   /**
-   * Pulls one **full** snapshot — the engine answers with its complete
-   * current state whether running or paused. Seeds a freshly-registered
-   * watch applier, which would otherwise only see future deltas. If a
-   * snapshot is already in flight, the full request is carried over to the
-   * next one instead of being dropped.
+   * Pulls one **full** snapshot, running or paused, seeding a freshly
+   * registered watch applier that would otherwise only see future deltas. With
+   * a snapshot in flight the full request carries over to the next one.
    */
   public requestSnapshot(): void {
     if (!this.worker) {
@@ -265,15 +327,93 @@ export class SimulationWorkerService {
   }
 
   /**
-   * Forwards a user input to the engine; applied at the next tick boundary.
-   * Fire-and-forget — failures surface through the session error hook.
+   * Hands input frames to the engine, which queues and sequences them inside
+   * its ticks. Nothing awaits it: a request the engine refuses — one that
+   * would take an input past `INPUT_QUEUE_LIMIT`, which the callers check
+   * first, or a malformed one — queues nothing, is logged and reported as a
+   * fault, and leaves the session running. While paused, a write that
+   * changes what the engine counts pulls a snapshot, which is what reports
+   * the count in {@link pendingEvents}.
    */
-  public triggerInput(
-    componentIndex: number,
-    event: InputEventKind,
-    state: boolean[]
-  ): void {
-    this._post({ kind: 'triggerInput', componentIndex, event, state });
+  public submitInput(writes: InputWrite[]): void {
+    const reqId = this._post({ kind: 'submitInput', writes });
+    if (reqId === null) {
+      return;
+    }
+    const counts = writes.flatMap((write): SubmittedEvents[] => {
+      const events = eventFrames(write.frames);
+      const replace = write.replace === true;
+      return events > 0 || replace
+        ? [{ unit: write.comp, events, replace }]
+        : [];
+    });
+    this.submissions.set(reqId, counts);
+    if (this.runMode === 'idle' && counts.length > 0) {
+      this._requestSnapshot();
+    }
+  }
+
+  /**
+   * Event frames of an input unit not yet applied, at most: the count the
+   * last snapshot reported, plus the events submitted after that snapshot
+   * was taken. The engine only applies frames meanwhile, so the count never
+   * falls short of what it holds, and frames that fit behind it fit.
+   */
+  public pendingEvents(unit: number): number {
+    let pending = this.inputProgress.get(unit) ?? 0;
+    for (const counts of this.submissions.values()) {
+      for (const { unit: submitted, events, replace } of counts) {
+        if (submitted === unit) {
+          pending = replace ? events : pending + events;
+        }
+      }
+    }
+    return pending;
+  }
+
+  /**
+   * Starts a watch over a range of an engine unit's state, reading nothing
+   * until its range is set. The worker reads the range beside each snapshot
+   * whose tick moved the unit's state version, and once after the range is
+   * set or moved; the bytes reach `onRead` ahead of the session's `onFrame`.
+   * While paused, setting a range pulls a snapshot, so the bytes come
+   * without waiting for a step. A watch does not survive the session.
+   */
+  public watchState(
+    unit: number,
+    onRead: (offset: number, bytes: Uint8Array) => void
+  ): StateWatch {
+    const id = this.nextWatchId++;
+    const entry: StateWatchEntry = { unit, range: null, onRead };
+    this.stateWatches.set(id, entry);
+    return {
+      setRange: (range) => {
+        const next = range && range.end > range.start ? range : null;
+        if (
+          this.stateWatches.get(id) !== entry ||
+          (next?.start === entry.range?.start && next?.end === entry.range?.end)
+        ) {
+          return;
+        }
+        entry.range = next;
+        if (
+          this._postStateWatch(id, entry) &&
+          next &&
+          this.runMode === 'idle'
+        ) {
+          this._requestSnapshotSoon();
+        }
+      },
+      close: () => {
+        if (this.stateWatches.get(id) !== entry) {
+          return;
+        }
+        this.stateWatches.delete(id);
+        if (entry.range) {
+          this._post({ kind: 'unwatchState', id });
+        }
+      }
+    };
   }
 
   private _startFrameLoop(): void {
@@ -289,9 +429,9 @@ export class SimulationWorkerService {
     }
   }
 
-  // One snapshot request in flight at most: a slow worker answers late
-  // rather than piling up a queue. In sync mode the tick is skipped too,
-  // keeping the tick rate at or below the frame rate.
+  // One snapshot request in flight at most: a slow worker answers late rather
+  // than piling up a queue. In sync mode the tick is skipped too, keeping the
+  // tick rate at or below the frame rate.
   private readonly _frame = (): void => {
     this.frameHandle = null;
     if (this.runMode === 'idle' || !this.worker) {
@@ -310,13 +450,42 @@ export class SimulationWorkerService {
     if (this.snapshotInFlight) {
       return;
     }
-    // The in-flight slot is claimed only once the request is really out — a
-    // dropped post answers with no snapshot, and the flag would never clear.
-    if (!this._post({ kind: 'requestSnapshot', full: this.wantFullSnapshot })) {
+    // Claim the in-flight slot only once the request is really out: a dropped
+    // post answers with no snapshot, and the flag would never clear.
+    if (
+      this._post({ kind: 'requestSnapshot', full: this.wantFullSnapshot }) ===
+      null
+    ) {
       return;
     }
     this.snapshotInFlight = true;
     this.wantFullSnapshot = false;
+  }
+
+  /** {@link _requestSnapshot}, or the next one once the one in flight lands. */
+  private _requestSnapshotSoon(): void {
+    if (this.snapshotInFlight) {
+      this.wantSnapshot = true;
+    } else {
+      this._requestSnapshot();
+    }
+  }
+
+  /** Tells the worker a watch's range: one to read, or none. */
+  private _postStateWatch(id: number, entry: StateWatchEntry): boolean {
+    const { unit, range } = entry;
+    const reqId = range
+      ? this._post({
+          kind: 'watchState',
+          watch: {
+            id,
+            unit,
+            offset: range.start,
+            length: range.end - range.start
+          }
+        })
+      : this._post({ kind: 'unwatchState', id });
+    return reqId !== null;
   }
 
   private _startStatusPolling(): void {
@@ -359,36 +528,46 @@ export class SimulationWorkerService {
   }
 
   /**
-   * Sends without registering a response promise (still tracked by reqId), and
-   * reports whether the message went out.
-   *
-   * Nothing is posted before the session is {@link ready}: the worker holds no
-   * `Simulation` until it acks `init`, and an uncorrelated op arriving in that
-   * window has no promise to fail — the worker's error would come back
-   * uncorrelated and tear down a session that was about to be usable. That is
-   * reachable from the UI, since simulation mode (and with it the switch/button
-   * tap path) is entered while the engine is still starting. Dropping is the
-   * right answer rather than queueing: an input predating the engine has no
-   * tick to apply at.
+   * Sends without registering a response promise, reporting the request id
+   * the message went out under, or `null` where it did not go out. Nothing
+   * is posted before the session is {@link ready}: the worker
+   * holds no `Simulation` until it acks `init`, and an uncorrelated op in that
+   * window would come back as an uncorrelated error and tear down a session
+   * that was about to be usable. The switch/pulse-button tap path reaches this, since
+   * simulation mode is entered while the engine is still starting. Dropping
+   * beats queueing — an input predating the engine has no tick to apply at.
    */
-  private _post(
-    msg: MainRequest | Extract<MainToWorkerMessage, { kind: 'returnBuffer' }>,
-    transfer?: Transferable[]
-  ): boolean {
-    // Returning a pooled buffer is bookkeeping the worker accepts either way.
-    if (!this.worker || (!this.ready && msg.kind !== 'returnBuffer')) {
-      return false;
+  private _post(msg: MainRequest): number | null {
+    if (!this.worker || !this.ready) {
+      return null;
     }
-    const message =
-      msg.kind === 'returnBuffer'
-        ? msg
-        : ({ ...msg, reqId: this.nextReqId++ } as MainToWorkerMessage);
-    if (transfer) {
-      this.worker.postMessage(message, transfer);
-    } else {
-      this.worker.postMessage(message);
+    const reqId = this.nextReqId++;
+    this.worker.postMessage({ ...msg, reqId } as MainToWorkerMessage);
+    return reqId;
+  }
+
+  /**
+   * Hands a snapshot's buffer back to the worker's pool: bookkeeping the
+   * worker accepts with or without an engine.
+   */
+  private _returnBuffer(buffer: ArrayBuffer): void {
+    this.worker?.postMessage(
+      { kind: 'returnBuffer', buffer } satisfies MainToWorkerMessage,
+      [buffer]
+    );
+  }
+
+  /**
+   * Forgets the input requests below `reqId`, which a snapshot or a rebuilt
+   * engine now accounts for.
+   */
+  private _settleSubmissions(reqId: number): void {
+    for (const id of this.submissions.keys()) {
+      if (id >= reqId) {
+        break;
+      }
+      this.submissions.delete(id);
     }
-    return true;
   }
 
   private _onMessage(msg: WorkerToMainMessage): void {
@@ -402,44 +581,64 @@ export class SimulationWorkerService {
       case 'ok':
         this.pending.get(msg.reqId)?.resolve();
         this.pending.delete(msg.reqId);
+        // Taken: a request that moved no count has nothing left to say.
+        if (this.submissions.get(msg.reqId)?.length === 0) {
+          this.submissions.delete(msg.reqId);
+        }
         break;
       case 'error': {
-        // A coded failure carries a raw detail in `message` for the log and a
-        // translatable, user-facing message under the code.
+        if (msg.reqId !== null && this.submissions.delete(msg.reqId)) {
+          this._inputRefused(msg.message);
+          break;
+        }
+        // A coded failure carries the raw detail in `message` for the log and
+        // a translatable, user-facing message under the code.
         const userMessage =
           msg.code === 'engineInitFailed'
             ? this.translation.translate('simulation.engineInitFailed')
             : msg.message;
+        const fault: FaultContext = {
+          source: 'workerError',
+          code: msg.code,
+          detail: msg.message
+        };
         const request =
           msg.reqId !== null ? this.pending.get(msg.reqId) : undefined;
         if (request) {
           this.pending.delete(msg.reqId!);
           const error = new Error(userMessage);
-          this._reportFault(error);
+          this._reportFault(error, fault);
           request.reject(error);
         } else {
           if (msg.code) {
             this.logging.error(msg.message, 'SimulationWorker');
           }
-          this._fail(userMessage);
+          this._fail(userMessage, fault);
         }
         break;
       }
       case 'snapshot': {
         this.snapshotInFlight = false;
         this._tick.set(msg.tick);
+        if (msg.inputProgress) {
+          this.inputProgress = new Map(msg.inputProgress);
+        }
+        this._settleSubmissions(msg.reqId);
         if (msg.isDelta) {
           this.deltaSnapshots++;
         } else {
           this.fullSnapshots++;
         }
+        // Before `onFrame`, where the frame's inspections show it.
+        for (const read of msg.state ?? []) {
+          this.stateWatches.get(read.id)?.onRead(read.offset, read.bytes);
+        }
         const applier = this.hooks?.applier;
         if (applier) {
           const { ids, values } = unpackSnapshot(msg);
           if (msg.isDelta) {
-            // An empty delta (no changed links) means nothing changed since
-            // the last poll — hold current state. Falling through to
-            // applyFull here would read an empty buffer and clear every link.
+            // An empty delta means nothing changed — hold current state.
+            // applyFull would read the empty buffer and clear every link.
             if (ids) {
               applier.applyDelta(ids, values);
             }
@@ -447,13 +646,17 @@ export class SimulationWorkerService {
             applier.applyFull(values);
           }
         }
-        this._post({ kind: 'returnBuffer', buffer: msg.buffer }, [msg.buffer]);
+        this._returnBuffer(msg.buffer);
         this.hooks?.onFrame?.();
         if (this.runMode === 'idle') {
           this.hooks?.repaint();
         }
-        // A full-snapshot request that arrived while this one was in flight.
-        if (this.wantFullSnapshot) {
+        // A full-snapshot request that arrived while this one was in flight,
+        // or a state watch moved while paused. A run pulls the next frame's
+        // snapshot anyway.
+        const wanted = this.wantSnapshot && this.runMode === 'idle';
+        this.wantSnapshot = false;
+        if (this.wantFullSnapshot || wanted) {
           this._requestSnapshot();
         }
         break;
@@ -479,27 +682,34 @@ export class SimulationWorkerService {
   }
 
   /**
-   * Reports an engine fault to error tracking as a real exception.
-   *
-   * Every failure the worker reports is an internal fault — a broken invariant,
-   * a crashed worker, or an engine that could not load — yet each one is caught
-   * on this side and surfaced as a toast, so none of them ever reaches the
-   * {@link GlobalErrorHandler} that owns the `$exception` path. Called from the
-   * two mutually exclusive arms of a worker error — the correlated rejection in
-   * {@link _onMessage} and {@link _fail} for everything else — so a fault is
-   * reported exactly once.
-   * Deliberately not called for {@link endSession}'s rejections: tearing a
-   * session down cancels in-flight requests by design.
+   * Reports an engine fault to error tracking as a real exception: every worker
+   * failure is an internal fault, but each is caught here and shown as a toast,
+   * so none reaches the {@link GlobalErrorHandler} that owns `$exception`. The
+   * call sites are mutually exclusive, so a fault is reported once. Not
+   * called for {@link endSession}'s rejections — tearing a session down cancels
+   * in-flight requests by design.
    */
-  private _reportFault(error: Error): void {
-    this.analytics.captureError(error);
+  private _reportFault(error: Error, context: FaultContext): void {
+    this.analytics.captureError(error, undefined, { ...context });
   }
 
-  /** Unrecoverable worker failure: reject everything, notify the session owner. */
-  private _fail(message: string): void {
+  /**
+   * The engine refused a `submitInput` whole, so nothing of it is queued.
+   * Never fatal: the session runs on as if the input had not been sent, so
+   * a race past the callers' room check, or an editor bug, costs that input
+   * and nothing more. Still a fault, so it is logged and reported.
+   */
+  private _inputRefused(detail: string): void {
+    const message = `The engine refused input frames: ${detail}`;
+    this.logging.error(message, 'SimulationWorker');
+    this._reportFault(new Error(message), { source: 'inputRefused', detail });
+  }
+
+  /** Unrecoverable failure: reject everything, notify the session owner. */
+  private _fail(message: string, context: FaultContext): void {
     const hooks = this.hooks;
     const error = new Error(message);
-    this._reportFault(error);
+    this._reportFault(error, context);
     for (const request of this.pending.values()) {
       request.reject(error);
     }

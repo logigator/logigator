@@ -1,0 +1,109 @@
+name: 'CI logigator-api'
+on:
+  pull_request:
+  push:
+    branches:
+      - 'master'
+      - 'development'
+
+jobs:
+  pre_job:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          concurrent_skipping: 'never'
+          cancel_others: 'true'
+          skip_after_successful_duplicate: 'true'
+          # The API bundles @logigator/core and @logigator/contract from source,
+          # so a change to either has to run this workflow too.
+          paths: '["logigator-api/**", "logigator-core/**", "logigator-contract/**", "package.json", "yarn.lock", ".yarnrc.yml", "tsconfig.json", "eslint.config.mjs"]'
+
+  ci:
+    name: 'CI logigator-api'
+    needs: pre_job
+    if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
+    runs-on: 'ubuntu-latest'
+
+    # The E2E suite runs the real application, so it needs the real services. Each
+    # spec file creates and drops a database of its own on this server.
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: logigator
+          POSTGRES_PASSWORD: logigator
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U logigator"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:8
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v5
+
+      - name: 'Setup Node'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24.x'
+          package-manager-cache: false
+
+      # The API is a member of the root Yarn workspace (unlike the legacy
+      # backend, which keeps its own lockfile), so the install runs at the root.
+      - name: Install Dependencies
+        uses: ./.github/actions/yarn-install
+        with:
+          cache-prefix: workspace
+
+      # Prettier is not run here: `yarn format` covers the whole repo, so it has
+      # its own unfiltered workflow (ci-format).
+      - name: 'Lint'
+        shell: bash
+        run: |
+          yarn run lint:api
+          yarn run lint:core
+          yarn run lint:contract
+
+      - name: 'Typecheck'
+        shell: bash
+        run: |
+          yarn run typecheck:api
+          yarn run typecheck:core
+          yarn run typecheck:contract
+
+      - name: 'Test'
+        shell: bash
+        run: |
+          yarn run test:api
+          yarn run test:core
+          yarn run test:contract
+
+      # A separate step and a separate script: the unit suites must stay runnable
+      # without any service, so the E2E suite is opt-in and fails loudly rather
+      # than skipping itself when a database is missing. The URL names the
+      # server's own database — the harness creates its throwaway ones from it.
+      - name: 'Test (E2E)'
+        shell: bash
+        env:
+          DATABASE_URL: 'postgresql://logigator:logigator@localhost:5432/postgres'
+          REDIS_URL: 'redis://localhost:6379'
+        run: yarn run test:e2e:api
+
+      - name: 'Build'
+        shell: bash
+        run: yarn run build:api

@@ -1,12 +1,6 @@
-<div *appTranslate="let t">
-  <lg-button
-    class="float-right"
-    [label]="t(option().label)"
-    size="sm"
-    severity="secondary"
-    (onClick)="open()"
-  ></lg-button>
+<app-dialog-option-button [label]="option().label" (open)="open()" />
 
+<ng-container *appTranslate="let t">
   <lg-dialog
     [visible]="dialogVisible()"
     (visibleChange)="$event ? null : cancel()"
@@ -27,12 +21,10 @@
     ></textarea>
 
     <ng-template #footer>
-      <lg-button
-        [label]="t('common.cancel')"
-        severity="secondary"
-        (onClick)="cancel()"
-      ></lg-button>
-      <lg-button [label]="t('common.save')" (onClick)="save()"></lg-button>
+      <button lgButton severity="secondary" (onClick)="cancel()">
+        {{ t('common.cancel') }}
+      </button>
+      <button lgButton (onClick)="save()">{{ t('common.save') }}</button>
     </ng-template>
   </lg-dialog>
-</div>
+</ng-container>

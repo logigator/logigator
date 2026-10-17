@@ -1,6 +1,5 @@
-// jsdom does not implement matchMedia; several overlay/responsive primitives
-// read it at construction. Provide a benign default. Specs needing specific
-// media-query results override window.matchMedia themselves.
+// jsdom implements no matchMedia, and several primitives read it at
+// construction. A spec needing specific results overrides this itself.
 if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,

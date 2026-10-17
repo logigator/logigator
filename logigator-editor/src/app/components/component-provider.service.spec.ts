@@ -4,15 +4,13 @@ import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../utils/get-di';
 import { ComponentProviderService } from './component-provider.service';
 import { ComponentConfig } from './component-config.model';
-import { ComponentCategory } from './component-category.enum';
-import { BuiltInComponentType } from './component-type.enum';
+import { BuiltInComponentType, ComponentCategory } from '@logigator/core';
 import { Component } from './component';
 
 const CUSTOM_TYPE = 1234;
 
-// A minimal config standing in for a runtime-registered custom component. Its
-// `create` factory is never invoked by these tests (they exercise only
-// registration/lookup), so it returns a placeholder.
+// A minimal config standing in for a runtime-registered custom component;
+// these tests exercise registration and lookup only, so `create` is a stub.
 function makeStubConfig(): ComponentConfig {
   return {
     type: CUSTOM_TYPE,
@@ -21,6 +19,7 @@ function makeStubConfig(): ComponentConfig {
     name: 'components.def.AND.name',
     description: 'components.def.AND.description',
     options: {},
+    defaultPorts: { inputs: 0, outputs: 0 },
     create: () => ({}) as unknown as Component
   };
 }

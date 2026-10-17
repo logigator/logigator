@@ -1,17 +1,9 @@
+import type { InputWrite } from '@logigator/sim/wasm';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
 
-// The WASM package exports `InputEvent`/`SimState` as types only (no runtime
-// values), so the wire values live here.
-/** Set-and-hold input event (switchComp). */
-export const INPUT_EVENT_CONT = 0;
-/** One-tick pulse input event (button). */
-export const INPUT_EVENT_PULSE = 1;
-export type InputEventKind = typeof INPUT_EVENT_CONT | typeof INPUT_EVENT_PULSE;
-
 /**
- * Worker-paced run modes. Sync-to-frame is not a worker mode: the bridge
- * drives it with one `step` per rendered frame, so the worker stays idle
- * between messages.
+ * Worker-paced run modes. Sync-to-frame is not one: the bridge drives it with
+ * one `step` per rendered frame, so the worker stays idle between messages.
  */
 export type RunRequest =
   { mode: 'continuous' } | { mode: 'target'; hz: number };
@@ -24,20 +16,49 @@ export type MainToWorkerMessage =
   | { kind: 'pause'; reqId: number }
   /** One deterministic tick. */
   | { kind: 'step'; reqId: number }
-  /** Reset: destroy and rebuild from the kept descriptor (the engine has no reset). */
+  /** Destroy and rebuild from the kept descriptor; the engine has no reset. */
   | { kind: 'stop'; reqId: number }
-  | {
-      kind: 'triggerInput';
-      reqId: number;
-      componentIndex: number;
-      event: InputEventKind;
-      state: boolean[];
-    }
-  /** `full` forces a full snapshot (seeds a freshly-registered watch applier). */
+  /**
+   * Frames for the engine's inputs, handed to `submitInput` as they are: the
+   * engine queues and sequences them, and refuses the whole request on any
+   * error.
+   */
+  | { kind: 'submitInput'; reqId: number; writes: InputWrite[] }
+  /**
+   * Starts reading a range of a unit's engine state with every snapshot, or
+   * moves the range of a watch already started under the same id.
+   */
+  | { kind: 'watchState'; reqId: number; watch: StateWatchRequest }
+  /** Stops a watch; an id the worker does not hold is ignored. */
+  | { kind: 'unwatchState'; reqId: number; id: number }
+  /** `full` forces a full snapshot, seeding a fresh watch applier. */
   | { kind: 'requestSnapshot'; reqId: number; full?: boolean }
   | { kind: 'requestStatus'; reqId: number }
   /** Pool refill: hands a transferred snapshot buffer back to the worker. */
   | { kind: 'returnBuffer'; buffer: ArrayBuffer };
+
+/**
+ * A byte range of one engine unit's state the main thread watches, under an
+ * id of its own: two views of one unit are two watches.
+ */
+export interface StateWatchRequest {
+  id: number;
+  /** The unit's board submission index, the engine's component id. */
+  unit: number;
+  /** The range `[offset, offset + length)` of the unit's state bytes. */
+  offset: number;
+  length: number;
+}
+
+/**
+ * A watched range read beside a snapshot, so the bytes belong to the tick the
+ * snapshot shows. `bytes` is the engine's own copy, its buffer transferred.
+ */
+export interface StateRead {
+  id: number;
+  offset: number;
+  bytes: Uint8Array;
+}
 
 export interface SnapshotMessage {
   kind: 'snapshot';
@@ -46,10 +67,24 @@ export interface SnapshotMessage {
   isDelta: boolean;
   /** Byte length of the changed-id `u32` array; `0` for full snapshots. */
   idsByteLength: number;
-  /** Delta: packed changed-link values (bit `i` ↔ id `i`). Full: packed link bits (byte `l>>3`, bit `l&7`). */
+  /**
+   * Delta: packed changed-link values (bit `i` ↔ id `i`). Full: packed link
+   * bits (byte `l>>3`, bit `l&7`).
+   */
   valuesByteLength: number;
   /** Transferred payload: ids at offset 0, values right after. */
   buffer: ArrayBuffer;
+  /**
+   * `[unit, event frames not yet applied]` for every input holding one,
+   * present only when some input's count changed since the last snapshot —
+   * an empty list then means none holds one any more.
+   */
+  inputProgress?: [unit: number, pending: number][];
+  /**
+   * The watched ranges whose unit's state version moved since each was last
+   * sent, or that were started or moved since; absent when there are none.
+   */
+  state?: StateRead[];
 }
 
 export type WorkerToMainMessage =
@@ -62,7 +97,7 @@ export type WorkerToMainMessage =
       message: string;
       /**
        * Set when the failure has a translatable main-thread message; `message`
-       * then carries the raw detail for logging. The worker cannot translate.
+       * then carries the raw detail. The worker cannot translate.
        */
       code?: 'engineInitFailed';
     }
@@ -92,11 +127,10 @@ export interface PackedSnapshot {
 }
 
 /**
- * Copies a snapshot's bytes into `pool` (reused when large enough, otherwise
- * a fresh buffer): ids at offset 0, values right after. `ids` are the raw
- * bytes of the changed-id `u32` array; `null` for full snapshots. Copying is
- * mandatory — the source views point into WASM linear memory and are valid
- * only until the next tick.
+ * Copies a snapshot's bytes into `pool` (reused when large enough): ids at
+ * offset 0, values right after. `ids` are the raw bytes of the changed-id
+ * `u32` array, `null` for full snapshots. Copying is mandatory — the source
+ * views point into WASM linear memory and are valid only until the next tick.
  */
 export function packSnapshot(
   pool: ArrayBuffer | undefined,
@@ -118,8 +152,8 @@ export function packSnapshot(
 }
 
 /**
- * Views into a snapshot message's transferred buffer. `ids` is `null` for
- * full snapshots; the id offset is 0, so the `u32` view is always aligned.
+ * Views into a snapshot message's transferred buffer. `ids` is `null` for full
+ * snapshots; the id offset is 0, so the `u32` view is always aligned.
  */
 export function unpackSnapshot(msg: SnapshotMessage): {
   ids: Uint32Array | null;

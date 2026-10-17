@@ -7,7 +7,7 @@ import { setStaticDIInjector } from '../../utils/get-di';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { EraseSession } from './erase.session';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { ActionContainer } from '../../actions/action-container';
 import { Project } from '../../project/project';
 import type { ActionManager } from '../../actions/action-manager';
@@ -44,7 +44,6 @@ describe('EraseSession', () => {
           .mockReturnValue({ toAdd: [], toRemove: [] })
       }
     } as unknown as MockedObject<Project>;
-    // A fresh array per call, matching the real query.
     project.queryComponentsInRange.mockImplementation(() => []);
     project.queryWiresInRange.mockImplementation(() => []);
 
@@ -122,7 +121,7 @@ describe('EraseSession', () => {
       project.queryWiresInRange.mockImplementation(() => [wire]);
 
       const session = new EraseSession(project, new Point(0, 0));
-      // Wire already erased in constructor; subsequent moves should skip it
+      // Erased in the constructor, so subsequent moves skip it.
       session.onMove(makeMoveInput(3, 2));
       session.onMove(makeMoveInput(4, 2));
 
@@ -210,8 +209,6 @@ describe('EraseSession', () => {
   });
 });
 
-// ── EraseSession — wire integration (real project) ───────────────────────────
-
 describe('EraseSession — wire integration', () => {
   let project: Project;
 
@@ -224,8 +221,8 @@ describe('EraseSession — wire integration', () => {
     project.destroy({ children: true });
   });
 
-  // A T-junction: two collinear bar halves whose shared endpoint (3.5, 3.5)
-  // is held apart by the stem terminating there.
+  // A T-junction: two collinear halves whose shared endpoint (3.5, 3.5) is
+  // held apart by the stem terminating there.
   function buildTee(): { left: Wire; right: Wire; stem: Wire } {
     const left = makeWire(0, 3, WireDirection.HORIZONTAL, 3);
     const right = makeWire(3, 3, WireDirection.HORIZONTAL, 3);
@@ -239,7 +236,6 @@ describe('EraseSession — wire integration', () => {
   it('merges the collinear pair whose junction stem was erased', () => {
     buildTee();
 
-    // Sweep rect (3,1,1,1) touches only the stem.
     const session = new EraseSession(project, new Point(3.5, 1));
     session.onEnd();
 
@@ -265,8 +261,8 @@ describe('EraseSession — wire integration', () => {
 
   it('does not merge when a third terminator remains at the junction', () => {
     buildTee();
-    // A second stem from below also ends at (3.5, 3.5) — erasing one stem
-    // leaves the other as the junction's terminator.
+    // A second stem also ends at (3.5, 3.5), so erasing one leaves the other
+    // as the junction's terminator.
     project.addWire(makeWire(3, 3, WireDirection.VERTICAL, 3));
 
     const session = new EraseSession(project, new Point(3.5, 1));

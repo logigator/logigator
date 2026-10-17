@@ -4,23 +4,18 @@ import { TranslateDirective } from '../../../translation/translate.directive';
 
 export interface CloseTabDialogData {
   name: string;
-  /**
-   * When the tab is a cloud document with local components, the warning shown
-   * because saving will publish them to the cloud library. Absent otherwise.
-   */
+  /** Warning shown when saving would also publish local components. */
   promotionWarning?: string;
 }
 
-/** What the user chose; dismissing the dialog (X / Escape) means cancel. */
+/** Dismissing the dialog means cancel. */
 export type CloseTabChoice = 'save' | 'discard';
 
 /**
  * Confirms closing a tab that has unsaved changes: Save, Discard, or Cancel.
- * Dismissing (the ✕, Escape, or backdrop) is the safe default — it cancels and
- * keeps the tab open, so a stray dismissal never loses work. Collects the choice
- * only; the caller performs the save/dispose. When saving would also publish
- * local components to the cloud (a cloud document with local deps), that warning
- * is folded in here rather than shown as a second dialog.
+ * Dismissing is the safe default and keeps the tab open, so a stray dismissal
+ * never loses work. Collects the choice only. A warning that saving would also
+ * publish local components folds in here rather than into a second dialog.
  */
 @Component({
   selector: 'app-close-tab-dialog',

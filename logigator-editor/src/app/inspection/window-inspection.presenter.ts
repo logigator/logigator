@@ -5,16 +5,19 @@ import {
   WindowService,
   WindowTitlePart
 } from '@logigator/ui';
-import { ComponentInspection } from '../components/component-inspection';
-import { InspectionPresenter, OpenInspection } from './inspection-presenter';
+import {
+  entryTitle,
+  entryTitleParts,
+  InspectionPresenter,
+  OpenInspection
+} from './inspection-presenter';
 
 /** Default window size for inspections that bring no sizing of their own. */
 const DEFAULT_SIZE = { width: 480, height: 400 };
 
 /**
  * The desktop presenter: one floating {@link WindowService} window per
- * inspection, rendered into the `lg-window-outlet` over the board. The
- * inspection model is handed to its renderer as the `inspection` input.
+ * inspection, rendered into the `lg-window-outlet` over the board.
  */
 @Injectable({ providedIn: 'root' })
 export class WindowInspectionPresenter implements InspectionPresenter {
@@ -24,16 +27,16 @@ export class WindowInspectionPresenter implements InspectionPresenter {
   public show(entry: OpenInspection, dismissed: () => void): void {
     const { inspection } = entry;
     const ref = this.windowService.open(inspection.renderer, {
-      title: inspection.title,
-      titleParts: this._titleParts(inspection),
+      title: entryTitle(entry),
+      titleParts: this._titleParts(entry),
       inputValues: { inspection },
       initialSize: inspection.sizing?.initial ?? DEFAULT_SIZE,
       minSize: inspection.sizing?.min,
       maxSize: inspection.sizing?.max
     });
     this.refs.set(entry, ref);
-    // Fires on every teardown path; `close()` below removes the map entry
-    // first, so only user-driven closes reach the service.
+    // Fires on every teardown path; `close()` removes the map entry first, so
+    // only user-driven closes reach the service.
     ref.onClose.subscribe(() => {
       if (this.refs.delete(entry)) {
         dismissed();
@@ -52,8 +55,8 @@ export class WindowInspectionPresenter implements InspectionPresenter {
   }
 
   /**
-   * The entry's window box in viewport CSS px — `null` when it is not framed
-   * by a window (the compact sheet) or its chrome is not in the DOM yet.
+   * The entry's window box in viewport CSS px — `null` when it is not framed by
+   * a window, or its chrome is not in the DOM yet.
    */
   public boundsOf(entry: OpenInspection): WindowRect | null {
     return this.refs.get(entry)?.bounds ?? null;
@@ -69,9 +72,9 @@ export class WindowInspectionPresenter implements InspectionPresenter {
 
   /** Breadcrumb segments for the title bar (`navigate` → clickable). */
   private _titleParts(
-    inspection: ComponentInspection
+    entry: OpenInspection
   ): Signal<readonly WindowTitlePart[]> | undefined {
-    const parts = inspection.titleParts;
+    const parts = entryTitleParts(entry);
     if (!parts) {
       return undefined;
     }

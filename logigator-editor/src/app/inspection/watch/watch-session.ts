@@ -1,6 +1,7 @@
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
-import { SwitchComponent } from '../../components/component-types/switch/switch.component';
+import { KeyboardComponent } from '../../components/component-types/keyboard/keyboard.component';
+import { isUserInput } from '../../components/user-input';
 import { LoggingService } from '../../logging/logging.service';
 import { LinkRenderTargets } from '../../simulation/compiler/compiled-board.model';
 import { WatchLevelInfo } from '../../simulation/compiler/watch-index';
@@ -13,25 +14,23 @@ import {
   buildProject,
   instantiateBody
 } from '../../persistence/circuit-builder';
-import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
+import { SerializedCircuitBody } from '@logigator/core';
 import { Project } from '../../project/project';
 import { getStaticDI } from '../../utils/get-di';
 import { TranslationService } from '../../translation/translation.service';
 import { Wire } from '../../wires/wire';
 
 /**
- * One live view of one inner circuit (one breadcrumb level of a watch): a
- * fresh headless {@link Project} instantiated from the level's circuit body,
- * wired to the running engine through a sparse {@link LinkStateApplier} whose
- * targets resolve through the compiler's watch index. Registered with the
- * simulation's snapshot fan-out on construction and seeded by a full
- * snapshot; `destroy()` unregisters and destroys the copies.
+ * One live view of one inner circuit (one breadcrumb level of a watch): a fresh
+ * headless {@link Project} instantiated from the level's circuit body, wired to
+ * the running engine through a sparse {@link LinkStateApplier} whose targets
+ * resolve through the compiler's watch index. Registered with the snapshot
+ * fan-out on construction and seeded by a full snapshot.
  *
- * The index tables are keyed by body-array position, so the arrays produced
- * by `instantiateBody` here line up with the ones the compiler recorded
- * against (the order contract pinned in `circuit-builder.spec.ts`). A shape
- * mismatch means the definition changed under the session — construction
- * fails loudly instead of mis-lighting wires.
+ * The index tables are keyed by body-array position, so the arrays
+ * `instantiateBody` produces here must line up with the ones the compiler
+ * recorded against. A shape mismatch means the definition changed under the
+ * session — construction fails loudly instead of mis-lighting wires.
  */
 export class WatchSession {
   public readonly project: Project;
@@ -70,11 +69,14 @@ export class WatchSession {
     }
     this.components = components;
     this.wires = wires;
+    // A watch only ever exists inside a live session, so its copies read a
+    // negated input the way the board's own components do.
+    for (const component of components) component.setSimulating(true);
     this.project = buildProject(components, wires);
 
     // Sparse render targets over the full link-id space: only this circuit's
-    // links carry targets. `-1` local nets (wire-only, never powered) and
-    // `-1` links are skipped.
+    // links carry targets. `-1` local nets (wire-only) and `-1` links are
+    // skipped.
     const targets: LinkRenderTargets[] = Array.from({ length: links }, () => ({
       wires: [],
       ports: []
@@ -93,8 +95,8 @@ export class WatchSession {
     });
 
     this.applier = new LinkStateApplier(targets);
-    // Wrap the applier so the first *full* snapshot triggers the one-time
-    // switch pose sync — deltas arriving before the seed don't count.
+    // Only a *full* snapshot triggers the one-time toggle pose sync; deltas
+    // arriving before the seed don't count.
     const sessionApplier: SnapshotApplier = {
       applyDelta: (ids, values) => this.applier.applyDelta(ids, values),
       applyFull: (bits) => {
@@ -107,16 +109,17 @@ export class WatchSession {
   }
 
   /**
-   * Per-frame pull (after each applied snapshot): returns whether the view
-   * needs a re-render. The first full snapshot additionally poses the copied
-   * switches from their output-port power — a switch drives its output link
-   * directly, so the link state *is* the switch state.
+   * Per-frame pull: returns whether the view needs a re-render. The first full
+   * snapshot additionally poses the copies' `toggle` slots from their
+   * output-port power — a `level` slot drives its output link directly, so
+   * the link state *is* the slot's state. A `hold` copy is not posed: its
+   * held state is the one operating it.
    */
   public onFrame(): boolean {
     const changed = this.applier.consumeChanged();
     if (this.needsSwitchSync) {
       this.needsSwitchSync = false;
-      this._syncSwitches();
+      this._syncToggles();
       return true;
     }
     return changed;
@@ -124,18 +127,60 @@ export class WatchSession {
 
   public destroy(): void {
     this.unregister();
+    // Every high `level` slot of a copy, and the keys a keyboard copy holds
+    // down, are set low first: once the copy is gone, nothing is left to
+    // reset its engine input.
+    const simulation = getStaticDI(SimulationService);
+    this.components.forEach((component, index) => {
+      const unitIndex = this.info.unitIndexFor(index);
+      if (component instanceof KeyboardComponent && unitIndex !== undefined) {
+        component.releaseKeys({
+          send: (frames) =>
+            simulation.sendUnitFrames(unitIndex, component, frames)
+        });
+        return;
+      }
+      if (
+        !isUserInput(component) ||
+        component.drive !== 'level' ||
+        unitIndex === undefined
+      ) {
+        return;
+      }
+      simulation.setUnitInputs(
+        unitIndex,
+        component,
+        new Array<boolean>(component.inputSlots).fill(false),
+        () => undefined
+      );
+    });
     this.project.destroy({ children: true });
   }
 
-  private _syncSwitches(): void {
+  /**
+   * A powered `toggle` slot is adopted through the simulation service, which
+   * tracks it like any other high level slot without telling the engine what
+   * it already holds.
+   */
+  private _syncToggles(): void {
+    const simulation = getStaticDI(SimulationService);
+    const repaint = () => this.project.triggerTicker('single');
     this.components.forEach((component, index) => {
-      if (!(component instanceof SwitchComponent)) {
+      const unitIndex = this.info.unitIndexFor(index);
+      if (
+        !isUserInput(component) ||
+        component.gesture !== 'toggle' ||
+        unitIndex === undefined
+      ) {
         return;
       }
-      const outputNet = this.info.tables.portNets[index][component.numInputs];
-      const link = outputNet >= 0 ? this.info.linkOfLocalNet[outputNet] : -1;
-      if (link >= 0) {
-        component.setOn(this.applier.isPowered(link));
+      for (let slot = 0; slot < component.inputSlots; slot++) {
+        const outputNet =
+          this.info.tables.portNets[index][component.numInputs + slot];
+        const link = outputNet >= 0 ? this.info.linkOfLocalNet[outputNet] : -1;
+        if (link >= 0 && this.applier.isPowered(link)) {
+          simulation.adoptHighLevel(unitIndex, component, repaint, slot);
+        }
       }
     });
   }

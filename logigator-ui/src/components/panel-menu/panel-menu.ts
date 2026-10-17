@@ -8,10 +8,9 @@ const ROW =
   'hover:bg-content-hover disabled:pointer-events-none disabled:opacity-50';
 
 /**
- * An inline (no-overlay) menu rendered as a one-level accordion: top-level items
- * with `items` expand/collapse to reveal their children; leaf items dispatch
- * their `command`. The only menu surface that renders the default item chrome
- * (icon + label + caret) rather than a custom `#item` template.
+ * An inline, overlay-less menu rendered as a one-level accordion. The only
+ * menu surface rendering the default item chrome rather than an `#item`
+ * template.
  */
 @Component({
   selector: 'lg-panel-menu',

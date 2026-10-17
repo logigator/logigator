@@ -19,17 +19,13 @@ interface Hole {
 }
 
 /**
- * The tutorial's click-through dim: a soft full-viewport shade with real holes
- * punched out around whatever the current step wants the user to act on — the
- * anchored target (a palette item, tool, button) and the board canvas — so the
- * dim never sits over something the step tells the user to interact with. The
- * target also gets a highlight ring. Purely visual; `pointer-events` stay off
- * throughout (per the tolerant interaction model — the user can act on anything
- * at any time).
+ * The tutorial's click-through dim: a full-viewport shade with holes punched
+ * out around the step's target (which also gets a highlight ring) and the board
+ * canvas. Purely visual — `pointer-events` stay off throughout, since the user
+ * may act on anything at any time.
  *
- * `targetRect` is the anchored target's viewport rect (or null for centered,
- * targetless steps); `canvasRect` is the board's rect. The controller refreshes
- * both on scroll/resize so the holes and ring track.
+ * `targetRect` is null for centred, targetless steps. The controller refreshes
+ * both rects on scroll/resize so the holes and ring track.
  */
 @Component({
   selector: 'app-coach-mark-backdrop',
