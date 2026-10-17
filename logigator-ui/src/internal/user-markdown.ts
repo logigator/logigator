@@ -48,13 +48,26 @@ function schemeOf(url: string): string | undefined {
  *
  * A relative destination is allowed — it stays on this origin — except the
  * protocol-relative `//host/path`, which reads like a path and is not one.
+ * A web link must also parse: `https:` alone, or `https://` with no host,
+ * names nowhere, and the browser refuses to open it rather than ignoring it.
  */
 export function isAllowedLinkDestination(url: string): boolean {
   const trimmed = url.trim();
   if (trimmed === '') return false;
   const scheme = schemeOf(trimmed);
   if (scheme === undefined) return !trimmed.startsWith('//');
-  return LINK_SCHEMES.has(scheme);
+  if (!LINK_SCHEMES.has(scheme)) return false;
+  return scheme === 'mailto' || parsesAsUrl(trimmed);
+}
+
+/** `URL.canParse`, which is newer than the browsers both apps still serve. */
+function parsesAsUrl(url: string): boolean {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /**

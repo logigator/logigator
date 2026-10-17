@@ -234,6 +234,13 @@ describe('isAllowedLinkDestination', () => {
       expect(isAllowedLinkDestination(url)).toBe(false);
     }
   });
+
+  it('refuses a web link that names no address', () => {
+    // The browser throws when asked to open one of these.
+    for (const url of ['https:', 'http:', 'https://', 'http://exa mple.com']) {
+      expect(isAllowedLinkDestination(url)).toBe(false);
+    }
+  });
 });
 
 describe('isAllowedImageDestination', () => {
