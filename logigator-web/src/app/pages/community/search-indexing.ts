@@ -2,11 +2,12 @@ import type { CommunityProject, PublicProfile } from '@logigator/contract';
 
 /**
  * The fewest top-level elements a document needs before its page is offered to
- * an index. Measured rather than picked: across the legacy site's saved
- * projects, a fifth had five elements or fewer or no wire at all — test boards,
- * a gate dropped and abandoned — while the median had nineteen.
+ * an index. Low enough for a library component, which is small by nature — a
+ * gate with its inputs and output is four — while across the legacy site's
+ * saved projects it and the wire rule still set aside 18%: empty boards and a
+ * gate dropped and abandoned. The median project had nineteen.
  */
-export const MIN_INDEXED_COMPONENTS = 6;
+export const MIN_INDEXED_COMPONENTS = 4;
 
 /**
  * Whether a published document's page is worth a search engine's index, by the

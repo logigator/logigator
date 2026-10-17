@@ -484,7 +484,7 @@ path behaves the same in development).
   language**, each its own canonical carrying all four alternates plus `x-default`; the unprefixed
   URL is the negotiating `302` and so is never a `<loc>`. **Only what the indexing rule accepts is
   named** — `pages/community/search-indexing.ts`, which the document page's `noindex` reads too, so
-  the sitemap never names a page that refuses the index: at least six components, a wire, and a
+  the sitemap never names a page that refuses the index: at least four components, a wire, and a
   description or a star. **No profile is named**: a profile is indexed only once its member wrote a
   bio, and the listing rows the walk reads carry none. The community half is walked through the
   public listings ordered by `latest` (trending re-ranks between requests), read with bounded
