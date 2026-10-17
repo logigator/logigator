@@ -15,6 +15,7 @@ import { LgSelectButton } from '@logigator/ui';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { makeAnd, makeGamepad } from '../../../testing/factories';
 import { NameMapOptionInputComponent } from '../../components/component-options/name-map/name-map-option-input.component';
+import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 
 describe('ComponentSettingsComponent', () => {
   let fixture: ComponentFixture<ComponentSettingsComponent>;
@@ -30,6 +31,24 @@ describe('ComponentSettingsComponent', () => {
   it('renders no panel while nothing is being placed or selected', () => {
     const host = fixture.nativeElement as HTMLElement;
     expect(host.querySelector('lg-card')).toBeNull();
+  });
+
+  it("renders a custom component's description as markdown", () => {
+    // The description is what the author wrote in the details dialog's
+    // markdown field; flattening it to text would show its syntax instead.
+    const typeId = TestBed.inject(CustomComponentRegistry).createMaster(
+      { symbol: 'X', description: 'Adds **two** numbers on `A`.' },
+      'browser'
+    );
+    workModeService.setSelectedComponentType(typeId);
+    fixture.detectChanges();
+
+    const description = (fixture.nativeElement as HTMLElement).querySelector(
+      'lg-card lg-markdown'
+    )!;
+    expect(description.querySelector('strong')?.textContent).toBe('two');
+    expect(description.querySelector('code')?.textContent).toBe('A');
+    expect(description.textContent).not.toMatch(/[*`]/);
   });
 
   it('omits inspector-hidden options from the rendered form', () => {

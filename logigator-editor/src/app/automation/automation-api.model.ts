@@ -103,6 +103,7 @@ export interface CatalogEntry {
   category: string;
   symbol: string;
   name: string;
+  /** Markdown, as the settings card renders it. */
   description: string;
   /** Custom components only: which library the master lives in. */
   source?: 'server' | 'browser';

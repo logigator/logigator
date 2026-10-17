@@ -6,7 +6,7 @@ import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { SelectionInspectorService } from '../../project/selection-inspector.service';
 import { ProjectService } from '../../project/project.service';
-import { LgCard } from '@logigator/ui';
+import { LgCard, LgMarkdown } from '@logigator/ui';
 import {
   LocalizableText,
   resolveLocalizableText
@@ -37,6 +37,7 @@ let nextDirectionInputId = 0;
     NgComponentOutlet,
     FormsModule,
     LgCard,
+    LgMarkdown,
     LgSelectButton,
     SourceIndicatorComponent
   ],

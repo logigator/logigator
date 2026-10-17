@@ -243,7 +243,8 @@ meta — their `CustomComponentDefinition` _is_ that data, and
 meta's identity fields plus `options`, `defaultPorts`, and the editor-only
 `symbolShape` / `actions` / `inspection` / `source` (`'server' | 'browser'`,
 customs only). `name` and `description` are `LocalizableText` — a built-in's
-`TranslationKey` or a custom's `{ literal }`. `defaultPorts` is read off the meta
+`TranslationKey` or a custom's `{ literal }`. A description in either arm is
+markdown, which the settings card renders under the user-content rule. `defaultPorts` is read off the meta
 or the definition rather than probed by constructing an instance.
 
 `symbolShape` is SVG **path data** in an 18-unit box, carried only by types whose
