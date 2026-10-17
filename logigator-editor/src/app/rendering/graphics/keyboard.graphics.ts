@@ -15,23 +15,27 @@ const CASE_PADDING = 0.15;
 
 /** Width of the glyph column the keycaps and the readout are centred in. */
 const COLUMN_WIDTH = 3;
-/** Vertical centre of the keycaps: the middle of rows 0–3. */
-const KEYCAPS_CENTRE_Y = 2;
+/**
+ * Vertical centre of the keycaps: half a row below the middle of rows 0–3,
+ * so they and the readout box under them sit centred on the body's nine
+ * rows.
+ */
+const KEYCAPS_CENTRE_Y = 2.5;
 
 /**
- * The readout box, in the body's grid units: a square in rows 4–6 of the
- * glyph column, inset from the column's edges, so it fits upright in every
- * direction.
+ * The readout box, in the body's grid units: a square under the keycaps,
+ * half a row below rows 4–6 of the glyph column like them, inset from the
+ * column's edges, so it fits upright in every direction.
  */
 export const KEYBOARD_READOUT_BOX = {
   x: 0.3,
-  y: 4.3,
+  y: 4.8,
   size: 2.4,
   radius: 0.2
 } as const;
 
 /**
- * The keyboard's keycap glyph in the glyph column's rows 0–3: three rows of
+ * The keyboard's keycap glyph at the top of the glyph column: three rows of
  * small keys and a space bar in the wire color, inside a case outlined one
  * screen pixel wide. Drawn in the body's own coordinates.
  */

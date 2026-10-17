@@ -56,7 +56,7 @@ interface HistoryChar {
   readonly label: string;
   /** Drawn as a chip: a control code, or space. */
   readonly chip: boolean;
-  /** The character of the key held on `D`. */
+  /** The character on `D` while a key is down. */
   readonly held: boolean;
 }
 
@@ -75,18 +75,19 @@ function isShortcut(e: KeyboardEvent): boolean {
  * The keyboard's window. A hidden `<textarea>` over the history strip is the
  * capture field, and every key and every text it receives is handled on it:
  *
- * - `keydown` sends a press for an ASCII key and remembers it as the key on
- *   `D`. Auto-repeat is consumed and sends nothing. Ctrl, Meta and Alt
+ * - `keydown` sends a press for an ASCII key, which is down from then on,
+ *   over any key still down. Auto-repeat is consumed and sends nothing. Ctrl, Meta and Alt
  *   combinations, Shift+Tab, arrows and F-keys pass through to the browser.
  *   A key whose character is still being composed (an IME, a dead key, a
  *   soft keyboard's `Unidentified`) passes through too: its text arrives as
  *   an input event. Escape is consumed where it lands, so it reaches neither
  *   the window nor the sheet, which would close.
- * - `keyup` of the key on `D`, matched by `code`, sends the release.
+ * - `keyup`, matched by `code`, lets go of the key; the last key down
+ *   going up sends the release.
  * - `paste`, `beforeinput` and `compositionend` carry text that had no
  *   keydown of its own; it is sent as taps.
- * - Losing the focus, the window losing it, or the page being hidden
- *   releases the key on `D`.
+ * - Losing the focus, the window losing it, or the page being hidden lets
+ *   go of every key down.
  *
  * After every input event the field holds only its one-character sentinel.
  * Opening the view focuses it, except on a touch device in the compact

@@ -26,17 +26,19 @@ interface PressedKey {
 /**
  * A keyboard typed into from its window. Every character goes out through
  * the {@link InputRoute} as frames: a key going down is three press frames,
- * its code on `D` before, with and after a strobe, and the key on `D` going
- * up is a release frame.
+ * its code on `D` before, with and after a strobe, `KD` high in all three,
+ * and the last key down going up is a release frame, `KD` low.
  * Text that arrives without a key (a paste, a soft keyboard's word, the Type
  * text dialog) goes out as taps, a press and a release per character.
  * A key or a text that does not fit behind the characters still queued is
  * refused whole and recorded nowhere; the caller says why.
  *
- * At most one key is on `D`: a press takes it over from the key held
- * before, and so does a tap, so the earlier key's release sends nothing. Only
- * the key on `D` going up releases it. Which key that is lives on the
- * component, so a key pressed or released elsewhere counts here too.
+ * Every physical key down counts: a press over a key still down puts its
+ * own code on `D` with its own strobe and leaves `KD` high, and a keyup
+ * sends the release only when no other key is down. A tap ends with `KD`
+ * low, so it counts as every key going up, and their keyups send nothing.
+ * Which keys are down lives on the component, so a key pressed or released
+ * elsewhere counts here too.
  *
  * What the window shows of the circuit — the code on `D`, how many
  * characters are still queued — is re-read on every frame. The history of
@@ -58,7 +60,10 @@ export class KeyboardInspection extends ComponentInspection {
   public readonly history = this._history.asReadonly();
 
   private readonly _pressed = signal<PressedKey | null>(null);
-  /** The history entry of the key held on `D`, or `null`. */
+  /**
+   * The history entry of the press on `D` while a key is down
+   * (`KeyboardComponent.heldKey`), or `null`.
+   */
   public readonly heldEntry = computed(() => {
     const pressed = this._pressed();
     return pressed && pressed.held === this.component.heldKey()
@@ -95,9 +100,10 @@ export class KeyboardInspection extends ComponentInspection {
   }
 
   /**
-   * The physical key `key` went down, sending `code`: `D` takes it, and the
-   * key is the one whose release sets `D` to zero. Reports whether it fit
-   * behind the characters queued; one that does not changes nothing.
+   * The physical key `key` went down, sending `code`: `D` takes it with a
+   * strobe, and `KD` is high until it and every other key down are up.
+   * Reports whether it fit behind the characters queued; one that does not
+   * changes nothing.
    */
   public press(key: string, code: number): boolean {
     if (!this.component.pressKey(this.route, code, key)) {
@@ -109,23 +115,23 @@ export class KeyboardInspection extends ComponentInspection {
     return true;
   }
 
-  /** The physical key `key` went up; only the key on `D` sends a release. */
+  /**
+   * The physical key `key` went up; only the last key down sends a release.
+   */
   public release(key: string): void {
-    if (this.component.heldKey()?.key !== key) return;
-    this.component.releaseKey(this.route);
+    this.component.releaseKey(this.route, key);
   }
 
-  /** Releases the key on `D`, if a physical key is: the focus went away. */
+  /** Lets go of every physical key down: the focus went away. */
   public releaseHeld(): void {
-    if (this.component.heldKey()?.key == null) return;
-    this.component.releaseKey(this.route);
+    this.component.releaseKeys(this.route, 'physical');
   }
 
   /**
-   * Sends `codes` as taps, in order. A tap takes `D` over, so the key held
-   * before counts as released and its keyup sends nothing. Reports whether
-   * they fit behind the characters queued; ones that do not are refused
-   * whole and change nothing.
+   * Sends `codes` as taps, in order. A tap ends with `KD` low, so every key
+   * down before counts as released and its keyup sends nothing. Reports
+   * whether they fit behind the characters queued; ones that do not are
+   * refused whole and change nothing.
    */
   public type(codes: readonly number[]): boolean {
     if (codes.length === 0) return true;
@@ -135,7 +141,11 @@ export class KeyboardInspection extends ComponentInspection {
     return true;
   }
 
-  /** Drops every character still queued; `D` is zero after the next tick. */
+  /**
+   * Drops every character still queued and lets go of every key: `STB` is
+   * low after the next tick and `KD` after the one after, `D` keeping its
+   * code.
+   */
   public cancel(): void {
     this.component.cancelKeys(this.route);
     this.refresh();
@@ -144,7 +154,7 @@ export class KeyboardInspection extends ComponentInspection {
   public override onFrame(): void {
     const resets = this.simulation.resets();
     if (resets !== this.seenResets) {
-      // The rebuilt engine has nothing on D and nothing queued.
+      // The rebuilt engine has every output low and nothing queued.
       this.seenResets = resets;
       this._pressed.set(null);
       this._history.set([]);
@@ -152,7 +162,7 @@ export class KeyboardInspection extends ComponentInspection {
     this.refresh();
   }
 
-  /** Nothing stays on `D` once the window closes. */
+  /** No key the window pressed stays down once it closes. */
   public override destroy(): void {
     this.releaseHeld();
   }

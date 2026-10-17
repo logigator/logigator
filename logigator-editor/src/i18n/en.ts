@@ -312,7 +312,7 @@ const en = {
       KEYBOARD: {
         name: 'Keyboard',
         description:
-          'A keyboard. While a key is held down, D0–D6 carry its ASCII code, and STB pulses once each time a key is pressed. While the simulation is running, clicking it opens a window that receives your typing.',
+          'A keyboard. D0–D6 carry the ASCII code of the last key pressed, STB pulses once each time a key is pressed, and KD is on while a key is held down. While the simulation is running, clicking it opens a window that receives your typing.',
         window: {
           field: 'Type into the circuit',
           onD: 'On D',

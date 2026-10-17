@@ -219,6 +219,24 @@ export class SubCircuitWatch extends ComponentInspection {
   }
 
   /**
+   * Drops the frames the input of a component of the active level's copy
+   * still has queued and queues `frames` in their place, as
+   * `SimulationService.cancelFrames` does for a top-level one. Reports
+   * whether the component is one of the level's inputs and every frame fits
+   * its outputs.
+   */
+  public cancelFrames(
+    component: Component,
+    frames: readonly InputFrame[] = []
+  ): boolean {
+    const unitIndex = this._unitIndexAt(this.activeLevel(), component);
+    return (
+      unitIndex !== undefined &&
+      this.simulation.cancelUnitFrames(unitIndex, component, frames)
+    );
+  }
+
+  /**
    * How many event frames the input of a component of the active level's
    * copy has not yet applied, at most, as `SimulationService.pendingEvents`
    * counts a top-level one; 0 for anything but one of the level's inputs.
@@ -374,10 +392,10 @@ export class SubCircuitWatch extends ComponentInspection {
           this.simulation.sendUnitFrames(base, component, frames);
         }
       },
-      cancel: (reset) => {
+      cancel: (frames) => {
         const base = unitIndex();
         if (base !== undefined) {
-          this.simulation.cancelUnitFrames(base, component, reset);
+          this.simulation.cancelUnitFrames(base, component, frames);
         }
       },
       pending: () => {

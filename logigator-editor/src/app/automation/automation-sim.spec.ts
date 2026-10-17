@@ -1,5 +1,8 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
-import { KEYBOARD_STROBE_OUTPUT } from '@logigator/core';
+import {
+  KEYBOARD_KEY_DOWN_OUTPUT,
+  KEYBOARD_STROBE_OUTPUT
+} from '@logigator/core';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
@@ -404,7 +407,7 @@ describe('AutomationApiService simulation', () => {
 
   describe('a keyboard', () => {
     let keyboard: KeyboardComponent;
-    /** The keyboard's unit, its outputs `D0`…`D6` and `STB` in port order. */
+    /** The keyboard's unit, its outputs `D0`…`D6`, `STB`, `KD` in port order. */
     let base: number;
 
     beforeEach(async () => {
@@ -429,6 +432,12 @@ describe('AutomationApiService simulation', () => {
     /** The code on `D` after the last tick. */
     const onD = () =>
       codeFromBits((bit) => fakeWorker.engine.output(base, bit));
+    /** `D`, `STB` and `KD` after the last tick. */
+    const outputs = () => [
+      onD(),
+      fakeWorker.engine.output(base, KEYBOARD_STROBE_OUTPUT),
+      fakeWorker.engine.output(base, KEYBOARD_KEY_DOWN_OUTPUT)
+    ];
 
     it('types a text as one tap per character, a CRLF as one LF', async () => {
       await api.simType(keyboard.id, 'a\r\nb');
@@ -474,16 +483,57 @@ describe('AutomationApiService simulation', () => {
       expect(pressed()).toEqual([0x41]);
     });
 
-    it('shows a key set and let go of while paused before it falls back to 0', async () => {
+    it('shows a key set and let go of while paused before KD falls, D keeping it', async () => {
       await api.simSetKey(keyboard.id, 'A');
       await api.simSetKey(keyboard.id, null);
 
-      const seen: number[] = [];
+      const seen: (number | boolean)[][] = [];
       for (let step = 0; step < 4; step++) {
         await api.simStep();
-        seen.push(onD());
+        seen.push(outputs());
       }
-      expect(seen).toEqual([0x41, 0x41, 0x41, 0]);
+      expect(seen).toEqual([
+        [0x41, false, true],
+        [0x41, true, true],
+        [0x41, false, true],
+        [0x41, false, false]
+      ]);
+    });
+
+    it('cancels what a text still has to send, lowering the strobe and then KD, D keeping the character on it', async () => {
+      await api.simType(keyboard.id, 'abc');
+      await api.simStep();
+      await api.simStep();
+      expect(outputs()).toEqual([0x61, true, true]);
+
+      await api.simCancelKeys(keyboard.id);
+
+      expect(fakeWorker.submitted().at(-1)?.replace).toBe(true);
+      const seen: (number | boolean)[][] = [];
+      for (let step = 0; step < 6; step++) {
+        await api.simStep();
+        seen.push(outputs());
+      }
+      expect(seen).toEqual([
+        [0x61, false, true],
+        [0x61, false, false],
+        [0x61, false, false],
+        [0x61, false, false],
+        [0x61, false, false],
+        [0x61, false, false]
+      ]);
+      expect(pressed()).toEqual([0x61, 0x62, 0x63]);
+      expect(simulation.pendingEvents(keyboard.id)).toBe(0);
+    });
+
+    it('lets go of a key setKey holds on a cancel', async () => {
+      await api.simSetKey(keyboard.id, 'A');
+      await api.simCancelKeys(keyboard.id);
+      expect(keyboard.heldKey()).toBeNull();
+
+      // Held no longer, so the same key presses again.
+      await api.simSetKey(keyboard.id, 'A');
+      expect(pressed()).toEqual([0x41, 0x41]);
     });
 
     it('counts what a text still has to send in its window, one character per four steps', async () => {
@@ -518,7 +568,7 @@ describe('AutomationApiService simulation', () => {
       for (let step = 0; step < 4; step++) {
         await api.simStep();
       }
-      expect(onD()).toBe(0);
+      expect(outputs()).toEqual([0x61, false, false]);
       expect(window.heldEntry()).toBeNull();
     });
 

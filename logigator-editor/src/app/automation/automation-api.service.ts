@@ -3,6 +3,7 @@ import { Point, Rectangle } from 'pixi.js';
 
 import { environment } from '../../environments/environment';
 import { Component } from '../components/component';
+import type { InputRoute } from '../components/component-inspection';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { isUserInput, UserInput } from '../components/user-input';
 import {
@@ -219,6 +220,8 @@ export class AutomationApiService {
           this.simType(componentId, text),
         setKey: (componentId: number, key: string | null): Promise<void> =>
           this.simSetKey(componentId, key),
+        cancelKeys: (componentId: number): Promise<void> =>
+          this.simCancelKeys(componentId),
         readPorts: (componentIds?: number[]): Promise<PortReadout[]> =>
           this.simReadPorts(componentIds)
       }),
@@ -277,6 +280,10 @@ export class AutomationApiService {
           componentId: number,
           key: string | null
         ): Promise<void> => this.inspectSetKey(inspectionId, componentId, key),
+        cancelKeys: (
+          inspectionId: number,
+          componentId: number
+        ): Promise<void> => this.inspectCancelKeys(inspectionId, componentId),
         navigateTo: (inspectionId: number, level: number): InspectionInfo =>
           this.inspectNavigateTo(inspectionId, level),
         camera: Object.freeze({
@@ -657,8 +664,9 @@ export class AutomationApiService {
   }
 
   /**
-   * Holds a key of a keyboard down, or with `null` lets go of the one held.
-   * A key already on `D` and a release with none held send nothing.
+   * Holds a key of a keyboard down, or with `null` lets go of every key
+   * down. A key already on `D` while a key is down and a release with none
+   * down send nothing.
    */
   public async simSetKey(
     componentId: number,
@@ -667,6 +675,16 @@ export class AutomationApiService {
     const code = keyboardKeyCode(key);
     const keyboard = this.requireBoardKeyboard(componentId);
     setKeyboardKey(keyboard, this.boardKeyRoute(keyboard), code);
+    await this.nextFrame();
+  }
+
+  /**
+   * Drops every character a keyboard still has to send and lets go of every
+   * key down, as its window's ✕ does (`KeyboardComponent.cancelKeys`).
+   */
+  public async simCancelKeys(componentId: number): Promise<void> {
+    const keyboard = this.requireBoardKeyboard(componentId);
+    keyboard.cancelKeys(this.boardKeyRoute(keyboard));
     await this.nextFrame();
   }
 
@@ -685,10 +703,13 @@ export class AutomationApiService {
     return component;
   }
 
-  private boardKeyRoute(keyboard: KeyboardComponent): KeyboardRoute {
+  private boardKeyRoute(keyboard: KeyboardComponent): AutomationKeyRoute {
     return {
       send: (frames) => {
         this.simulation.sendFrames(keyboard.id, frames);
+      },
+      cancel: (frames) => {
+        this.simulation.cancelFrames(keyboard.id, frames);
       },
       pending: () => this.simulation.pendingEvents(keyboard.id)
     };
@@ -1228,11 +1249,24 @@ export class AutomationApiService {
     await this.nextFrame();
   }
 
+  /** {@link simCancelKeys} for a keyboard of the visible watch level. */
+  public async inspectCancelKeys(
+    inspectionId: number,
+    componentId: number
+  ): Promise<void> {
+    const { keyboard, route } = this.requireWatchKeyboard(
+      inspectionId,
+      componentId
+    );
+    keyboard.cancelKeys(route);
+    await this.nextFrame();
+  }
+
   /** A keyboard copy of the visible watch level, with the route to its unit. */
   private requireWatchKeyboard(
     inspectionId: number,
     componentId: number
-  ): { keyboard: KeyboardComponent; route: KeyboardRoute } {
+  ): { keyboard: KeyboardComponent; route: AutomationKeyRoute } {
     const watch = this.requireWatch(inspectionId);
     const keyboard = this.requireWatchComponent(
       watch,
@@ -1252,6 +1286,9 @@ export class AutomationApiService {
       route: {
         send: (frames) => {
           watch.sendFrames(keyboard, frames);
+        },
+        cancel: (frames) => {
+          watch.cancelFrames(keyboard, frames);
         },
         pending: () => watch.pendingEvents(keyboard)
       }
@@ -1643,6 +1680,9 @@ export function toGridRect(rect: Rectangle): GridRect {
   };
 }
 
+/** A keyboard's route for `type`, `setKey` and `cancelKeys`. */
+type AutomationKeyRoute = KeyboardRoute & Pick<InputRoute, 'cancel'>;
+
 /** What the keyboard sends, for an error refusing what it does not. */
 const KEYBOARD_CHARACTERS =
   'it sends printable ASCII (U+0020–U+007E), "\\n" (a CR or CRLF counting as one), "\\t", "\\b", "\\u001b" and "\\u007f"';
@@ -1702,10 +1742,10 @@ function keyboardKeyCode(key: unknown): number | null {
 }
 
 /**
- * Puts `code` on the keyboard's `D` unless it is already there, or with
- * `null` sets `D` to zero unless no key holds it. A press that does not fit
- * behind the characters still queued is refused, queueing nothing; a
- * release always fits.
+ * Holds `code` down on the keyboard — pressed, unless it is on `D` already
+ * while a key is down — or with `null` lets go of every key down, `KD`
+ * falling unless none was. A press that does not fit behind the characters
+ * still queued is refused, queueing nothing; a release always fits.
  */
 function setKeyboardKey(
   keyboard: KeyboardComponent,
@@ -1713,11 +1753,8 @@ function setKeyboardKey(
   code: number | null
 ): void {
   if (code === null) {
-    keyboard.releaseKey(route);
-  } else if (
-    keyboard.heldKey()?.code !== code &&
-    !keyboard.pressKey(route, code)
-  ) {
+    keyboard.releaseKeys(route);
+  } else if (!keyboard.holdKey(route, code)) {
     throw keyboardFullError(route, 'a key press does');
   }
 }

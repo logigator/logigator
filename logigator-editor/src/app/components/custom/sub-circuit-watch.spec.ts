@@ -38,7 +38,7 @@ import {
 } from '../../simulation/worker/simulation-worker.service';
 import { Wire } from '../../wires/wire';
 import { WindowService } from '@logigator/ui';
-import { KEYBOARD_DATA_BITS, WireDirection } from '@logigator/core';
+import { KEYBOARD_KEY_DOWN_OUTPUT, WireDirection } from '@logigator/core';
 import { OpenInspection } from '../../inspection/inspection-presenter';
 import { CustomComponentRegistry } from './custom-component-registry.service';
 import { CustomComponent } from './custom-component';
@@ -301,7 +301,7 @@ describe('SubCircuitWatch', () => {
       // Frames leave the copy's slot state alone.
       expect(buttonCopy.isActive(0)).toBe(false);
 
-      route.cancel({ state: [false], coalesce: true });
+      route.cancel([{ state: [false], coalesce: true }]);
       expect(fakeWorker.submitted().at(-1)).toEqual({
         comp: 0,
         frames: [{ state: [false], coalesce: true }],
@@ -475,6 +475,9 @@ describe('SubCircuitWatch', () => {
     /** The code on the copy's data outputs after the last tick. */
     const copyCode = () =>
       codeFromBits((bit) => fakeWorker.engine.output(base, bit));
+    /** Whether the copy's `KD` is high after the last tick. */
+    const copyKeyDown = () =>
+      fakeWorker.engine.output(base, KEYBOARD_KEY_DOWN_OUTPUT);
 
     it('opens its window on the copy, whose frames reach the copy’s unit and not the board’s', () => {
       watch.activate(keyboardCopy);
@@ -514,7 +517,7 @@ describe('SubCircuitWatch', () => {
       expect(fakeWorker.engine.pending(boardBase)).toBe(3);
     });
 
-    it('sets the copy’s data outputs low when the watch closes under a held key', () => {
+    it('lowers the copy’s KD when the watch closes under a held key, D keeping its code', () => {
       keyboardCopy.pressKey(
         {
           send: (frames) => watch.sendFrames(keyboardCopy, frames),
@@ -525,12 +528,17 @@ describe('SubCircuitWatch', () => {
 
       inspections.close(watchEntry);
 
-      const seen: number[] = [];
+      const seen: [number, boolean][] = [];
       for (let step = 0; step < 4; step++) {
         simulation.step();
-        seen.push(copyCode());
+        seen.push([copyCode(), copyKeyDown()]);
       }
-      expect(seen).toEqual([0x41, 0x41, 0x41, 0]);
+      expect(seen).toEqual([
+        [0x41, true],
+        [0x41, true],
+        [0x41, true],
+        [0x41, false]
+      ]);
     });
 
     it('releases a key held from its window once when the watch closes', () => {
@@ -543,14 +551,12 @@ describe('SubCircuitWatch', () => {
 
       const releases = fakeWorker
         .sentFrames()
-        .filter((frame) =>
-          frame.state.slice(0, KEYBOARD_DATA_BITS).every((bit) => bit === false)
-        );
+        .filter((frame) => frame.state[KEYBOARD_KEY_DOWN_OUTPUT] === false);
       expect(releases).toHaveLength(1);
       for (let step = 0; step < 4; step++) {
         simulation.step();
       }
-      expect(copyCode()).toBe(0);
+      expect(copyKeyDown()).toBe(false);
     });
   });
 });

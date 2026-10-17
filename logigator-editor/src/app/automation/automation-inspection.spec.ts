@@ -351,7 +351,7 @@ describe('AutomationApiService inspection', () => {
       expect(pad.isActive(slotA)).toBe(true);
     });
 
-    it('types into and holds a key of an inner keyboard, reaching the copy’s unit', async () => {
+    it('types into, holds a key of and cancels an inner keyboard, reaching the copy’s unit', async () => {
       // A keyboard on the board too, whose units the copy's frames must miss.
       const boardKeyboard = makeKeyboard(0, 20);
       project.addComponent(boardKeyboard);
@@ -382,6 +382,13 @@ describe('AutomationApiService inspection', () => {
       expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(queued + 1);
       expect(copy.heldKey()).toEqual({ code: 0x41, key: null });
       expect(sentUnits()).toEqual(new Set([base]));
+
+      await api.inspectCancelKeys(id, copy.id);
+      expect(fakeWorker.submitted().at(-1)).toMatchObject({
+        comp: base,
+        replace: true
+      });
+      expect(copy.heldKey()).toBeNull();
 
       await expect(api.inspectSetInput(id, copy.id, true)).rejects.toThrow(
         /is a keyboard — use inspect\.type or inspect\.setKey$/

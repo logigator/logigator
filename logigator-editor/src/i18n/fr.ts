@@ -313,7 +313,7 @@ const fr: TranslationSchema = {
       KEYBOARD: {
         name: 'Clavier',
         description:
-          "Un clavier. Tant qu'une touche est maintenue enfoncée, D0–D6 portent son code ASCII, et STB émet une impulsion à chaque appui. Pendant que la simulation tourne, cliquer dessus ouvre une fenêtre qui reçoit votre saisie.",
+          "Un clavier. D0–D6 portent le code ASCII de la dernière touche appuyée, STB émet une impulsion à chaque appui, et KD est activé tant qu'une touche est maintenue enfoncée. Pendant que la simulation tourne, cliquer dessus ouvre une fenêtre qui reçoit votre saisie.",
         window: {
           field: 'Taper dans le circuit',
           onD: 'Sur D',

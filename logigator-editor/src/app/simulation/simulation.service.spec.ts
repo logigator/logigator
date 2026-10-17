@@ -909,7 +909,7 @@ describe('SimulationService', () => {
       for (const hold of [0, 1.5, Number.NaN, 2 ** 32]) {
         expect(service.sendFrames(input.id, [{ ...press, hold }])).toBe(false);
       }
-      expect(service.cancelFrames(input.id, narrow)).toBe(false);
+      expect(service.cancelFrames(input.id, [narrow])).toBe(false);
       expect(service.sendFrames(input.id, [press])).toBe(true);
 
       expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(1);
@@ -921,7 +921,7 @@ describe('SimulationService', () => {
       service.enter();
 
       service.sendFrames(input.id, [press]);
-      service.cancelFrames(input.id, reset);
+      service.cancelFrames(input.id, [reset]);
 
       expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(0);
     });
@@ -935,7 +935,7 @@ describe('SimulationService', () => {
       await vi.waitFor(() => expect(service.pendingEvents(input.id)).toBe(3));
 
       // The press's hold has a tick to run; the reset lands on the next one.
-      expect(service.cancelFrames(input.id, reset)).toBe(true);
+      expect(service.cancelFrames(input.id, [reset])).toBe(true);
       expect(stepAndRead(3, outputs)).toEqual([
         [false, false, false],
         [false, false, false],

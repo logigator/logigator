@@ -34,7 +34,7 @@ describe('a keyboard against the engine’s input limit', () => {
   let fakeWorker: FakeSimulationWorker;
   let keyboard: KeyboardComponent;
   let window: KeyboardInspection;
-  /** The keyboard's unit, `D0`…`D6` then `STB`. */
+  /** The keyboard's unit, `D0`…`D6`, `STB`, then `KD`. */
   let base: number;
 
   beforeEach(async () => {
@@ -144,5 +144,25 @@ describe('a keyboard against the engine’s input limit', () => {
     );
     expect(window.press('KeyA', 0x61)).toBe(true);
     expect(fakeWorker.engine.pending(base)).toBe(INPUT_QUEUE_LIMIT);
+  });
+
+  it('cancels a full queue, its one event fitting and counting as no character', async () => {
+    fillWithTwoSends();
+    expect(window.type(text(window.room()))).toBe(true);
+    simulation.step();
+    simulation.step();
+    await vi.waitFor(() =>
+      expect(simulation.pendingEvents(keyboard.id)).toBe(INPUT_QUEUE_LIMIT - 3)
+    );
+    expect(window.press('KeyA', 0x61)).toBe(true);
+    expect(fakeWorker.engine.pending(base)).toBe(INPUT_QUEUE_LIMIT);
+
+    window.cancel();
+
+    // The engine took it: only the cancel's own event is left.
+    expect(fakeWorker.engine.pending(base)).toBe(1);
+    expect(window.pending()).toBe(0);
+    expect(window.room()).toBe(Math.floor(INPUT_QUEUE_LIMIT / 3));
+    expect(keyboard.heldKey()).toBeNull();
   });
 });

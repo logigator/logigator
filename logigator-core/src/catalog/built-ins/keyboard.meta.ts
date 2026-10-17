@@ -8,6 +8,9 @@ export const KEYBOARD_DATA_BITS = 7;
 /** Output index of the strobe, which follows the data bits. */
 export const KEYBOARD_STROBE_OUTPUT = KEYBOARD_DATA_BITS;
 
+/** Output index of key down, which follows the strobe. */
+export const KEYBOARD_KEY_DOWN_OUTPUT = KEYBOARD_STROBE_OUTPUT + 1;
+
 /** Width of the glyph column the body draws beside its port labels. */
 export const KEYBOARD_GLYPH_COLUMN_WIDTH = 3;
 
@@ -17,12 +20,13 @@ export const KEYBOARD_GLYPH_COLUMN_WIDTH = 3;
  */
 const KEYBOARD_LABEL_COLUMN_WIDTH = 1;
 
-const OUTPUT_LABELS = [...busLabels('D', KEYBOARD_DATA_BITS), 'STB'];
+const OUTPUT_LABELS = [...busLabels('D', KEYBOARD_DATA_BITS), 'STB', 'KD'];
 
 /**
- * A keyboard: `D0`…`D6` carry the ASCII code of the held key and are zero
- * while no key is held, and `STB` pulses for one tick on every press. Its
- * arity is fixed, so it has no options.
+ * A keyboard: `D0`…`D6` carry the ASCII code of the last key pressed and
+ * keep it until the next press replaces it, `STB` pulses for one tick on
+ * every press, and `KD` is high while a key is down. Its arity is fixed, so
+ * it has no options.
  */
 export const keyboardMeta = {
   type: BuiltInComponentType.KEYBOARD,

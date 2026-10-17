@@ -43,8 +43,8 @@ export interface InputFrame {
 /**
  * The most event frames one input holds pending: `@logigator/sim`'s
  * `submitInput` (0.5.0 on) refuses a request that would take an input past
- * it, whole, and queues nothing. States never count, so a release or a
- * cancel's reset always fits.
+ * it, whole, and queues nothing. States never count, so a release always
+ * fits; a cancel replaces what was queued, so only its own events count.
  */
 export const INPUT_QUEUE_LIMIT = 65_536;
 
@@ -86,15 +86,16 @@ export interface SlotOperation {
  * queues frames on the component's input
  * directly — refused whole, sending nothing, when they do not fit behind
  * what it still has ({@link fitsInputQueue}) — `cancel` drops the frames it
- * still has queued — ending a hold that is still running — and applies
- * `reset` on the next tick, or keeps the outputs as they are without one,
- * and `pending` is how many of its event frames are not yet applied, at
- * most: the count the last snapshot reported, plus every event sent since.
+ * still has queued — ending a hold that is still running — and queues
+ * `frames` in their place, the first applied on the next tick, or keeps the
+ * outputs as they are without any, and `pending` is how many of its event
+ * frames are not yet applied, at most: the count the last snapshot
+ * reported, plus every event sent since.
  */
 export interface InputRoute {
   operate(operations: readonly SlotOperation[]): void;
   send(frames: readonly InputFrame[]): void;
-  cancel(reset?: InputFrame): void;
+  cancel(frames?: readonly InputFrame[]): void;
   pending(): number;
 }
 

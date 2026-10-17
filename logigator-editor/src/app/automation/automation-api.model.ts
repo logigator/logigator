@@ -500,7 +500,7 @@ export interface LogigatorAutomationApi {
      * Pulse button: pulse on `true`, ignored on `false`, every one delivered.
      * A boolean sets the one slot `input` addresses (default `0`); an array
      * sets every slot, element `i` for slot `i`, and takes no `input`. A
-     * keyboard is refused: it takes `type` and `setKey`.
+     * keyboard is refused: it takes `type`, `setKey` and `cancelKeys`.
      */
     setInput(
       componentId: number,
@@ -509,8 +509,9 @@ export interface LogigatorAutomationApi {
     ): Promise<void>;
     /**
      * Keyboard: queues `text` as taps, a press and a release per character:
-     * each character on `D` for three ticks, `STB` high for the middle one,
-     * then `D` at 0 for one — four steps per character while paused. Strict:
+     * each character on `D` with `KD` high for three ticks, `STB` high for
+     * the middle one, then `KD` low for one with `D` kept — four steps per
+     * character while paused. `D` keeps the last character. Strict:
      * printable ASCII, `\n`, `\t`, `\b`, `\x1b` and `\x7f` only (CRLF and CR
      * read as `\n`), at most 10 000 characters; any other character is an
      * error naming it and its position, and nothing is queued. Resolves once
@@ -518,12 +519,21 @@ export interface LogigatorAutomationApi {
      */
     type(componentId: number, text: string): Promise<void>;
     /**
-     * Keyboard: holds the key for one character down (a no-op when that key
-     * is already on `D`), or with `null` lets go of the key held (a no-op when
-     * none is). Never merged, so `setKey('A')` then `setKey(null)` while
-     * paused shows `A` after the next three steps and then `0`.
+     * Keyboard: holds the key for one character down, `KD` high (a no-op
+     * when that character is on `D` already while a key is down), or with
+     * `null` lets go of every key down, `KD` low (a no-op when none is).
+     * Never merged, so `setKey('A')` then `setKey(null)` while paused shows
+     * `A` with `KD` high after the next three steps and then `KD` low, `D`
+     * keeping `A`.
      */
     setKey(componentId: number, key: string | null): Promise<void>;
+    /**
+     * Keyboard: drops every character it still has to send and lets go of
+     * every key down, as its window's ✕ does: `STB` low after the next step
+     * (a character whose strobe was high keeps `D` for it), `KD` low after
+     * the one after, `D` kept. Resolves once queued.
+     */
+    cancelKeys(componentId: number): Promise<void>;
     readPorts(componentIds?: number[]): Promise<PortReadout[]>;
   };
 
@@ -559,7 +569,7 @@ export interface LogigatorAutomationApi {
   ): WorkModeState;
 
   /**
-   * Live inspections. `getElements`/`activate`/`setInput`/`type`/`setKey`/`navigateTo`/`camera` address a
+   * Live inspections. `getElements`/`activate`/`setInput`/`type`/`setKey`/`cancelKeys`/`navigateTo`/`camera` address a
    * **watch**, whose levels are fresh copies of the inner circuit — their
    * element ids are the copy's, not the placed instance's.
    */
@@ -608,6 +618,8 @@ export interface LogigatorAutomationApi {
       componentId: number,
       key: string | null
     ): Promise<void>;
+    /** `sim.cancelKeys` for a keyboard inside the visible watch level. */
+    cancelKeys(inspectionId: number, componentId: number): Promise<void>;
     /** Breadcrumb navigation: pops every level deeper than `level`. */
     navigateTo(inspectionId: number, level: number): InspectionInfo;
     /**

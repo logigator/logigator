@@ -614,16 +614,21 @@ export class SimulationService {
 
   /**
    * Drops the frames a top-level component's input still has queued, ending
-   * a hold still running, then applies `reset` on the next tick — or, without
-   * one, leaves the outputs as they are. Refused like {@link sendFrames}.
+   * a hold still running, and queues `frames` in their place, the first
+   * applied on the next tick — or, without any, leaves the outputs as they
+   * are. Refused like {@link sendFrames}, except that only `frames` count
+   * against the input's limit: what they replace is gone.
    */
-  public cancelFrames(componentId: number, reset?: InputFrame): boolean {
+  public cancelFrames(
+    componentId: number,
+    frames: readonly InputFrame[] = []
+  ): boolean {
     const component = this._project?.getComponentById(componentId);
     const base = this._board?.userInputs.get(componentId);
     return (
       !!component &&
       base !== undefined &&
-      this.cancelUnitFrames(base, component, reset)
+      this.cancelUnitFrames(base, component, frames)
     );
   }
 
@@ -631,12 +636,15 @@ export class SimulationService {
   public cancelUnitFrames(
     unitIndex: number,
     component: Component,
-    reset?: InputFrame
+    frames: readonly InputFrame[] = []
   ): boolean {
-    if (reset && !frameFits(component, reset)) {
+    if (
+      !frames.every((frame) => frameFits(component, frame)) ||
+      !fitsInputQueue(0, frames)
+    ) {
       return false;
     }
-    this._send(unitIndex, reset ? [reset] : [], true);
+    this._send(unitIndex, frames, true);
     return true;
   }
 

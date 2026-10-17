@@ -127,14 +127,14 @@ export class WatchSession {
 
   public destroy(): void {
     this.unregister();
-    // Every high `level` slot of a copy, and the key a keyboard copy holds,
-    // is set low first: once the copy is gone, nothing is left to reset its
-    // engine input.
+    // Every high `level` slot of a copy, and the keys a keyboard copy holds
+    // down, are set low first: once the copy is gone, nothing is left to
+    // reset its engine input.
     const simulation = getStaticDI(SimulationService);
     this.components.forEach((component, index) => {
       const unitIndex = this.info.unitIndexFor(index);
       if (component instanceof KeyboardComponent && unitIndex !== undefined) {
-        component.releaseKey({
+        component.releaseKeys({
           send: (frames) =>
             simulation.sendUnitFrames(unitIndex, component, frames)
         });

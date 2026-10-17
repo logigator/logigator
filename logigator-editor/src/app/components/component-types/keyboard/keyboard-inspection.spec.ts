@@ -22,24 +22,27 @@ import {
   InputRoute
 } from '../../component-inspection';
 import { TranslationService } from '../../../translation/translation.service';
-import { KEYBOARD_STROBE_OUTPUT } from '@logigator/core';
-import { codeFromBits, readoutText, resetFrame } from './ascii';
+import {
+  KEYBOARD_KEY_DOWN_OUTPUT,
+  KEYBOARD_STROBE_OUTPUT
+} from '@logigator/core';
+import { cancelFrames, codeFromBits, readoutText } from './ascii';
 import { KeyboardComponent } from './keyboard.component';
 import { KeyboardInspection } from './keyboard-inspection';
 import { KeyboardInspectionComponent } from './keyboard-inspection.component';
 
 /**
  * What a frame does to the keyboard's outputs, in words: `press A` for a
- * code with the strobe, `release` for every data bit low. The frames on
- * either side of a press's strobe, its code on `D` without it, say nothing
- * of their own.
+ * code with the strobe, `release` for key down low. The frames on either
+ * side of a press's strobe, its code on `D` without it, say nothing of
+ * their own.
  */
 function describeFrame(frame: InputFrame): string | null {
   const code = codeFromBits((bit) => frame.state[bit] === true);
   if (frame.state[KEYBOARD_STROBE_OUTPUT] === true) {
     return `press ${readoutText(code)}`;
   }
-  return code === 0 ? 'release' : null;
+  return frame.state[KEYBOARD_KEY_DOWN_OUTPUT] === false ? 'release' : null;
 }
 
 /**
@@ -48,17 +51,17 @@ function describeFrame(frame: InputFrame): string | null {
  */
 function recordingRoute(): InputRoute & {
   sent: string[];
-  cancels: (InputFrame | undefined)[];
+  cancels: (readonly InputFrame[] | undefined)[];
   pendingEvents: number;
 } {
   const route = {
     sent: [] as string[],
-    cancels: [] as (InputFrame | undefined)[],
+    cancels: [] as (readonly InputFrame[] | undefined)[],
     pendingEvents: 0,
     operate: () => undefined,
     send: (frames: readonly InputFrame[]) =>
       route.sent.push(...frames.flatMap((frame) => describeFrame(frame) ?? [])),
-    cancel: (reset?: InputFrame) => route.cancels.push(reset),
+    cancel: (frames?: readonly InputFrame[]) => route.cancels.push(frames),
     pending: () => route.pendingEvents
   };
   return route;
@@ -208,14 +211,39 @@ describe('KeyboardInspectionComponent capture', () => {
     expect(route.sent).toEqual(['press b', 'release']);
   });
 
-  it('releases only the key on D: B taking over from A, and B going up', () => {
+  it('presses a key over a held one with no release between, and releases only once the last key is up', () => {
     key('keydown', 'KeyA', 'a');
     key('keydown', 'KeyB', 'b');
     key('keyup', 'KeyA', 'a');
     expect(route.sent).toEqual(['press a', 'press b']);
+    expect(keyboard.heldKey()).toEqual({ code: 0x62, key: 'KeyB' });
 
     key('keyup', 'KeyB', 'b');
     expect(route.sent).toEqual(['press a', 'press b', 'release']);
+    expect(keyboard.heldKey()).toBeNull();
+  });
+
+  it('keeps a key down when the key pressed over it goes up first', () => {
+    key('keydown', 'KeyA', 'a');
+    key('keydown', 'KeyB', 'b');
+    key('keyup', 'KeyB', 'b');
+    expect(route.sent).toEqual(['press a', 'press b']);
+    // B's code stays on D, held down by A.
+    expect(keyboard.heldKey()).toEqual({ code: 0x62, key: 'KeyB' });
+
+    key('keyup', 'KeyA', 'a');
+    expect(route.sent).toEqual(['press a', 'press b', 'release']);
+  });
+
+  it('highlights the character on D while any key is down', () => {
+    key('keydown', 'KeyA', 'a');
+    key('keydown', 'KeyB', 'b');
+    const [, b] = inspection.history();
+    key('keyup', 'KeyB', 'b');
+    expect(inspection.heldEntry()).toBe(b.id);
+
+    key('keyup', 'KeyA', 'a');
+    expect(inspection.heldEntry()).toBeNull();
   });
 
   it('releases a shifted key by its code after Shift went up first', () => {
@@ -227,19 +255,22 @@ describe('KeyboardInspectionComponent capture', () => {
     expect(route.sent).toEqual(['press A', 'release']);
   });
 
-  it('releases the key on D when the field loses the focus', () => {
+  it('lets go of every key down when the field loses the focus', () => {
     key('keydown', 'KeyA', 'a');
+    key('keydown', 'KeyB', 'b');
     field.blur();
     key('keyup', 'KeyA', 'a');
+    key('keyup', 'KeyB', 'b');
 
-    expect(route.sent).toEqual(['press a', 'release']);
+    expect(route.sent).toEqual(['press a', 'press b', 'release']);
   });
 
-  it('releases the key on D when the page loses the focus', () => {
+  it('lets go of every key down when the page loses the focus', () => {
     key('keydown', 'KeyA', 'a');
+    key('keydown', 'KeyB', 'b');
     window.dispatchEvent(new Event('blur'));
 
-    expect(route.sent).toEqual(['press a', 'release']);
+    expect(route.sent).toEqual(['press a', 'press b', 'release']);
   });
 
   it('taps every character of a paste', () => {
@@ -249,7 +280,7 @@ describe('KeyboardInspectionComponent capture', () => {
     expect(route.sent).toEqual(['press l', 'release', 'press l', 'release']);
   });
 
-  it('lets a tap take D over, so the held key going up sends nothing', () => {
+  it('lets a tap end with every key up, so the held key going up sends nothing', () => {
     key('keydown', 'KeyA', 'a');
     paste('x');
     key('keyup', 'KeyA', 'a');
@@ -422,20 +453,27 @@ describe('KeyboardInspection', () => {
     keyboard.destroy({ children: true });
   });
 
-  it('cancels with every output low, forgetting the held key', () => {
+  it('cancels in place of what is queued, letting go of every key down', () => {
     inspection.press('KeyA', 0x61);
+    inspection.press('KeyB', 0x62);
     inspection.cancel();
     inspection.release('KeyA');
+    inspection.release('KeyB');
 
-    expect(route.cancels).toEqual([resetFrame()]);
-    expect(route.sent).toEqual(['press a']);
+    expect(route.cancels).toEqual([cancelFrames()]);
+    expect(route.sent).toEqual(['press a', 'press b']);
+    expect(keyboard.heldKey()).toBeNull();
   });
 
-  it('releases the key on D when it closes', () => {
+  it('lets go of every key it pressed when it closes, and of no other', () => {
     inspection.press('KeyA', 0x61);
+    keyboard.pressKey(route, 0x62);
     inspection.destroy();
+    expect(route.sent).toEqual(['press a', 'press b']);
+    expect(keyboard.heldKey()).toEqual({ code: 0x62, key: null });
 
-    expect(route.sent).toEqual(['press a', 'release']);
+    keyboard.releaseKeys(route);
+    expect(route.sent).toEqual(['press a', 'press b', 'release']);
   });
 
   it('keeps the last 64 characters sent, oldest first', () => {

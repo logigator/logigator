@@ -282,7 +282,7 @@ describe('BoardCompilerService watch index', () => {
       type: 200,
       inputs: [],
       outputs: Array.from(
-        { length: 8 },
+        { length: 9 },
         (_, port) => info.linkOfLocalNet[info.tables.portNets[1][port]]
       ),
       negOutputs: [5]

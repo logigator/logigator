@@ -3,6 +3,7 @@ import { BitmapText, Graphics } from 'pixi.js';
 import {
   KEYBOARD_DATA_BITS,
   KEYBOARD_GLYPH_COLUMN_WIDTH,
+  KEYBOARD_KEY_DOWN_OUTPUT,
   keyboardMeta
 } from '@logigator/core';
 import { Component } from '../../component';
@@ -18,11 +19,11 @@ import {
   KeyboardReadoutFrameGraphics
 } from '../../../rendering/graphics/keyboard.graphics';
 import {
+  cancelFrames,
   codeFromBits,
   pressFrames,
   readoutText,
   releaseFrame,
-  resetFrame,
   tapFrames
 } from './ascii';
 import { keyboardComponentConfig, KeyboardOptions } from './keyboard.config';
@@ -32,22 +33,25 @@ const READOUT_FONT_SIZE = 1.4 / PX;
 const READOUT_MIN_FONT_SIZE = 0.5 / PX;
 /** Width a readout may span inside its box, in pixels. */
 const READOUT_ROOM = (KEYBOARD_READOUT_BOX.size - 0.4) / PX;
-/** The box's fill alpha while a code is on D. */
+/** The box's fill alpha while KD is high. */
 const LIT_FILL_ALPHA = 0.4;
-/** The box outline's alpha while D is zero. */
+/** The box outline's alpha while D is zero, before the first character. */
 const EMPTY_FRAME_ALPHA = 0.4;
 
-/** The key whose code is on `D`. */
+/** The press whose code is on `D`, while a key is down. */
 export interface KeyboardHeldKey {
   /** The code it put on `D`. */
   readonly code: number;
   /**
-   * The physical key holding it, by `KeyboardEvent.code`, which its keyup
-   * carries whatever the modifiers; `null` for a key pressed with no physical
-   * key behind it.
+   * The physical key that pressed it, by `KeyboardEvent.code`, which its
+   * keyup carries whatever the modifiers; `null` for a press with no
+   * physical key behind it. Another key may be the one still down.
    */
   readonly key: string | null;
 }
+
+/** Which keys {@link KeyboardComponent.releaseKeys} lets go of. */
+export type KeyboardKeys = 'all' | 'physical';
 
 /**
  * What a key operation sends its frames through, and asks whether a press
@@ -56,20 +60,24 @@ export interface KeyboardHeldKey {
 export type KeyboardRoute = Pick<InputRoute, 'send' | 'pending'>;
 
 /**
- * A keyboard: `D0`…`D6` carry the ASCII code of the held key, `STB` pulses on
- * every press. It is not a user input: no slot path and no pointer on the
- * canvas drives it. Its keys are pressed and released through the methods
- * here, which send the frames through the route they are given and keep the
- * one record of which key is on `D` ({@link heldKey}), so every source of
- * keys agrees on it. A press or a text that does not fit behind what the
- * input still has to send is refused whole: nothing is sent, nothing on
- * `D` changes, and the caller is told so.
+ * A keyboard: `D0`…`D6` carry the ASCII code of the last key pressed and
+ * keep it, `STB` pulses on every press, and `KD` is high while any key is
+ * down. It is not a user input: no slot path and no pointer on the canvas
+ * drives it. Its keys are pressed and released through the methods here,
+ * which send the frames through the route they are given and keep the one
+ * record of which keys are down and which press is on `D`
+ * ({@link heldKey}), so every source of keys agrees on them: a press raises
+ * `KD` (it stays high under a key pressed over another), and only the last
+ * key down going up lowers it. A press or a text that does not fit behind
+ * what the input still has to send is refused whole: nothing is sent,
+ * nothing on `D` changes, and the caller is told so.
  *
  * The body is a keycap glyph above a readout box in the glyph column, the port
  * labels beside them. The readout shows the code on the data outputs, each
- * output read ahead of its bubble, so it is the code the keyboard sends; it
- * follows the link state tick by tick, in a watch as on the board. A code
- * changes the readout's text and scale and the box's alphas, never a context.
+ * output read ahead of its bubble, so it is the code the keyboard sends, and
+ * the box lights while `KD` is high; both follow the link state tick by
+ * tick, in a watch as on the board. A code changes the readout's text and
+ * scale and the box's alphas, never a context.
  */
 export class KeyboardComponent extends Component<KeyboardOptions> {
   public readonly config = keyboardComponentConfig;
@@ -77,37 +85,44 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
   // Set by every draw(). Declared rather than initialized: a class-field
   // define would run after the base constructor's first draw and drop them.
   declare private _code: number;
+  declare private _lit: boolean;
   declare private _readout: BitmapText;
   declare private _frame: Graphics;
   declare private _fill: Graphics;
 
-  // Stamped with the session reset it was pressed in: a stop rebuilds the
-  // engine with nothing on D.
-  private readonly _held = signal<{
+  // The keys down and the press on D, stamped with the session reset they
+  // were pressed in: a stop rebuilds the engine with every output low.
+  private readonly _down = signal<{
     held: KeyboardHeldKey;
+    keys: ReadonlySet<string | null>;
     resets: number;
   } | null>(null);
 
-  /**
-   * The key on `D`, or `null` when no key holds it. Transient session state:
-   * {@link clearSimState} drops it, and a stop outdates it.
-   */
-  public readonly heldKey: Signal<KeyboardHeldKey | null> = computed(() => {
-    const record = this._held();
-    return record && record.resets === this.sessionResets()
-      ? record.held
-      : null;
+  private readonly _current = computed(() => {
+    const record = this._down();
+    return record && record.resets === this.sessionResets() ? record : null;
   });
+
+  /**
+   * The press on `D` while a key is down, `KD` high; `null` while none is.
+   * It stays the same object while the keys down change under it, until
+   * the next press. Transient session state: {@link clearSimState} drops
+   * it, and a stop outdates it.
+   */
+  public readonly heldKey: Signal<KeyboardHeldKey | null> = computed(
+    () => this._current()?.held ?? null
+  );
 
   constructor(options: KeyboardOptions) {
     super(keyboardMeta, options);
   }
 
   /**
-   * Puts `code` on `D` with a strobe, held by the physical key `key` or by
-   * none. The key held before is let go of without a release of its own.
-   * Reports whether the press fit behind what the input still has to send;
-   * one that does not sends nothing and leaves the key held before on `D`.
+   * Puts `code` on `D` with a strobe and `KD` high, the key `key` down — a
+   * physical key, or none. Keys already down stay down, so `KD` stays high
+   * until every one of them is up. Reports whether the press fit behind
+   * what the input still has to send; one that does not sends nothing and
+   * changes nothing.
    */
   public pressKey(
     route: KeyboardRoute,
@@ -119,28 +134,80 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
       return false;
     }
     route.send(frames);
-    this._held.set({ held: { code, key }, resets: this.sessionResets() });
+    const keys = new Set(this._current()?.keys);
+    keys.add(key);
+    this._down.set({
+      held: { code, key },
+      keys,
+      resets: this.sessionResets()
+    });
     return true;
   }
 
   /**
-   * Sets `D` to zero if a key is on it; reports whether one was. A release
-   * is a state, so it always fits.
+   * Holds `code` down with the key `key`: a press, unless `code` is on `D`
+   * with a key down already, which `key` then joins without a strobe.
+   * Reports whether it fit, as {@link pressKey} does.
    */
-  public releaseKey(route: Pick<InputRoute, 'send'>): boolean {
-    if (!this.heldKey()) {
+  public holdKey(
+    route: KeyboardRoute,
+    code: number,
+    key: string | null = null
+  ): boolean {
+    const current = this._current();
+    if (current?.held.code !== code) {
+      return this.pressKey(route, code, key);
+    }
+    this._down.set({ ...current, keys: new Set([...current.keys, key]) });
+    return true;
+  }
+
+  /**
+   * Lets go of the key `key`. Only the last key down going up sends the
+   * release, `KD` low; `D` keeps its code. Reports whether `key` was down.
+   * A release is a state, so it always fits.
+   */
+  public releaseKey(
+    route: Pick<InputRoute, 'send'>,
+    key: string | null
+  ): boolean {
+    const current = this._current();
+    if (!current?.keys.has(key)) {
       return false;
     }
-    this._held.set(null);
-    route.send([releaseFrame()]);
+    const keys = new Set(current.keys);
+    keys.delete(key);
+    this._setKeys(route, current, keys);
     return true;
   }
 
   /**
-   * Sends `codes` as taps, a press and a release each, in order. A tap takes
-   * `D` over, so the key held before counts as released. Reports whether
-   * the text fit behind what the input still has to send; one that does not
-   * is refused whole — never cut — and sends nothing.
+   * Lets go of every key down, or of every physical one, sending the
+   * release if no key is left down. Reports whether a key was let go of.
+   */
+  public releaseKeys(
+    route: Pick<InputRoute, 'send'>,
+    which: KeyboardKeys = 'all'
+  ): boolean {
+    const current = this._current();
+    if (!current) {
+      return false;
+    }
+    const keys = new Set(
+      which === 'all' ? [] : [...current.keys].filter((key) => key === null)
+    );
+    if (keys.size === current.keys.size) {
+      return false;
+    }
+    this._setKeys(route, current, keys);
+    return true;
+  }
+
+  /**
+   * Sends `codes` as taps, a press and a release each, in order. A tap ends
+   * with `KD` low, so every key down before counts as released. Reports
+   * whether the text fit behind what the input still has to send; one that
+   * does not is refused whole — never cut — and sends nothing.
    */
   public tapKeys(route: KeyboardRoute, codes: readonly number[]): boolean {
     if (codes.length === 0) {
@@ -150,27 +217,29 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
     if (!fitsInputQueue(route.pending(), frames)) {
       return false;
     }
-    this._held.set(null);
+    this._down.set(null);
     route.send(frames);
     return true;
   }
 
   /**
-   * Drops every frame `route` still has queued and sets every output low on
-   * the next tick.
+   * Drops every frame `route` still has queued and lets go of every key:
+   * `STB` low on the next tick, `KD` low on the one after, `D` kept (see
+   * `cancelFrames`).
    */
   public cancelKeys(route: Pick<InputRoute, 'cancel'>): void {
-    this._held.set(null);
-    route.cancel(resetFrame());
+    this._down.set(null);
+    route.cancel(cancelFrames());
   }
 
   public override clearSimState(): void {
-    this._held.set(null);
+    this._down.set(null);
   }
 
   public override setPortPowered(portIndex: number, powered: boolean): void {
     super.setPortPowered(portIndex, powered);
-    if (portIndex - this.numInputs < KEYBOARD_DATA_BITS) {
+    const output = portIndex - this.numInputs;
+    if (output < KEYBOARD_DATA_BITS || output === KEYBOARD_KEY_DOWN_OUTPUT) {
       this._syncReadout();
     }
   }
@@ -199,11 +268,38 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
     return getStaticDI(SimulationService).resets();
   }
 
+  /** Whether `KD` is high, read ahead of its bubble, as the box shows it. */
+  private readKeyDown(): boolean {
+    return this.isOutputHigh(KEYBOARD_KEY_DOWN_OUTPUT);
+  }
+
+  /**
+   * Sets `keys` as the keys down, sending the release once none is left.
+   * The press on `D` stays the same record while any key is down.
+   */
+  private _setKeys(
+    route: Pick<InputRoute, 'send'>,
+    current: { held: KeyboardHeldKey; resets: number },
+    keys: ReadonlySet<string | null>
+  ): void {
+    if (keys.size > 0) {
+      this._down.set({ ...current, keys });
+      return;
+    }
+    this._down.set(null);
+    route.send([releaseFrame()]);
+  }
+
   private _syncReadout(): void {
     const code = this.readCode();
+    const lit = this.readKeyDown();
     if (code !== this._code) {
       this._code = code;
       this._showCode();
+    }
+    if (lit !== this._lit) {
+      this._lit = lit;
+      this._showLit();
     }
   }
 
@@ -222,9 +318,11 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
         )) /
         READOUT_FONT_SIZE
     );
-    const held = this._code !== 0;
-    this._fill.alpha = held ? LIT_FILL_ALPHA : 0;
-    this._frame.alpha = held ? 1 : EMPTY_FRAME_ALPHA;
+    this._frame.alpha = this._code !== 0 ? 1 : EMPTY_FRAME_ALPHA;
+  }
+
+  private _showLit(): void {
+    this._fill.alpha = this._lit ? LIT_FILL_ALPHA : 0;
   }
 
   protected draw(): void {
@@ -274,5 +372,7 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
     this._readout = readout;
     this._code = this.readCode();
     this._showCode();
+    this._lit = this.readKeyDown();
+    this._showLit();
   }
 }

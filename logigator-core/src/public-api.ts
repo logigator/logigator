@@ -194,6 +194,7 @@ export type {
 export {
   KEYBOARD_DATA_BITS,
   KEYBOARD_GLYPH_COLUMN_WIDTH,
+  KEYBOARD_KEY_DOWN_OUTPUT,
   KEYBOARD_STROBE_OUTPUT
 } from './catalog/built-ins/keyboard.meta';
 export {

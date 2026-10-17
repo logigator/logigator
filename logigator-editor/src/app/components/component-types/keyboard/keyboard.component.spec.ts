@@ -3,6 +3,7 @@ import { BitmapText, Container, Graphics, GraphicsContext } from 'pixi.js';
 import {
   Direction,
   KEYBOARD_DATA_BITS,
+  KEYBOARD_KEY_DOWN_OUTPUT,
   KEYBOARD_STROBE_OUTPUT,
   keyboardMeta
 } from '@logigator/core';
@@ -40,6 +41,14 @@ function send(keyboard: KeyboardComponent, code: number): void {
     const high = ((code >> bit) & 1) === 1;
     keyboard.setPortPowered(bit, high !== keyboard.isPortNegated('out', bit));
   }
+}
+
+/** Powers `KD` as the engine does, through its bubble if it has one. */
+function keyDown(keyboard: KeyboardComponent, high: boolean): void {
+  keyboard.setPortPowered(
+    KEYBOARD_KEY_DOWN_OUTPUT,
+    high !== keyboard.isPortNegated('out', KEYBOARD_KEY_DOWN_OUTPUT)
+  );
 }
 
 describe('KeyboardComponent', () => {
@@ -103,6 +112,7 @@ describe('KeyboardComponent', () => {
     const empty = looks();
 
     send(keyboard, 0x7f);
+    keyDown(keyboard, true);
     const lit = looks();
 
     expect(lit.map((entry) => entry.node)).toEqual(
@@ -121,10 +131,30 @@ describe('KeyboardComponent', () => {
       relit.every((entry) => entry.context instanceof GraphicsContext)
     ).toBe(true);
 
+    keyDown(keyboard, false);
     send(keyboard, 0);
     expect(looks().map((entry) => entry.alpha)).toEqual(
       empty.map((entry) => entry.alpha)
     );
+    keyboard.destroy({ children: true });
+  });
+
+  it('lights the box while KD is high and keeps the code shown once it falls', () => {
+    const keyboard = makeKeyboard();
+    keyboard.setPortNegated('out', KEYBOARD_KEY_DOWN_OUTPUT, true);
+    keyboard.setSimulating(true);
+    const alphas = () => flatten(keyboard).map((node) => node.alpha);
+    send(keyboard, 0x41);
+    keyDown(keyboard, false);
+    const latched = alphas();
+
+    keyDown(keyboard, true);
+    expect(alphas()).not.toEqual(latched);
+    expect(readoutOf(keyboard).text).toBe('A');
+
+    keyDown(keyboard, false);
+    expect(alphas()).toEqual(latched);
+    expect(readoutOf(keyboard).text).toBe('A');
     keyboard.destroy({ children: true });
   });
 

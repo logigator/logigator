@@ -192,7 +192,7 @@ export class InspectionService {
       operate: (operations) =>
         this.simulation.operateInput(component.id, operations),
       send: (frames) => this.simulation.sendFrames(component.id, frames),
-      cancel: (reset) => this.simulation.cancelFrames(component.id, reset),
+      cancel: (frames) => this.simulation.cancelFrames(component.id, frames),
       pending: () => this.simulation.pendingEvents(component.id)
     };
   }

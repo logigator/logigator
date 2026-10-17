@@ -314,7 +314,7 @@ const de: TranslationSchema = {
       KEYBOARD: {
         name: 'Tastatur',
         description:
-          'Eine Tastatur. Solange eine Taste gedrückt ist, liegt ihr ASCII-Code an D0–D6 an, und STB gibt bei jedem Tastendruck einen Puls aus. Während die Simulation läuft, öffnet ein Klick ein Fenster, das deine Eingaben entgegennimmt.',
+          'Eine Tastatur. An D0–D6 liegt der ASCII-Code der zuletzt gedrückten Taste an, STB gibt bei jedem Tastendruck einen Puls aus, und KD ist an, solange eine Taste gedrückt ist. Während die Simulation läuft, öffnet ein Klick ein Fenster, das deine Eingaben entgegennimmt.',
         window: {
           field: 'In die Schaltung tippen',
           onD: 'An D',

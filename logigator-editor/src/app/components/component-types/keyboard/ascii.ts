@@ -1,4 +1,8 @@
-import { KEYBOARD_DATA_BITS, KEYBOARD_STROBE_OUTPUT } from '@logigator/core';
+import {
+  KEYBOARD_DATA_BITS,
+  KEYBOARD_KEY_DOWN_OUTPUT,
+  KEYBOARD_STROBE_OUTPUT
+} from '@logigator/core';
 import { INPUT_QUEUE_LIMIT, type InputFrame } from '../../component-inspection';
 
 /**
@@ -56,7 +60,7 @@ export function codeFromBits(bit: (index: number) => boolean): number {
 }
 
 /**
- * What the readout shows for `code`: nothing for `0`, which is no key held, a
+ * What the readout shows for `code`: nothing for `0`, which no key sends, a
  * mnemonic for a code without a glyph, and a printable character as itself.
  */
 export function readoutText(code: number): string {
@@ -228,86 +232,114 @@ export function textToCodesStrict(text: string): StrictKeyboardText {
 const PRESS_FRAME_TICKS = 1;
 
 /**
- * Ticks `D` stays zero after a release, or a cancel, before the next key's
- * code may replace it, so a double letter still reads as two presses.
+ * Ticks `KD` stays low after a release, or a cancel, before the next press
+ * may raise it again, so a double letter still reads as two key-down pulses.
  */
 const RELEASE_TICKS = 1;
 
 /**
  * The event frames one key press is: what turns the route's pending count
- * into characters. A release and a reset are states, so neither counts.
+ * into characters. A release is a state, so it never counts, and a cancel's
+ * one event is fewer than a press's (see {@link cancelFrames}).
  */
 const PRESS_EVENTS = 3;
 
 /**
- * The keyboard's eight outputs for `code` on `D`, the strobe as `strobe`
- * says: `D0` the least significant bit, `STB` last.
+ * The keyboard's nine outputs: `D0` the least significant bit of `code`,
+ * then `STB` and `KD` as `strobe` and `keyDown` say. A `null` code, strobe
+ * or key down keeps what those outputs show.
  */
-function outputs(code: number, strobe: boolean | null): (boolean | null)[] {
+function outputs(
+  code: number | null,
+  strobe: boolean | null,
+  keyDown: boolean | null
+): (boolean | null)[] {
   const state: (boolean | null)[] = [];
   for (let bit = 0; bit < KEYBOARD_DATA_BITS; bit++) {
-    state.push(((code >> bit) & 1) === 1);
+    state.push(code === null ? null : ((code >> bit) & 1) === 1);
   }
   state[KEYBOARD_STROBE_OUTPUT] = strobe;
+  state[KEYBOARD_KEY_DOWN_OUTPUT] = keyDown;
   return state;
 }
 
 /**
- * A key going down, as three events: `D` takes `code` with `STB` low, `STB`
- * rises, and `STB` falls while `D` keeps the code. The engine has no pulse
- * of its own, so the third frame is what ends the strobe. A code outside
- * `1`…`0x7F` is refused: `0` on `D` means no key is held.
+ * A key going down, as three events with `KD` high in each: `D` takes
+ * `code` with `STB` low, `STB` rises, and `STB` falls while `D` keeps the
+ * code. The engine has no pulse of its own, so the third frame is what ends
+ * the strobe. Pressed over a key still down, `KD` is high already and stays
+ * so; `D` switches to the new code with a strobe of its own. A code outside
+ * `1`…`0x7F` is refused: no key sends `0`.
  */
 export function pressFrames(code: number): InputFrame[] {
   if (!Number.isInteger(code) || code < 1 || code > 0x7f) {
     throw new RangeError(`Not a code the keyboard sends: ${code}`);
   }
   return [
-    { state: outputs(code, false), hold: PRESS_FRAME_TICKS },
-    { state: outputs(code, true), hold: PRESS_FRAME_TICKS },
-    { state: outputs(code, false), hold: PRESS_FRAME_TICKS }
+    { state: outputs(code, false, true), hold: PRESS_FRAME_TICKS },
+    { state: outputs(code, true, true), hold: PRESS_FRAME_TICKS },
+    { state: outputs(code, false, true), hold: PRESS_FRAME_TICKS }
   ];
 }
 
 /**
- * The key on `D` going up: every data bit low, held for
- * {@link RELEASE_TICKS}. A state rather than an event, so it stays out of the
- * pending count; it never merges, since it always follows a press.
+ * The last key down going up: `KD` low, held for {@link RELEASE_TICKS}. `D`
+ * keeps the last code, latched until the next press replaces it, and `STB`,
+ * low after every press, stays low. A state rather than an event, so it
+ * stays out of the pending count; it never merges into a press, which ends
+ * in an event.
  */
 export function releaseFrame(): InputFrame {
   return {
-    state: outputs(0, null),
+    state: outputs(null, false, false),
     hold: RELEASE_TICKS,
     coalesce: true
   };
 }
 
-/** Each code pressed and released, in order: four ticks a character. */
+/**
+ * Each code pressed and released, in order: four ticks a character, `KD`
+ * high for the first three and low for the fourth.
+ */
 export function tapFrames(codes: readonly number[]): InputFrame[] {
   return codes.flatMap((code) => [...pressFrames(code), releaseFrame()]);
 }
 
 /**
- * Every output low, the strobe included, since the cancel it follows can cut
- * a press short while `STB` is high. Held as long as a release: the cancel
- * ends whatever hold was running, so the reset is on the outputs after the
- * next tick, and the next character's first frame replaces it no sooner
- * than a tick later. `D` is zero for that tick, as between two characters,
- * and `STB`, which the next press raises only with its second frame, stays
- * low for at least two.
+ * A cancel, sent in place of every frame still queued: `STB` low, then `KD`
+ * low, `D` kept throughout.
+ *
+ * The first frame lowers `STB` and keeps `D` and `KD`, as a press's third
+ * frame does. A cancel ends whatever hold was running, so it is on the
+ * outputs after the next tick, and a character whose strobe had already
+ * risen keeps its code on `D` for the tick after the strobe falls, exactly
+ * as an uncut press would; a circuit whose strobe path has a gate more than
+ * its data path still latches it. It is an event so that the second frame,
+ * a state, cannot merge into it and take that tick away, and neither can a
+ * release sent after the cancel.
+ *
+ * The second frame lowers `KD` like a release and holds as long as one, so
+ * the next press raises it again no sooner than a tick later. It lets go of
+ * every key held.
+ *
+ * The one event never counts as a character: a press is three, and
+ * {@link pendingCharacters} rounds down, so one event alone, or ahead of
+ * whole presses, adds nothing. It always fits: the cancel replaces what the
+ * input had queued, so the engine counts only its own frames against the
+ * limit, one event of {@link INPUT_QUEUE_LIMIT}.
  */
-export function resetFrame(): InputFrame {
-  return {
-    state: outputs(0, false),
-    hold: RELEASE_TICKS,
-    coalesce: true
-  };
+export function cancelFrames(): InputFrame[] {
+  return [
+    { state: outputs(null, false, null), hold: PRESS_FRAME_TICKS },
+    releaseFrame()
+  ];
 }
 
 /**
  * How many characters are queued and not yet on `D`, from how many event
  * frames the keyboard's input has not yet applied: a character whose first
- * press frame is applied is on `D` already, so the count rounds down.
+ * press frame is applied is on `D` already, and a cancel's one event is no
+ * character, so the count rounds down.
  */
 export function pendingCharacters(pendingEvents: number): number {
   return Math.floor(pendingEvents / PRESS_EVENTS);

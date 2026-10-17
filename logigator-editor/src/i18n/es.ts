@@ -311,7 +311,7 @@ const es: TranslationSchema = {
       KEYBOARD: {
         name: 'Teclado',
         description:
-          'Un teclado. Mientras se mantiene pulsada una tecla, D0–D6 llevan su código ASCII, y STB emite un pulso cada vez que se pulsa una tecla. Mientras la simulación está en marcha, al hacer clic se abre una ventana que recibe lo que escribes.',
+          'Un teclado. D0–D6 llevan el código ASCII de la última tecla pulsada, STB emite un pulso cada vez que se pulsa una tecla, y KD está encendido mientras se mantiene pulsada una tecla. Mientras la simulación está en marcha, al hacer clic se abre una ventana que recibe lo que escribes.',
         window: {
           field: 'Escribir en el circuito',
           onD: 'En D',
