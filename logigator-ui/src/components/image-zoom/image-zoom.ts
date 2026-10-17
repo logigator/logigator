@@ -28,6 +28,8 @@ export class LgImageZoom {
   private readonly viewer = inject(ImageZoomViewer);
 
   protected open(): void {
-    this.viewer.open(this.src(), this.alt(), this.closeLabel());
+    this.viewer.open(this.src(), this.alt(), {
+      closeLabel: this.closeLabel()
+    });
   }
 }

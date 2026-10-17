@@ -80,6 +80,10 @@ export type { LgMarkdownView } from './components/markdown-field/markdown-field'
 export type { LgMarkdownTool } from './internal/markdown-insert';
 
 export { LgImageZoom } from './components/image-zoom/image-zoom';
+// The zoom without its button, for a consumer whose image is already inside a
+// frame of its own — the site's circuit previews.
+export { ImageZoomViewer } from './components/image-zoom/image-zoom-viewer';
+export type { ImageZoomOptions } from './components/image-zoom/image-zoom-viewer';
 export { LgAvatar } from './components/avatar/avatar';
 export { LgCard } from './components/card/card';
 export {
