@@ -227,13 +227,18 @@ so read the returned `state`.
 - The engine applies an input frame on its next tick, so an input's own
   output port shows a write after **one** step, and a gate it feeds after
   two — the same one tick per stage as every other component.
-- `setInput` writes a level as a state frame: written twice while paused, the
-  circuit sees the last value and nothing in between. What a pointer does to a
-  button is an event frame instead, each on the outputs for at least a tick
-  before the next applies — so a button pressed and released while paused is
-  high after the next step and low after the one after it. A pulse, from a
-  pointer or from `setInput`, is always an event followed by the frame that
-  ends it: high after the next step, low after the second.
+- `setInput` sends the frame the input's own gesture sends, so a script
+  operates it as a pointer does. A lever's is a state frame: written twice while
+  paused, the circuit sees the last value and nothing in between. A button's
+  or a gamepad's is an event frame, each on the outputs for at least a tick
+  before the next applies — so `true` then `false` while paused is high after
+  the next step and low after the one after it — behind a bounded backlog:
+  past one pending press and release, the newest write replaces what is still
+  queued ([simulation.md](simulation.md#input-frames)), so a script that
+  writes faster than it steps loses older presses, never the last one. A
+  pulse, from a pointer or from `setInput`, is always an event followed by the
+  frame that ends it: high after the next step, low after the second, every
+  one of them delivered.
 - A **keyboard** is not a user input and `setInput` refuses it, naming `type`
   and `setKey`. Its calls build the frames its window sends, through the
   same `KeyboardComponent` methods, so both agree on the key held on `D`

@@ -26,18 +26,19 @@ and its per-port link power (`Component.isPortPowered`, maintained by
 `LinkStateApplier`) — and exposes it as signals its OnPush renderer picks up.
 
 The factory also receives an `InspectionContext` whose **`InputRoute`**
-(`press(slot)` / `release(slot)`) is where a user input played inside the
-inspection sends its presses, so the inspection never resolves an engine unit
-itself. Where the component was opened decides the route: on the board it
-emits on the main project's `userInput$` (`emitUserInput(component, phase,
-slot)`), exactly as a press on the canvas does; in a watch it holds the copy's
-slot through that level (`SubCircuitWatch.holdFor`). Beside the presses, the
+(`operate(operations)`, each a `{ slot, phase }`) is where a user input played
+inside the inspection sends its presses, so the inspection never resolves an
+engine unit itself. One call is one frame: every slot it changes reaches the
+circuit on the same tick. Where the component was opened decides the route: on
+the board it is `SimulationService.operateInput`, the gesture mapping a press
+on the canvas goes through; in a watch it operates the copy's slots through
+that level (`operateUnitInput` with the copy's unit). Beside the presses, the
 route hands [input frames](simulation.md#input-frames) to the component's own
 engine input (`send(frames)`), replaces the ones it still has queued with an
 optional reset (`cancel(reset?)`), and counts its event frames not yet applied
 (`pending()`) — through `SimulationService.sendFrames` and its siblings on the
 board, through `sendUnitFrames` with the copy's resolved unit in a watch. The gamepad
-plays its slots through `press` and `release`, the keyboard sends frames, and
+plays its slots through `operate`, the keyboard sends frames, and
 the ROM, the RAM and the watch ignore the route.
 
 Beside it, the context's **`StateRoute`** is where the inspection reads its
@@ -159,11 +160,11 @@ circuit**, split between the component layer and `inspection/watch/`:
   own inspection is opened rather than pressed — tracked per level and closed
   with it; any other user input operated on the canvas — one slot, no
   inspection, the board's rule (`isCanvasOperatedInput`) — gets a `tap` on
-  its slot `0` (`SimulationService.triggerUnitInput`, unit index from the
+  its slot `0` (`SimulationService.operateUnitInput`, unit index from the
   watch index), which its gesture reads as a toggle or a pulse. A multi-slot
   input without an inspection is neither tapped nor held there. A `hold` input is held
   rather than tapped: `holdFor(component, slot)` hands out the slot's
-  `press` / `release`, both `triggerUnitInput` with that phase and
+  `press` / `release`, both `operateUnitInput` with that phase and
   bound to the level they were resolved on, so a release arriving after a
   level swap still reaches the unit it pressed. `setInput(component, value,
 slot)` is the absolute path automation drives.
@@ -212,8 +213,9 @@ set, `keyCaps`,
 `keyboardPresent` (chips show even on a touch-only device, where
 `(hover: none)` hides them otherwise) and `enlarged` (hit regions grown past
 the shapes); for `assign`, `capturing` and `flashed` (one control each, or
-`null`). Outputs: `controlDown` / `controlUp` (`{ control, pointerId }`,
-transitions only), `controlSelect` and `save`. One SVG behind draws the fixed silhouette and the
+`null`). Outputs: `pointerHold` (`{ pointerId, pressed, released }`, what
+one pointer event changed, so a D-pad diagonal is one event), `controlSelect`
+and `save`. One SVG behind draws the fixed silhouette and the
 control shapes; every control, glyph, caption and keycap chip is an HTML
 element over it, placed in percent from **one layout table** in viewBox units
 (`pad/gamepad-pad-layout.ts`, `padLayout(controls)`), which the SVG draws from
@@ -252,8 +254,19 @@ pressing ↑ once and releasing ← once.
 **`GamepadInspection`** merges every source. Each control has a set of
 **holders**, `key:<code>`, `ptr:<pointerId>` and `pad:<index>:<input>`, and is
 pressed while the set is non-empty; only an empty ↔ non-empty transition goes out, as
-`route.press(slot)` / `route.release(slot)`, the slot read from
-`component.slotIds` at the call. Holding a key and clicking the same control,
+a `press` or `release` of the control's slot, read from `component.slotIds` at
+the call. What one source event changes goes out **batched**, as one
+`route.operate` and so one engine frame (`batch(run)`, nested batches joining
+the outer one): a key down or up, one pointer event (`pointerMove(pointerId,
+pressed, released)`, from the pad's `pointerHold`), one controller poll, and
+every holder a `releaseKeys()`, `releasePointers()`, `releasePad()`,
+`setAssigning(true)` or `destroy()` lets go of. Controls pressed together
+therefore reach the circuit on the same tick; two keys or two fingers are two
+DOM events, so two frames, a tick apart when both arrive between two ticks. A frame
+is the gamepad's slot write like any hold input's, events behind a bounded
+backlog ([simulation.md](simulation.md#input-frames)), so mashing a control
+faster than a paused or slow simulation steps keeps its last press and drops
+older ones. Holding a key and clicking the same control,
 then letting go of either, keeps it held. `releaseKeys()` drops only `key:`
 holders, so pointer and controller holds survive the window losing focus;
 `releasePad()` drops only `pad:` holders. A control the pad does not have takes
@@ -293,9 +306,9 @@ controller.
 
 **In a watch.** A tap on a gamepad copy opens its window through
 `SubCircuitWatch.activate`, with the level's route and the breadcrumb as its
-place, so the title reads _Outer › Inner › Gamepad_. Its presses hold the inner
-engine input's slots (`holdFor`), light the copy and re-blit the level through the
-level project's ticker. Keys and controllers reach it as they reach a
+place, so the title reads _Outer › Inner › Gamepad_. Its presses drive the inner
+engine input's slots (`operateUnitInput`), light the copy and re-blit the level
+through the level project's ticker. Keys and controllers reach it as they reach a
 top-level pad; only the route differs. Popping its level, navigating the
 breadcrumb above it or closing the watch closes the window first, and its
 `destroy()` sets every held slot low through that route while the copy still
@@ -409,7 +422,7 @@ page has focus, and only in a secure context; where `getGamepads` is missing,
 
 **Assignment.** A `GamepadInspection` registers itself as a
 `GamepadPadTarget` (`padDown(control, input)`, `padUp(control, input)`,
-`releasePad()`) when it opens and unregisters when it closes, so a controller
+`releasePad()`, `batch(run)`) when it opens and unregisters when it closes, so a controller
 plays a pad whether or not a view of it is on screen. Registrations are
 counted: a target registered twice stays until both registrations have gone.
 `assign(index, target)`, `unassign(target)` and `assignmentOf(target)` (a
@@ -438,7 +451,8 @@ be held while paused) and the page is visible, and stops otherwise. Each frame
 maps every assigned controller through `standardHolds` (pure, in
 `gamepad-hardware-mapping.ts`) to the inputs holding a control right now, and
 **diffs** that against the last frame, so a target hears only changes, as
-`padDown` / `padUp` with `input` = `<index>:<input>`.
+`padDown` / `padUp` with `input` = `<index>:<input>`, all of one frame inside
+one `batch`, so what a poll finds pressed together lands on one tick.
 
 | Standard input                       | Control                  | Input id                |
 | ------------------------------------ | ------------------------ | ----------------------- |

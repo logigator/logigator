@@ -178,10 +178,12 @@ Inputs are independent: one input's hold never delays another's frames.
 
 There are two kinds, because inputs report two different things:
 
-- **Event** (`coalesce` unset) — never dropped or merged. A press and its
-  release both reach the circuit however fast they came: a button pressed and
-  let go while paused is high after the next step and low after the one after
-  it, and two pulse-button taps between ticks give two pulses.
+- **Event** (`coalesce` unset) — never dropped or merged by the engine. A press
+  and its release both reach the circuit however fast they came: a button
+  pressed and let go while paused is high after the next step and low after the
+  one after it, and two pulse-button taps between ticks give two pulses. What
+  bounds a button's or a gamepad's events is the editor's
+  [held-input backlog](#input-frames), not the engine.
 - **State** (`coalesce: true`) — a position, not a happening. It merges into
   the input's last frame not yet applied while that one is a state too (its
   non-`null` entries over the earlier ones, its own hold kept), so a switch
@@ -209,14 +211,59 @@ checks what it can first and refuses the call instead: the shape, and the
 `fitsInputQueue(pending, frames)` — the pending bound below plus the frames'
 events — is the one check, made by `sendUnitFrames` and, ahead of it, by the
 keyboard, which has to say why. States never count, so a release or a
-cancel's reset always fits. The slot paths (`_drive`) are not checked: a
-button would need tens of thousands of presses queued while paused.
+cancel's reset always fits. The slot paths (`_drive`) are not checked: a held
+input keeps at most three events pending, and a pulse button would need tens of
+thousands of taps queued while paused.
 
 A request the engine refuses anyway — a race past the check, or an editor
 bug — is no session failure. `submitInput` is tracked by its `reqId`
 (`submissions`); the worker posts the engine's throw as an `error` under that
 id, and the bridge logs it, reports it as an `inputRefused` fault and carries
 on, nothing of the request queued.
+
+**Held inputs.** A `hold` input — the button, every gamepad control — reports
+what is held now. Its frames are events, so a single quick tap reaches the
+circuit for a tick even while paused, but its backlog is bounded: one
+`HeldInputHistory` per unit in `SimulationService` remembers the last states
+sent, and
+`heldInputWrite` (`simulation/held-input.ts`, pure) decides each change against
+`pendingEvents(unit)` — _P_, an upper bound, see Progress below:
+
+- **_P_ + 1 ≤ 3** (`HELD_INPUT_BACKLOG`: one transition plus one press and its
+  release) — the change is **appended** as one event frame of the slots it
+  changes, `null` elsewhere.
+- **Otherwise** it **replaces** the backlog (`replace: true`) with what is held
+  now: the newest state, every slot set, and ahead of it, only where needed, a
+  **lead** frame stepping each slot this change moves through the opposite
+  value. A slot falling now gets a lead of high if the pins may still be low —
+  the release's press may not have reached the circuit, so the latest click
+  goes out whole; a slot rising now gets a lead of low if the pins may still be
+  high, so the press is an edge. "May" is decided over every state the pins can
+  be in with up to _P_ frames unapplied (the history's entries `0`…_P_, or
+  anything beyond what it holds). The presses the replace drops are the older
+  ones; every other slot is restated at its newest value, so a control held on
+  a gamepad stays held while another is mashed.
+
+Paused, one press is `[T]`, the release appends `[F]`: high after the next
+step, low after the one after. Three quick taps go `[T]`, `[T F]`, `[T F T]`,
+and the second release finds _P_ = 3 and replaces with `[T F]` (the pins still
+low, its press is unapplied); the third press appends, the third release
+replaces again, so three taps, or ten, leave `[T F]` — the last tap high for
+one step, the rest dropped. A press held across steps is applied by the first
+and stays. With a lone button the states alternate, so a full backlog, counted
+exactly, has the pins showing the value the change sets: every replace is
+exactly `[¬v, v]`, the newest transition as an edge, and nothing waits behind it
+but at most one more press-and-release.
+
+A stale _P_ — frames the engine applied since its last report — only makes a
+replace come early, and that stays harmless: the lead is decided against every
+state the pins may be in, so it never replays a press the circuit already saw,
+and what it drops is older presses, as a full backlog does, only sooner. The
+price is at most one extra tick before the newest state where the pins already
+had the lead's value. No fixed replacement can avoid both a repeated press and
+an early drop when only an upper bound is known; this one never repeats. The
+switch is unaffected (a state frame, a position), and the pulse button and the
+keyboard queue every press on purpose.
 
 **Progress.** The engine counts, per input, the event frames not yet applied;
 a state frame never counts, and neither does a frame whose hold is still
@@ -434,18 +481,21 @@ control. Two independent properties describe it:
   sends the result as [input frames](#input-frames) over the input's outputs,
   `null` for every slot it leaves alone: a `level` slot (button, switch) is
   set to its new state in one frame, which stays until the next one, and is
-  idempotent per slot — a slot already there writes nothing; a `pulse` slot
+  idempotent per slot — a slot already there writes nothing. Which frame
+  follows from the input alone, whoever drives it: a `toggle` input's is a
+  state, a `hold` input's an event behind the bounded backlog of
+  [held inputs](#input-frames). A `pulse` slot
   (pulse button) is an event frame setting it high and a state frame setting
   it low again, one tick later, and flashes active for
   `PULSE_BUTTON_FLASH_MS`. Setting a level high and pulsing obey the readiness
   rule; setting a level low always clears the visual and reaches the engine
   whenever one is up. The visuals change when the frame is sent, so while
   paused they lead the engine by up to a step.
-- **`gesture`** — how a pointer operates it, mapped onto a value and a frame
-  kind in one place, `_operate`: `hold` (button) is high on `press` and low on
-  `release`, `tap` (pulse button) is `true` on a `tap` — both reported as
-  events — and `toggle` (switch) flips on a `tap`, a state.
-  Any other phase is ignored.
+- **`gesture`** — how a pointer operates it, mapped onto a value in one place,
+  `_operate`: `hold` (button, gamepad) is high on `press` and low on
+  `release`, `tap` (pulse button) is `true` on a `tap`, and `toggle` (switch)
+  flips on a `tap`. Any other phase is ignored. `_operate` takes a list of
+  `{ slot, phase }`, and what one call changes goes out as one frame.
 
 Only three pairs exist, and only they type-check: `UserInput` is the union of
 `LevelUserInput` (`level` with `hold` or `toggle`) and `PulseUserInput`
@@ -466,14 +516,16 @@ pans and only a tap hit-tests the component under the cursor, emitting an
 inspect request for one that declares an inspection and a `tap` on slot `0` for
 any other user input operated on the canvas. An input that declares an
 inspection is played in it, its presses arriving through the inspection's
-`InputRoute` ([inspection.md](inspection.md)). `Project.userInput$` carries
-each operation as `{ component, phase, slot }`. A slot outside `inputSlots` is
-ignored.
+`InputRoute` ([inspection.md](inspection.md)), which reaches `operateInput`.
+`Project.userInput$` carries each canvas operation as
+`{ component, phase, slot }`. A slot outside `inputSlots` is ignored.
 
 The service keeps every high `level` slot — toggled and held alike, per
 input, the board's and a watch's copies — so nothing outlives the session
 holding it high. `stop()` sets them low against the rebuilt engine once the
-reset lands, one state frame per input, which also catches a press or toggle
+reset lands, one frame per input of the kind its gesture sends, after dropping
+every held input's history (the rebuilt engine holds none of it), which also
+catches a press or toggle
 that reached the engine while the reset was in flight; `exit()` clears them
 visually, the engine being
 gone. A hold still open afterwards releases nothing further. A watch copy
@@ -484,16 +536,17 @@ holds it — so it is reset like any other.
 Callers pass an input's unit and slots, and the service is the one place that
 turns slots and a `drive` into frames (`_drive`). Top-level units come from
 `CompiledBoard.userInputs` (`Component.id` → submission index); inner inputs
-operated in a watch arrive through `triggerUnitInput` with the unit already
-resolved by the watch index and the phase read through the same gesture
+operated in a watch arrive through `operateUnitInput` with the unit already
+resolved by the watch index and the phases read through the same gesture
 mapping. The automation
 API's `setUserInput` (and `setUnitInput`, its watch counterpart) drives one
 slot to an **absolute** state, which follows from the drive alone: a `level`
 slot is set to `value`, one already there being left alone, and a `pulse` slot
-pulses on `true` and ignores `false`, holding no state to clear.
-`setUserInputs` (and `setUnitInputs`) takes one value per slot and sends
-**one** state frame of the slots that change, so all of them land on the
-same tick. All of them report `false` for a slot the input does not have, the
+pulses on `true` and ignores `false`, holding no state to clear. The frame is
+the one `_drive` picks for the input, so a script presses a button as a pointer
+does, bounded backlog included. `setUserInputs` (and `setUnitInputs`) takes one
+value per slot and sends **one** frame of the slots that change, so all of them
+land on the same tick. All of them report `false` for a slot the input does not have, the
 array forms for a list that is not one value per slot.
 
 Beside the slot paths, `sendFrames(componentId, frames)` and
@@ -506,7 +559,7 @@ last snapshot's count plus what was sent since). A frame without exactly one
 entry per output, or with a hold that is not a whole number of ticks, refuses
 the whole call, and so do frames that do not fit behind that count. An
 inspection reaches all of them through its `InputRoute` (`send`, `cancel`,
-`pending` beside `press` and `release`), so it never resolves a unit itself.
+`pending` beside `operate`), so it never resolves a unit itself.
 The keyboard is what uses them: it has no slots here, and its window and the
 automation API send its press, release and tap frames through these calls
 (`KeyboardComponent`, see [component-system.md](component-system.md)).
