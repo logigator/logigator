@@ -116,22 +116,22 @@ const de: TranslationSchema = {
       NOT: {
         name: 'NICHT-Gatter',
         description:
-          'Ein NICHT-Gatter ist ein digitales Logikgatter, das die logische Negation umsetzt. Ein HIGH-Eingang (1) ergibt einen LOW-Ausgang (0), ein LOW-Eingang (0) einen HIGH-Ausgang (1).'
+          'Ein NICHT-Gatter ist ein digitales Logikgatter, das die logische **Negation** umsetzt. Ein HIGH-Eingang (1) ergibt einen LOW-Ausgang (0), ein LOW-Eingang (0) einen HIGH-Ausgang (1).'
       },
       AND: {
         name: 'UND-Gatter',
         description:
-          'Ein UND-Gatter ist ein digitales Logikgatter, das die logische Konjunktion umsetzt. Ein HIGH-Ausgang (1) ergibt sich nur, wenn alle Eingänge des UND-Gatters HIGH (1) sind. Ist ein Eingang LOW (0), ergibt sich ein LOW-Ausgang.'
+          'Ein UND-Gatter ist ein digitales Logikgatter, das die logische **Konjunktion** umsetzt. Ein HIGH-Ausgang (1) ergibt sich nur, wenn alle Eingänge des UND-Gatters HIGH (1) sind. Ist ein Eingang LOW (0), ergibt sich ein LOW-Ausgang.'
       },
       OR: {
         name: 'ODER-Gatter',
         description:
-          'Ein ODER-Gatter ist ein digitales Logikgatter, das die logische Disjunktion umsetzt. Ein HIGH-Ausgang (1) ergibt sich, wenn mindestens ein Eingang des ODER-Gatters HIGH (1) ist. Nur wenn jeder Eingang LOW (0) ist, ergibt sich ein LOW-Ausgang.'
+          'Ein ODER-Gatter ist ein digitales Logikgatter, das die logische **Disjunktion** umsetzt. Ein HIGH-Ausgang (1) ergibt sich, wenn mindestens ein Eingang des ODER-Gatters HIGH (1) ist. Nur wenn jeder Eingang LOW (0) ist, ergibt sich ein LOW-Ausgang.'
       },
       XOR: {
         name: 'XOR-Gatter',
         description:
-          'Ein XOR-Gatter ist ein digitales Logikgatter, das die exklusive Disjunktion umsetzt. Ein HIGH-Ausgang (1) ergibt sich, wenn eine ungerade Anzahl an Eingängen des XOR-Gatters HIGH (1) ist.'
+          'Ein XOR-Gatter ist ein digitales Logikgatter, das die **exklusive Disjunktion** umsetzt. Ein HIGH-Ausgang (1) ergibt sich, wenn eine ungerade Anzahl an Eingängen des XOR-Gatters HIGH (1) ist.'
       },
       DELAY: {
         name: 'Durchpass',
@@ -141,7 +141,7 @@ const de: TranslationSchema = {
       CLOCK: {
         name: 'Taktgeber',
         description:
-          'Gibt periodisch einen ein Tick langen Puls an seinem Ausgang aus. Die Verzögerung zwischen den Pulsen ist einstellbar; ein HIGH am STP-Eingang pausiert den Taktgeber.',
+          'Gibt periodisch einen ein Tick langen Puls an seinem Ausgang aus. Die Verzögerung zwischen den Pulsen ist einstellbar; ein HIGH am `STP`-Eingang pausiert den Taktgeber.',
         options: {
           speed: 'Verzögerung'
         }
@@ -149,22 +149,22 @@ const de: TranslationSchema = {
       TUNNEL: {
         name: 'Tunnel',
         description:
-          'Funktioniert wie eine Leitung, aber drahtlos: Alle Tunnel mit derselben Beschriftung sind elektrisch verbunden.'
+          'Funktioniert wie eine Leitung, aber drahtlos: Alle Tunnel mit **derselben Beschriftung** sind elektrisch verbunden.'
       },
       HALF_ADDER: {
         name: 'Halbaddierer',
         description:
-          'Addiert zwei 1-Bit-Zahlen. S führt das Summenbit und C das Übertragsbit.'
+          'Addiert zwei 1-Bit-Zahlen. `S` führt das Summenbit und `C` das Übertragsbit.'
       },
       FULL_ADDER: {
         name: 'Volladdierer',
         description:
-          'Addiert drei 1-Bit-Zahlen (zwei Summanden und einen Übertrag-Eingang). S führt das Summenbit und C das Übertragsbit.'
+          'Addiert drei 1-Bit-Zahlen (zwei Summanden und einen Übertrag-Eingang). `S` führt das Summenbit und `C` das Übertragsbit.'
       },
       ROM: {
         name: 'ROM',
         description:
-          'Festwertspeicher. Die Ausgänge führen das Wort, das an der Adresse an den A-Eingängen gespeichert ist. Der Inhalt wird mit „Inhalt bearbeiten“ festgelegt und ändert sich nicht, während die Simulation läuft.',
+          'Festwertspeicher. Die Ausgänge führen das Wort, das an der Adresse an den `A`-Eingängen gespeichert ist. Der Inhalt wird mit **Inhalt bearbeiten** festgelegt und ändert sich nicht, während die Simulation läuft.',
         options: {
           wordSize: 'Wortbreite',
           addressSize: 'Adressgröße',
@@ -175,27 +175,27 @@ const de: TranslationSchema = {
       D_FF: {
         name: 'D-Flip-Flop',
         description:
-          'Speichert ein Bit Zustand. Der Zustand an D wird bei der steigenden Flanke von CLK gespeichert; Q führt den Zustand und !Q dessen Inverses.'
+          'Speichert ein Bit Zustand. Der Zustand an `D` wird bei der steigenden Flanke von `CLK` gespeichert; `Q` führt den Zustand und `!Q` dessen Inverses.'
       },
       JK_FF: {
         name: 'JK-Flip-Flop',
         description:
-          'Speichert ein Bit Zustand. Bei der steigenden Flanke von CLK setzt ein HIGH an J den Zustand und ein HIGH an K setzt ihn zurück; sind beide HIGH, wird umgeschaltet. Q führt den Zustand und !Q dessen Inverses.'
+          'Speichert ein Bit Zustand. Bei der steigenden Flanke von `CLK` gilt:\n\n- HIGH an `J` setzt den Zustand\n- HIGH an `K` setzt ihn zurück\n- HIGH an beiden schaltet ihn um\n\n`Q` führt den Zustand und `!Q` dessen Inverses.'
       },
       SR_FF: {
         name: 'SR-Flip-Flop',
         description:
-          'Speichert ein Bit Zustand. Bei der steigenden Flanke von CLK setzt ein HIGH an S den Zustand und ein HIGH an R setzt ihn zurück. Q führt den Zustand und !Q dessen Inverses.'
+          'Speichert ein Bit Zustand. Bei der steigenden Flanke von `CLK` gilt:\n\n- HIGH an `S` setzt den Zustand\n- HIGH an `R` setzt ihn zurück\n\n`Q` führt den Zustand und `!Q` dessen Inverses.'
       },
       RNG: {
         name: 'Zufallsgenerator',
         description:
-          'Erzeugt bei jeder steigenden Flanke von CLK zufällige Daten an seinen Ausgängen.'
+          'Erzeugt bei jeder steigenden Flanke von `CLK` zufällige Daten an seinen Ausgängen.'
       },
       RAM: {
         name: 'RAM',
         description:
-          'Speicher mit wahlfreiem Zugriff. Bei der steigenden Flanke von CLK liest er das adressierte Wort an die Ausgänge. Solange WE HIGH ist, speichert er stattdessen das Wort an den Dateneingängen an dieser Adresse.',
+          'Speicher mit wahlfreiem Zugriff. Bei der steigenden Flanke von `CLK` liest er das adressierte Wort an die Ausgänge. Solange `WE` HIGH ist, speichert er stattdessen das Wort an den Dateneingängen an dieser Adresse.',
         options: {
           wordSize: 'Wortbreite',
           addressSize: 'Adressgröße'
@@ -209,7 +209,7 @@ const de: TranslationSchema = {
       ENCODER: {
         name: 'Enkodierer',
         description:
-          '2^n-auf-n-Binärenkodierer. Gibt den Binärindex des höchsten aktiven Eingangs aus.'
+          '2ⁿ-auf-n-Binärkodierer. Gibt den Binärindex des höchsten aktiven Eingangs aus.'
       },
       MUX: {
         name: 'Multiplexer',
@@ -222,7 +222,7 @@ const de: TranslationSchema = {
       DEMUX: {
         name: 'Demultiplexer',
         description:
-          'Leitet den Dateneingang I an den durch die Auswahlleitungen adressierten Ausgang.',
+          'Leitet den Dateneingang `I` an den durch die Auswahlleitungen adressierten Ausgang.',
         options: {
           selectLines: 'Auswahlleitungen'
         }
@@ -314,7 +314,7 @@ const de: TranslationSchema = {
       KEYBOARD: {
         name: 'Tastatur',
         description:
-          'Eine Tastatur. An D0–D6 liegt der ASCII-Code der zuletzt gedrückten Taste an, STB gibt bei jedem Tastendruck einen Puls aus, und KD ist an, solange eine Taste gedrückt ist. Während die Simulation läuft, öffnet ein Klick ein Fenster, das deine Eingaben entgegennimmt.',
+          'Eine Tastatur.\n\n- An `D0`–`D6` liegt der ASCII-Code der zuletzt gedrückten Taste an\n- `STB` gibt bei jedem Tastendruck einen Puls aus\n- `KD` ist an, solange eine Taste gedrückt ist\n\nWährend die Simulation läuft, öffnet ein Klick ein Fenster, das deine Eingaben entgegennimmt.',
         window: {
           field: 'In die Schaltung tippen',
           onD: 'An D',
@@ -370,7 +370,7 @@ const de: TranslationSchema = {
       LED_MATRIX: {
         name: 'LED-Matrix',
         description:
-          'Ein quadratisches Raster aus LEDs, das ein Bild anzeigt. Bei der steigenden Flanke von CLK werden die Dateneingänge in die durch die Adresseingänge adressierte Zeile übernommen.',
+          'Ein quadratisches Raster aus LEDs, das ein Bild anzeigt. Bei der steigenden Flanke von `CLK` werden die Dateneingänge in die durch die Adresseingänge adressierte Zeile übernommen.',
         options: {
           size: 'Breite/Höhe'
         }

@@ -115,22 +115,22 @@ const fr: TranslationSchema = {
       NOT: {
         name: 'Porte NON',
         description:
-          'Une porte NON est une porte logique numérique qui réalise la négation logique. Une entrée HIGH (1) donne une sortie LOW (0), et une entrée LOW (0) une sortie HIGH (1).'
+          'Une porte NON est une porte logique numérique qui réalise la **négation** logique. Une entrée HIGH (1) donne une sortie LOW (0), et une entrée LOW (0) une sortie HIGH (1).'
       },
       AND: {
         name: 'Porte ET',
         description:
-          "Une porte ET est une porte logique numérique qui réalise la conjonction logique. Une sortie HIGH (1) n'est produite que si toutes les entrées de la porte ET sont HIGH (1). Si une entrée est LOW (0), la sortie est LOW."
+          "Une porte ET est une porte logique numérique qui réalise la **conjonction** logique. Une sortie HIGH (1) n'est produite que si toutes les entrées de la porte ET sont HIGH (1). Si une entrée est LOW (0), la sortie est LOW."
       },
       OR: {
         name: 'Porte OU',
         description:
-          "Une porte OU est une porte logique numérique qui réalise la disjonction logique. Une sortie HIGH (1) est produite si au moins une entrée de la porte OU est HIGH (1). La sortie n'est LOW (0) que si toutes les entrées sont LOW (0)."
+          "Une porte OU est une porte logique numérique qui réalise la **disjonction** logique. Une sortie HIGH (1) est produite si au moins une entrée de la porte OU est HIGH (1). La sortie n'est LOW (0) que si toutes les entrées sont LOW (0)."
       },
       XOR: {
         name: 'Porte XOR',
         description:
-          "Une porte XOR est une porte logique numérique qui réalise la disjonction exclusive. Une sortie HIGH (1) est produite si un nombre impair d'entrées de la porte XOR sont HIGH (1)."
+          "Une porte XOR est une porte logique numérique qui réalise la **disjonction exclusive**. Une sortie HIGH (1) est produite si un nombre impair d'entrées de la porte XOR sont HIGH (1)."
       },
       DELAY: {
         name: 'Retard',
@@ -140,7 +140,7 @@ const fr: TranslationSchema = {
       CLOCK: {
         name: 'Horloge',
         description:
-          "Émet périodiquement une impulsion d'un tick sur sa sortie. Le délai entre les impulsions est configurable ; mettre l'entrée STP à HIGH met l'horloge en pause.",
+          "Émet périodiquement une impulsion d'un tick sur sa sortie. Le délai entre les impulsions est configurable ; mettre l'entrée `STP` à HIGH met l'horloge en pause.",
         options: {
           speed: 'Retard'
         }
@@ -148,22 +148,22 @@ const fr: TranslationSchema = {
       TUNNEL: {
         name: 'Tunnel',
         description:
-          'Fonctionne comme un fil, mais sans fil : tous les tunnels portant la même étiquette sont électriquement connectés.'
+          'Fonctionne comme un fil, mais sans fil : tous les tunnels portant la **même étiquette** sont électriquement connectés.'
       },
       HALF_ADDER: {
         name: 'Demi-additionneur',
         description:
-          'Additionne deux nombres de 1 bit. S porte le bit de somme et C le bit de retenue.'
+          'Additionne deux nombres de 1 bit. `S` porte le bit de somme et `C` le bit de retenue.'
       },
       FULL_ADDER: {
         name: 'Additionneur complet',
         description:
-          'Additionne trois nombres de 1 bit (deux opérandes et une retenue entrante). S porte le bit de somme et C le bit de retenue.'
+          'Additionne trois nombres de 1 bit (deux opérandes et une retenue entrante). `S` porte le bit de somme et `C` le bit de retenue.'
       },
       ROM: {
         name: 'ROM',
         description:
-          'Mémoire morte. Les sorties portent le mot stocké à l’adresse présente sur les entrées A. Son contenu se définit avec « Modifier le contenu » et ne peut pas changer pendant la simulation.',
+          'Mémoire morte. Les sorties portent le mot stocké à l’adresse présente sur les entrées `A`. Son contenu se définit avec **Modifier le contenu** et ne peut pas changer pendant la simulation.',
         options: {
           wordSize: 'Taille de mot',
           addressSize: "Taille d'adresse",
@@ -174,27 +174,27 @@ const fr: TranslationSchema = {
       D_FF: {
         name: 'Bascule D',
         description:
-          "Conserve un bit d'état. L'état présent sur D est enregistré sur le front montant de CLK ; Q porte l'état et !Q son inverse."
+          "Conserve un bit d'état. L'état présent sur `D` est enregistré sur le front montant de `CLK` ; `Q` porte l'état et `!Q` son inverse."
       },
       JK_FF: {
         name: 'Bascule JK',
         description:
-          "Conserve un bit d'état. Sur le front montant de CLK, un J à HIGH met l'état à 1 et un K à HIGH le remet à 0 ; les deux à HIGH le basculent. Q porte l'état et !Q son inverse."
+          "Conserve un bit d'état. Sur le front montant de `CLK` :\n\n- un `J` à HIGH met l'état à 1\n- un `K` à HIGH le remet à 0\n- les deux à HIGH le basculent\n\n`Q` porte l'état et `!Q` son inverse."
       },
       SR_FF: {
         name: 'Bascule SR',
         description:
-          "Conserve un bit d'état. Sur le front montant de CLK, un S à HIGH met l'état à 1 et un R à HIGH le remet à 0. Q porte l'état et !Q son inverse."
+          "Conserve un bit d'état. Sur le front montant de `CLK` :\n\n- un `S` à HIGH met l'état à 1\n- un `R` à HIGH le remet à 0\n\n`Q` porte l'état et `!Q` son inverse."
       },
       RNG: {
         name: 'Générateur de nombres aléatoires',
         description:
-          'Génère des données aléatoires sur ses sorties à chaque front montant de CLK.'
+          'Génère des données aléatoires sur ses sorties à chaque front montant de `CLK`.'
       },
       RAM: {
         name: 'RAM',
         description:
-          'Mémoire vive. Sur le front montant de CLK, elle lit le mot adressé sur les sorties. Tant que WE est à HIGH, elle stocke à la place le mot présent sur les entrées de données à cette adresse.',
+          'Mémoire vive. Sur le front montant de `CLK`, elle lit le mot adressé sur les sorties. Tant que `WE` est à HIGH, elle stocke à la place le mot présent sur les entrées de données à cette adresse.',
         options: {
           wordSize: 'Taille de mot',
           addressSize: "Taille d'adresse"
@@ -208,7 +208,7 @@ const fr: TranslationSchema = {
       ENCODER: {
         name: 'Encodeur',
         description:
-          "Encodeur binaire 2^n vers n. Produit l'index binaire de l'entrée active la plus élevée."
+          "Encodeur binaire 2ⁿ vers n. Produit l'index binaire de l'entrée active la plus élevée."
       },
       MUX: {
         name: 'Multiplexeur',
@@ -221,7 +221,7 @@ const fr: TranslationSchema = {
       DEMUX: {
         name: 'Démultiplexeur',
         description:
-          "Achemine l'entrée de données I vers la sortie désignée par les lignes de sélection.",
+          "Achemine l'entrée de données `I` vers la sortie désignée par les lignes de sélection.",
         options: {
           selectLines: 'Lignes de sélection'
         }
@@ -313,7 +313,7 @@ const fr: TranslationSchema = {
       KEYBOARD: {
         name: 'Clavier',
         description:
-          "Un clavier. D0–D6 portent le code ASCII de la dernière touche appuyée, STB émet une impulsion à chaque appui, et KD est activé tant qu'une touche est maintenue enfoncée. Pendant que la simulation tourne, cliquer dessus ouvre une fenêtre qui reçoit votre saisie.",
+          "Un clavier.\n\n- `D0`–`D6` portent le code ASCII de la dernière touche appuyée\n- `STB` émet une impulsion à chaque appui\n- `KD` est activé tant qu'une touche est maintenue enfoncée\n\nPendant que la simulation tourne, cliquer dessus ouvre une fenêtre qui reçoit votre saisie.",
         window: {
           field: 'Taper dans le circuit',
           onD: 'Sur D',
@@ -368,7 +368,7 @@ const fr: TranslationSchema = {
       LED_MATRIX: {
         name: 'Matrice de LED',
         description:
-          "Une grille carrée de LED qui affiche une image. Sur le front montant de CLK, les entrées de données sont verrouillées dans la ligne désignée par les entrées d'adresse.",
+          "Une grille carrée de LED qui affiche une image. Sur le front montant de `CLK`, les entrées de données sont verrouillées dans la ligne désignée par les entrées d'adresse.",
         options: {
           size: 'Largeur/Hauteur'
         }

@@ -116,22 +116,22 @@ const en = {
       NOT: {
         name: 'NOT Gate',
         description:
-          'A NOT gate is a digital logic gate that implements logical negation. A HIGH input (1) gives a LOW output (0), and a LOW input (0) gives a HIGH output (1).'
+          'A NOT gate is a digital logic gate that implements logical **negation**. A HIGH input (1) gives a LOW output (0), and a LOW input (0) gives a HIGH output (1).'
       },
       AND: {
         name: 'AND Gate',
         description:
-          'An AND gate is a digital logic gate that implements logical conjunction. A HIGH output (1) results only if every input to the AND gate is HIGH (1). If any input is LOW (0), a LOW output results.'
+          'An AND gate is a digital logic gate that implements logical **conjunction**. A HIGH output (1) results only if every input to the AND gate is HIGH (1). If any input is LOW (0), a LOW output results.'
       },
       OR: {
         name: 'OR Gate',
         description:
-          'An OR gate is a digital logic gate that implements logical disjunction. A HIGH output (1) results if at least one input to the OR gate is HIGH (1). Only if every input is LOW (0), a LOW output results.'
+          'An OR gate is a digital logic gate that implements logical **disjunction**. A HIGH output (1) results if at least one input to the OR gate is HIGH (1). Only if every input is LOW (0), a LOW output results.'
       },
       XOR: {
         name: 'XOR Gate',
         description:
-          'An XOR gate is a digital logic gate that implements exclusive disjunction. A HIGH output (1) results if an odd number of inputs to the XOR gate are HIGH (1).'
+          'An XOR gate is a digital logic gate that implements **exclusive disjunction**. A HIGH output (1) results if an odd number of inputs to the XOR gate are HIGH (1).'
       },
       DELAY: {
         name: 'Delay',
@@ -141,7 +141,7 @@ const en = {
       CLOCK: {
         name: 'Clock',
         description:
-          'Periodically emits a one-tick pulse on its output. The delay between pulses is configurable; driving the STP input HIGH pauses the clock.',
+          'Periodically emits a one-tick pulse on its output. The delay between pulses is configurable; driving the `STP` input HIGH pauses the clock.',
         options: {
           speed: 'Delay'
         }
@@ -149,22 +149,22 @@ const en = {
       TUNNEL: {
         name: 'Tunnel',
         description:
-          'Works like a wire, but wireless: all tunnels carrying the same label are electrically connected.'
+          'Works like a wire, but wireless: all tunnels carrying the **same label** are electrically connected.'
       },
       HALF_ADDER: {
         name: 'Half Adder',
         description:
-          'Adds up two 1-bit numbers. S carries the sum bit and C the carry bit.'
+          'Adds up two 1-bit numbers. `S` carries the sum bit and `C` the carry bit.'
       },
       FULL_ADDER: {
         name: 'Full Adder',
         description:
-          'Adds up three 1-bit numbers (two summands and a carry-in). S carries the sum bit and C the carry bit.'
+          'Adds up three 1-bit numbers (two summands and a carry-in). `S` carries the sum bit and `C` the carry bit.'
       },
       ROM: {
         name: 'ROM',
         description:
-          'Read-only memory. The outputs carry the word stored at the address on the A inputs. Its contents are set with “Edit contents” and cannot change while the simulation runs.',
+          'Read-only memory. The outputs carry the word stored at the address on the `A` inputs. Its contents are set with **Edit contents** and cannot change while the simulation runs.',
         options: {
           wordSize: 'Word Size',
           addressSize: 'Address Size',
@@ -175,27 +175,27 @@ const en = {
       D_FF: {
         name: 'D Flip-Flop',
         description:
-          'Holds one bit of state. The state on D is saved on the rising edge of CLK; Q carries the state and !Q its inverse.'
+          'Holds one bit of state. The state on `D` is saved on the rising edge of `CLK`; `Q` carries the state and `!Q` its inverse.'
       },
       JK_FF: {
         name: 'JK Flip-Flop',
         description:
-          'Holds one bit of state. On the rising edge of CLK, a HIGH J sets and a HIGH K resets the state; both HIGH toggle it. Q carries the state and !Q its inverse.'
+          'Holds one bit of state. On the rising edge of `CLK`:\n\n- a HIGH `J` sets the state\n- a HIGH `K` resets it\n- both HIGH toggle it\n\n`Q` carries the state and `!Q` its inverse.'
       },
       SR_FF: {
         name: 'SR Flip-Flop',
         description:
-          'Holds one bit of state. On the rising edge of CLK, a HIGH S sets and a HIGH R resets the state. Q carries the state and !Q its inverse.'
+          'Holds one bit of state. On the rising edge of `CLK`:\n\n- a HIGH `S` sets the state\n- a HIGH `R` resets it\n\n`Q` carries the state and `!Q` its inverse.'
       },
       RNG: {
         name: 'Random Number Generator',
         description:
-          'Generates random data on its outputs on every rising edge of CLK.'
+          'Generates random data on its outputs on every rising edge of `CLK`.'
       },
       RAM: {
         name: 'RAM',
         description:
-          'Random access memory. On the rising edge of CLK it reads the addressed word onto the outputs. While WE is HIGH, it stores the word on the data inputs at that address instead.',
+          'Random access memory. On the rising edge of `CLK` it reads the addressed word onto the outputs. While `WE` is HIGH, it stores the word on the data inputs at that address instead.',
         options: {
           wordSize: 'Word Size',
           addressSize: 'Address Size'
@@ -209,7 +209,7 @@ const en = {
       ENCODER: {
         name: 'Encoder',
         description:
-          '2^n-to-n binary encoder. Outputs the binary index of the highest powered input.'
+          '2ⁿ-to-n binary encoder. Outputs the binary index of the highest powered input.'
       },
       MUX: {
         name: 'Multiplexer',
@@ -222,7 +222,7 @@ const en = {
       DEMUX: {
         name: 'Demultiplexer',
         description:
-          'Routes the data input I to the output addressed by the select lines.',
+          'Routes the data input `I` to the output addressed by the select lines.',
         options: {
           selectLines: 'Select lines'
         }
@@ -312,7 +312,7 @@ const en = {
       KEYBOARD: {
         name: 'Keyboard',
         description:
-          'A keyboard. D0–D6 carry the ASCII code of the last key pressed, STB pulses once each time a key is pressed, and KD is on while a key is held down. While the simulation is running, clicking it opens a window that receives your typing.',
+          'A keyboard.\n\n- `D0`–`D6` carry the ASCII code of the last key pressed\n- `STB` pulses once each time a key is pressed\n- `KD` is on while a key is held down\n\nWhile the simulation is running, clicking it opens a window that receives your typing.',
         window: {
           field: 'Type into the circuit',
           onD: 'On D',
@@ -364,7 +364,7 @@ const en = {
       LED_MATRIX: {
         name: 'LED Matrix',
         description:
-          'A square grid of LEDs that displays an image. On the rising edge of CLK, the data inputs are latched into the row addressed by the address inputs.',
+          'A square grid of LEDs that displays an image. On the rising edge of `CLK`, the data inputs are latched into the row addressed by the address inputs.',
         options: {
           size: 'Width/Height'
         }

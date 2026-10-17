@@ -115,22 +115,22 @@ const es: TranslationSchema = {
       NOT: {
         name: 'Puerta NO',
         description:
-          'Una puerta NO es una puerta lógica digital que implementa la negación lógica. Una entrada ALTA (1) da una salida BAJA (0), y una entrada BAJA (0) una salida ALTA (1).'
+          'Una puerta NO es una puerta lógica digital que implementa la **negación** lógica. Una entrada ALTA (1) da una salida BAJA (0), y una entrada BAJA (0) una salida ALTA (1).'
       },
       AND: {
         name: 'Puerta Y',
         description:
-          'Una puerta Y es una puerta lógica digital que implementa la conjunción lógica. La salida es ALTA (1) solo si todas las entradas de la puerta Y son ALTAS (1). Si alguna entrada es BAJA (0), la salida es BAJA.'
+          'Una puerta Y es una puerta lógica digital que implementa la **conjunción** lógica. La salida es ALTA (1) solo si todas las entradas de la puerta Y son ALTAS (1). Si alguna entrada es BAJA (0), la salida es BAJA.'
       },
       OR: {
         name: 'Puerta O',
         description:
-          'Una puerta O es una puerta lógica digital que implementa la disyunción lógica. La salida es ALTA (1) si al menos una entrada de la puerta O es ALTA (1). La salida solo es BAJA (0) si todas las entradas son BAJAS (0).'
+          'Una puerta O es una puerta lógica digital que implementa la **disyunción** lógica. La salida es ALTA (1) si al menos una entrada de la puerta O es ALTA (1). La salida solo es BAJA (0) si todas las entradas son BAJAS (0).'
       },
       XOR: {
         name: 'Puerta XOR',
         description:
-          'Una puerta XOR es una puerta lógica digital que implementa la disyunción exclusiva. La salida es ALTA (1) si un número impar de entradas de la puerta XOR son ALTAS (1).'
+          'Una puerta XOR es una puerta lógica digital que implementa la **disyunción exclusiva**. La salida es ALTA (1) si un número impar de entradas de la puerta XOR son ALTAS (1).'
       },
       DELAY: {
         name: 'Retardo',
@@ -140,7 +140,7 @@ const es: TranslationSchema = {
       CLOCK: {
         name: 'Reloj',
         description:
-          'Emite periódicamente un pulso de un tick en su salida. El retardo entre pulsos es configurable; poner la entrada STP en ALTO pausa el reloj.',
+          'Emite periódicamente un pulso de un tick en su salida. El retardo entre pulsos es configurable; poner la entrada `STP` en ALTO pausa el reloj.',
         options: {
           speed: 'Retardo'
         }
@@ -148,22 +148,22 @@ const es: TranslationSchema = {
       TUNNEL: {
         name: 'Túnel',
         description:
-          'Funciona como un cable, pero sin cables: todos los túneles con la misma etiqueta están conectados eléctricamente.'
+          'Funciona como un cable, pero sin cables: todos los túneles con la **misma etiqueta** están conectados eléctricamente.'
       },
       HALF_ADDER: {
         name: 'Semisumador',
         description:
-          'Suma dos números de 1 bit. S lleva el bit de suma y C el bit de acarreo.'
+          'Suma dos números de 1 bit. `S` lleva el bit de suma y `C` el bit de acarreo.'
       },
       FULL_ADDER: {
         name: 'Sumador completo',
         description:
-          'Suma tres números de 1 bit (dos sumandos y un acarreo de entrada). S lleva el bit de suma y C el bit de acarreo.'
+          'Suma tres números de 1 bit (dos sumandos y un acarreo de entrada). `S` lleva el bit de suma y `C` el bit de acarreo.'
       },
       ROM: {
         name: 'ROM',
         description:
-          'Memoria de solo lectura. Las salidas llevan la palabra almacenada en la dirección presente en las entradas A. Su contenido se fija con «Editar contenido» y no cambia mientras la simulación está en marcha.',
+          'Memoria de solo lectura. Las salidas llevan la palabra almacenada en la dirección presente en las entradas `A`. Su contenido se fija con **Editar contenido** y no cambia mientras la simulación está en marcha.',
         options: {
           wordSize: 'Tamaño de palabra',
           addressSize: 'Tamaño de dirección',
@@ -174,27 +174,27 @@ const es: TranslationSchema = {
       D_FF: {
         name: 'Biestable D',
         description:
-          'Almacena un bit de estado. El estado en D se guarda en el flanco ascendente de CLK; Q lleva el estado y !Q su inverso.'
+          'Almacena un bit de estado. El estado en `D` se guarda en el flanco ascendente de `CLK`; `Q` lleva el estado y `!Q` su inverso.'
       },
       JK_FF: {
         name: 'Biestable JK',
         description:
-          'Almacena un bit de estado. En el flanco ascendente de CLK, una J ALTA activa el estado y una K ALTA lo reinicia; ambas ALTAS lo conmutan. Q lleva el estado y !Q su inverso.'
+          'Almacena un bit de estado. En el flanco ascendente de `CLK`:\n\n- una `J` ALTA activa el estado\n- una `K` ALTA lo reinicia\n- ambas ALTAS lo conmutan\n\n`Q` lleva el estado y `!Q` su inverso.'
       },
       SR_FF: {
         name: 'Biestable SR',
         description:
-          'Almacena un bit de estado. En el flanco ascendente de CLK, una S ALTA activa el estado y una R ALTA lo reinicia. Q lleva el estado y !Q su inverso.'
+          'Almacena un bit de estado. En el flanco ascendente de `CLK`:\n\n- una `S` ALTA activa el estado\n- una `R` ALTA lo reinicia\n\n`Q` lleva el estado y `!Q` su inverso.'
       },
       RNG: {
         name: 'Generador de números aleatorios',
         description:
-          'Genera datos aleatorios en sus salidas en cada flanco ascendente de CLK.'
+          'Genera datos aleatorios en sus salidas en cada flanco ascendente de `CLK`.'
       },
       RAM: {
         name: 'RAM',
         description:
-          'Memoria de acceso aleatorio. En el flanco ascendente de CLK lee la palabra direccionada hacia las salidas. Mientras WE está en ALTO, en su lugar almacena en esa dirección la palabra presente en las entradas de datos.',
+          'Memoria de acceso aleatorio. En el flanco ascendente de `CLK` lee la palabra direccionada hacia las salidas. Mientras `WE` está en ALTO, en su lugar almacena en esa dirección la palabra presente en las entradas de datos.',
         options: {
           wordSize: 'Tamaño de palabra',
           addressSize: 'Tamaño de dirección'
@@ -208,7 +208,7 @@ const es: TranslationSchema = {
       ENCODER: {
         name: 'Codificador',
         description:
-          'Codificador binario de 2^n a n. Emite el índice binario de la entrada activa de mayor peso.'
+          'Codificador binario de 2ⁿ a n. Emite el índice binario de la entrada activa de mayor peso.'
       },
       MUX: {
         name: 'Multiplexor',
@@ -221,7 +221,7 @@ const es: TranslationSchema = {
       DEMUX: {
         name: 'Demultiplexor',
         description:
-          'Encamina la entrada de datos I hacia la salida direccionada por las líneas de selección.',
+          'Encamina la entrada de datos `I` hacia la salida direccionada por las líneas de selección.',
         options: {
           selectLines: 'Líneas de selección'
         }
@@ -311,7 +311,7 @@ const es: TranslationSchema = {
       KEYBOARD: {
         name: 'Teclado',
         description:
-          'Un teclado. D0–D6 llevan el código ASCII de la última tecla pulsada, STB emite un pulso cada vez que se pulsa una tecla, y KD está encendido mientras se mantiene pulsada una tecla. Mientras la simulación está en marcha, al hacer clic se abre una ventana que recibe lo que escribes.',
+          'Un teclado.\n\n- `D0`–`D6` llevan el código ASCII de la última tecla pulsada\n- `STB` emite un pulso cada vez que se pulsa una tecla\n- `KD` está encendido mientras se mantiene pulsada una tecla\n\nMientras la simulación está en marcha, al hacer clic se abre una ventana que recibe lo que escribes.',
         window: {
           field: 'Escribir en el circuito',
           onD: 'En D',
@@ -364,7 +364,7 @@ const es: TranslationSchema = {
       LED_MATRIX: {
         name: 'Matriz de LEDs',
         description:
-          'Una cuadrícula cuadrada de LEDs que muestra una imagen. En el flanco ascendente de CLK, las entradas de datos se enclavan en la fila direccionada por las entradas de dirección.',
+          'Una cuadrícula cuadrada de LEDs que muestra una imagen. En el flanco ascendente de `CLK`, las entradas de datos se enclavan en la fila direccionada por las entradas de dirección.',
         options: {
           size: 'Ancho/Alto'
         }
