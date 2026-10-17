@@ -85,7 +85,9 @@ const en = {
   consent: consentEn,
   documents: {
     /** Read after the count, so a screen reader says “214 stars”. */
-    stars: 'stars'
+    stars: 'stars',
+    /** The name of a preview that opens full-size when clicked. */
+    enlargePreview: 'Enlarge preview of “{{name}}”'
   },
   // The share controls, which a document's own page and the shelf dialog both
   // draw — so their words belong under neither of those.

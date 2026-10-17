@@ -332,7 +332,9 @@ path behaves the same in development).
   document's own page). Both pick the preview for the active theme in TypeScript — the two themes
   are separate renders, so a CSS-hidden second image would be downloaded for nothing; the tile does
   it because it takes one theme's ladder, the preview because it draws the `<picture>` itself
-  through `@logigator/ui`'s exported `pictureFor`. `web-share-controls` is the one share row — the
+  through `@logigator/ui`'s exported `pictureFor`. The preview's frame is also a button that opens the render full-size
+  through `ImageZoomViewer`, the documentation screenshots' zoom, handed the whole ladder and the
+  dot ground, a render being transparent line art the dark backdrop would swallow. `web-share-controls` is the one share row — the
   sheet where the browser has one, the clipboard where it has not, and the embed disclosure — drawn
   by a community page and a shelf dialog alike, over the rules in `@logigator/ui`'s
   `internal/share`, `internal/embed` and `internal/visibility`. `crawler-image.ts` is the other rule: the one URL

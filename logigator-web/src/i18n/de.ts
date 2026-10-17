@@ -78,7 +78,8 @@ const de: TranslationSchema = {
   },
   consent: consentDe,
   documents: {
-    stars: 'Sterne'
+    stars: 'Sterne',
+    enlargePreview: 'Vorschau von „{{name}}“ vergrößern'
   },
   share: {
     /** Sent with the link by a share sheet, and the embed's alt text. */
