@@ -6,7 +6,7 @@ import {
 } from '@angular/common/http/testing';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { EMPTY_PAGE } from '../../../testing/community-rows';
-import { environment } from '../../../environments/environment';
+import { EXAMPLES_ACCOUNT_ID } from '@logigator/core';
 import { HomeContentService } from './home-content.service';
 
 /** The API's own error body, which is where the mapped code comes from. */
@@ -15,7 +15,7 @@ const UNAVAILABLE = {
   init: { status: 503, statusText: 'Service Unavailable' }
 };
 
-const EXAMPLES_URL = `/api/community/users/${environment.exampleUserId}/projects`;
+const EXAMPLES_URL = `/api/community/users/${EXAMPLES_ACCOUNT_ID}/projects`;
 
 describe('HomeContentService', () => {
   let http: HttpTestingController;

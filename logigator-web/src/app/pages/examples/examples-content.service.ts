@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { CommunityApiService } from '../../api/services/community-api.service';
-import { environment } from '../../../environments/environment';
+import { EXAMPLES_ACCOUNT_ID } from '@logigator/core';
 import { contentSection } from '../../transfer/content-section';
 
 /**
@@ -12,15 +12,15 @@ const PAGE_SIZE = 100;
 
 /**
  * Every example the seed account publishes, in one read. The examples are that
- * account's public projects, so editing one is a save in the editor rather than
- * a deploy.
+ * account's public projects, which the API seeds from `logigator-api/examples/`
+ * and leaves out of the community browse listings.
  */
 @Injectable({ providedIn: 'root' })
 export class ExamplesContentService {
   private readonly communityApi = inject(CommunityApiService);
 
   public readonly examples = contentSection('examples.list', () =>
-    this.communityApi.userProjects(environment.exampleUserId, {
+    this.communityApi.userProjects(EXAMPLES_ACCOUNT_ID, {
       size: PAGE_SIZE
     })
   );

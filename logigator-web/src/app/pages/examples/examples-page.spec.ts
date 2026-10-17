@@ -3,13 +3,13 @@ import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { communityRow, EMPTY_PAGE } from '../../../testing/community-rows';
-import { environment } from '../../../environments/environment';
+import { EXAMPLES_ACCOUNT_ID } from '@logigator/core';
 import { ThemingService } from '../../theming/theming.service';
 import { TranslationService } from '../../translation/translation.service';
 import { ExamplesContentService } from './examples-content.service';
 import { ExamplesPage } from './examples-page';
 
-const EXAMPLES_URL = `/api/community/users/${environment.exampleUserId}/projects`;
+const EXAMPLES_URL = `/api/community/users/${EXAMPLES_ACCOUNT_ID}/projects`;
 
 const HALF_ADDER = '11111111-1111-4111-8111-111111111111';
 const FULL_ADDER = '22222222-2222-4222-8222-222222222222';

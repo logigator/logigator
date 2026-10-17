@@ -20,11 +20,6 @@ export interface Environment {
    * editor's address, and the editor rewrites `/editor/` to it.
    */
   editorUrl: string;
-  /**
-   * The account whose public projects are the site's examples: editing an
-   * example is a save in the editor, not a deploy.
-   */
-  exampleUserId: string;
   analytics: {
     /** PostHog project API key (public, write-only). Empty disables PostHog. */
     posthogKey: string;

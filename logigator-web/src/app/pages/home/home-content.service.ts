@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { CommunityApiService } from '../../api/services/community-api.service';
-import { environment } from '../../../environments/environment';
+import { EXAMPLES_ACCOUNT_ID } from '@logigator/core';
 import { contentSection } from '../../transfer/content-section';
 
 /** Six, so the rail overflows its frame at every width. */
@@ -17,7 +17,7 @@ export class HomeContentService {
   private readonly communityApi = inject(CommunityApiService);
 
   public readonly examples = contentSection('home.examples', () =>
-    this.communityApi.userProjects(environment.exampleUserId, {
+    this.communityApi.userProjects(EXAMPLES_ACCOUNT_ID, {
       size: EXAMPLE_COUNT
     })
   );

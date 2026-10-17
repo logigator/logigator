@@ -358,7 +358,7 @@ path behaves the same in development).
 - `pages/` — one folder per page; `pages/auth/` holds the four sign-in pages plus the card frame and
   the Google entry they share. `pages/home/` resolves its three listings through `contentSection()`
   - `homeContentGuard`.
-    `pages/examples/` is the seed account's public projects, one row each — the render beside the
+    `pages/examples/` is the seed account's public projects (`EXAMPLES_ACCOUNT_ID`, written by the API's `db:seed-examples`), one row each — the render beside the
     description that teaches it, sides alternating — since a tile has nowhere to put a description;
     it is also where the **inner-page header** (h1 + lede in `page-wrap`, no eyebrow, the rule under
     it being the first row's) is set for the pages that follow. `pages/legal/` is the imprint and the

@@ -4,6 +4,7 @@ import {
   type CommunityComponent,
   type CommunityProject
 } from '@logigator/contract';
+import { EXAMPLES_ACCOUNT_ID } from '@logigator/core';
 import type { CommunityKind } from './app/api/services/community-api.service';
 import { apiOrigin } from './api-origin';
 import type { SitemapPage } from './sitemap';
@@ -83,7 +84,9 @@ export function communityPages(): Promise<SitemapPage[]> {
 /**
  * Read through the same public listings the browse pages use — this phase adds
  * no API surface — rather than through an endpoint written for it, which would
- * be a second definition of what `public` means.
+ * be a second definition of what `public` means. The browse listings leave the
+ * examples account out, so its own profile listings are walked beside them:
+ * an example is as public as anything the community published.
  *
  * A member's profile is derived from the authors that came back rather than
  * listed separately: the authors of the documents above are exactly the set of
@@ -91,10 +94,16 @@ export function communityPages(): Promise<SitemapPage[]> {
  */
 async function readCommunityPages(): Promise<SitemapPage[]> {
   const origin = apiOrigin();
-  const [projects, components] = await Promise.all([
-    listAll(origin, 'projects'),
-    listAll(origin, 'components')
-  ]);
+  const examples = `users/${EXAMPLES_ACCOUNT_ID}`;
+  const [community, communityComponents, exampleProjects, exampleComponents] =
+    await Promise.all([
+      listAll(origin, 'projects'),
+      listAll(origin, 'components'),
+      listAll(origin, 'projects', examples),
+      listAll(origin, 'components', examples)
+    ]);
+  const projects = [...community, ...exampleProjects];
+  const components = [...communityComponents, ...exampleComponents];
 
   const authors = new Map<string, string>();
   for (const { author, lastEditedAt } of [...projects, ...components]) {
@@ -116,26 +125,30 @@ async function readCommunityPages(): Promise<SitemapPage[]> {
 }
 
 /**
- * One listing, whole. The first response carries `total`, so the rest of the
- * pages are known after it and are read concurrently — which also shortens the
- * window in which a save can shift the offsets under the walk.
+ * One listing, whole: the browse listing of a kind, or under `owner` (a
+ * `users/{id}` path) one member's. The first response carries `total`, so the
+ * rest of the pages are known after it and are read concurrently — which also
+ * shortens the window in which a save can shift the offsets under the walk.
  *
  * Ordered by `latest` rather than by the default ranking for the same reason:
  * trending re-ranks between two requests, while edit time only moves a row that
- * was written.
+ * was written. A member's listing has that order already and takes no
+ * `orderBy`.
  */
 async function listAll(
   origin: string,
-  kind: CommunityKind
+  kind: CommunityKind,
+  owner?: string
 ): Promise<CommunityRow[]> {
-  const first = await readPage(origin, kind, 0);
+  const read = (page: number) => readPage(origin, kind, page, owner);
+  const first = await read(0);
   const pages = Math.min(Math.ceil(first.total / PAGE_SIZE), MAX_PAGES);
 
   const rest: CommunityRow[] = [];
   for (let from = 1; from < pages; from += CONCURRENCY) {
     const batch = await Promise.all(
       Array.from({ length: Math.min(CONCURRENCY, pages - from) }, (_, index) =>
-        readPage(origin, kind, from + index)
+        read(from + index)
       )
     );
     for (const page of batch) {
@@ -152,9 +165,12 @@ async function listAll(
 async function readPage(
   origin: string,
   kind: CommunityKind,
-  page: number
+  page: number,
+  owner?: string
 ): Promise<{ entries: CommunityRow[]; total: number }> {
-  const url = `${origin}/api/community/${kind}?size=${PAGE_SIZE}&page=${page}&orderBy=latest`;
+  const url = owner
+    ? `${origin}/api/community/${owner}/${kind}?size=${PAGE_SIZE}&page=${page}`
+    : `${origin}/api/community/${kind}?size=${PAGE_SIZE}&page=${page}&orderBy=latest`;
   const response = await fetch(url, {
     headers: { accept: 'application/json' },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
