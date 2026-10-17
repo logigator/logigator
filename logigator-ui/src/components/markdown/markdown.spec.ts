@@ -122,6 +122,14 @@ describe('LgMarkdown content interaction', () => {
     );
   });
 
+  it('keeps a web link the browser cannot open inert instead of throwing', async () => {
+    const { link, click } = await setup();
+    vi.spyOn(window, 'open').mockImplementation(() => {
+      throw new DOMException('Unable to open a window', 'SyntaxError');
+    });
+    expect(click(link('https://logigator.com/features'))).toBe(false);
+  });
+
   it('scrolls to the matching heading on a fragment link', async () => {
     const { el, link, click } = await setup();
     const heading = el.querySelector('h1')!;

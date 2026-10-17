@@ -377,7 +377,14 @@ export class LgMarkdown {
     const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(href)?.[1]?.toLowerCase();
     if (scheme === undefined || scheme === 'http' || scheme === 'https') {
       event.preventDefault();
-      window.open(href, '_blank', 'noopener');
+      try {
+        window.open(href, '_blank', 'noopener');
+      } catch {
+        // `https:` with nothing after it, say: the browser throws rather than
+        // opening nothing, and a dead link is no reason for an error report.
+        // Authored content reaches here unchecked; a member's is refused at
+        // render time already.
+      }
     } else if (!NATIVE_SCHEMES.has(scheme)) {
       // Unclaimed non-user-agent schemes stay inert: app-specific links carry
       // no native meaning, and javascript: payloads must never execute.
