@@ -234,7 +234,7 @@ meanwhile, so the result is an **upper bound**, never short of what the
 engine holds: two pastes in one frame see each other, and what fits behind
 the bound fits. An event sent while paused, or a `replace`, pulls a
 snapshot so the count settles before the next step. What an input's count means
-in its own terms is the input's to say: a keyboard character is two events, so
+in its own terms is the input's to say: a keyboard character is three events, so
 the window divides (`pendingCharacters` in `ascii.ts`).
 
 Specs run against the real engine: `src/testing/sim-engine.ts` wraps the WASM
@@ -515,25 +515,37 @@ The keyboard's frames (`ascii.ts`) give the timing the user docs state:
 
 | Frame                    | `D0`…`D6` | `STB` | Kind  | Hold |
 | ------------------------ | --------- | ----- | ----- | ---- |
-| press, 1 (`pressFrames`) | code      | 1     | event | 1    |
-| press, 2                 | code      | 0     | event | 1    |
-| release (`releaseFrame`) | 0         | kept  | state | 2    |
-| reset (`resetFrame`)     | 0         | 0     | state | 2    |
+| press, 1 (`pressFrames`) | code      | 0     | event | 1    |
+| press, 2                 | code      | 1     | event | 1    |
+| press, 3                 | code      | 0     | event | 1    |
+| release (`releaseFrame`) | 0         | kept  | state | 1    |
+| reset (`resetFrame`)     | 0         | 0     | state | 1    |
 
-A tap is the three in order, so a character submitted at tick count _t_ is on
-`D` with `STB` after tick _t + 1_, on `D` alone after _t + 2_, and `D` is 0
-after _t + 3_ and _t + 4_; the next character follows after _t + 5_ — four
-ticks per character, a strobe of exactly one tick, at least two ticks of 0
-before the next code, so a double letter still reads as two presses. A key
-pressed over the held one goes straight from one code to the next, its own
-strobe telling them apart. The release and the reset are states so that the
-progress count is two events per character exactly, and the window's
-_Sending N…_ is `⌊pending / 2⌋` — a character whose first press frame is
-applied is on `D` already. The same two events make the queue limit 32 768
-characters (`charactersThatFit` is what is left of it): three full sends of
-10 000 and most of a fourth. Neither merges: a release always follows a press,
-and a reset replaces the queue. The reset lowers `STB` too, because the cancel
-it follows can cut a press short while the strobe is high.
+A tap is the four in order, so a character submitted at tick count _t_ is on
+`D` after tick _t + 1_, with `STB` after _t + 2_, on `D` alone again after
+_t + 3_, and `D` is 0 after _t + 4_; the next character follows after
+_t + 5_ — four ticks per character, a strobe of exactly one tick inside three
+of the code, and a tick of 0 before the next code, so a double letter still
+reads as two presses. The code's tick before the strobe rises and its tick
+after the strobe falls are setup and hold: a latch whose data path has one
+gate more than its strobe path, or its strobe path one more than its data
+path, still reads every code (`ascii.spec.ts` latches a text through D
+flip-flops wired each way on the engine). A held key keeps its code on `D`
+after the third press frame until its release. A key pressed over the held one
+goes straight from one code to the next, its own strobe telling them apart.
+The release and the reset are states so that the progress count is three
+events per character exactly, and the window's _Sending N…_ is
+`⌊pending / 3⌋` — a character whose first press frame is applied is on `D`
+already. The same three events make the queue limit 21 845 characters
+(`charactersThatFit` is what is left of it): two full sends of 10 000 and
+1 845 more, leaving the input one event short of full. Neither merges: a
+release always follows a press, and a reset replaces the queue. The reset
+lowers `STB` too, because the cancel it follows can cut a press short while
+the strobe is high, and holds one tick like a release: the cancel ends the
+hold that was running, so the next character's first frame follows the reset
+a tick later at the earliest — `D` is 0 for that tick, as between two
+characters, and `STB`, which a press raises only with its second frame, is
+low for at least two.
 
 ---
 

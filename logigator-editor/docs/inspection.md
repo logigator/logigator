@@ -485,14 +485,14 @@ go of first still releases the letter; `releaseHeld()` is focus loss;
 `type(codes)` sends text that had no keys as taps; `cancel()` replaces the
 route's queue with a reset, so `D` is low after the next tick. `press` and
 `type` report whether what they sent fit behind the characters still queued:
-the input holds at most `INPUT_QUEUE_LIMIT` event frames (32 768 characters,
+the input holds at most `INPUT_QUEUE_LIMIT` event frames (21 845 characters,
 see [simulation.md](simulation.md#input-frames)), and a key or a text that
 does not fit is refused whole by the component — a text is never cut — sending
 nothing, recording nothing and leaving `D` as it was. The inspection
 keeps the last 64 codes sent (`KEYBOARD_HISTORY_LENGTH`) and which of them is
 held, and re-reads on every frame the code on `D`
 (`KeyboardComponent.readCode`, ahead of any bubble) and the characters still
-to go out, the route's `pending()` events halved (`pendingCharacters`, see
+to go out, the route's `pending()` events in threes (`pendingCharacters`, see
 [simulation.md](simulation.md#run-controls-and-user-input)), and `room()`, how
 many more fit (`charactersThatFit`); both are re-read after every send too.
 `pending()` is an upper bound that counts what was sent since the last
