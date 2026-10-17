@@ -30,6 +30,11 @@ export interface GamepadPadTarget {
   padUp(control: GamepadControlId, input: string): void;
   /** Every control a controller holds lets go at once, without a `padUp`. */
   releasePad(): void;
+  /**
+   * Runs `run`, whose `padDown`/`padUp` calls are one poll's: what they
+   * change reaches the simulation together, on one tick.
+   */
+  batch(run: () => void): void;
 }
 
 /** A connected controller as the window lists it. */
@@ -64,7 +69,9 @@ const NO_HOLDS: ReadonlyMap<string, GamepadControlId> = new Map();
  *
  * The API has no input events. While a controller is assigned, the
  * simulation is ready and the page is visible, one frame callback reads every
- * controller and hands each target only what changed since the last frame.
+ * controller and hands each target only what changed since the last frame,
+ * in one {@link GamepadPadTarget.batch}, so controls pressed together reach
+ * the circuit on the same tick.
  * Whenever polling stops, every controller hold is released.
  */
 @Injectable({
@@ -311,16 +318,18 @@ export class GamepadHardwareService {
       const previous = this._held.get(target) ?? NO_HOLDS;
       if (next.size > 0) this._held.set(target, next);
       else this._held.delete(target);
-      for (const [input, control] of previous) {
-        if (next.get(input) !== control) {
-          target.padUp(control, `${index}:${input}`);
+      target.batch(() => {
+        for (const [input, control] of previous) {
+          if (next.get(input) !== control) {
+            target.padUp(control, `${index}:${input}`);
+          }
         }
-      }
-      for (const [input, control] of next) {
-        if (previous.get(input) !== control) {
-          target.padDown(control, `${index}:${input}`);
+        for (const [input, control] of next) {
+          if (previous.get(input) !== control) {
+            target.padDown(control, `${index}:${input}`);
+          }
         }
-      }
+      });
     }
     if (this._polls()) {
       this._frame = this.scheduler.request(() => this.poll());

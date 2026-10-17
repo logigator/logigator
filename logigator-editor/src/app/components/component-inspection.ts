@@ -1,4 +1,5 @@
 import { Signal, Type } from '@angular/core';
+import type { UserInputPhase } from '../project/project';
 
 /** Size hints (px) for the desktop inspection window hosting the renderer. */
 export interface ComponentInspectionSizing {
@@ -70,11 +71,19 @@ export function fitsInputQueue(
   return pending + eventFrames(frames) <= INPUT_QUEUE_LIMIT;
 }
 
+/** One pointer operation on one slot of a user input. */
+export interface SlotOperation {
+  readonly slot: number;
+  readonly phase: UserInputPhase;
+}
+
 /**
  * Where an inspection sends what it is played with, so it never resolves an
  * engine unit itself: the top-level board, or the watch level its component
- * is a copy in. `press` and `release` operate one slot of a user input
- * through its gesture; `send` queues frames on the component's input
+ * is a copy in. `operate` operates slots of a user input through its
+ * gesture, every slot one call changes going out in **one** frame, so
+ * controls pressed together reach the circuit on the same tick; `send`
+ * queues frames on the component's input
  * directly — refused whole, sending nothing, when they do not fit behind
  * what it still has ({@link fitsInputQueue}) — `cancel` drops the frames it
  * still has queued — ending a hold that is still running — and applies
@@ -83,8 +92,7 @@ export function fitsInputQueue(
  * most: the count the last snapshot reported, plus every event sent since.
  */
 export interface InputRoute {
-  press(slot: number): void;
-  release(slot: number): void;
+  operate(operations: readonly SlotOperation[]): void;
   send(frames: readonly InputFrame[]): void;
   cancel(reset?: InputFrame): void;
   pending(): number;

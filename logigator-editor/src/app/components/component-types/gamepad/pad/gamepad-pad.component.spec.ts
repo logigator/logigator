@@ -5,7 +5,7 @@ import { configureTestBed } from '../../../../../testing/configure-test-bed';
 import {
   GamepadPadComponent,
   GamepadPadMode,
-  GamepadPadPointer
+  GamepadPadHold
 } from './gamepad-pad.component';
 
 /** A pointer event on a pointer id, as jsdom has no PointerEvent. */
@@ -29,12 +29,15 @@ describe('GamepadPadComponent', () => {
     fixture.componentRef.setInput('mode', mode);
     fixture.componentRef.setInput('names', names);
     const pad = fixture.componentInstance;
-    const record =
-      (kind: string) =>
-      ({ control, pointerId }: GamepadPadPointer) =>
-        events.push(`${kind} ${control} ${pointerId}`);
-    pad.controlDown.subscribe(record('down'));
-    pad.controlUp.subscribe(record('up'));
+    pad.pointerHold.subscribe(
+      ({ pointerId, pressed, released }: GamepadPadHold) => {
+        for (const control of released)
+          events.push(`up ${control} ${pointerId}`);
+        for (const control of pressed) {
+          events.push(`down ${control} ${pointerId}`);
+        }
+      }
+    );
     pad.save.subscribe(() => saves++);
     fixture.detectChanges();
     host = fixture.nativeElement as HTMLElement;

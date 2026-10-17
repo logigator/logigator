@@ -55,8 +55,7 @@ function recordingRoute(): InputRoute & {
     sent: [] as string[],
     cancels: [] as (InputFrame | undefined)[],
     pendingEvents: 0,
-    press: () => undefined,
-    release: () => undefined,
+    operate: () => undefined,
     send: (frames: readonly InputFrame[]) =>
       route.sent.push(...frames.flatMap((frame) => describeFrame(frame) ?? [])),
     cancel: (reset?: InputFrame) => route.cancels.push(reset),

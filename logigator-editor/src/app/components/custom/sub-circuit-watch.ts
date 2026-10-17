@@ -6,6 +6,7 @@ import {
   InputFrame,
   InputRoute,
   InspectionTitlePart,
+  SlotOperation,
   StateRoute
 } from '../component-inspection';
 import { isUserInput, UserInput } from '../user-input';
@@ -20,6 +21,7 @@ import { LoggingService } from '../../logging/logging.service';
 import { ToastService } from '../../logging/toast.service';
 import { TranslationService } from '../../translation/translation.service';
 import { getStaticDI } from '../../utils/get-di';
+import type { UserInputPhase } from '../../project/project';
 import { CustomComponent } from './custom-component';
 
 /** One breadcrumb level of an open watch. */
@@ -133,12 +135,11 @@ export class SubCircuitWatch extends ComponentInspection {
     }
     const unitIndex = level.session.info.unitIndexFor(bodyIndex);
     if (isCanvasOperatedInput(component) && unitIndex !== undefined) {
-      this.simulation.triggerUnitInput(
+      this.simulation.operateUnitInput(
         unitIndex,
         component,
-        () => level.session.project.triggerTicker('single'),
-        'tap',
-        0
+        [{ slot: 0, phase: 'tap' }],
+        () => level.session.project.triggerTicker('single')
       );
     }
   }
@@ -185,7 +186,7 @@ export class SubCircuitWatch extends ComponentInspection {
 
   /**
    * {@link setInput} for every slot at once, `values[i]` for slot `i`, as one
-   * state frame, as `SimulationService.setUserInputs` does a top-level
+   * frame, as `SimulationService.setUserInputs` does a top-level
    * input. Reports whether the component is one of the level's user inputs
    * with exactly that many slots.
    */
@@ -329,37 +330,44 @@ export class SubCircuitWatch extends ComponentInspection {
     ) {
       return null;
     }
-    const repaint = () => level.session.project.triggerTicker('single');
+    const operate = (phase: UserInputPhase) =>
+      this.simulation.operateUnitInput(
+        unitIndex,
+        input,
+        [{ slot, phase }],
+        () => level.session.project.triggerTicker('single')
+      );
     return {
-      press: () =>
-        this.simulation.triggerUnitInput(
-          unitIndex,
-          input,
-          repaint,
-          'press',
-          slot
-        ),
-      release: () =>
-        this.simulation.triggerUnitInput(
-          unitIndex,
-          input,
-          repaint,
-          'release',
-          slot
-        )
+      press: () => operate('press'),
+      release: () => operate('release')
     };
   }
 
   /**
-   * An inspection's route into `level`: its presses hold the copy's slots,
-   * and its frames go to the copy's unit, resolved on every call like the
-   * holds.
+   * Operates slots of a user input of `level`'s copy, its unit resolved on
+   * the call.
+   */
+  private _operateAt(
+    level: WatchLevel,
+    input: Component,
+    operations: readonly SlotOperation[]
+  ): void {
+    const unitIndex = this._unitIndexAt(level, input);
+    if (unitIndex !== undefined) {
+      this.simulation.operateUnitInput(unitIndex, input, operations, () =>
+        level.session.project.triggerTicker('single')
+      );
+    }
+  }
+
+  /**
+   * An inspection's route into `level`: its operations drive the copy's
+   * slots, and its frames go to the copy's unit, resolved on every call.
    */
   private _routeFor(level: WatchLevel, component: Component): InputRoute {
     const unitIndex = () => this._unitIndexAt(level, component);
     return {
-      press: (slot) => this._holdAt(level, component, slot)?.press(),
-      release: (slot) => this._holdAt(level, component, slot)?.release(),
+      operate: (operations) => this._operateAt(level, component, operations),
       send: (frames) => {
         const base = unitIndex();
         if (base !== undefined) {

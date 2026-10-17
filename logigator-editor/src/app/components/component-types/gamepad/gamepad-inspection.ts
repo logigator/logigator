@@ -27,6 +27,11 @@ const PAD_HOLDER = 'pad:';
  * then letting go of either, keeps the control held. A control the pad does
  * not have takes no holder.
  *
+ * What one input event changes — a key, a pointer's move, every holder a
+ * focus loss lets go of — or one controller poll ({@link batch}) reaches the
+ * route as **one** operation, so the controls it presses together reach the
+ * circuit on the same tick.
+ *
  * What the window draws as pressed is the component's own slot state, not
  * the holders: {@link pressed} re-reads it on every frame and after every
  * route call, so a press that arrived any other way shows too, and a press
@@ -51,6 +56,11 @@ export class GamepadInspection
 
   /** Each control's holders; a control with none has no entry. */
   private readonly holders = new Map<GamepadControlId, Set<string>>();
+  /**
+   * The slots the running {@link batch} pressed (`true`) or released, by
+   * slot, the last change winning; `null` outside one.
+   */
+  private changes: Map<number, boolean> | null = null;
 
   private readonly _pressed = signal<ReadonlySet<GamepadControlId>>(new Set());
   /** The controls whose slot is active, as the board shows them. */
@@ -86,11 +96,11 @@ export class GamepadInspection
 
   /** A bound key went down while the window had focus. */
   public keyDown(control: GamepadControlId, code: string): void {
-    this.hold(control, KEY_HOLDER + code);
+    this.batch(() => this.hold(control, KEY_HOLDER + code));
   }
 
   public keyUp(control: GamepadControlId, code: string): void {
-    this.letGo(control, KEY_HOLDER + code);
+    this.batch(() => this.letGo(control, KEY_HOLDER + code));
   }
 
   /** Every key lets go at once: the window lost focus, or the page did. */
@@ -99,11 +109,27 @@ export class GamepadInspection
   }
 
   public pointerDown(control: GamepadControlId, pointerId: number): void {
-    this.hold(control, POINTER_HOLDER + pointerId);
+    this.batch(() => this.hold(control, POINTER_HOLDER + pointerId));
   }
 
   public pointerUp(control: GamepadControlId, pointerId: number): void {
-    this.letGo(control, POINTER_HOLDER + pointerId);
+    this.batch(() => this.letGo(control, POINTER_HOLDER + pointerId));
+  }
+
+  /**
+   * A pointer moved its hold in one event, letting go of `released` and
+   * taking `pressed` — a thumb rolling over the D-pad.
+   */
+  public pointerMove(
+    pointerId: number,
+    pressed: readonly GamepadControlId[],
+    released: readonly GamepadControlId[]
+  ): void {
+    const holder = POINTER_HOLDER + pointerId;
+    this.batch(() => {
+      for (const control of released) this.letGo(control, holder);
+      for (const control of pressed) this.hold(control, holder);
+    });
   }
 
   /** Every pointer lets go at once: the view holding them went away. */
@@ -113,16 +139,43 @@ export class GamepadInspection
 
   /** A controller input (`<index>:<input>`) started holding `control`. */
   public padDown(control: GamepadControlId, input: string): void {
-    this.hold(control, PAD_HOLDER + input);
+    this.batch(() => this.hold(control, PAD_HOLDER + input));
   }
 
   public padUp(control: GamepadControlId, input: string): void {
-    this.letGo(control, PAD_HOLDER + input);
+    this.batch(() => this.letGo(control, PAD_HOLDER + input));
   }
 
   /** Every controller input lets go at once: the controller went away. */
   public releasePad(): void {
     this.letGoWhere((holder) => holder.startsWith(PAD_HOLDER));
+  }
+
+  /**
+   * Runs `run`, whose holds and releases reach the route together, as one
+   * operation of every control whose pressed state they changed: one
+   * controller poll is one batch. A batch inside a batch joins it.
+   */
+  public batch(run: () => void): void {
+    if (this.changes) {
+      run();
+      return;
+    }
+    const changes = new Map<number, boolean>();
+    this.changes = changes;
+    try {
+      run();
+    } finally {
+      this.changes = null;
+    }
+    if (changes.size === 0) return;
+    this.route.operate(
+      [...changes].map(([slot, pressed]) => ({
+        slot,
+        phase: pressed ? 'press' : 'release'
+      }))
+    );
+    this.refresh();
   }
 
   /**
@@ -155,29 +208,31 @@ export class GamepadInspection
     }
     const first = held.size === 0;
     held.add(holder);
-    if (first) this.send('press', control);
+    if (first) this.change(control, true);
   }
 
   private letGo(control: GamepadControlId, holder: string): void {
     const held = this.holders.get(control);
     if (!held?.delete(holder) || held.size > 0) return;
     this.holders.delete(control);
-    this.send('release', control);
+    this.change(control, false);
   }
 
+  /** Lets go of every matching holder, in one batch. */
   private letGoWhere(matches: (holder: string) => boolean): void {
-    for (const [control, held] of [...this.holders]) {
-      for (const holder of [...held]) {
-        if (matches(holder)) this.letGo(control, holder);
+    this.batch(() => {
+      for (const [control, held] of [...this.holders]) {
+        for (const holder of [...held]) {
+          if (matches(holder)) this.letGo(control, holder);
+        }
       }
-    }
+    });
   }
 
-  private send(phase: 'press' | 'release', control: GamepadControlId): void {
+  /** Records a control's press or release in the running batch. */
+  private change(control: GamepadControlId, pressed: boolean): void {
     const slot = this.slotOf(control);
-    if (slot < 0) return;
-    this.route[phase](slot);
-    this.refresh();
+    if (slot >= 0) this.changes?.set(slot, pressed);
   }
 
   /** The control's slot, read now rather than kept. */

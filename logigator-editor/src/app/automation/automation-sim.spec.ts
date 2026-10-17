@@ -340,8 +340,7 @@ describe('AutomationApiService simulation', () => {
           {
             state: pad.slotIds.map((_, slot) =>
               slot === 0 ? false : slot % 2 === 1 ? true : null
-            ),
-            coalesce: true
+            )
           }
         ]
       }

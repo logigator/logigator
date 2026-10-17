@@ -13,8 +13,7 @@ import { KeyboardInspection } from './keyboard-inspection';
 import { KeyboardInspectionComponent } from './keyboard-inspection.component';
 
 const silentRoute: InputRoute = {
-  press: () => undefined,
-  release: () => undefined,
+  operate: () => undefined,
   send: () => undefined,
   cancel: () => undefined,
   pending: () => 0

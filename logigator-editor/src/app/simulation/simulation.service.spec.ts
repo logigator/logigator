@@ -30,6 +30,7 @@ import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { SimulationService } from './simulation.service';
 import { TOP_LEVEL_PATH } from './compiler/compiled-board.model';
+import { HELD_INPUT_BACKLOG } from './held-input';
 import { MIN_TARGET_HZ } from './worker/pacing';
 import { packSnapshot } from './worker/protocol';
 import {
@@ -423,6 +424,76 @@ describe('SimulationService', () => {
       ]);
     });
 
+    it('keeps a bounded backlog when tapped faster than it steps, the last tap still seen', async () => {
+      await bootWithButton();
+
+      for (let tap = 0; tap < 10; tap++) {
+        project.emitUserInput(button, 'press');
+        expect(fakeWorker.engine.pending(unit)).toBeLessThanOrEqual(
+          HELD_INPUT_BACKLOG
+        );
+        project.emitUserInput(button, 'release');
+        expect(fakeWorker.engine.pending(unit)).toBeLessThanOrEqual(
+          HELD_INPUT_BACKLOG
+        );
+      }
+
+      // The earlier taps are gone; the last one is high for its tick.
+      expect(stepAndRead(4, () => engineOutput(unit))).toEqual([
+        true,
+        false,
+        false,
+        false
+      ]);
+    });
+
+    it('stays high across steps for as long as it is held, after the last tap before it', async () => {
+      await bootWithButton();
+      for (let tap = 0; tap < 5; tap++) {
+        project.emitUserInput(button, 'press');
+        project.emitUserInput(button, 'release');
+      }
+
+      project.emitUserInput(button, 'press');
+      // The last tap, then the hold, which lasts.
+      expect(stepAndRead(6, () => engineOutput(unit))).toEqual([
+        true,
+        false,
+        true,
+        true,
+        true,
+        true
+      ]);
+
+      await vi.waitFor(() => expect(service.pendingEvents(button.id)).toBe(0));
+      project.emitUserInput(button, 'release');
+      expect(stepAndRead(2, () => engineOutput(unit))).toEqual([false, false]);
+    });
+
+    it('loses nothing still pending when a stale count replaces its backlog early', async () => {
+      await bootWithButton();
+      project.emitUserInput(button, 'press');
+      service.step();
+      await vi.waitFor(() => expect(service.pendingEvents(button.id)).toBe(0));
+
+      // Held on the outputs; a release, a press and a release queue behind.
+      project.emitUserInput(button, 'release');
+      project.emitUserInput(button, 'press');
+      project.emitUserInput(button, 'release');
+      // Two of them applied, before any snapshot says so.
+      const applied = stepAndRead(2, () => engineOutput(unit));
+      expect(service.pendingEvents(button.id)).toBe(3);
+      expect(fakeWorker.engine.pending(unit)).toBe(1);
+
+      // The count says the backlog is full; the engine holds one release.
+      project.emitUserInput(button, 'press');
+
+      // Every transition after the hold reaches the circuit, each once.
+      expect([...applied, ...stepAndRead(4, () => engineOutput(unit))]).toEqual(
+        [false, true, false, true, true, true]
+      );
+    });
+
     it('ignores a press while the engine is still starting', () => {
       button = makeButton();
       project.addComponent(button);
@@ -527,7 +598,7 @@ describe('SimulationService', () => {
       expect(input.isActive(3)).toBe(false);
     });
 
-    it('has every held slot released by stop in one state frame, against the rebuilt engine', async () => {
+    it('has every held slot released by stop in one frame, against the rebuilt engine', async () => {
       await bootWithInput();
       project.emitUserInput(input, 'press', 0);
       project.emitUserInput(input, 'press', 2);
@@ -536,19 +607,19 @@ describe('SimulationService', () => {
       await vi.waitFor(() => expect(input.isActive(2)).toBe(false));
 
       expect(input.isActive(0)).toBe(false);
-      expect(sent().at(-1)).toEqual([base, [false, null, false], true]);
+      expect(sent().at(-1)).toEqual([base, [false, null, false], false]);
       expect(engineLevel(base, 0)).toBe(false);
       expect(engineLevel(base, 2)).toBe(false);
     });
 
-    it('sets every slot in one state frame of the slots that change', async () => {
+    it('sets every slot in one frame of the slots that change', async () => {
       await bootWithInput();
       project.emitUserInput(input, 'press', 1);
       fakeWorker.posted.length = 0;
 
       expect(service.setUserInputs(input.id, [true, true, true])).toBe(true);
 
-      expect(sent()).toEqual([[base, [true, null, true], true]]);
+      expect(sent()).toEqual([[base, [true, null, true], false]]);
       expect([0, 1, 2].map((slot) => input.isActive(slot))).toEqual([
         true,
         true,
@@ -909,6 +980,22 @@ describe('SimulationService', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('delivers every pulse-button tap made faster than it steps, unlike a button', async () => {
+    const button = makePulseButton();
+    project.addComponent(button);
+    await enterAndBoot();
+    const unit = service.board!.userInputs.get(button.id)!;
+
+    const taps = HELD_INPUT_BACKLOG * 4;
+    for (let tap = 0; tap < taps; tap++) {
+      project.emitUserInput(button);
+    }
+
+    const trace = stepAndRead(taps * 2 + 1, () => engineOutput(unit));
+    expect(trace.filter((high, i) => high && !trace[i - 1])).toHaveLength(taps);
+    expect(trace.at(-1)).toBe(false);
   });
 
   it('fans snapshots out to registered watch appliers, seeded by a full one', async () => {

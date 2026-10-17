@@ -35,10 +35,14 @@ import {
  */
 export type GamepadPadMode = 'play' | 'assign' | 'names';
 
-/** One pointer starting or ending its hold on one control. */
-export interface GamepadPadPointer {
-  readonly control: GamepadControlId;
+/**
+ * What one pointer event did to its pointer's hold: the controls it took and
+ * the ones it let go of, at least one of them non-empty.
+ */
+export interface GamepadPadHold {
   readonly pointerId: number;
+  readonly pressed: readonly GamepadControlId[];
+  readonly released: readonly GamepadControlId[];
 }
 
 /** Every control's keycap, `null` for an unbound one. */
@@ -136,7 +140,8 @@ const DPAD_CONTROLS: ReadonlySet<GamepadControlId> = new Set([
  * The controller as the DOM draws it, the only such drawing: the simulation
  * window plays it, and the names dialog edits names on it. It holds no
  * simulation state; what is pressed comes in through `pressed`, and what the
- * pointer does goes out through `controlDown` / `controlUp`.
+ * pointer does goes out through `pointerHold`, one event for whatever one
+ * pointer event changed.
  *
  * One SVG draws the fixed silhouette and the control shapes. Every control,
  * glyph, caption and keycap chip is an HTML element laid over it, placed in
@@ -226,8 +231,7 @@ export class GamepadPadComponent {
   /** The control whose key just moved in `assign`, drawn highlighted. */
   public readonly flashed = input<GamepadControlId | null>(null);
 
-  public readonly controlDown = output<GamepadPadPointer>();
-  public readonly controlUp = output<GamepadPadPointer>();
+  public readonly pointerHold = output<GamepadPadHold>();
   /** Enter in a name input. */
   public readonly save = output<void>();
   /** A control was picked in `assign`, to capture its key or stop doing so. */
@@ -392,8 +396,8 @@ export class GamepadPadComponent {
   }
 
   /**
-   * Moves `pointerId`'s hold to `controls`, emitting only what changed. An
-   * empty set ends the pointer's hold.
+   * Moves `pointerId`'s hold to `controls`, emitting what changed, if
+   * anything, as one event. An empty set ends the pointer's hold.
    */
   private hold(pointerId: number, controls: readonly GamepadControlId[]): void {
     const before = this.held.get(pointerId) ?? [];
@@ -403,9 +407,9 @@ export class GamepadPadComponent {
     } else {
       this.held.delete(pointerId);
     }
-    for (const control of released) this.controlUp.emit({ control, pointerId });
-    for (const control of pressed)
-      this.controlDown.emit({ control, pointerId });
+    if (pressed.length > 0 || released.length > 0) {
+      this.pointerHold.emit({ pointerId, pressed, released });
+    }
   }
 
   /** The D-pad directions under the pointer, from the region's own box. */

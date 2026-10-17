@@ -42,13 +42,11 @@ describe('InspectionSheetComponent with two gamepad tabs', () => {
     const pad = makeGamepad();
     const calls: string[] = [];
     const route: InputRoute = {
-      press: (slot) => {
-        calls.push(`press ${pad.slotIds[slot]}`);
-        pad.setActive(slot, true);
-      },
-      release: (slot) => {
-        calls.push(`release ${pad.slotIds[slot]}`);
-        pad.setActive(slot, false);
+      operate: (operations) => {
+        for (const { slot, phase } of operations) {
+          calls.push(`${phase} ${pad.slotIds[slot]}`);
+          pad.setActive(slot, phase === 'press');
+        }
       },
       send: () => undefined,
       cancel: () => undefined,

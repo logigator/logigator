@@ -5,6 +5,7 @@ import type { InputFrame as EngineInputFrame } from '@logigator/sim/wasm';
 import {
   fitsInputQueue,
   InputFrame,
+  SlotOperation,
   StateWatch
 } from '../components/component-inspection';
 import {
@@ -15,7 +16,7 @@ import {
 } from '../components/user-input';
 import { LoggingService } from '../logging/logging.service';
 import { ToastService } from '../logging/toast.service';
-import { Project, UserInputEvent, UserInputPhase } from '../project/project';
+import { Project, UserInputEvent } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 import { ShortcutService } from '../shortcuts/shortcut.service';
@@ -28,6 +29,7 @@ import { BuiltInComponentType } from '@logigator/core';
 import { BoardCompilerService } from './compiler/board-compiler.service';
 import { CompiledBoard, TOP_LEVEL_PATH } from './compiler/compiled-board.model';
 import { CompileDiagnostic } from './compiler/compile-error';
+import { HeldInputHistory, heldInputWrite } from './held-input';
 import { LinkStateApplier, SnapshotApplier } from './state/link-state-applier';
 import { MIN_TARGET_HZ } from './worker/pacing';
 import {
@@ -118,6 +120,9 @@ export class SimulationService {
       slots: Set<number>;
     }
   >();
+  // What each held input's unit was sent, by unit, so a backlog it is too
+  // far behind can be replaced by what is held now (`held-input.ts`).
+  private readonly _heldInputs = new Map<number, HeldInputHistory>();
 
   constructor() {
     // The compiled session addresses the main project's live components and
@@ -306,6 +311,7 @@ export class SimulationService {
     this.workerService.endSession();
     this._state.set('inactive');
     this._watchAppliers.clear();
+    this._heldInputs.clear();
 
     // The reset walks live objects the board mapped at compile time, so one
     // freed under the session throws here. Dropping the session regardless
@@ -383,6 +389,8 @@ export class SimulationService {
     this.workerService
       .reset()
       .then(() => {
+        // The rebuilt engine holds none of what the held inputs were sent.
+        this._heldInputs.clear();
         // Set low against the rebuilt engine: a press or toggle that landed
         // while the reset was in flight reached it, and must not outlive its
         // visual.
@@ -456,28 +464,46 @@ export class SimulationService {
     this._operate(
       component,
       this._board?.userInputs.get(component.id),
-      phase,
-      () => this._project?.triggerTicker('single'),
-      slot
+      [{ slot, phase }],
+      () => this._project?.triggerTicker('single')
     );
   }
 
   /**
-   * Drives a user input whose engine unit index is already resolved: an inner
-   * user input operated in a watch, where `component` is the watch's fresh
-   * copy and `unitIndex` comes from `infoFor(path).unitIndexFor(bodyIndex)` —
-   * the input's unit, whose output `slot` is driven. `phase` is read through
-   * the input's `gesture`, as a canvas operation is. `repaint` re-blits
-   * whatever canvas shows the component.
+   * Operates slots of a top-level user input through its gesture, as
+   * pointers do: what one call changes reaches the engine as **one** frame,
+   * so controls pressed together land on the same tick. Ignored for a
+   * component that is not a user input of the running session.
    */
-  public triggerUnitInput(
+  public operateInput(
+    componentId: number,
+    operations: readonly SlotOperation[]
+  ): void {
+    const component = this._project?.getComponentById(componentId);
+    if (component) {
+      this._operate(
+        component,
+        this._board?.userInputs.get(componentId),
+        operations,
+        () => this._project?.triggerTicker('single')
+      );
+    }
+  }
+
+  /**
+   * {@link operateInput} for a user input whose engine unit index is already
+   * resolved: an inner user input operated in a watch, where `component` is
+   * the watch's fresh copy and `unitIndex` comes from
+   * `infoFor(path).unitIndexFor(bodyIndex)` — the input's unit, whose output
+   * slots are driven. `repaint` re-blits whatever canvas shows the component.
+   */
+  public operateUnitInput(
     unitIndex: number,
     component: Component,
-    repaint: () => void,
-    phase: UserInputPhase = 'tap',
-    slot = 0
+    operations: readonly SlotOperation[],
+    repaint: () => void
   ): void {
-    this._operate(component, unitIndex, phase, repaint, slot);
+    this._operate(component, unitIndex, operations, repaint);
   }
 
   /**
@@ -485,9 +511,11 @@ export class SimulationService {
    * which its `drive` alone decides: a `level` slot is set to `value` — one
    * already there is left alone, so repeating the call sends no further
    * engine frame — and a `pulse` slot pulses on `true` and ignores `false`,
-   * holding no state to clear. A level goes out as a state frame. Reports
-   * whether the component is a user input of the running session with that
-   * slot.
+   * holding no state to clear. The frame is the one the input's own gesture
+   * sends ({@link _drive}): a switch's a state, a button's or a gamepad's an
+   * event behind a bounded backlog, so a script presses one as a pointer
+   * does. Reports whether the component is a user input of the running
+   * session with that slot.
    */
   public setUserInput(componentId: number, value: boolean, slot = 0): boolean {
     return this._setTopLevel(componentId, [{ slot, value }]);
@@ -514,7 +542,7 @@ export class SimulationService {
 
   /**
    * {@link setUserInput} for a user input whose engine unit index is already
-   * resolved — an inner one of a watch, as in {@link triggerUnitInput}.
+   * resolved — an inner one of a watch, as in {@link operateUnitInput}.
    * Reports whether the component is a user input with that slot.
    */
   public setUnitInput(
@@ -667,7 +695,7 @@ export class SimulationService {
     );
   }
 
-  /** Absolute values through {@link _drive}, a level as a state frame. */
+  /** Absolute values through {@link _drive}. */
   private _setAbsolute(
     component: Component,
     base: number,
@@ -680,7 +708,7 @@ export class SimulationService {
     ) {
       return false;
     }
-    this._drive(component, base, values, true, repaint);
+    this._drive(component, base, values, repaint);
     return true;
   }
 
@@ -688,7 +716,7 @@ export class SimulationService {
    * Records a `level` slot the engine already holds high — a watch copy posed
    * from its output link — as active, sending no frame, so a stop, an exit or
    * the copy's teardown sets it low like any other. `unitIndex` is the
-   * input's unit, as in {@link triggerUnitInput}.
+   * input's unit, as in {@link operateUnitInput}.
    */
   public adoptHighLevel(
     unitIndex: number,
@@ -710,63 +738,73 @@ export class SimulationService {
   }
 
   /**
-   * A pointer operation on a slot, mapped through the input's `gesture`: a
+   * Pointer operations on slots, mapped through the input's `gesture`: a
    * `hold` slot is set high on press and low on release, a `toggle` slot
-   * flips on a tap, a `tap` (pulse) slot pulses on a tap. A hold and a tap
-   * report events, so each goes out as event frames; a toggle reports a
-   * position, a state frame. A phase the gesture does not use, and a slot
-   * the input does not have, is ignored.
+   * flips on a tap, a `tap` (pulse) slot pulses on a tap — all of them in
+   * one {@link _drive}, so what the operations change goes out together. A
+   * phase the gesture does not use, and a slot the input does not have, is
+   * ignored.
    */
   private _operate(
     component: Component,
     base: number | undefined,
-    phase: UserInputPhase,
-    repaint: () => void,
-    slot: number
+    operations: readonly SlotOperation[],
+    repaint: () => void
   ): void {
-    if (!isUserInput(component) || !isSlotOf(component, slot)) {
+    if (!isUserInput(component)) {
       return;
     }
-    if (component.drive === 'pulse') {
-      if (phase === 'tap') {
-        this._drive(component, base, [{ slot, value: true }], false, repaint);
+    const values: SlotValue[] = [];
+    for (const { slot, phase } of operations) {
+      if (!isSlotOf(component, slot)) {
+        continue;
       }
-    } else if (component.gesture === 'hold') {
-      if (phase !== 'tap') {
-        const value = phase === 'press';
-        this._drive(component, base, [{ slot, value }], false, repaint);
+      if (component.drive === 'pulse') {
+        if (phase === 'tap') {
+          values.push({ slot, value: true });
+        }
+      } else if (component.gesture === 'hold') {
+        if (phase !== 'tap') {
+          values.push({ slot, value: phase === 'press' });
+        }
+      } else if (phase === 'tap') {
+        values.push({ slot, value: !component.isActive(slot) });
       }
-    } else if (phase === 'tap') {
-      const value = !component.isActive(slot);
-      this._drive(component, base, [{ slot, value }], true, repaint);
+    }
+    if (values.length > 0) {
+      this._drive(component, base, values, repaint);
     }
   }
 
   /**
-   * Drives slots of a user input to the given values, by its `drive`, as
-   * frames over its outputs that leave every other slot as it is. A `level`
-   * slot already at its value is left alone, so the engine never sees the
-   * same state twice; setting one high obeys the readiness rule, while
-   * setting one low always clears the visual. The slots that change go out
-   * as one frame, a state when `coalesce` is set and an event otherwise. A
-   * `pulse` slot pulses on `true` — obeying the readiness rule and flashing
-   * active for {@link PULSE_BUTTON_FLASH_MS} — and ignores `false`. The
-   * engine has no pulse of its own, so a pulse is always an event frame that
-   * sets the slots high followed by a state frame setting them low again:
-   * as an event it never merges into an earlier pulse, and the frame after
-   * it ends it a tick later. `base` is the input's unit.
+   * Drives slots of a user input to the given values as frames over its
+   * outputs that leave every other slot as it is; what kind of frames
+   * follows from the input alone, so a pointer, a watch and the automation
+   * API drive it alike. A `level` slot already at its value is left alone,
+   * so the engine never sees the same state twice; setting one high obeys
+   * the readiness rule, while setting one low always clears the visual. The
+   * slots that change go out together: a `toggle` input's (a switch's) as
+   * one state frame, a position; a `hold` input's (a button's, a gamepad's)
+   * as one event frame, behind at most a bounded backlog, which it otherwise
+   * replaces with what is held now ({@link heldInputWrite}). A `pulse` slot
+   * pulses on `true` — obeying the readiness rule and flashing active for
+   * {@link PULSE_BUTTON_FLASH_MS} — and ignores `false`. The engine has no
+   * pulse of its own, so a pulse is always an event frame that sets the
+   * slots high followed by a state frame setting them low again: as an event
+   * it never merges into an earlier pulse, and the frame after it ends it a
+   * tick later, so every tap is delivered. `base` is the input's unit.
    */
   private _drive(
     input: Component & UserInput,
     base: number | undefined,
     values: readonly SlotValue[],
-    coalesce: boolean,
     repaint: () => void
   ): void {
     // Inputs are live from the moment simulation mode is entered, while the
     // engine is still starting. The worker drops inputs from that window, so
     // changing the visuals would show a state the engine never received.
     const ready = this.isReady();
+    const before = slotStates(input);
     const state = new Array<boolean | null>(input.inputSlots).fill(null);
     let changed = false;
     for (const { slot, value } of values) {
@@ -791,13 +829,40 @@ export class SimulationService {
     if (!changed) {
       return;
     }
-    this._send(
-      base,
-      input.drive === 'level'
-        ? [{ state, coalesce }]
-        : [{ state }, { state: lowered(state), coalesce: true }]
-    );
+    if (input.drive === 'pulse') {
+      this._send(base, [{ state }, { state: lowered(state), coalesce: true }]);
+    } else if (input.gesture === 'toggle') {
+      this._send(base, [{ state, coalesce: true }]);
+    } else {
+      this._sendHeld(base, state, before);
+    }
     repaint();
+  }
+
+  /**
+   * Sends a held input's change through {@link heldInputWrite}, against what
+   * its unit was sent before — or, the first time, against `before`, the
+   * slot states the change started from.
+   */
+  private _sendHeld(
+    base: number | undefined,
+    change: readonly (boolean | null)[],
+    before: readonly boolean[]
+  ): void {
+    if (base === undefined || !this.isReady()) {
+      return;
+    }
+    let history = this._heldInputs.get(base);
+    if (!history) {
+      history = new HeldInputHistory(before);
+      this._heldInputs.set(base, history);
+    }
+    const { frames, replace } = heldInputWrite(
+      history,
+      change,
+      this.workerService.pendingEvents(base)
+    );
+    this._send(base, frames, replace);
   }
 
   /** Shows a pulsed slot active for {@link PULSE_BUTTON_FLASH_MS}. */
@@ -869,7 +934,7 @@ export class SimulationService {
 
   /**
    * Sets every high `level` slot low, the engine's inputs included: one
-   * state frame per input.
+   * frame per input, of the kind its gesture sends.
    */
   private _resetLevels(): void {
     for (const [input, { base, width, repaint, slots }] of [
@@ -877,12 +942,16 @@ export class SimulationService {
     ]) {
       const values = [...slots].map((slot) => ({ slot, value: false }));
       if (!input.destroyed) {
-        this._drive(input, base, values, true, repaint);
+        this._drive(input, base, values, repaint);
         continue;
       }
       // A copy freed while high has nothing left to draw, but its engine
-      // input still reads high.
+      // input still reads high. What it was sent no longer says where the
+      // unit is once this frame goes out.
       this._highLevels.delete(input);
+      if (base !== undefined) {
+        this._heldInputs.delete(base);
+      }
       const state = new Array<boolean | null>(width).fill(null);
       for (const slot of slots) {
         state[slot] = false;
@@ -896,6 +965,13 @@ export class SimulationService {
 interface SlotValue {
   slot: number;
   value: boolean;
+}
+
+/** Every slot's state, in slot order. */
+function slotStates(input: UserInput): boolean[] {
+  return Array.from({ length: input.inputSlots }, (_, slot) =>
+    input.isActive(slot)
+  );
 }
 
 /** `values[i]` for slot `i`. */

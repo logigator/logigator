@@ -494,7 +494,10 @@ export interface LogigatorAutomationApi {
     setTarget(value: number, unit: 'Hz' | 'kHz' | 'MHz'): void;
     /**
      * Lever: absolute set. Button: absolute too — held by `true` until a
-     * `false` releases it. Pulse button: pulse on `true`, ignored on `false`.
+     * `false` releases it, each written as a press or release is: `true` then
+     * `false` between two steps is high for one tick, and writes past one
+     * pending press and release replace the older ones (a gamepad slot alike).
+     * Pulse button: pulse on `true`, ignored on `false`, every one delivered.
      * A boolean sets the one slot `input` addresses (default `0`); an array
      * sets every slot, element `i` for slot `i`, and takes no `input`. A
      * keyboard is refused: it takes `type` and `setKey`.

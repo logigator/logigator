@@ -21,7 +21,7 @@ import { TranslationService } from '../../../translation/translation.service';
 import type { GamepadInspection } from './gamepad-inspection';
 import {
   GamepadPadComponent,
-  GamepadPadPointer
+  GamepadPadHold
 } from './pad/gamepad-pad.component';
 import { PAD_VIEWBOX } from './pad/gamepad-pad-layout';
 
@@ -104,8 +104,7 @@ interface ControllerOption {
         [enlarged]="compact()"
         [capturing]="capturing()"
         [flashed]="flashed()"
-        (controlDown)="onControlDown($event)"
-        (controlUp)="onControlUp($event)"
+        (pointerHold)="onPointerHold($event)"
         (controlSelect)="onControlSelect($event)"
       />
     </div>
@@ -343,12 +342,12 @@ export class GamepadInspectionComponent {
     else this.hardware.assign(index, inspection);
   }
 
-  protected onControlDown({ control, pointerId }: GamepadPadPointer): void {
-    this.inspection().pointerDown(control, pointerId);
-  }
-
-  protected onControlUp({ control, pointerId }: GamepadPadPointer): void {
-    this.inspection().pointerUp(control, pointerId);
+  protected onPointerHold({
+    pointerId,
+    pressed,
+    released
+  }: GamepadPadHold): void {
+    this.inspection().pointerMove(pointerId, pressed, released);
   }
 
   /**

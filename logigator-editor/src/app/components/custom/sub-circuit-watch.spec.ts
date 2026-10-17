@@ -287,10 +287,10 @@ describe('SubCircuitWatch', () => {
       expect(levels()).toEqual([]);
 
       const route = openFor.mock.calls[0][1]!.input!;
-      route.press(0);
+      route.operate([{ slot: 0, phase: 'press' }]);
       expect(buttonCopy.isActive(0)).toBe(true);
       expect(levels()).toEqual([true]);
-      route.release(0);
+      route.operate([{ slot: 0, phase: 'release' }]);
       expect(levels()).toEqual([true, false]);
 
       route.send([{ state: [true] }]);
