@@ -88,7 +88,10 @@
              corner. The wrapper owns placement only (no z-index, so its children
              keep their own bands) and lets pointer events fall through; each
              child re-enables its own. The card sits in the canvas-overlay band
-             (under windows/dialogs), the toast in the toast band (on top). -->
+             (under windows/dialogs), the toast in the toast band (on top). The
+             card's width is fixed rather than content-sized, so it does not
+             jump with every selection; a custom component's card would
+             otherwise be as narrow as its name and buttons. -->
         <div
           class="pointer-events-none absolute left-3 bottom-3 flex max-w-sm flex-col items-start"
         >
@@ -98,7 +101,7 @@
             [dismissLabel]="uiLabels().dismiss"
           />
           <app-component-settings
-            class="pointer-events-auto z-canvas-overlay"
+            class="pointer-events-auto z-canvas-overlay w-sm max-w-full"
           ></app-component-settings>
         </div>
 
