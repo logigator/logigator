@@ -322,6 +322,7 @@ const en = {
           skippedOne: "{{char}} isn't ASCII and was skipped",
           skippedMany: "{{count}} characters weren't ASCII and were skipped",
           truncated: 'Only the first {{limit}} characters were sent',
+          refused: 'Nothing was sent: wait for the characters still being sent',
           sending: 'Sending {{count}}…',
           cancelSending: 'Stop sending',
           typeText: 'Type text…'
@@ -331,6 +332,8 @@ const en = {
           label: 'Text to send to the keyboard',
           skippedOne: "{{char}} isn't ASCII and will be skipped",
           skippedMany: "{{count}} characters aren't ASCII and will be skipped",
+          doesNotFit:
+            "Wait for the characters still being sent: this text doesn't fit behind them yet",
           send: 'Send',
           cancel: 'Cancel'
         }

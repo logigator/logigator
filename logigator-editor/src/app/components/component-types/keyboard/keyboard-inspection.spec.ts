@@ -16,7 +16,12 @@ import { InspectionService } from '../../../inspection/inspection.service';
 import { LayoutService } from '../../../layout/layout.service';
 import { SimulationService } from '../../../simulation/simulation.service';
 import { WorkModeService } from '../../../work-mode/work-mode.service';
-import { InputFrame, InputRoute } from '../../component-inspection';
+import {
+  INPUT_QUEUE_LIMIT,
+  InputFrame,
+  InputRoute
+} from '../../component-inspection';
+import { TranslationService } from '../../../translation/translation.service';
 import { KEYBOARD_STROBE_OUTPUT } from '@logigator/core';
 import { codeFromBits, readoutText, resetFrame } from './ascii';
 import { KeyboardComponent } from './keyboard.component';
@@ -36,23 +41,27 @@ function describeFrame(frame: InputFrame): string | null {
   return code === 0 ? 'release' : null;
 }
 
-/** A route that records, in words, every frame sent through it. */
+/**
+ * A route that records, in words, every frame sent through it, its input
+ * holding `pendingEvents` event frames not yet applied.
+ */
 function recordingRoute(): InputRoute & {
   sent: string[];
   cancels: (InputFrame | undefined)[];
+  pendingEvents: number;
 } {
-  const sent: string[] = [];
-  const cancels: (InputFrame | undefined)[] = [];
-  return {
-    sent,
-    cancels,
+  const route = {
+    sent: [] as string[],
+    cancels: [] as (InputFrame | undefined)[],
+    pendingEvents: 0,
     press: () => undefined,
     release: () => undefined,
-    send: (frames) =>
-      sent.push(...frames.flatMap((frame) => describeFrame(frame) ?? [])),
-    cancel: (reset) => cancels.push(reset),
-    pending: () => 0
+    send: (frames: readonly InputFrame[]) =>
+      route.sent.push(...frames.flatMap((frame) => describeFrame(frame) ?? [])),
+    cancel: (reset?: InputFrame) => route.cancels.push(reset),
+    pending: () => route.pendingEvents
   };
+  return route;
 }
 
 function fakeSimulation(): {
@@ -318,6 +327,68 @@ describe('KeyboardInspectionComponent capture', () => {
     expect(submitButton(form).disabled).toBe(true);
     form.dispatchEvent(new Event('submit', { cancelable: true }));
     expect(route.sent).toEqual([]);
+  });
+
+  /** Leaves room for `characters` more behind what the input holds. */
+  function leaveRoom(characters: number): void {
+    route.pendingEvents = INPUT_QUEUE_LIMIT - 2 * characters - 1;
+    inspection.onFrame();
+    TestBed.inject(ApplicationRef).tick();
+  }
+
+  /** The window's status line, where its notices replace the status. */
+  function statusLine(): string {
+    return (fixture.nativeElement as HTMLElement)
+      .querySelector('[aria-live]')!
+      .textContent!.trim();
+  }
+
+  it('refuses a paste or a key that does not fit behind the characters still being sent, whole, and asks to wait', () => {
+    const refused = TestBed.inject(TranslationService).translate(
+      'components.def.KEYBOARD.window.refused'
+    );
+    leaveRoom(2);
+
+    paste('abc');
+    TestBed.inject(ApplicationRef).tick();
+    expect(route.sent).toEqual([]);
+    expect(inspection.history()).toEqual([]);
+    expect(statusLine()).toBe(refused);
+
+    paste('ab');
+    expect(route.sent).toEqual(['press a', 'release', 'press b', 'release']);
+
+    leaveRoom(0);
+    key('keydown', 'KeyD', 'd');
+    key('keyup', 'KeyD', 'd');
+    expect(route.sent).toHaveLength(4);
+    expect(keyboard.heldKey()).toBeNull();
+  });
+
+  it('holds back a Type text send that does not fit, saying so, until the characters ahead have gone out', () => {
+    const doesNotFit = TestBed.inject(TranslationService).translate(
+      'components.def.KEYBOARD.typeText.doesNotFit'
+    );
+    leaveRoom(2);
+    const form = typeTextDialog('abc');
+
+    expect(submitButton(form).disabled).toBe(true);
+    expect(form.textContent).toContain(doesNotFit);
+    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    expect(route.sent).toEqual([]);
+
+    leaveRoom(3);
+    expect(form.textContent).not.toContain(doesNotFit);
+    submitButton(form).click();
+    TestBed.inject(ApplicationRef).tick();
+    expect(route.sent).toEqual([
+      'press a',
+      'release',
+      'press b',
+      'release',
+      'press c',
+      'release'
+    ]);
   });
 
   it('forgets the history and the held key once a stop rebuilds the engine', () => {

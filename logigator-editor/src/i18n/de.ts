@@ -326,6 +326,8 @@ const de: TranslationSchema = {
           skippedMany:
             '{{count}} Zeichen waren keine ASCII-Zeichen und wurden übersprungen',
           truncated: 'Nur die ersten {{limit}} Zeichen wurden gesendet',
+          refused:
+            'Nichts gesendet: Warte, bis die noch ausstehenden Zeichen gesendet sind',
           sending: 'Sende {{count}}…',
           cancelSending: 'Senden abbrechen',
           typeText: 'Text eingeben…'
@@ -336,6 +338,8 @@ const de: TranslationSchema = {
           skippedOne: '{{char}} ist kein ASCII-Zeichen und wird übersprungen',
           skippedMany:
             '{{count}} Zeichen sind keine ASCII-Zeichen und werden übersprungen',
+          doesNotFit:
+            'Warte, bis die noch ausstehenden Zeichen gesendet sind: Dieser Text passt noch nicht dahinter',
           send: 'Senden',
           cancel: 'Abbrechen'
         }

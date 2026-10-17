@@ -6,7 +6,9 @@ import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { isUserInput, UserInput } from '../components/user-input';
 import {
+  charactersThatFit,
   KEYBOARD_TEXT_LIMIT,
+  pendingCharacters,
   textToCodesStrict
 } from '../components/component-types/keyboard/ascii';
 import {
@@ -643,12 +645,14 @@ export class AutomationApiService {
    * Types `text` into a keyboard as taps, a press and a release per
    * character, queued behind what the keyboard still has to send. The text is
    * checked whole first ({@link keyboardTextCodes}), so a character the
-   * keyboard has no key for queues nothing. Resolves once queued.
+   * keyboard has no key for queues nothing, and so does a text that does not
+   * fit behind the characters still queued ({@link typeKeyboardText}).
+   * Resolves once queued.
    */
   public async simType(componentId: number, text: string): Promise<void> {
     const codes = keyboardTextCodes(text);
     const keyboard = this.requireBoardKeyboard(componentId);
-    keyboard.tapKeys(this.boardKeyRoute(keyboard), codes);
+    typeKeyboardText(keyboard, this.boardKeyRoute(keyboard), codes);
     await this.nextFrame();
   }
 
@@ -685,7 +689,8 @@ export class AutomationApiService {
     return {
       send: (frames) => {
         this.simulation.sendFrames(keyboard.id, frames);
-      }
+      },
+      pending: () => this.simulation.pendingEvents(keyboard.id)
     };
   }
 
@@ -1204,7 +1209,7 @@ export class AutomationApiService {
       inspectionId,
       componentId
     );
-    keyboard.tapKeys(route, codes);
+    typeKeyboardText(keyboard, route, codes);
     await this.nextFrame();
   }
 
@@ -1247,7 +1252,8 @@ export class AutomationApiService {
       route: {
         send: (frames) => {
           watch.sendFrames(keyboard, frames);
-        }
+        },
+        pending: () => watch.pendingEvents(keyboard)
       }
     };
   }
@@ -1697,7 +1703,9 @@ function keyboardKeyCode(key: unknown): number | null {
 
 /**
  * Puts `code` on the keyboard's `D` unless it is already there, or with
- * `null` sets `D` to zero unless no key holds it.
+ * `null` sets `D` to zero unless no key holds it. A press that does not fit
+ * behind the characters still queued is refused, queueing nothing; a
+ * release always fits.
  */
 function setKeyboardKey(
   keyboard: KeyboardComponent,
@@ -1706,9 +1714,38 @@ function setKeyboardKey(
 ): void {
   if (code === null) {
     keyboard.releaseKey(route);
-  } else if (keyboard.heldKey()?.code !== code) {
-    keyboard.pressKey(route, code);
+  } else if (
+    keyboard.heldKey()?.code !== code &&
+    !keyboard.pressKey(route, code)
+  ) {
+    throw keyboardFullError(route, 'a key press does');
   }
+}
+
+/**
+ * Types `codes` as taps, refusing them whole — never cut — where they do
+ * not fit behind the characters the keyboard is still sending.
+ */
+function typeKeyboardText(
+  keyboard: KeyboardComponent,
+  route: KeyboardRoute,
+  codes: readonly number[]
+): void {
+  if (!keyboard.tapKeys(route, codes)) {
+    throw keyboardFullError(route, `the text's ${codes.length} characters do`);
+  }
+}
+
+/**
+ * The error refusing what does not fit behind the characters a keyboard is
+ * still sending: its input holds `INPUT_QUEUE_LIMIT` event frames, two per
+ * character.
+ */
+function keyboardFullError(route: KeyboardRoute, subject: string): Error {
+  const pending = pendingCharacters(route.pending());
+  return new Error(
+    `logigator: ${subject} not fit behind the ${pending} characters the keyboard is still sending, of the ${charactersThatFit(0)} it holds at once; nothing was queued — step or run the simulation until they are sent`
+  );
 }
 
 /**

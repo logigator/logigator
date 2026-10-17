@@ -13,7 +13,11 @@ import {
   ManualFrameScheduler
 } from '../../../testing/fake-simulation-worker';
 import { Component } from '../component';
-import { ComponentInspection } from '../component-inspection';
+import {
+  ComponentInspection,
+  INPUT_QUEUE_LIMIT,
+  InputFrame
+} from '../component-inspection';
 import { ComponentProviderService } from '../component-provider.service';
 import { ButtonComponent } from '../component-types/button/button.component';
 import { GamepadComponent } from '../component-types/gamepad/gamepad.component';
@@ -445,12 +449,13 @@ describe('SubCircuitWatch', () => {
     let keyboardCopy: KeyboardComponent;
     /** The engine unit of the copy. */
     let base: number;
-    /** The unit of the board's own keyboard. */
+    /** The board's own keyboard, and its unit. */
+    let boardKeyboard: KeyboardComponent;
     let boardBase: number;
 
     beforeEach(async () => {
       // A keyboard on the board too, whose units the copy's frames must miss.
-      const boardKeyboard = makeKeyboard(0, 20);
+      boardKeyboard = makeKeyboard(0, 20);
       project.addComponent(boardKeyboard);
       const instance = await placeNestedFixture(() => makeKeyboard());
       boardBase = simulation.board!.userInputs.get(boardKeyboard.id)!;
@@ -488,9 +493,32 @@ describe('SubCircuitWatch', () => {
       expect(keyboardCopy.heldKey()).toEqual({ code: 0x41, key: 'KeyA' });
     });
 
+    it('refuses what does not fit behind the copy’s own queue, whatever the board’s keyboard holds', () => {
+      watch.activate(keyboardCopy);
+      const typing = inspections.open().at(-1)!
+        .inspection as KeyboardInspection;
+      const boardRoute = {
+        send: (frames: readonly InputFrame[]) =>
+          simulation.sendFrames(boardKeyboard.id, frames),
+        pending: () => simulation.pendingEvents(boardKeyboard.id)
+      };
+
+      expect(typing.type(new Array(INPUT_QUEUE_LIMIT / 2).fill(0x61))).toBe(
+        true
+      );
+      expect(typing.type([0x62])).toBe(false);
+      expect(boardKeyboard.tapKeys(boardRoute, [0x62])).toBe(true);
+
+      expect(fakeWorker.engine.pending(base)).toBe(INPUT_QUEUE_LIMIT);
+      expect(fakeWorker.engine.pending(boardBase)).toBe(2);
+    });
+
     it('sets the copy’s data outputs low when the watch closes under a held key', () => {
       keyboardCopy.pressKey(
-        { send: (frames) => watch.sendFrames(keyboardCopy, frames) },
+        {
+          send: (frames) => watch.sendFrames(keyboardCopy, frames),
+          pending: () => watch.pendingEvents(keyboardCopy)
+        },
         0x41
       );
 

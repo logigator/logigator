@@ -6,7 +6,7 @@ import {
   keyboardMeta
 } from '@logigator/core';
 import { Component } from '../../component';
-import type { InputRoute } from '../../component-inspection';
+import { fitsInputQueue, type InputRoute } from '../../component-inspection';
 import { SimulationService } from '../../../simulation/simulation.service';
 import { getStaticDI } from '../../../utils/get-di';
 import { PX } from '../../../utils/grid';
@@ -49,8 +49,11 @@ export interface KeyboardHeldKey {
   readonly key: string | null;
 }
 
-/** What a key operation sends its frames through. */
-export type KeyboardRoute = Pick<InputRoute, 'send'>;
+/**
+ * What a key operation sends its frames through, and asks whether a press
+ * still fits behind what the input has pending.
+ */
+export type KeyboardRoute = Pick<InputRoute, 'send' | 'pending'>;
 
 /**
  * A keyboard: `D0`…`D6` carry the ASCII code of the held key, `STB` pulses on
@@ -58,7 +61,9 @@ export type KeyboardRoute = Pick<InputRoute, 'send'>;
  * canvas drives it. Its keys are pressed and released through the methods
  * here, which send the frames through the route they are given and keep the
  * one record of which key is on `D` ({@link heldKey}), so every source of
- * keys agrees on it.
+ * keys agrees on it. A press or a text that does not fit behind what the
+ * input still has to send is refused whole: nothing is sent, nothing on
+ * `D` changes, and the caller is told so.
  *
  * The body is a keycap glyph above a readout box in the glyph column, the port
  * labels beside them. The readout shows the code on the data outputs, each
@@ -101,18 +106,28 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
   /**
    * Puts `code` on `D` with a strobe, held by the physical key `key` or by
    * none. The key held before is let go of without a release of its own.
+   * Reports whether the press fit behind what the input still has to send;
+   * one that does not sends nothing and leaves the key held before on `D`.
    */
   public pressKey(
     route: KeyboardRoute,
     code: number,
     key: string | null = null
-  ): void {
-    route.send(pressFrames(code));
+  ): boolean {
+    const frames = pressFrames(code);
+    if (!fitsInputQueue(route.pending(), frames)) {
+      return false;
+    }
+    route.send(frames);
     this._held.set({ held: { code, key }, resets: this.sessionResets() });
+    return true;
   }
 
-  /** Sets `D` to zero if a key is on it; reports whether one was. */
-  public releaseKey(route: KeyboardRoute): boolean {
+  /**
+   * Sets `D` to zero if a key is on it; reports whether one was. A release
+   * is a state, so it always fits.
+   */
+  public releaseKey(route: Pick<InputRoute, 'send'>): boolean {
     if (!this.heldKey()) {
       return false;
     }
@@ -123,15 +138,21 @@ export class KeyboardComponent extends Component<KeyboardOptions> {
 
   /**
    * Sends `codes` as taps, a press and a release each, in order. A tap takes
-   * `D` over, so the key held before counts as released.
+   * `D` over, so the key held before counts as released. Reports whether
+   * the text fit behind what the input still has to send; one that does not
+   * is refused whole — never cut — and sends nothing.
    */
-  public tapKeys(route: KeyboardRoute, codes: readonly number[]): void {
+  public tapKeys(route: KeyboardRoute, codes: readonly number[]): boolean {
     if (codes.length === 0) {
-      return;
+      return true;
     }
     const frames = tapFrames(codes);
+    if (!fitsInputQueue(route.pending(), frames)) {
+      return false;
+    }
     this._held.set(null);
     route.send(frames);
+    return true;
   }
 
   /**

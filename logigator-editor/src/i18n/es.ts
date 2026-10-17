@@ -321,6 +321,8 @@ const es: TranslationSchema = {
           skippedOne: '{{char}} no es ASCII y se ha omitido',
           skippedMany: '{{count}} caracteres no eran ASCII y se han omitido',
           truncated: 'Solo se han enviado los primeros {{limit}} caracteres',
+          refused:
+            'No se ha enviado nada: espera a que se envíen los caracteres pendientes',
           sending: 'Enviando {{count}}…',
           cancelSending: 'Detener el envío',
           typeText: 'Escribir texto…'
@@ -330,6 +332,8 @@ const es: TranslationSchema = {
           label: 'Texto que enviará el teclado',
           skippedOne: '{{char}} no es ASCII y se omitirá',
           skippedMany: '{{count}} caracteres no son ASCII y se omitirán',
+          doesNotFit:
+            'Espera a que se envíen los caracteres pendientes: este texto aún no cabe detrás de ellos',
           send: 'Enviar',
           cancel: 'Cancelar'
         }

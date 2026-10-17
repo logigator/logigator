@@ -28,7 +28,11 @@ import { TOP_LEVEL_PATH } from '../simulation/compiler/compiled-board.model';
 import { InspectionService } from '../inspection/inspection.service';
 import { KeyboardComponent } from '../components/component-types/keyboard/keyboard.component';
 import { KeyboardInspection } from '../components/component-types/keyboard/keyboard-inspection';
-import { codeFromBits } from '../components/component-types/keyboard/ascii';
+import {
+  codeFromBits,
+  KEYBOARD_TEXT_LIMIT
+} from '../components/component-types/keyboard/ascii';
+import { INPUT_QUEUE_LIMIT } from '../components/component-inspection';
 import {
   FRAME_SCHEDULER,
   SIMULATION_WORKER_FACTORY
@@ -439,6 +443,28 @@ describe('AutomationApiService simulation', () => {
       );
 
       expect(fakeWorker.postedOfKind('submitInput')).toEqual([]);
+    });
+
+    it('refuses a text or a key that does not fit behind the characters still queued, queueing nothing', async () => {
+      const text = 'x'.repeat(KEYBOARD_TEXT_LIMIT);
+      for (let send = 0; send < 3; send++) {
+        await api.simType(keyboard.id, text);
+      }
+      const submitted = fakeWorker.postedOfKind('submitInput').length;
+
+      await expect(api.simType(keyboard.id, text)).rejects.toThrow(
+        /^logigator: the text's 10000 characters do not fit behind the 30000 characters the keyboard is still sending, of the 32768 it holds at once; nothing was queued/
+      );
+      await api.simType(keyboard.id, 'x'.repeat(2768));
+      await expect(api.simSetKey(keyboard.id, 'A')).rejects.toThrow(
+        /^logigator: a key press does not fit behind the 32768 characters/
+      );
+
+      expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(
+        submitted + 1
+      );
+      expect(fakeWorker.engine.pending(base)).toBe(INPUT_QUEUE_LIMIT);
+      expect(keyboard.heldKey()).toBeNull();
     });
 
     it('presses a key setKey already holds once', async () => {

@@ -3,7 +3,7 @@ import { TranslationService } from '../../../translation/translation.service';
 import { SimulationService } from '../../../simulation/simulation.service';
 import { getStaticDI } from '../../../utils/get-di';
 import { ComponentInspection, InputRoute } from '../../component-inspection';
-import { pendingCharacters } from './ascii';
+import { charactersThatFit, pendingCharacters } from './ascii';
 import type { KeyboardComponent, KeyboardHeldKey } from './keyboard.component';
 import { KeyboardInspectionComponent } from './keyboard-inspection.component';
 
@@ -30,6 +30,8 @@ interface PressedKey {
  * up is a release frame.
  * Text that arrives without a key (a paste, a soft keyboard's word, the Type
  * text dialog) goes out as taps, a press and a release per character.
+ * A key or a text that does not fit behind the characters still queued is
+ * refused whole and recorded nowhere; the caller says why.
  *
  * At most one key is on `D`: a press takes it over from the key held
  * before, and so does a tap, so the earlier key's release sends nothing. Only
@@ -72,6 +74,10 @@ export class KeyboardInspection extends ComponentInspection {
   /** How many characters are queued and not yet on `D`. */
   public readonly pending = this._pending.asReadonly();
 
+  private readonly _room = signal(0);
+  /** How many more characters fit behind those queued (`charactersThatFit`). */
+  public readonly room = this._room.asReadonly();
+
   private nextEntry = 0;
   private seenResets: number;
 
@@ -90,12 +96,17 @@ export class KeyboardInspection extends ComponentInspection {
 
   /**
    * The physical key `key` went down, sending `code`: `D` takes it, and the
-   * key is the one whose release sets `D` to zero.
+   * key is the one whose release sets `D` to zero. Reports whether it fit
+   * behind the characters queued; one that does not changes nothing.
    */
-  public press(key: string, code: number): void {
-    this.component.pressKey(this.route, code, key);
+  public press(key: string, code: number): boolean {
+    if (!this.component.pressKey(this.route, code, key)) {
+      return false;
+    }
     const [entry] = this.record([code]);
     this._pressed.set({ held: this.component.heldKey()!, entry });
+    this.refresh();
+    return true;
   }
 
   /** The physical key `key` went up; only the key on `D` sends a release. */
@@ -112,18 +123,22 @@ export class KeyboardInspection extends ComponentInspection {
 
   /**
    * Sends `codes` as taps, in order. A tap takes `D` over, so the key held
-   * before counts as released and its keyup sends nothing.
+   * before counts as released and its keyup sends nothing. Reports whether
+   * they fit behind the characters queued; ones that do not are refused
+   * whole and change nothing.
    */
-  public type(codes: readonly number[]): void {
-    if (codes.length === 0) return;
-    this.component.tapKeys(this.route, codes);
+  public type(codes: readonly number[]): boolean {
+    if (codes.length === 0) return true;
+    if (!this.component.tapKeys(this.route, codes)) return false;
     this.record(codes);
+    this.refresh();
+    return true;
   }
 
   /** Drops every character still queued; `D` is zero after the next tick. */
   public cancel(): void {
     this.component.cancelKeys(this.route);
-    this._pending.set(0);
+    this.refresh();
   }
 
   public override onFrame(): void {
@@ -152,7 +167,9 @@ export class KeyboardInspection extends ComponentInspection {
   }
 
   private refresh(): void {
+    const pending = this.route.pending();
     this._code.set(this.component.readCode());
-    this._pending.set(pendingCharacters(this.route.pending()));
+    this._pending.set(pendingCharacters(pending));
+    this._room.set(charactersThatFit(pending));
   }
 }

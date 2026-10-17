@@ -203,8 +203,8 @@ export class SubCircuitWatch extends ComponentInspection {
   /**
    * Hands input frames to the engine input of a component of the active
    * level's copy, as `SimulationService.sendFrames` does a top-level one.
-   * Reports whether the component is one of the level's inputs and every
-   * frame fits its outputs.
+   * Reports whether the component is one of the level's inputs, every
+   * frame fits its outputs and the frames fit behind its pending events.
    */
   public sendFrames(
     component: Component,
@@ -215,6 +215,18 @@ export class SubCircuitWatch extends ComponentInspection {
       unitIndex !== undefined &&
       this.simulation.sendUnitFrames(unitIndex, component, frames)
     );
+  }
+
+  /**
+   * How many event frames the input of a component of the active level's
+   * copy has not yet applied, at most, as `SimulationService.pendingEvents`
+   * counts a top-level one; 0 for anything but one of the level's inputs.
+   */
+  public pendingEvents(component: Component): number {
+    const unitIndex = this._unitIndexAt(this.activeLevel(), component);
+    return unitIndex === undefined
+      ? 0
+      : this.simulation.pendingUnitEvents(unitIndex);
   }
 
   /** Breadcrumb navigation: pops every level deeper than `index`. */

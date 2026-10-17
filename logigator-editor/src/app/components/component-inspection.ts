@@ -40,14 +40,47 @@ export interface InputFrame {
 }
 
 /**
+ * The most event frames one input holds pending: `@logigator/sim`'s
+ * `submitInput` (0.5.0 on) refuses a request that would take an input past
+ * it, whole, and queues nothing. States never count, so a release or a
+ * cancel's reset always fits.
+ */
+export const INPUT_QUEUE_LIMIT = 65_536;
+
+/** How many of `frames` are events, what {@link INPUT_QUEUE_LIMIT} counts. */
+export function eventFrames(frames: readonly InputFrame[]): number {
+  let events = 0;
+  for (const frame of frames) {
+    if (!frame.coalesce) {
+      events++;
+    }
+  }
+  return events;
+}
+
+/**
+ * Whether `frames` fit behind the `pending` event frames an input still
+ * has, so the engine takes them. `pending` is an upper bound (see
+ * {@link InputRoute.pending}), so a `true` is never refused for room.
+ */
+export function fitsInputQueue(
+  pending: number,
+  frames: readonly InputFrame[]
+): boolean {
+  return pending + eventFrames(frames) <= INPUT_QUEUE_LIMIT;
+}
+
+/**
  * Where an inspection sends what it is played with, so it never resolves an
  * engine unit itself: the top-level board, or the watch level its component
  * is a copy in. `press` and `release` operate one slot of a user input
  * through its gesture; `send` queues frames on the component's input
- * directly, `cancel` drops the frames it still has queued — ending a hold
- * that is still running — and applies `reset` on the next tick, or keeps the
- * outputs as they are without one, and `pending` is how many of its event
- * frames are not yet applied.
+ * directly — refused whole, sending nothing, when they do not fit behind
+ * what it still has ({@link fitsInputQueue}) — `cancel` drops the frames it
+ * still has queued — ending a hold that is still running — and applies
+ * `reset` on the next tick, or keeps the outputs as they are without one,
+ * and `pending` is how many of its event frames are not yet applied, at
+ * most: the count the last snapshot reported, plus every event sent since.
  */
 export interface InputRoute {
   press(slot: number): void;

@@ -6,6 +6,8 @@ import {
   ManualFrameScheduler
 } from '../../../testing/fake-simulation-worker';
 import { AnalyticsService } from '../../analytics/analytics.service';
+import { INPUT_QUEUE_LIMIT } from '../../components/component-inspection';
+import { LoggingService } from '../../logging/logging.service';
 import { LinkStateApplier } from '../state/link-state-applier';
 import { packSnapshot } from './protocol';
 import {
@@ -396,6 +398,61 @@ describe('SimulationWorkerService', () => {
     // between them, which is never counted.
     expect(counts).toEqual([1, 1, 1, 0]);
     expect(service.pendingEvents(4)).toBe(0);
+  });
+
+  it('counts the events sent since the last snapshot, never fewer than the engine holds', async () => {
+    await service.startSession(DESCRIPTOR, hooks);
+    const event = { state: [true] };
+
+    // Both go out before any snapshot answers; the one pulled counts only
+    // the first.
+    service.submitInput([{ comp: 3, frames: [event, event, event] }]);
+    service.submitInput([
+      { comp: 3, frames: [event, event] },
+      { comp: 4, frames: [event] }
+    ]);
+    expect([service.pendingEvents(3), service.pendingEvents(4)]).toEqual([
+      5, 1
+    ]);
+    await vi.waitFor(() =>
+      expect(fakeWorker.snapshots.length).toBeGreaterThan(0)
+    );
+    expect(service.pendingEvents(3)).toBe(fakeWorker.engine.pending(3));
+
+    await service.step();
+    expect(service.pendingEvents(3)).toBeGreaterThanOrEqual(
+      fakeWorker.engine.pending(3)
+    );
+    await vi.waitFor(() => expect(service.pendingEvents(3)).toBe(4));
+
+    service.submitInput([{ comp: 3, frames: [event], replace: true }]);
+    expect(service.pendingEvents(3)).toBe(1);
+  });
+
+  it('keeps the session when the engine refuses an input, logging and reporting it', async () => {
+    const captureError = vi.spyOn(
+      TestBed.inject(AnalyticsService),
+      'captureError'
+    );
+    const logError = vi.spyOn(TestBed.inject(LoggingService), 'error');
+    await service.startSession(DESCRIPTOR, hooks);
+    const event = { state: [true] };
+
+    // One event past what an input holds: the engine queues none of it.
+    service.submitInput([
+      { comp: 3, frames: new Array(INPUT_QUEUE_LIMIT + 1).fill(event) }
+    ]);
+    await vi.waitFor(() => expect(captureError).toHaveBeenCalledOnce());
+
+    expect(hooks.onError).not.toHaveBeenCalled();
+    expect(captureError.mock.calls[0][2]).toMatchObject({
+      source: 'inputRefused'
+    });
+    expect(logError).toHaveBeenCalledOnce();
+    expect(service.pendingEvents(3)).toBe(0);
+    service.submitInput([{ comp: 3, frames: [event] }]);
+    await service.step();
+    expect(fakeWorker.engine.output(3)).toBe(true);
   });
 
   it('pulls no snapshot for a state frame sent while paused', async () => {

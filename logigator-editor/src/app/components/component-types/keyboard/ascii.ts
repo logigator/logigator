@@ -1,5 +1,5 @@
 import { KEYBOARD_DATA_BITS, KEYBOARD_STROBE_OUTPUT } from '@logigator/core';
-import type { InputFrame } from '../../component-inspection';
+import { INPUT_QUEUE_LIMIT, type InputFrame } from '../../component-inspection';
 
 /**
  * The readout name of every ASCII code that has no glyph: the C0 controls,
@@ -301,4 +301,16 @@ export function resetFrame(): InputFrame {
  */
 export function pendingCharacters(pendingEvents: number): number {
   return Math.floor(pendingEvents / PRESS_EVENTS);
+}
+
+/**
+ * How many more characters fit behind `pendingEvents` event frames, as taps
+ * or as presses: the most a paste, a send or a key may carry right now, the
+ * input holding at most {@link INPUT_QUEUE_LIMIT} event frames.
+ */
+export function charactersThatFit(pendingEvents: number): number {
+  return Math.max(
+    0,
+    Math.floor((INPUT_QUEUE_LIMIT - pendingEvents) / PRESS_EVENTS)
+  );
 }

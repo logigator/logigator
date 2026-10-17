@@ -324,6 +324,8 @@ const fr: TranslationSchema = {
           skippedMany:
             "{{count}} caractères n'étaient pas ASCII et ont été ignorés",
           truncated: 'Seuls les {{limit}} premiers caractères ont été envoyés',
+          refused:
+            "Rien n'a été envoyé : attendez que les caractères en cours d'envoi soient partis",
           sending: 'Envoi : {{count}}…',
           cancelSending: "Arrêter l'envoi",
           typeText: 'Saisir du texte…'
@@ -334,6 +336,8 @@ const fr: TranslationSchema = {
           skippedOne: "{{char}} n'est pas un caractère ASCII et sera ignoré",
           skippedMany:
             '{{count}} caractères ne sont pas ASCII et seront ignorés',
+          doesNotFit:
+            "Attendez que les caractères en cours d'envoi soient partis : ce texte ne tient pas encore derrière eux",
           send: 'Envoyer',
           cancel: 'Annuler'
         }

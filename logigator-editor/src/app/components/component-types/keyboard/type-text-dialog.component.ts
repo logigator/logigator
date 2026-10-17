@@ -2,17 +2,29 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  Signal,
   signal
 } from '@angular/core';
 import { LgButton, LgDialogContent, LgTextarea } from '@logigator/ui';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { KEYBOARD_TEXT_LIMIT, textToCodes } from './ascii';
 
+/** What the Type text dialog is opened with. */
+export interface TypeTextDialogData {
+  /**
+   * How many characters fit behind those the keyboard is still sending,
+   * kept current while the dialog is open.
+   */
+  readonly room: Signal<number>;
+}
+
 /**
  * Prepares a longer text for the keyboard, a program listing say, before it
  * goes out. The text is read as a paste is, and what that leaves out is
- * said before anything is sent. Closes with the codes to send as taps;
- * dismissing sends nothing.
+ * said before anything is sent. A text that does not fit behind the
+ * characters still being sent is held back, saying so, until they have gone
+ * out far enough. Closes with the codes to send as taps; dismissing sends
+ * nothing.
  */
 @Component({
   selector: 'app-type-text-dialog',
@@ -42,7 +54,9 @@ import { KEYBOARD_TEXT_LIMIT, textToCodes } from './ascii';
       ></textarea>
       <div class="min-h-5 text-sm text-warn-text" aria-live="polite">
         @let skipped = result().skipped;
-        @if (skipped.length === 1) {
+        @if (!fits()) {
+          {{ t('components.def.KEYBOARD.typeText.doesNotFit') }}
+        } @else if (skipped.length === 1) {
           {{
             t('components.def.KEYBOARD.typeText.skippedOne', {
               char: skipped[0]
@@ -65,7 +79,11 @@ import { KEYBOARD_TEXT_LIMIT, textToCodes } from './ascii';
         >
           {{ t('components.def.KEYBOARD.typeText.cancel') }}
         </button>
-        <button lgButton type="submit" [disabled]="result().codes.length === 0">
+        <button
+          lgButton
+          type="submit"
+          [disabled]="result().codes.length === 0 || !fits()"
+        >
           {{ t('components.def.KEYBOARD.typeText.send') }}
         </button>
       </div>
@@ -73,13 +91,19 @@ import { KEYBOARD_TEXT_LIMIT, textToCodes } from './ascii';
   `
 })
 export class TypeTextDialogComponent extends LgDialogContent<
-  void,
+  TypeTextDialogData,
   readonly number[]
 > {
   protected readonly limit = KEYBOARD_TEXT_LIMIT;
   protected readonly text = signal('');
   /** The text as it would be sent, recomputed as it is edited. */
   protected readonly result = computed(() => textToCodes(this.text()));
+  /** Whether the text fits behind the characters still being sent. */
+  protected readonly fits = computed(
+    () =>
+      this.result().codes.length <=
+      (this.dialogData?.room() ?? Number.POSITIVE_INFINITY)
+  );
 
   protected onInput(e: Event): void {
     this.text.set((e.target as HTMLTextAreaElement).value);
@@ -88,6 +112,6 @@ export class TypeTextDialogComponent extends LgDialogContent<
   protected send(e: Event): void {
     e.preventDefault();
     const { codes } = this.result();
-    if (codes.length > 0) this.dialogRef.close(codes);
+    if (codes.length > 0 && this.fits()) this.dialogRef.close(codes);
   }
 }

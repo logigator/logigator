@@ -131,7 +131,9 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
     // uncorrelated error would kill the session. The run controls above keep
     // `requireSim`, since their caller holds a promise to carry the failure.
     // The engine sequences the frames inside its ticks, between `runAsync`
-    // batches as between steps, so nothing here waits for a tick.
+    // batches as between steps, so nothing here waits for a tick. A request
+    // it refuses throws, and goes back as an error under its own `reqId`,
+    // which the bridge knows as a refused input rather than a failure.
     case 'submitInput':
       if (!sim) break;
       sim.submitInput(msg.writes);

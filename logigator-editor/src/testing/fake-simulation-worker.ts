@@ -23,9 +23,9 @@ export interface SentFrame extends InputFrame {
  * With `autoRespond` it behaves like a healthy worker: `ready` after
  * construction, `ok` for every correlated request, an empty-delta snapshot
  * carrying the engine's input progress as the worker reports it per
- * `requestSnapshot` — the watched state ranges read beside it through the
- * worker's own `StateReader`, at the point the request was posted, as the
- * worker reads them between ticks — and a `status` with `statusTick` per
+ * `requestSnapshot` — it and the watched state ranges read beside it through
+ * the worker's own readers, at the point the request was posted, as the
+ * worker reads them between messages — and a `status` with `statusTick` per
  * `requestStatus` — all on microtasks, like real worker messages. Every
  * snapshot it sends is kept in `snapshots`. Turn it off to script the
  * conversation manually.
@@ -34,7 +34,9 @@ export interface SentFrame extends InputFrame {
  * ({@link SimEngine}) as each message is posted: `init` builds it, `step`
  * ticks it, `submitInput` submits to it and `stop` rebuilds it. `engine` then
  * answers what the circuit sees, tick by tick. Input posted before `init` is
- * dropped, as the worker drops it.
+ * dropped, as the worker drops it, and a `submitInput` the engine refuses
+ * queues nothing and is answered with an `error` under its `reqId`, as the
+ * worker answers it.
  */
 export class FakeSimulationWorker {
   public posted: MainToWorkerMessage[] = [];
@@ -70,14 +72,25 @@ export class FakeSimulationWorker {
 
   public postMessage(msg: MainToWorkerMessage): void {
     this.posted.push(msg);
-    this.runEngine(msg);
+    let refused: string | null = null;
+    try {
+      this.runEngine(msg);
+    } catch (err) {
+      // Only an engine call throws; the worker posts what it threw.
+      refused = String(err);
+    }
     if (!this.autoRespond || this.terminated) {
       return;
     }
-    // Read now: a step posted before the microtask runs would tick first.
+    // Read now, as the worker reads between messages: a step or an input
+    // posted before the microtask runs would reach the engine first.
     const state =
       msg.kind === 'requestSnapshot' && this._engine
         ? this.stateReader.read(this._engine)
+        : undefined;
+    const inputProgress =
+      msg.kind === 'requestSnapshot' && this._engine
+        ? this.progress?.read(this._engine)
         : undefined;
     queueMicrotask(() => {
       if (this.terminated) {
@@ -85,8 +98,6 @@ export class FakeSimulationWorker {
       }
       switch (msg.kind) {
         case 'requestSnapshot': {
-          const inputProgress =
-            this._engine && this.progress?.read(this._engine);
           const snapshot: SnapshotMessage = {
             kind: 'snapshot',
             reqId: msg.reqId,
@@ -114,7 +125,11 @@ export class FakeSimulationWorker {
         case 'unwatchState':
           break;
         default:
-          this.emit({ kind: 'ok', reqId: msg.reqId });
+          this.emit(
+            refused === null
+              ? { kind: 'ok', reqId: msg.reqId }
+              : { kind: 'error', reqId: msg.reqId, message: refused }
+          );
       }
     });
   }

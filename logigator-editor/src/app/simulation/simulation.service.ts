@@ -2,7 +2,11 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { Component } from '../components/component';
 import type { InputFrame as EngineInputFrame } from '@logigator/sim/wasm';
-import { InputFrame, StateWatch } from '../components/component-inspection';
+import {
+  fitsInputQueue,
+  InputFrame,
+  StateWatch
+} from '../components/component-inspection';
 import {
   isUserInput,
   LevelUserInput,
@@ -543,8 +547,10 @@ export class SimulationService {
    * the frames it still has. The frames reach the engine as they are: no slot
    * state of the component is read or set, so its visuals are the caller's.
    * Refuses the whole call, sending nothing, unless every frame has one entry
-   * per output of the component and a hold the engine takes. Frames sent
-   * before the engine is ready are dropped.
+   * per output of the component and a hold the engine takes, and the frames
+   * fit behind the events the input still has ({@link fitsInputQueue}, over
+   * {@link pendingEvents}). Frames sent before the engine is ready are
+   * dropped.
    */
   public sendFrames(
     componentId: number,
@@ -568,7 +574,10 @@ export class SimulationService {
     component: Component,
     frames: readonly InputFrame[]
   ): boolean {
-    if (!frames.every((frame) => frameFits(component, frame))) {
+    if (
+      !frames.every((frame) => frameFits(component, frame)) ||
+      !fitsInputQueue(this.pendingUnitEvents(unitIndex), frames)
+    ) {
       return false;
     }
     this._send(unitIndex, frames);
@@ -605,9 +614,9 @@ export class SimulationService {
 
   /**
    * How many event frames a top-level component's input has not yet
-   * applied, as of the last snapshot that reported its count. What that is
-   * in the input's own terms — characters, presses — is for the caller to
-   * say.
+   * applied, at most: the count the last snapshot reported, plus the events
+   * sent since (`SimulationWorkerService.pendingEvents`). What that is in
+   * the input's own terms — characters, presses — is for the caller to say.
    */
   public pendingEvents(componentId: number): number {
     const base = this._board?.userInputs.get(componentId);

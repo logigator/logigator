@@ -31,7 +31,7 @@ import { TypeTextDialogComponent } from './type-text-dialog.component';
  */
 const SENTINEL = ' ';
 
-/** How long a skipped-characters notice replaces the status line. */
+/** How long a skipped or a refused notice replaces the status line. */
 const NOTICE_MS = 4000;
 
 /** Keys whose character arrives later, through an input or composition event. */
@@ -96,6 +96,10 @@ function isShortcut(e: KeyboardEvent): boolean {
  * a tap on the strip lands on the field itself, which takes the focus inside
  * that tap. Type text… opens a dialog for a longer text, which goes out as
  * taps once sent; the dialog closes with the view.
+ *
+ * A key or a text that does not fit behind the characters still being sent
+ * is refused whole — a text is never cut — and the status line asks to wait
+ * for them instead.
  */
 @Component({
   selector: 'app-keyboard-inspection',
@@ -346,7 +350,9 @@ export class KeyboardInspectionComponent {
     e.preventDefault();
     if (e.key === 'Escape') e.stopPropagation();
     if (character.kind === 'ascii') {
-      this.inspection().press(e.code, character.code);
+      if (!this.inspection().press(e.code, character.code)) {
+        this.showRefused();
+      }
     } else {
       this.showSkipped([character.char], false);
     }
@@ -380,11 +386,11 @@ export class KeyboardInspectionComponent {
         return;
       case 'deleteContentBackward':
         this.consume(e);
-        this.inspection().type([BACKSPACE]);
+        this.typeCodes([BACKSPACE]);
         return;
       case 'deleteContentForward':
         this.consume(e);
-        this.inspection().type([DELETE]);
+        this.typeCodes([DELETE]);
         return;
     }
   }
@@ -415,7 +421,9 @@ export class KeyboardInspectionComponent {
 
   /**
    * Opens the Type text dialog; what it closes with goes out as taps, and the
-   * focus comes back to the capture field either way.
+   * focus comes back to the capture field either way. The dialog reads how
+   * many characters still fit, so it holds back a text that would be
+   * refused.
    */
   public openTypeText(): void {
     const ref = this.dialogs.open(TypeTextDialogComponent, {
@@ -425,12 +433,13 @@ export class KeyboardInspectionComponent {
       width: '32rem',
       modal: true,
       closable: true,
-      telemetryId: DialogId.TypeText
+      telemetryId: DialogId.TypeText,
+      data: { room: this.inspection().room }
     });
     this.typeTextRef = ref;
     ref.onClose.subscribe((codes) => {
       this.typeTextRef = null;
-      if (codes) this.inspection().type(codes);
+      if (codes) this.typeCodes(codes);
       this.field().nativeElement.focus({ preventScroll: true });
     });
   }
@@ -439,11 +448,30 @@ export class KeyboardInspectionComponent {
     this.inspection().cancel();
   }
 
-  /** Sends `text` as taps, as a paste does, and says what it left out. */
+  /**
+   * Sends `text` as taps, as a paste does, and says what it left out — or,
+   * for a text that does not fit, that nothing went out.
+   */
   private typeText(text: string): void {
     const result = textToCodes(text);
-    this.inspection().type(result.codes);
-    this.report(result);
+    if (this.typeCodes(result.codes)) {
+      this.report(result);
+    }
+  }
+
+  /** Sends `codes` as taps, saying so where they were refused. */
+  private typeCodes(codes: readonly number[]): boolean {
+    const sent = this.inspection().type(codes);
+    if (!sent) {
+      this.showRefused();
+    }
+    return sent;
+  }
+
+  private showRefused(): void {
+    this.showNotice(
+      this.translation.translate('components.def.KEYBOARD.window.refused')
+    );
   }
 
   private report(result: KeyboardText): void {
