@@ -439,6 +439,17 @@ export class Editor {
     return Buffer.from(png, 'base64');
   }
 
+  /**
+   * Renders the open circuit's preview in this pass's colour scheme, through
+   * the path a cloud save uploads it by — the square, transparent picture a
+   * tile shows, not the image export's.
+   */
+  async renderPreview(): Promise<Buffer> {
+    this.report('rendering the preview');
+    const previews = await this.api(() => __logigator.renderPreviews());
+    return Buffer.from(previews[this.colorScheme].png, 'base64');
+  }
+
   /** Captures one frame into memory rather than to disk. */
   snap(target: SnapTarget): Promise<Buffer> {
     const options = { animations: 'disabled' } as const;

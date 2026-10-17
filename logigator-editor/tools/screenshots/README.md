@@ -8,7 +8,7 @@ Playwright handles the rest — the chrome the API deliberately does not model
 
 One run is one **target**, and a target owns what is specific to the images it
 produces: its shot list, the colour schemes it runs, the window it frames, where
-a capture lands and what it is called. Three exist:
+a capture lands and what it is called. Four exist:
 
 - **`docs`** — the in-editor documentation's screenshots
   (`logigator-docs/src/pages/<lang>/images/`), dark and single-themed. Every
@@ -21,6 +21,9 @@ a capture lands and what it is called. Three exist:
 - **`hero`** — the home page's hero board (`logigator-web/src/assets/`): the
   `hero-marquee` circuit running, as a still and as its animated loop, in both
   colour schemes. See [The hero board](#the-hero-board).
+- **`examples`** — the previews of the seed account's examples
+  (`logigator-api/examples/`), both colour schemes, beside the documents they
+  show. See [The examples](#the-examples).
 
 **Every image a target writes is lossless WebP**, animated for the
 step-throughs. It is the targets' only output format; `lib/webp.ts` is the only
@@ -258,6 +261,32 @@ still are not in the file, so they are constants at the top of
 `targets/hero/shots.ts`; the shots check the display is not redrawing at the
 sampling point and that a lap comes back to its first frame, and fail naming
 the constant to update rather than writing a torn or jumping loop.
+
+## The examples
+
+```bash
+yarn capture examples ../../../logigator-api
+```
+
+The site's examples are documents in the API's seed account, and
+`logigator-api/examples/` is where they are checked in: `examples.json` names
+each one by slug, its document is `<slug>.json`, and this target writes its
+preview beside it as `<slug>-light.webp` and `<slug>-dark.webp`. The API's
+`db:seed-examples` uploads that pair with the document, so a seeded example has
+its preview without anyone signing in as the account and opening it.
+
+One shot per slug the manifest names, read when the target loads, so a new
+example needs no edit here. Each imports the document exactly as the seed will
+store it and renders it through the automation API's `renderPreviews` — the
+`BoardSnapshotService` path a cloud save uploads by, square and transparent, not
+the image export. A preview has no interface text, so English is the only pass,
+and the names are fixed, so there is no registry.
+
+To change an example, open its `<slug>.json` in the editor, edit it, export it
+back over the same file, run this target, then the seed. The seed rewrites a
+preview only along with its document, so a run that re-rendered unchanged
+documents — after a change to how the board draws — is seeded with
+`--previews`.
 
 ## The social card
 

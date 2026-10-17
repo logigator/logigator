@@ -27,7 +27,9 @@ standalone package with its own lockfile — outside the workspace, never instal
 **target** (a folder under its `targets/`, whose config owns the shots, the colour schemes, the
 window it frames, where a capture lands and what it is called): `docs` writes `logigator-docs/`'s
 screenshots, `web` the website's tour figures, `hero` the home page's running board — rendered
-through the editor's own image export rather than screenshotted. The shared half is the runner, the page driver and
+through the editor's own image export rather than screenshotted — and `examples` the seed account's
+previews beside their documents in `logigator-api/examples/`, through the preview path a cloud save
+uploads by. The shared half is the runner, the page driver and
 the encoder — **every image a target writes is lossless WebP**, animated for the step-throughs,
 and `lib/webp.ts` is its only encoder — for a long loop that names a keyframe interval it writes the
 animated container itself, sharp's encoder having no such setting. Beside the runner, `social-card.ts` composes the site's
