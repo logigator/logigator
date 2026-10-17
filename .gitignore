@@ -55,5 +55,6 @@ plans/
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# Container data
-data/*
+# Container data, at any depth: a process started from a package directory
+# resolves a relative STORAGE_DIR there rather than at the root.
+data/
