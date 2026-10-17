@@ -25,8 +25,8 @@ interface PressedKey {
 
 /**
  * A keyboard typed into from its window. Every character goes out through
- * the {@link InputRoute} as frames: a key going down is two press frames,
- * its code on `D` with a strobe and then without, and the key on `D` going
+ * the {@link InputRoute} as frames: a key going down is three press frames,
+ * its code on `D` before, with and after a strobe, and the key on `D` going
  * up is a release frame.
  * Text that arrives without a key (a paste, a soft keyboard's word, the Type
  * text dialog) goes out as taps, a press and a release per character.

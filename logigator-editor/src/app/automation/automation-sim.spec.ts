@@ -447,23 +447,24 @@ describe('AutomationApiService simulation', () => {
 
     it('refuses a text or a key that does not fit behind the characters still queued, queueing nothing', async () => {
       const text = 'x'.repeat(KEYBOARD_TEXT_LIMIT);
-      for (let send = 0; send < 3; send++) {
+      for (let send = 0; send < 2; send++) {
         await api.simType(keyboard.id, text);
       }
       const submitted = fakeWorker.postedOfKind('submitInput').length;
 
       await expect(api.simType(keyboard.id, text)).rejects.toThrow(
-        /^logigator: the text's 10000 characters do not fit behind the 30000 characters the keyboard is still sending, of the 32768 it holds at once; nothing was queued/
+        /^logigator: the text's 10000 characters do not fit behind the 20000 characters the keyboard is still sending, of the 21845 it holds at once; nothing was queued/
       );
-      await api.simType(keyboard.id, 'x'.repeat(2768));
+      await api.simType(keyboard.id, 'x'.repeat(1845));
       await expect(api.simSetKey(keyboard.id, 'A')).rejects.toThrow(
-        /^logigator: a key press does not fit behind the 32768 characters/
+        /^logigator: a key press does not fit behind the 21845 characters/
       );
 
       expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(
         submitted + 1
       );
-      expect(fakeWorker.engine.pending(base)).toBe(INPUT_QUEUE_LIMIT);
+      // Three events a character: the queue is one short of full.
+      expect(fakeWorker.engine.pending(base)).toBe(INPUT_QUEUE_LIMIT - 1);
       expect(keyboard.heldKey()).toBeNull();
     });
 
@@ -483,7 +484,7 @@ describe('AutomationApiService simulation', () => {
         await api.simStep();
         seen.push(onD());
       }
-      expect(seen).toEqual([0x41, 0x41, 0, 0]);
+      expect(seen).toEqual([0x41, 0x41, 0x41, 0]);
     });
 
     it('counts what a text still has to send in its window, one character per four steps', async () => {

@@ -217,9 +217,13 @@ export function textToCodesStrict(text: string): StrictKeyboardText {
 }
 
 /**
- * Ticks a code stays on `D` once pressed, the strobe high for the first: the
- * press's two frames each hold one. A circuit sees every character for at
- * least this long, its strobe for exactly one tick.
+ * Ticks each of a press's three frames holds: `D` takes the code a tick
+ * before `STB` rises, `STB` is high for one, and `D` keeps the code for a
+ * tick after it falls. A circuit sees every character on `D` for at least
+ * three ticks and its strobe for exactly one, with a tick of setup before
+ * the strobe's rising edge and a tick of hold after it, so a latch still
+ * reads every code when its data path has one gate more than its strobe
+ * path, or its strobe path one more than its data path.
  */
 const PRESS_FRAME_TICKS = 1;
 
@@ -227,13 +231,13 @@ const PRESS_FRAME_TICKS = 1;
  * Ticks `D` stays zero after a release, or a cancel, before the next key's
  * code may replace it, so a double letter still reads as two presses.
  */
-const RELEASE_TICKS = 2;
+const RELEASE_TICKS = 1;
 
 /**
  * The event frames one key press is: what turns the route's pending count
  * into characters. A release and a reset are states, so neither counts.
  */
-const PRESS_EVENTS = 2;
+const PRESS_EVENTS = 3;
 
 /**
  * The keyboard's eight outputs for `code` on `D`, the strobe as `strobe`
@@ -249,16 +253,17 @@ function outputs(code: number, strobe: boolean | null): (boolean | null)[] {
 }
 
 /**
- * A key going down, as two events: `D` takes `code` with `STB` high, then
- * `STB` falls while `D` keeps the code. The engine has no pulse of its own,
- * so the second frame is what ends the strobe. A code outside `1`…`0x7F` is
- * refused: `0` on `D` means no key is held.
+ * A key going down, as three events: `D` takes `code` with `STB` low, `STB`
+ * rises, and `STB` falls while `D` keeps the code. The engine has no pulse
+ * of its own, so the third frame is what ends the strobe. A code outside
+ * `1`…`0x7F` is refused: `0` on `D` means no key is held.
  */
 export function pressFrames(code: number): InputFrame[] {
   if (!Number.isInteger(code) || code < 1 || code > 0x7f) {
     throw new RangeError(`Not a code the keyboard sends: ${code}`);
   }
   return [
+    { state: outputs(code, false), hold: PRESS_FRAME_TICKS },
     { state: outputs(code, true), hold: PRESS_FRAME_TICKS },
     { state: outputs(code, false), hold: PRESS_FRAME_TICKS }
   ];
@@ -277,14 +282,19 @@ export function releaseFrame(): InputFrame {
   };
 }
 
-/** Each code pressed and released, in order. */
+/** Each code pressed and released, in order: four ticks a character. */
 export function tapFrames(codes: readonly number[]): InputFrame[] {
   return codes.flatMap((code) => [...pressFrames(code), releaseFrame()]);
 }
 
 /**
  * Every output low, the strobe included, since the cancel it follows can cut
- * a press short while `STB` is high.
+ * a press short while `STB` is high. Held as long as a release: the cancel
+ * ends whatever hold was running, so the reset is on the outputs after the
+ * next tick, and the next character's first frame replaces it no sooner
+ * than a tick later. `D` is zero for that tick, as between two characters,
+ * and `STB`, which the next press raises only with its second frame, stays
+ * low for at least two.
  */
 export function resetFrame(): InputFrame {
   return {
@@ -296,8 +306,8 @@ export function resetFrame(): InputFrame {
 
 /**
  * How many characters are queued and not yet on `D`, from how many event
- * frames the keyboard's input has not yet applied: a character whose press
- * is half applied is on `D` already, so the count rounds down.
+ * frames the keyboard's input has not yet applied: a character whose first
+ * press frame is applied is on `D` already, so the count rounds down.
  */
 export function pendingCharacters(pendingEvents: number): number {
   return Math.floor(pendingEvents / PRESS_EVENTS);

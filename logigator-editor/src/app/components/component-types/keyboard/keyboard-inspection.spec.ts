@@ -30,8 +30,9 @@ import { KeyboardInspectionComponent } from './keyboard-inspection.component';
 
 /**
  * What a frame does to the keyboard's outputs, in words: `press A` for a
- * code with the strobe, `release` for every data bit low. The frame that
- * ends a press's strobe, the code kept, says nothing of its own.
+ * code with the strobe, `release` for every data bit low. The frames on
+ * either side of a press's strobe, its code on `D` without it, say nothing
+ * of their own.
  */
 function describeFrame(frame: InputFrame): string | null {
   const code = codeFromBits((bit) => frame.state[bit] === true);
@@ -331,7 +332,7 @@ describe('KeyboardInspectionComponent capture', () => {
 
   /** Leaves room for `characters` more behind what the input holds. */
   function leaveRoom(characters: number): void {
-    route.pendingEvents = INPUT_QUEUE_LIMIT - 2 * characters - 1;
+    route.pendingEvents = INPUT_QUEUE_LIMIT - 3 * characters - 1;
     inspection.onFrame();
     TestBed.inject(ApplicationRef).tick();
   }

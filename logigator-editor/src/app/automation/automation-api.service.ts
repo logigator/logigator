@@ -1738,8 +1738,8 @@ function typeKeyboardText(
 
 /**
  * The error refusing what does not fit behind the characters a keyboard is
- * still sending: its input holds `INPUT_QUEUE_LIMIT` event frames, two per
- * character.
+ * still sending: its input holds `INPUT_QUEUE_LIMIT` event frames, three
+ * per character.
  */
 function keyboardFullError(route: KeyboardRoute, subject: string): Error {
   const pending = pendingCharacters(route.pending());

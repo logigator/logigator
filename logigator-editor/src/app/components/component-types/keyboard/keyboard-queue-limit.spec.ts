@@ -86,40 +86,42 @@ describe('a keyboard against the engine’s input limit', () => {
     return latched;
   }
 
-  /** Three full sends: 30 000 characters, 60 000 of the input's events. */
-  function fillWithThreeSends(): number[] {
+  /** Two full sends: 20 000 characters, 60 000 of the input's events. */
+  function fillWithTwoSends(): number[] {
     const first = text(KEYBOARD_TEXT_LIMIT);
     expect(window.type(first)).toBe(true);
     expect(window.type(text(KEYBOARD_TEXT_LIMIT, 0x41))).toBe(true);
-    expect(window.type(text(KEYBOARD_TEXT_LIMIT))).toBe(true);
     return first;
   }
 
   it('refuses a send that does not fit behind the text still queued, whole, while that text keeps arriving', () => {
-    const first = fillWithThreeSends();
+    const first = fillWithTwoSends();
     const submitted = fakeWorker.postedOfKind('submitInput').length;
     const history = window.history();
 
-    // Sent within the same frame: no snapshot has counted the three yet.
+    // Sent within the same frame: no snapshot has counted the two yet.
     expect(window.type(text(KEYBOARD_TEXT_LIMIT))).toBe(false);
 
     expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(submitted);
-    expect(fakeWorker.engine.pending(base)).toBe(6 * KEYBOARD_TEXT_LIMIT);
+    expect(fakeWorker.engine.pending(base)).toBe(3 * 2 * KEYBOARD_TEXT_LIMIT);
     expect(window.history()).toBe(history);
     // Nothing was cut or replaced: the first text goes on in order.
     expect(latchedOver(4 * 5)).toEqual(first.slice(0, 5));
     expect(fakeWorker.engine.pending(base)).toBe(
-      6 * KEYBOARD_TEXT_LIMIT - 2 * 5
+      3 * 2 * KEYBOARD_TEXT_LIMIT - 3 * 5
     );
   });
 
-  it('takes a send that fills the queue exactly, then nothing more until a character goes out', async () => {
-    fillWithThreeSends();
-    const room = (INPUT_QUEUE_LIMIT - 6 * KEYBOARD_TEXT_LIMIT) / 2;
+  it('takes the longest send that fits, then no key until the queue has room for its three press frames', async () => {
+    fillWithTwoSends();
+    const room = Math.floor(
+      (INPUT_QUEUE_LIMIT - 3 * 2 * KEYBOARD_TEXT_LIMIT) / 3
+    );
     expect(window.room()).toBe(room);
 
     expect(window.type(text(room))).toBe(true);
-    expect(fakeWorker.engine.pending(base)).toBe(INPUT_QUEUE_LIMIT);
+    // Three events a character: the queue is one short of full.
+    expect(fakeWorker.engine.pending(base)).toBe(INPUT_QUEUE_LIMIT - 1);
     expect(window.room()).toBe(0);
     const submitted = fakeWorker.postedOfKind('submitInput').length;
 
@@ -128,11 +130,17 @@ describe('a keyboard against the engine’s input limit', () => {
     expect(keyboard.heldKey()).toBeNull();
     expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(submitted);
 
-    // The first character's two press frames are applied by the second tick.
-    simulation.step();
+    // The first character's first press frame leaves room for two events.
     simulation.step();
     await vi.waitFor(() =>
       expect(simulation.pendingEvents(keyboard.id)).toBe(INPUT_QUEUE_LIMIT - 2)
+    );
+    expect(window.press('KeyA', 0x61)).toBe(false);
+
+    // Its second leaves room for a press, which fills the queue exactly.
+    simulation.step();
+    await vi.waitFor(() =>
+      expect(simulation.pendingEvents(keyboard.id)).toBe(INPUT_QUEUE_LIMIT - 3)
     );
     expect(window.press('KeyA', 0x61)).toBe(true);
     expect(fakeWorker.engine.pending(base)).toBe(INPUT_QUEUE_LIMIT);

@@ -503,14 +503,15 @@ describe('SubCircuitWatch', () => {
         pending: () => simulation.pendingEvents(boardKeyboard.id)
       };
 
-      expect(typing.type(new Array(INPUT_QUEUE_LIMIT / 2).fill(0x61))).toBe(
-        true
-      );
+      // Three press frames a character, so the most that fit leave the
+      // copy's input one event short of the limit.
+      const characters = Math.floor(INPUT_QUEUE_LIMIT / 3);
+      expect(typing.type(new Array(characters).fill(0x61))).toBe(true);
       expect(typing.type([0x62])).toBe(false);
       expect(boardKeyboard.tapKeys(boardRoute, [0x62])).toBe(true);
 
-      expect(fakeWorker.engine.pending(base)).toBe(INPUT_QUEUE_LIMIT);
-      expect(fakeWorker.engine.pending(boardBase)).toBe(2);
+      expect(fakeWorker.engine.pending(base)).toBe(INPUT_QUEUE_LIMIT - 1);
+      expect(fakeWorker.engine.pending(boardBase)).toBe(3);
     });
 
     it('sets the copy’s data outputs low when the watch closes under a held key', () => {
@@ -529,7 +530,7 @@ describe('SubCircuitWatch', () => {
         simulation.step();
         seen.push(copyCode());
       }
-      expect(seen).toEqual([0x41, 0x41, 0, 0]);
+      expect(seen).toEqual([0x41, 0x41, 0x41, 0]);
     });
 
     it('releases a key held from its window once when the watch closes', () => {

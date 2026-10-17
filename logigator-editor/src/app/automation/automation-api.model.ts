@@ -506,8 +506,8 @@ export interface LogigatorAutomationApi {
     ): Promise<void>;
     /**
      * Keyboard: queues `text` as taps, a press and a release per character:
-     * each character on `D` for two ticks, `STB` high for the first, then `D`
-     * at 0 for two — four steps per character while paused. Strict:
+     * each character on `D` for three ticks, `STB` high for the middle one,
+     * then `D` at 0 for one — four steps per character while paused. Strict:
      * printable ASCII, `\n`, `\t`, `\b`, `\x1b` and `\x7f` only (CRLF and CR
      * read as `\n`), at most 10 000 characters; any other character is an
      * error naming it and its position, and nothing is queued. Resolves once
@@ -518,7 +518,7 @@ export interface LogigatorAutomationApi {
      * Keyboard: holds the key for one character down (a no-op when that key
      * is already on `D`), or with `null` lets go of the key held (a no-op when
      * none is). Never merged, so `setKey('A')` then `setKey(null)` while
-     * paused shows `A` after the next two steps and then `0`.
+     * paused shows `A` after the next three steps and then `0`.
      */
     setKey(componentId: number, key: string | null): Promise<void>;
     readPorts(componentIds?: number[]): Promise<PortReadout[]>;
