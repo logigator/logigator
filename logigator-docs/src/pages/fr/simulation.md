@@ -42,8 +42,8 @@ Sous les modes, « Horloges à cette vitesse » liste la fréquence que donne ch
 ## Utiliser les entrées
 
 - Un interrupteur bascule à chaque clic et reste dans la position où vous le laissez.
-- Un bouton est actif tant que vous le maintenez enfoncé.
-- Un bouton à impulsion envoie une impulsion d'un tick par clic, quelle que soit la durée de l'appui.
+- Un bouton est actif tant que vous le maintenez enfoncé. Il transmet ce qui est enfoncé maintenant : si vous cliquez bien plus vite qu'une simulation lente ou en pause n'avance, il saute les appuis les plus anciens, mais votre dernier clic arrive toujours.
+- Un bouton à impulsion envoie une impulsion d'un tick par clic, quelle que soit la durée de l'appui. C'est lui qui ne saute jamais de clic, quelle que soit votre avance sur la simulation.
 - Une manette ouvre sa fenêtre de jeu, décrite dans la section suivante.
 - Un clavier ouvre une fenêtre de saisie, décrite après la manette.
 
@@ -51,7 +51,7 @@ Un glisser n'importe où ailleurs sur le plan de travail déplace la vue.
 
 ## Jouer avec une manette
 
-Un clic sur une manette ouvre une fenêtre où la manette est dessinée. Un bouton maintenu enfoncé dans cette fenêtre met sa sortie à 1 jusqu'à ce que vous le relâchiez, et s'allume aussi sur le plan de travail.
+Un clic sur une manette ouvre une fenêtre où la manette est dessinée. Un bouton maintenu enfoncé dans cette fenêtre met sa sortie à 1 jusqu'à ce que vous le relâchiez, et s'allume aussi sur le plan de travail. Comme un bouton, la manette transmet ce qui est enfoncé maintenant et peut sauter les appuis les plus anciens quand vous avez une grande avance sur une simulation lente ou en pause, tandis que des boutons enfoncés ensemble arrivent au même tick.
 
 ![La fenêtre d'une manette avec A et Droite enfoncés, à côté de la manette sur le plan de travail.](./images/gamepad-window.webp)
 

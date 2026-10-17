@@ -42,8 +42,8 @@ Unter den Modi listet „Taktgeber bei dieser Geschwindigkeit“ die Frequenz, d
 ## Eingaben bedienen
 
 - Ein Schalter wechselt mit jedem Klick und bleibt, wo du ihn lässt.
-- Ein Taster ist an, solange du ihn gedrückt hältst.
-- Ein Impulstaster sendet pro Klick einen Impuls von einem Tick, egal wie lange du ihn hältst.
+- Ein Taster ist an, solange du ihn gedrückt hältst. Er gibt weiter, was gerade gedrückt ist: Klickst du einer langsamen oder pausierten Simulation weit voraus, überspringt er ältere Klicks, dein letzter Klick kommt aber immer an.
+- Ein Impulstaster sendet pro Klick einen Impuls von einem Tick, egal wie lange du ihn hältst. Er überspringt keinen Klick, egal wie weit du der Simulation voraus bist.
 - Ein Gamepad öffnet seinen Controller, beschrieben im nächsten Abschnitt.
 - Eine Tastatur öffnet ein Fenster zum Tippen, beschrieben nach dem Gamepad.
 
@@ -51,7 +51,7 @@ Ziehen an jeder anderen Stelle der Arbeitsfläche verschiebt die Ansicht.
 
 ## Ein Gamepad spielen
 
-Ein Klick auf ein Gamepad öffnet ein Fenster mit einem gezeichneten Controller. Eine Taste, die du dort gedrückt hältst, setzt ihren Ausgang auf 1, bis du loslässt, und leuchtet auch auf der Arbeitsfläche.
+Ein Klick auf ein Gamepad öffnet ein Fenster mit einem gezeichneten Controller. Eine Taste, die du dort gedrückt hältst, setzt ihren Ausgang auf 1, bis du loslässt, und leuchtet auch auf der Arbeitsfläche. Wie ein Taster gibt das Gamepad weiter, was gerade gedrückt ist, und kann ältere Tastendrücke überspringen, wenn du einer langsamen oder pausierten Simulation weit voraus bist, während gleichzeitig gedrückte Tasten im selben Tick ankommen.
 
 ![Das Controller-Fenster eines Gamepads mit gedrücktem A und Rechts, neben dem Gamepad auf der Arbeitsfläche.](./images/gamepad-window.webp)
 

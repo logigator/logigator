@@ -42,8 +42,8 @@ Under the modes, Clocks at this speed lists the frequency each clock delay in th
 ## Operating inputs
 
 - A Switch toggles with each click and stays where you left it.
-- A Button is on for as long as you hold it down.
-- A Pulse button sends a pulse of one tick per click, however long you hold it.
+- A Button is on for as long as you hold it down. It passes on what is held now, so when you click far ahead of a slow or paused simulation it skips older presses, but your last click always arrives.
+- A Pulse button sends a pulse of one tick per click, however long you hold it. It is the one that never skips a click, however far ahead of the simulation you are.
 - A Gamepad opens its controller, described in the next section.
 - A Keyboard opens a window to type into, described after the gamepad.
 
@@ -51,7 +51,7 @@ Dragging from anywhere else on the board pans it.
 
 ## Playing a gamepad
 
-Clicking a Gamepad opens a window with a controller drawn in it. A button held there sets its output to 1 until you let go, and lights up on the board too.
+Clicking a Gamepad opens a window with a controller drawn in it. A button held there sets its output to 1 until you let go, and lights up on the board too. Like a Button, the gamepad passes on what is held now and can skip older presses when you are far ahead of a slow or paused simulation, while buttons pressed together arrive on the same tick.
 
 ![A gamepad's controller window with A and right held, beside the gamepad on the board.](./images/gamepad-window.webp)
 

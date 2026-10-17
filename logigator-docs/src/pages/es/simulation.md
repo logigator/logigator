@@ -42,8 +42,8 @@ Bajo los modos, «Relojes a esta velocidad» lista la frecuencia que da cada ret
 ## Usar las entradas
 
 - Un interruptor cambia con cada clic y se queda donde lo dejas.
-- Un botón está activo mientras lo mantienes pulsado.
-- Un botón de pulso envía un pulso de un tick por clic, lo mantengas pulsado el tiempo que sea.
+- Un botón está activo mientras lo mantienes pulsado. Transmite lo que está pulsado ahora: si haces clic muy por delante de una simulación lenta o en pausa, se salta las pulsaciones más antiguas, pero tu último clic siempre llega.
+- Un botón de pulso envía un pulso de un tick por clic, lo mantengas pulsado el tiempo que sea. Es el que nunca se salta ningún clic, por mucha ventaja que le lleves a la simulación.
 - Un mando abre su ventana de juego, descrita en la sección siguiente.
 - Un teclado abre una ventana para escribir, descrita después del mando.
 
@@ -51,7 +51,7 @@ Arrastrar en cualquier otro punto del tablero desplaza la vista.
 
 ## Jugar con un mando
 
-Un clic en un mando abre una ventana con el mando dibujado. Un botón que mantienes pulsado ahí pone su salida a 1 hasta que lo sueltas, y se ilumina también en el tablero.
+Un clic en un mando abre una ventana con el mando dibujado. Un botón que mantienes pulsado ahí pone su salida a 1 hasta que lo sueltas, y se ilumina también en el tablero. Como un botón, el mando transmite lo que está pulsado ahora y puede saltarse pulsaciones antiguas cuando le llevas mucha ventaja a una simulación lenta o en pausa, mientras que los botones pulsados a la vez llegan en el mismo tick.
 
 ![La ventana de un mando con A y Derecha pulsados, junto al mando en el tablero.](./images/gamepad-window.webp)
 
