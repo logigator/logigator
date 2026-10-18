@@ -17,9 +17,9 @@
           "Out",
           "0",
           "1",
-          "In",
-          "0",
           "S",
+          "0",
+          "In",
           "1",
           "1",
           "0",
@@ -63,7 +63,8 @@
       "x": [36],
       "y": [18],
       "opt": {
-        "selectLines": [1]
+        "selectLines": [1],
+        "pinOrder": ["selectFirst"]
       }
     },
     {
