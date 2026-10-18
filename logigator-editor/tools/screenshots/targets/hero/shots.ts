@@ -59,7 +59,9 @@ const MULTIPLIER = 1.25;
  * of the width — the centre of the right half, which a narrow page doubles
  * about the top-right corner to show. A wide page shows the rest beside its
  * copy, which covers what lies further left, so that is not rendered. The
- * circuit's whole height, either way.
+ * circuit's whole height, either way, with more room above it than below:
+ * both pages pin the picture to their top edge, and the social card crops it
+ * from there.
  */
 function region(matrices: GridRect, content: GridRect): GridRect {
   const right = content.x + content.width + 3;
@@ -67,9 +69,9 @@ function region(matrices: GridRect, content: GridRect): GridRect {
   const width = 4 * (right - centre);
   return {
     x: right - width,
-    y: content.y - 3,
+    y: content.y - 6,
     width,
-    height: content.height + 6
+    height: content.height + 9
   };
 }
 
