@@ -57,7 +57,7 @@
       "id": "eae9ed4a-d29e-4c30-b6ba-e91ab56f4f22",
       "link": "35a326db-b191-4099-b014-4132150d9805",
       "name": "Selectors",
-      "description": "Four components that route or translate signals. Each one has its switches on the left and its outputs on the right.\n\n## How to use it\n\nStart the simulation and try the switches of each one:\n\n- **Multiplexer**: S picks which of the inputs 0 and 1 reaches **Out**.\n- **Demultiplexer**: S picks which of the outputs 0 and 1 receives **In**.\n- **Decoder**: the switches 1 and 2 form a number from 0 to 3, and the LED with that number lights up.\n- **Encoder**: the display shows the number of the highest input that is on.",
+      "description": "Four components that route or translate signals. Each one has its switches on the left and its outputs on the right.\n\n## How to use it\n\nStart the simulation and try the switches of each one:\n\n- **Multiplexer**: S picks which of the inputs 0 and 1 reaches **Out**.\n- **Demultiplexer**: S picks which of the outputs 0 and 1 receives **In**.\n- **Decoder**: the switches 1 and 2 form a number from 0 to 3, and the LED with that number lights up.\n- **Encoder**: the display shows the number of the highest input that is on. **V** lights up while any input is on, so input 0 shows a 0 with V on, and no input a 0 with V off.",
       "visibility": "public",
       "createdAt": "2026-10-17T00:00:00.000Z"
     },
