@@ -21,7 +21,7 @@
       "id": "00000000-18b7-4ba7-a2ec-4455a7609a40",
       "link": "84c816f5-3514-4c2e-a749-5b5c6c15a07b",
       "name": "Basic Gates",
-      "description": "Shows the most basic components for building logic circuits like AND, OR, XOR or NOT.\n\nYou can use the switches to control the inputs.",
+      "description": "The basic gates side by side: OR, AND, XOR and NOT, plus the Delay. The gates share the same two inputs, so you can compare what each one does with them.\n\n## How to use it\n\n1. Start the simulation.\n2. Click the switches **A** and **B** to turn the inputs on and off.\n3. Each LED shows the output of the gate beside it.\n\n## What each gate does\n\n| Gate  | The output is 1 when            |\n| ----- | ------------------------------- |\n| OR    | A is 1, B is 1, or both are     |\n| AND   | A and B are both 1              |\n| XOR   | exactly one of A and B is 1     |\n| NOT   | A is 0                          |\n| Delay | B was 1 one tick earlier        |",
       "visibility": "public",
       "createdAt": "2021-03-27T23:21:14.447Z"
     },
@@ -30,7 +30,7 @@
       "id": "00000001-1f9b-4a74-bc2f-da4ca49c4d60",
       "link": "45176ad4-0b89-4326-9a60-18d75d1566fe",
       "name": "Half Adder",
-      "description": "A half adder adds two binary bits.\n\nSum is the single digit sum of the addition. Carry represents the overflow. You can build a half adder yourself using basic gates or you can just use the built-in half adder.",
+      "description": "A half adder adds two one-bit numbers, A and B. **Sum** is the last digit of the result, and **Carry** is the digit that overflows into the next place, like the 1 you carry in written addition.\n\n## How to use it\n\nStart the simulation and set A and B with the switches. Each circuit has its own switches. The top one builds the half adder from an XOR gate and an AND gate, and the bottom one is the built-in Half Adder. Both give the same result:\n\n| A | B | Sum | Carry |\n| - | - | --- | ----- |\n| 0 | 0 | 0   | 0     |\n| 0 | 1 | 1   | 0     |\n| 1 | 0 | 1   | 0     |\n| 1 | 1 | 0   | 1     |",
       "visibility": "public",
       "createdAt": "2021-03-27T23:21:14.517Z"
     },
@@ -39,16 +39,34 @@
       "id": "00000002-f9d0-43eb-8217-0a302091c720",
       "link": "2c8462f6-bcf4-436a-838e-b927af143f08",
       "name": "Full Adder",
-      "description": "The full adder does the same as the half adder, but with 3 bits.\n\nYou can build it with basic gates or use the built-in element.",
+      "description": "A full adder adds three bits: A, B and a carry **Cin** coming in from the place below. That third input is what lets full adders be chained into adders for longer numbers, as in the 4 Bit Adder example.\n\n## How to use it\n\nStart the simulation and set the three inputs with the switches. Each circuit has its own switches. The top one is built from gates, two XOR, two AND and one OR, and the bottom one is the built-in Full Adder. Only the number of inputs that are on matters:\n\n| Inputs that are 1 | Sum | Carry |\n| ----------------- | --- | ----- |\n| none              | 0   | 0     |\n| one               | 1   | 0     |\n| two               | 0   | 1     |\n| all three         | 1   | 1     |",
       "visibility": "public",
       "createdAt": "2021-03-27T23:21:14.579Z"
+    },
+    {
+      "slug": "4-bit-adder",
+      "id": "00000005-fdbe-4368-9780-7d776e4d6f3f",
+      "link": "7e6a2c5b-9cc3-4b23-a19d-e9e879b672d5",
+      "name": "4 Bit Adder",
+      "description": "Adds two numbers from 0 to 15 and shows the sum, which can go up to 30.\n\n## How to use it\n\n1. Start the simulation.\n2. Set **A** with the four switches at the top and **B** with the four at the bottom. The labels 1, 2, 4 and 8 are what each switch adds to the number, and the display beside each group shows its value.\n3. The display on the right shows A + B.\n\n## How it works\n\nEach full adder adds one bit of A and one bit of B plus the carry from the bit below, and passes its own carry on to the next one. The carry out of the last one is the fifth bit of the sum.\n\nThe full adders are a custom component built from gates. Click one while the simulation runs to watch the gates inside it.",
+      "visibility": "public",
+      "createdAt": "2021-03-27T23:21:14.715Z"
+    },
+    {
+      "slug": "selectors",
+      "id": "eae9ed4a-d29e-4c30-b6ba-e91ab56f4f22",
+      "link": "35a326db-b191-4099-b014-4132150d9805",
+      "name": "Selectors",
+      "description": "Four components that route or translate signals. Each one has its switches on the left and its outputs on the right.\n\n## How to use it\n\nStart the simulation and try the switches of each one:\n\n- **Multiplexer**: S picks which of the inputs 0 and 1 reaches **Out**.\n- **Demultiplexer**: S picks which of the outputs 0 and 1 receives **In**.\n- **Decoder**: the switches 1 and 2 form a number from 0 to 3, and the LED with that number lights up.\n- **Encoder**: the display shows the number of the highest input that is on.",
+      "visibility": "public",
+      "createdAt": "2026-10-17T00:00:00.000Z"
     },
     {
       "slug": "flip-flops",
       "id": "00000003-b410-4b20-9a3e-079e69c11626",
       "link": "03b04e81-2bb1-4ed0-a2bd-9983c7138d60",
       "name": "Flip Flops",
-      "description": "Flip Flops are used to save a state.\n\nThere are several different flip flops in Logigator. You can learn more on how they behave and how to use them by reading the help pages found in the editor.",
+      "description": "Flip-flops store one bit: they keep their output after the input that set it is gone. Memories, counters and registers are built from them.\n\n## The latch at the top\n\nThis one is built from two gates. The output of the OR gate feeds back into it through the AND gate, so once it is on, it keeps itself on.\n\n1. Start the simulation.\n2. Turn **S** on and off again. **Q** turns on and stays on.\n3. Turn **R** on and off again. **Q** turns off and stays off.\n\n## The built-in flip-flops\n\nThe D, JK and SR flip-flops only change at the moment you press the button on **CLK**. Set their switches first, then press it:\n\n- **D**: Q takes the value of D.\n- **JK**: J sets Q, K clears it, and both together flip it.\n- **SR**: S sets Q and R clears it.\n\n**!Q** is always the opposite of Q.",
       "visibility": "public",
       "createdAt": "2021-03-27T23:21:14.625Z"
     },
@@ -57,25 +75,52 @@
       "id": "00000004-ba68-4718-a79d-d5dcd16cd368",
       "link": "acefd06a-38f6-47b5-b90b-ad17e3d9915c",
       "name": "4 Bit Counter",
-      "description": "An example implementation for a 4 bit binary counter.\n\nIncreases the output by one every time the button gets pressed.",
+      "description": "Counts from 0 to 15 and then starts over at 0.\n\n## How to use it\n\n1. Start the simulation.\n2. Press **Count** to add one, or turn on **Auto** to let a clock count by itself.\n3. The LEDs show the count in binary, each labelled with the value of its bit, and the display shows it in decimal.\n\n## How it works\n\nEach D flip-flop has its **!Q** output wired back to its **D** input, so it flips every time its clock rises. The first one flips on every count. Each of the others is clocked by the one before it and flips when that one goes from 1 to 0, which is when a binary digit carries over. The small circle on their CLK inputs makes them react to that falling edge.",
       "visibility": "public",
       "createdAt": "2021-03-27T23:21:14.671Z"
     },
     {
-      "slug": "4-bit-adder",
-      "id": "00000005-fdbe-4368-9780-7d776e4d6f3f",
-      "link": "7e6a2c5b-9cc3-4b23-a19d-e9e879b672d5",
-      "name": "4 Bit Adder",
-      "description": "Adds two 4-bit numbers.\n\nIt works by passing the carry bit from the last full adder to the carry in from the next full adder.\n\nOn the left, it is implemented with the built-in full adders, on the right, a custom component is used.\n\nYou can click on it during simulation to see what's happening in there.",
+      "slug": "pattern-recorder",
+      "id": "e79c6665-f1cc-455d-a1fd-5d0b5ee4e777",
+      "link": "cad46cb9-b448-4b45-9645-a5be0c92eb55",
+      "name": "Pattern Recorder",
+      "description": "Records a pattern you play on four buttons and plays it back in a loop, with a RAM as its memory.\n\n## How to use it\n\n1. Start the simulation. The **Step** display counts from 0 to 15 and starts over.\n2. Turn on **Record**, then hold the buttons **Light 1** to **Light 4** in any rhythm. Each step stores which buttons are held at that moment.\n3. Turn **Record** off. The four lights play the pattern back on every lap.\n\nTurn Record on again at any time to change the pattern. Every step you pass while recording is overwritten.\n\n## How it works\n\nA clock drives a 4-bit counter, the same as in the 4 Bit Counter example, and the count is the RAM address. On each clock pulse the RAM either stores the buttons at that address, while Record is on, or reads the stored word out to the lights.\n\nClick the RAM while the simulation runs to see all 16 stored steps.",
       "visibility": "public",
-      "createdAt": "2021-03-27T23:21:14.715Z"
+      "createdAt": "2026-10-17T00:00:00.000Z"
+    },
+    {
+      "slug": "traffic-light",
+      "id": "eefe7bb5-53ec-451e-bcbd-41af4fe0f9b7",
+      "link": "fc44f3fd-a348-4c32-9063-2d1722016205",
+      "name": "Traffic Light",
+      "description": "A traffic light that runs through its four phases in a loop, driven by a clock.\n\n## How to use it\n\nStart the simulation and watch. Each step lasts one cycle of the clock, so the faster the simulation runs, the faster the lights change.\n\n| Step   | Lamps          |\n| ------ | -------------- |\n| 0 to 2 | Red            |\n| 3      | Red and yellow |\n| 4 to 6 | Green          |\n| 7      | Yellow         |\n\n## How it works\n\nThree flip-flops count the steps from 0 to 7, the same way as in the 4 Bit Counter. The decoder turns on one of its eight outputs per step, and the OR gate in front of each lamp collects the steps that lamp is lit for.",
+      "visibility": "public",
+      "createdAt": "2026-10-17T00:00:00.000Z"
+    },
+    {
+      "slug": "dice",
+      "id": "2ec696f3-e5de-4ccb-bb37-da4b27f3b438",
+      "link": "f176c559-7658-4d7b-a984-4322535749a2",
+      "name": "Dice",
+      "description": "A die that shows a number from 1 to 6.\n\n## How to use it\n\nStart the simulation, hold **Roll** and let go. The display shows the number you threw.\n\n## How it works\n\nWhile Roll is held, the clock keeps running and the random number generator draws a new 3-bit number, from 0 to 7, on every pulse. The ROM is a lookup table that turns 0 to 5 into the faces 1 to 6.\n\nA 3-bit number can also be 6 or 7, which have no face. The AND gate detects those two and keeps the clock running until the number is 5 or below, so every face is equally likely.\n\nClick the ROM while the simulation runs to see the table.",
+      "visibility": "public",
+      "createdAt": "2026-10-17T00:00:00.000Z"
+    },
+    {
+      "slug": "keyboard-and-gamepad",
+      "id": "af95f985-c1b1-4351-a269-531a845fce38",
+      "link": "d8dc06a1-bb24-4300-9c5a-7ad47b32f9bc",
+      "name": "Keyboard and Gamepad",
+      "description": "The two input devices you can play during a simulation. Start the simulation, then click either one.\n\n## Keyboard\n\nClicking the keyboard opens a window to type into. The display shows the ASCII code of the last key in hexadecimal, for example 41 for `A` and 61 for `a`. The **Key held** LED is on while you hold a key down.\n\n## Gamepad\n\nClicking the gamepad opens its controller. Each button lights the LED beside its port while you hold it, with the mouse, a finger or the key shown under it.",
+      "visibility": "public",
+      "createdAt": "2026-10-17T00:00:00.000Z"
     },
     {
       "slug": "logigator-marquee",
       "id": "039c9918-e609-4512-b2f1-c9ad8116c202",
       "link": "732ad275-6cd4-42a5-a5ef-763ab5b9dece",
       "name": "Logigator Marquee",
-      "description": "Scrolls the word LOGIGATOR across three 16×16 LED matrices.\n\nA clock drives a counter built from JK flip-flops. The counter addresses a ROM holding the letters and a RAM holding the picture on the display, which is read, shifted by one column and written back row by row.\n\nStart the simulation to watch it scroll.",
+      "description": "Scrolls the word LOGIGATOR across three 16 × 16 LED matrices. It is the circuit running in the background of the home page.\n\n## How to use it\n\nStart the simulation, open the speed button next to the run controls and choose **Fixed speed** at **50 kHz** (type `50k`). That is about the speed the home page shows. At the default speed of one tick per frame the text barely moves.\n\n## How it works\n\nA clock drives a counter built from JK flip-flops. The counter addresses a ROM that holds the letters and a RAM that holds the picture on the matrices. Row by row, the circuit reads the picture from the RAM, shifts it by one column and writes it back.\n\nClick the ROM or the RAM while the simulation runs to see their contents.",
       "visibility": "public",
       "createdAt": "2026-10-17T00:00:00.000Z"
     }
