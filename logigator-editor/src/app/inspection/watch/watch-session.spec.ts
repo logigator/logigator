@@ -268,8 +268,8 @@ describe('WatchSession', () => {
       wires: []
     };
 
-    expect(
-      () => new WatchSession(mutilated, info, board.linkCount)
-    ).toThrow(/does not match/);
+    expect(() => new WatchSession(mutilated, info, board.linkCount)).toThrow(
+      /does not match/
+    );
   });
 });
