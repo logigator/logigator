@@ -219,7 +219,10 @@ const de: TranslationSchema = {
       ENCODER: {
         name: 'Enkodierer',
         description:
-          '2ⁿ-auf-n-Binärkodierer. Gibt den Binärindex des höchsten aktiven Eingangs aus.'
+          '2ⁿ-auf-n-Binärkodierer. Gibt den Binärindex des höchsten aktiven Eingangs aus. `V` ist HIGH, solange irgendein Eingang aktiv ist, sodass sich Eingang 0 von keinem aktiven Eingang unterscheiden lässt.',
+        options: {
+          validOutput: 'Gültig-Ausgang'
+        }
       },
       MUX: {
         name: 'Multiplexer',

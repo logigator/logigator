@@ -32,15 +32,16 @@ import { SerializedComponentBody } from '../../model/serialized-circuit';
 /**
  * What a v1 document's components did where v2 made the old behavior an option
  * and the new one its default: a clock pulsed, a RAM's outputs changed only
- * on a rising clock, and a DEMUX took its data input before its select lines.
- * A v1 component gets the old
+ * on a rising clock, a DEMUX took its data input before its select lines, and
+ * an encoder had no valid output. A v1 component gets the old
  * value explicitly, over anything it carries, since no v1 writer knew the key.
  */
 const V1_BEHAVIOR: Partial<Record<number, Readonly<Record<string, unknown>>>> =
   {
     [BuiltInComponentType.CLOCK]: { mode: 'pulse' },
     [BuiltInComponentType.RAM]: { read: 'clocked' },
-    [BuiltInComponentType.DEMUX]: { pinOrder: 'dataFirst' }
+    [BuiltInComponentType.DEMUX]: { pinOrder: 'dataFirst' },
+    [BuiltInComponentType.ENCODER]: { validOutput: 'off' }
   };
 
 function withV1Behavior(

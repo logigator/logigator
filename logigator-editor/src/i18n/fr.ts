@@ -218,7 +218,10 @@ const fr: TranslationSchema = {
       ENCODER: {
         name: 'Encodeur',
         description:
-          "Encodeur binaire 2ⁿ vers n. Produit l'index binaire de l'entrée active la plus élevée."
+          "Encodeur binaire 2ⁿ vers n. Produit l'index binaire de l'entrée active la plus élevée. `V` est HIGH tant qu'une entrée est active, ce qui distingue l'entrée 0 de l'absence d'entrée.",
+        options: {
+          validOutput: 'Sortie de validité'
+        }
       },
       MUX: {
         name: 'Multiplexeur',

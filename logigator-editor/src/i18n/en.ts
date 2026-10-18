@@ -219,7 +219,10 @@ const en = {
       ENCODER: {
         name: 'Encoder',
         description:
-          '2ⁿ-to-n binary encoder. Outputs the binary index of the highest powered input.'
+          '2ⁿ-to-n binary encoder. Outputs the binary index of the highest powered input. `V` is HIGH while any input is, so input 0 can be told apart from no input.',
+        options: {
+          validOutput: 'Valid output'
+        }
       },
       MUX: {
         name: 'Multiplexer',

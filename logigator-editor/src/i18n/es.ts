@@ -218,7 +218,10 @@ const es: TranslationSchema = {
       ENCODER: {
         name: 'Codificador',
         description:
-          'Codificador binario de 2ⁿ a n. Emite el índice binario de la entrada activa de mayor peso.'
+          'Codificador binario de 2ⁿ a n. Emite el índice binario de la entrada activa de mayor peso. `V` está en HIGH mientras alguna entrada esté activa, de modo que la entrada 0 se distingue de ninguna entrada.',
+        options: {
+          validOutput: 'Salida de validez'
+        }
       },
       MUX: {
         name: 'Multiplexor',

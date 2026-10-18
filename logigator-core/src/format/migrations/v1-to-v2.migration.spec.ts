@@ -160,6 +160,11 @@ describe('v1ToV2Migration', () => {
         type: BuiltInComponentType.DEMUX,
         pos: [10, 0],
         options: { selectLines: 2 }
+      },
+      {
+        type: BuiltInComponentType.ENCODER,
+        pos: [15, 0],
+        options: { numOutputs: 2 }
       }
     ];
     const migrated = migrate(
@@ -176,6 +181,7 @@ describe('v1ToV2Migration', () => {
     const pinned = [
       { mode: ['pulse'], speed: [3] },
       { wordSize: [8], addressSize: [2], read: ['clocked'] },
+      { numOutputs: [2], validOutput: ['off'] },
       { selectLines: [2], pinOrder: ['dataFirst'] }
     ];
     for (const blocks of [
