@@ -1,4 +1,4 @@
-Last updated: 30 September 2026
+Last updated: 18 October 2026
 
 This policy describes which personal data Logigator processes, for what purpose, on which legal basis and for how long. It applies to the website and the editor at logigator.com. The German version is binding; the English, French and Spanish versions are translations.
 
@@ -20,9 +20,7 @@ This policy describes which personal data Logigator processes, for what purpose,
 
 ## Controller
 
-Andreas Schlößl\
-Rüdengasse 9/7\
-1030 Vienna, Austria
+Andreas Schlößl
 
 Email: [business@logigator.com](mailto:business@logigator.com)
 

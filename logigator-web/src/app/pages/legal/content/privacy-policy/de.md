@@ -1,4 +1,4 @@
-Stand: 30. September 2026
+Stand: 18. Oktober 2026
 
 Diese Erklärung beschreibt, welche personenbezogenen Daten Logigator verarbeitet, wozu, auf welcher Rechtsgrundlage und wie lange. Sie gilt für die Website und den Editor unter logigator.com. Verbindlich ist die deutsche Fassung; die englische, französische und spanische sind Übersetzungen.
 
@@ -20,9 +20,7 @@ Diese Erklärung beschreibt, welche personenbezogenen Daten Logigator verarbeite
 
 ## Verantwortlicher
 
-Andreas Schlößl\
-Rüdengasse 9/7\
-1030 Wien, Österreich
+Andreas Schlößl
 
 E-Mail: [business@logigator.com](mailto:business@logigator.com)
 

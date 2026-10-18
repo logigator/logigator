@@ -1,4 +1,4 @@
-Dernière mise à jour : 30 septembre 2026
+Dernière mise à jour : 18 octobre 2026
 
 Cette politique décrit quelles données personnelles Logigator traite, dans quel but, sur quelle base juridique et pendant combien de temps. Elle s’applique au site web et à l’éditeur sur logigator.com. La version allemande fait foi ; les versions anglaise, française et espagnole sont des traductions.
 
@@ -20,9 +20,7 @@ Cette politique décrit quelles données personnelles Logigator traite, dans que
 
 ## Responsable du traitement
 
-Andreas Schlößl\
-Rüdengasse 9/7\
-1030 Vienne, Autriche
+Andreas Schlößl
 
 E-mail : [business@logigator.com](mailto:business@logigator.com)
 
