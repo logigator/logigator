@@ -113,11 +113,13 @@ export function makeRam(
   addressSize = 2,
   wordSize = 4,
   px = 0,
-  py = 0
+  py = 0,
+  read: 'async' | 'clocked' = 'async'
 ): RamComponent {
   const ram = new RamComponent({
     wordSize: ramComponentConfig.options.wordSize.clone(wordSize),
-    addressSize: ramComponentConfig.options.addressSize.clone(addressSize)
+    addressSize: ramComponentConfig.options.addressSize.clone(addressSize),
+    read: ramComponentConfig.options.read.clone(read)
   });
   ram.position.set(px, py);
   return ram;

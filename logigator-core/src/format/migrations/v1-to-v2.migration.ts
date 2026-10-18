@@ -31,12 +31,14 @@ import { SerializedComponentBody } from '../../model/serialized-circuit';
  */
 /**
  * What a v1 document's components did where v2 made the old behavior an option
- * and the new one its default: a clock pulsed. A v1 component gets the old
+ * and the new one its default: a clock pulsed, and a RAM's outputs changed
+ * only on a rising clock. A v1 component gets the old
  * value explicitly, over anything it carries, since no v1 writer knew the key.
  */
 const V1_BEHAVIOR: Partial<Record<number, Readonly<Record<string, unknown>>>> =
   {
-    [BuiltInComponentType.CLOCK]: { mode: 'pulse' }
+    [BuiltInComponentType.CLOCK]: { mode: 'pulse' },
+    [BuiltInComponentType.RAM]: { read: 'clocked' }
   };
 
 function withV1Behavior(

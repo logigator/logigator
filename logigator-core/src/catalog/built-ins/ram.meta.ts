@@ -5,6 +5,7 @@ import { busLabels, ComponentMeta, defaultBodyHeight } from '../component-meta';
 interface RamValues {
   wordSize: number;
   addressSize: number;
+  read: string;
 }
 
 // Address and data lines plus the WE and CLK controls (engine pin order).
@@ -33,6 +34,15 @@ export const ramMeta = {
       min: 1,
       max: 16,
       default: 4
+    },
+    read: {
+      kind: 'select-button',
+      label: 'components.def.RAM.options.read',
+      values: [
+        { value: 'async', labelKey: 'components.def.RAM.reads.async' },
+        { value: 'clocked', labelKey: 'components.def.RAM.reads.clocked' }
+      ],
+      default: 'async'
     }
   },
   legacyV0Slots: { n: ['wordSize', 'addressSize'] },

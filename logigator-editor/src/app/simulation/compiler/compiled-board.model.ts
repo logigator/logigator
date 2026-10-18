@@ -13,6 +13,9 @@ export const ENGINE_USER_INPUT_TYPE = 200;
 /** A clock's waveform: high for `period` ticks, or for one. */
 export type ClockMode = 'square' | 'pulse';
 
+/** When a RAM's outputs change: with its address, or on a rising clock. */
+export type RamRead = 'async' | 'clocked';
+
 /** One simulator unit: link ids per pin, in the component's pin order. */
 export interface BoardComponentDescriptor {
   type: number;
@@ -30,7 +33,7 @@ export interface BoardComponentDescriptor {
   /** CLK: high for `period` ticks (`square`) or for one (`pulse`). */
   mode?: ClockMode;
   /** RAM: outputs follow the address (`async`) or change on a rising clock. */
-  read?: 'async' | 'clocked';
+  read?: RamRead;
   /** ROM: its contents, bit-packed to the address × word table. */
   data?: Uint8Array;
   /** LED matrix (the engine's addressable register): its data-bus width. */

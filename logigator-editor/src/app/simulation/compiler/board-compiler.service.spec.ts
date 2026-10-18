@@ -9,7 +9,8 @@ import {
   makeKeyboard,
   makePulseButton,
   makeSwitch,
-  makeNot
+  makeNot,
+  makeRam
 } from '../../../testing/factories';
 import { FakeUserInput } from '../../../testing/fake-user-input';
 import { Component } from '../../components/component';
@@ -308,6 +309,13 @@ describe('BoardCompilerService', () => {
         }
       ]
     });
+  });
+
+  it('emits a RAM unit with its read mode', () => {
+    place(makeRam(2, 4, 0, 0, 'clocked'));
+
+    const [unit] = compiler.compile(project).descriptor.components;
+    expect(unit.read).toBe('clocked');
   });
 
   it('hands the engine a DEMUX’s data input, and its negation, behind the select bits', () => {

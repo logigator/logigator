@@ -200,10 +200,15 @@ const en = {
       RAM: {
         name: 'RAM',
         description:
-          'Random access memory. On the rising edge of `CLK` it reads the addressed word onto the outputs. While `WE` is HIGH, it stores the word on the data inputs at that address instead.',
+          'Random access memory. The outputs show the word stored at the address on the address inputs. On the rising edge of `CLK` while `WE` is HIGH, it stores the word on the data inputs at that address. Set to read on clock, the outputs change only on the rising edge of `CLK`, which reads the addressed word, or shows the one it stored.',
         options: {
           wordSize: 'Word Size',
-          addressSize: 'Address Size'
+          addressSize: 'Address Size',
+          read: 'Read'
+        },
+        reads: {
+          async: 'Immediate',
+          clocked: 'On clock'
         }
       },
       DECODER: {

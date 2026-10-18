@@ -199,10 +199,15 @@ const fr: TranslationSchema = {
       RAM: {
         name: 'RAM',
         description:
-          'Mémoire vive. Sur le front montant de `CLK`, elle lit le mot adressé sur les sorties. Tant que `WE` est à HIGH, elle stocke à la place le mot présent sur les entrées de données à cette adresse.',
+          'Mémoire vive. Les sorties montrent le mot stocké à l’adresse présente sur les entrées d’adresse. Sur le front montant de `CLK`, tant que `WE` est à HIGH, elle stocke à cette adresse le mot présent sur les entrées de données. En lecture sur horloge, les sorties ne changent qu’au front montant de `CLK`, qui lit le mot adressé ou montre celui qu’elle vient de stocker.',
         options: {
           wordSize: 'Taille de mot',
-          addressSize: "Taille d'adresse"
+          addressSize: "Taille d'adresse",
+          read: 'Lecture'
+        },
+        reads: {
+          async: 'Immédiate',
+          clocked: 'Sur horloge'
         }
       },
       DECODER: {

@@ -199,10 +199,15 @@ const es: TranslationSchema = {
       RAM: {
         name: 'RAM',
         description:
-          'Memoria de acceso aleatorio. En el flanco ascendente de `CLK` lee la palabra direccionada hacia las salidas. Mientras `WE` está en ALTO, en su lugar almacena en esa dirección la palabra presente en las entradas de datos.',
+          'Memoria de acceso aleatorio. Las salidas muestran la palabra almacenada en la dirección presente en las entradas de dirección. En el flanco ascendente de `CLK`, mientras `WE` está en ALTO, almacena en esa dirección la palabra de las entradas de datos. Con lectura por reloj, las salidas solo cambian en el flanco ascendente de `CLK`, que lee la palabra direccionada o muestra la que acaba de almacenar.',
         options: {
           wordSize: 'Tamaño de palabra',
-          addressSize: 'Tamaño de dirección'
+          addressSize: 'Tamaño de dirección',
+          read: 'Lectura'
+        },
+        reads: {
+          async: 'Inmediata',
+          clocked: 'Por reloj'
         }
       },
       DECODER: {

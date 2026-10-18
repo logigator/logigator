@@ -200,10 +200,15 @@ const de: TranslationSchema = {
       RAM: {
         name: 'RAM',
         description:
-          'Speicher mit wahlfreiem Zugriff. Bei der steigenden Flanke von `CLK` liest er das adressierte Wort an die Ausgänge. Solange `WE` HIGH ist, speichert er stattdessen das Wort an den Dateneingängen an dieser Adresse.',
+          'Speicher mit wahlfreiem Zugriff. Die Ausgänge zeigen das Wort, das an der Adresse an den Adresseingängen gespeichert ist. Bei der steigenden Flanke von `CLK` speichert er, solange `WE` HIGH ist, das Wort an den Dateneingängen an dieser Adresse. Liest er bei Takt, ändern sich die Ausgänge nur bei der steigenden Flanke von `CLK`, die das adressierte Wort liest oder das gespeicherte zeigt.',
         options: {
           wordSize: 'Wortbreite',
-          addressSize: 'Adressgröße'
+          addressSize: 'Adressgröße',
+          read: 'Lesen'
+        },
+        reads: {
+          async: 'Sofort',
+          clocked: 'Bei Takt'
         }
       },
       DECODER: {

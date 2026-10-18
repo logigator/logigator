@@ -150,6 +150,11 @@ describe('v1ToV2Migration', () => {
         type: BuiltInComponentType.CLOCK,
         pos: [0, 0],
         options: { speed: 3, mode: 'square' }
+      },
+      {
+        type: BuiltInComponentType.RAM,
+        pos: [5, 0],
+        options: { wordSize: 8, addressSize: 2 }
       }
     ];
     const migrated = migrate(
@@ -163,9 +168,16 @@ describe('v1ToV2Migration', () => {
       })
     );
 
-    const pinned = { speed: [3], mode: ['pulse'] };
-    expect(migrated.components[0].opt).toEqual(pinned);
-    expect(migrated.definitions[0].components[0].opt).toEqual(pinned);
+    const pinned = [
+      { mode: ['pulse'], speed: [3] },
+      { wordSize: [8], addressSize: [2], read: ['clocked'] }
+    ];
+    for (const blocks of [
+      migrated.components,
+      migrated.definitions[0].components
+    ]) {
+      expect(blocks.map((block) => block.opt)).toEqual(pinned);
+    }
   });
 
   it('emits no option columns for a type the catalog does not know', () => {

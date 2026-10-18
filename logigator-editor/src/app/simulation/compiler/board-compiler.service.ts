@@ -20,6 +20,7 @@ import {
   BoardComponentParams,
   ClockMode,
   CompiledBoard,
+  RamRead,
   ENGINE_USER_INPUT_TYPE,
   LinkRenderTargets,
   TOP_LEVEL_PATH
@@ -214,7 +215,7 @@ export class BoardCompilerService {
           mode: component.options['mode'].value as ClockMode
         };
       case BuiltInComponentType.RAM:
-        return { read: 'clocked' };
+        return { read: component.options['read'].value as RamRead };
       default:
         return undefined;
     }

@@ -3,6 +3,7 @@ import { ComponentConfig } from '../../component-config.model';
 import { configFromMeta } from '../../config-from-meta';
 import { ComponentOption } from '../../component-option';
 import { NumberComponentOption } from '../../component-options/number/number.component-option';
+import { SelectButtonComponentOption } from '../../component-options/select-button/select-button.component-option';
 import { RamComponent } from './ram.component';
 import { RamInspection } from './ram-inspection';
 
@@ -10,6 +11,7 @@ export interface RamOptions {
   [key: string]: ComponentOption;
   wordSize: NumberComponentOption;
   addressSize: NumberComponentOption;
+  read: SelectButtonComponentOption<string>;
 }
 
 export const ramComponentConfig: ComponentConfig<RamOptions> = configFromMeta(
