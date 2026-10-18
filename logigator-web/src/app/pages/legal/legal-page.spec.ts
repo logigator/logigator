@@ -20,7 +20,9 @@ describe('the legal pages', () => {
     // The body's own headings start at h2: the page's h1 is its title, and two
     // would leave the document with no single name.
     expect(page.querySelector('lg-markdown h1')).toBeNull();
-    expect(page.textContent).toContain('Liability for links on this website');
+    expect(page.textContent).toContain(
+      'Contact point under the Digital Services Act'
+    );
     expect(
       page.querySelector('a[href="mailto:business@logigator.com"]')
     ).not.toBeNull();
@@ -29,11 +31,17 @@ describe('the legal pages', () => {
   it('follows a language switch, which is a navigation to the same page', async () => {
     const render = await markdownPageNavigator();
     const english = await render('/en/imprint');
-    expect(english.textContent).toContain('Liability for contents');
+    expect(english.textContent).toContain(
+      'Contact point under the Digital Services Act'
+    );
 
     const german = await render('/de/imprint');
-    expect(german.textContent).toContain('Haftung für Inhalte dieser Webseite');
-    expect(german.textContent).not.toContain('Liability for contents');
+    expect(german.textContent).toContain(
+      'Kontaktstelle nach dem Digital Services Act'
+    );
+    expect(german.textContent).not.toContain(
+      'Contact point under the Digital Services Act'
+    );
   });
 
   it('renders the privacy policy with its table of contents', async () => {

@@ -1,24 +1,18 @@
-Information obligation according to §5 E-Commerce Law, §14 Corporate Code, §63 Trade Regulations and Disclosure Obligation according to §25 Media Act.
+Information according to § 5 of the Austrian E-Commerce Act (E-Commerce-Gesetz) and disclosure according to § 25 of the Austrian Media Act (Mediengesetz).
 
 Andreas Schlößl\
-Rüdengasse 9/7,\
-1030 Vienna,\
-Austria
+Rüdengasse 9/7\
+1030 Vienna, Austria
 
-**E-Mail:** [business@logigator.com](mailto:business@logigator.com)
+**Email:** [business@logigator.com](mailto:business@logigator.com)
 
-## Liability for contents of this website
+**Trade:** Dienstleistungen in der automatischen Datenverarbeitung und Informationstechnik (IT services), granted in Austria\
+**Trade authority:** Magistrat der Stadt Wien\
+**Chamber:** Member of the Vienna Chamber of Commerce (Wirtschaftskammer Wien)\
+**Professional rules:** [Austrian Trade Regulation Act 1994 (Gewerbeordnung)](https://www.ris.bka.gv.at/GeltendeFassung.wxe?Abfrage=Bundesnormen&Gesetzesnummer=10007517)
 
-We are constantly developing the contents of this website and strive to provide correct and up-to-date information. Unfortunately, we can not assume any liability for the correctness of all content on this website, especially for those provided by third parties.
+## Contact point under the Digital Services Act
 
-If you notice any problematic or unlawful content, please contact us immediately, you will find the contact details in the imprint.
+The email address above is the single point of contact for authorities, the European Commission and users (Art. 11 and 12 DSA). You can write to us in German or English.
 
-## Liability for links on this website
-
-Our website contains links to other websites whose content we are not responsible for. Liability for linked websites does not exist for us according to [§ 17 ECG](https://www.ris.bka.gv.at/Dokument.wxe?Abfrage=Bundesnormen&Dokumentnummer=NOR40025813&tid=221100654), because we did not have knowledge of illegal activities and have not noticed such illegality and we would remove links immediately if we become aware of any illegalities.
-
-If you notice unlawful links on our website, we ask you to contact us, you will find the contact details in the imprint.
-
-## Copyright Notice
-
-All contents of this website (pictures, photos, texts, videos) are subject to copyright. If necessary, we will legally pursue the unauthorized use of parts of the contents of our site.
+You can report illegal content, for example in published circuits or profiles, to the same address. Include the link to the content and the reason why it is illegal.

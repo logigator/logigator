@@ -1,24 +1,18 @@
-Obligation d'information selon le §5 de la loi sur le commerce électronique, §14 du Code des sociétés, §63 de la loi sur le commerce et obligation de divulgation selon le §25 de la loi sur les médias.
+Informations selon le § 5 de la loi autrichienne sur le commerce électronique (E-Commerce-Gesetz) et publication selon le § 25 de la loi autrichienne sur les médias (Mediengesetz).
 
 Andreas Schlößl\
-Rüdengasse 9/7,\
-1030 Vienne,\
-Autriche
+Rüdengasse 9/7\
+1030 Vienne, Autriche
 
-**E-Mail:** [business@logigator.com](mailto:business@logigator.com)
+**E-mail :** [business@logigator.com](mailto:business@logigator.com)
 
-## Responsabilité pour le contenu de ce site Web
+**Activité :** Dienstleistungen in der automatischen Datenverarbeitung und Informationstechnik (services informatiques), autorisée en Autriche\
+**Autorité de tutelle :** Magistrat der Stadt Wien\
+**Chambre :** membre de la Chambre économique de Vienne (Wirtschaftskammer Wien)\
+**Réglementation professionnelle :** [code autrichien des professions artisanales, commerciales et industrielles de 1994 (Gewerbeordnung)](https://www.ris.bka.gv.at/GeltendeFassung.wxe?Abfrage=Bundesnormen&Gesetzesnummer=10007517)
 
-Nous développons constamment le contenu de ce site Web et nous nous efforçons de fournir des informations correctes et à jour. Malheureusement, nous ne pouvons pas garantir l'exactitude de tout le contenu de ce site Web, en particulier pour ceux fournis par des tiers.
+## Point de contact au titre du règlement sur les services numériques
 
-Si vous remarquez un contenu problématique ou illégal, veuillez nous contacter immédiatement, vous trouverez les coordonnées dans l'empreinte.
+L’adresse e-mail ci-dessus est le point de contact unique pour les autorités, la Commission européenne et les utilisateurs (art. 11 et 12 du DSA). Vous pouvez nous écrire en allemand ou en anglais.
 
-## Responsabilité des liens sur ce site Web
-
-Notre site Web contient des liens vers d'autres sites Web dont nous ne sommes pas responsables du contenu. La responsabilité pour les sites Web liés n'existe pas pour nous selon [§ 17 ECG](https://www.ris.bka.gv.at/Dokument.wxe?Abfrage=Bundesnormen&Dokumentnummer=NOR40025813&tid=221100654), car nous n'avons pas eu connaissance d'activités illégales et n'avons pas remarqué une telle illégalité et nous supprimerions immédiatement les liens si nous prenions connaissance d'illégalités.
-
-Si vous remarquez des liens illégaux sur notre site Web, nous vous demandons de nous contacter, vous trouverez les coordonnées dans l'empreinte.
-
-## Avis de droits d'auteur
-
-Tous les contenus de ce site Web (images, photos, textes, vidéos) sont soumis au droit d'auteur. Si nécessaire, nous poursuivrons en justice l'utilisation non autorisée de parties du contenu de notre site.
+Vous pouvez signaler un contenu illicite, par exemple dans un circuit publié ou un profil, à la même adresse. Indiquez le lien vers le contenu et la raison pour laquelle il est illicite.
