@@ -6,14 +6,16 @@
  * The board is a background rather than an <img>: hydration writes an
  * element's attributes again, and writing `src` or `srcset` — even unchanged
  * — sends an animated image back to its first frame, while a background keeps
- * playing. Which files it is is decided here too, so a page downloads only the
- * ones the reader's scheme and motion preference name.
+ * playing. Which file it is is decided here too, so a page downloads only the
+ * one the reader's scheme and motion preference name: the loop, or the still
+ * under reduced motion. The loop paints from its first frame, a small part of
+ * the file, while the rest is still downloading.
  *
- * The loop lies over the still. The still is the whole board and paints first,
- * being a fraction of the loop's size; the loop is only the top of the board,
- * where anything moves, and its first frame is that part of the still. Both
- * start at the board's top edge, so the one size and position the template
- * gives them lines them up.
+ * The loop is only the top of the board, the rows that move: 1193 of the
+ * still's 1300. Beside the copy that is 622px of board, which the tallest
+ * hero (the Spanish one, 583px) stays inside, and below it the band is
+ * always shorter than the render. A hero that grows past it shows the
+ * board's bottom edge.
  *
  * Beside the copy, the composition is the one a 1440px page shows, held
  * relative to the centred column above that: the board's right edge stays
@@ -33,15 +35,11 @@
 }
 
 .hero-board {
-  background-image:
-    url('../../../assets/hero-board-animated-light.webp'),
-    url('../../../assets/hero-board-light.webp');
+  background-image: url('../../../assets/hero-board-animated-light.webp');
 }
 
 :host-context(.dark-mode) .hero-board {
-  background-image:
-    url('../../../assets/hero-board-animated-dark.webp'),
-    url('../../../assets/hero-board-dark.webp');
+  background-image: url('../../../assets/hero-board-animated-dark.webp');
 }
 
 @media (prefers-reduced-motion: reduce) {
