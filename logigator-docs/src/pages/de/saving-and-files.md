@@ -51,10 +51,11 @@ Ein Projekt, das über einen Freigabelink geöffnet wurde, lässt sich nicht exp
 
 Datei → Bild generieren öffnet den Dialog „Bild exportieren“:
 
-- Format: PNG, JPEG oder WebP.
+- Format: PNG, JPEG oder WebP. WebP wird nur angeboten, wenn dein Browser WebP-Bilder erstellen kann.
 - Auflösung: 1×, 2× oder 4×, vorausgewählt ist 2×. Wäre das Bild größer, als dein Gerät darstellen kann, wird es verkleinert, und der Dialog sagt das.
 - Hintergrund: an zeichnet die Hintergrundfarbe des Designs und das Raster. Aus ergibt ein transparentes PNG oder WebP oder ein weißes JPEG.
-- Qualität, 10 bis 100 %, bei JPEG und WebP. PNG ist verlustfrei.
+- Verlustfrei, bei WebP, wenn dein Browser es unterstützt, und standardmäßig an. Ein verlustfreies WebP behält jedes Pixel wie ein PNG und ist meist kleiner.
+- Qualität, 10 bis 100 %, bei JPEG und nicht verlustfreiem WebP. PNG ist verlustfrei.
 
 Der Dialog zeigt die endgültige Größe in Pixeln, bevor du exportierst. Ist der Tab einer benutzerdefinierten Komponente offen, wählt ein Feld „Projekt“, welche Schaltung exportiert wird.
 

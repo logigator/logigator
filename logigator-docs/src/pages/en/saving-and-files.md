@@ -51,10 +51,11 @@ A project opened from a share link can't be exported. Clone it first (see [Cloud
 
 File → Generate image opens the Export image dialog:
 
-- Format: PNG, JPEG or WebP.
+- Format: PNG, JPEG or WebP. WebP is only offered if your browser can create WebP images.
 - Resolution: 1×, 2× or 4×, with 2× preselected. If the image would be larger than your device can render, it is scaled down and the dialog says so.
 - Background: on draws the theme's background colour and the grid. Off gives a transparent PNG or WebP, or a white JPEG.
-- Quality, 10 to 100 %, for JPEG and WebP. PNG is lossless.
+- Lossless, for WebP, if your browser supports it, and on by default. A lossless WebP keeps every pixel, like a PNG, and is usually smaller.
+- Quality, 10 to 100 %, for JPEG and WebP that isn't lossless. PNG is lossless.
 
 The dialog shows the final size in pixels before you export. With a custom component's tab open, a Project field chooses which circuit to export.
 

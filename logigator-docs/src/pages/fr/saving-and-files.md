@@ -51,10 +51,11 @@ Un projet ouvert depuis un lien de partage ne peut pas être exporté. Clonez-le
 
 Fichier → Générer une image ouvre la fenêtre « Exporter une image » :
 
-- Format : PNG, JPEG ou WebP.
+- Format : PNG, JPEG ou WebP. WebP n'est proposé que si votre navigateur sait créer des images WebP.
 - Résolution : 1×, 2× ou 4×, 2× étant présélectionné. Si l'image dépassait ce que votre appareil peut afficher, elle est réduite et la fenêtre le signale.
 - Arrière-plan : activé, il dessine la couleur de fond du thème et la grille. Désactivé, il donne un PNG ou WebP transparent, ou un JPEG blanc.
-- Qualité, de 10 à 100 %, pour JPEG et WebP. PNG est sans perte.
+- Sans perte, pour WebP, si votre navigateur le permet, activé par défaut. Un WebP sans perte garde chaque pixel, comme un PNG, et est généralement plus léger.
+- Qualité, de 10 à 100 %, pour JPEG et le WebP avec perte. PNG est sans perte.
 
 La fenêtre affiche la taille finale en pixels avant l'export. Si l'onglet d'un composant personnalisé est ouvert, un champ « Projet » choisit le circuit à exporter.
 

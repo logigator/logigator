@@ -51,10 +51,11 @@ Un proyecto abierto desde un enlace para compartir no se puede exportar. Clónal
 
 Archivo → Generar imagen abre el diálogo «Exportar imagen»:
 
-- Formato: PNG, JPEG o WebP.
+- Formato: PNG, JPEG o WebP. WebP solo aparece si tu navegador puede crear imágenes WebP.
 - Resolución: 1×, 2× o 4×, con 2× preseleccionado. Si la imagen fuera más grande de lo que tu dispositivo puede dibujar, se reduce y el diálogo lo indica.
 - Fondo: activado dibuja el color de fondo del tema y la cuadrícula. Desactivado da un PNG o WebP transparente, o un JPEG blanco.
-- Calidad, de 10 a 100 %, para JPEG y WebP. PNG no tiene pérdidas.
+- Sin pérdida, para WebP, si tu navegador lo admite, y activado por defecto. Un WebP sin pérdida conserva cada píxel, como un PNG, y suele ocupar menos.
+- Calidad, de 10 a 100 %, para JPEG y WebP con pérdida. PNG no tiene pérdidas.
 
 El diálogo muestra el tamaño final en píxeles antes de exportar. Si hay abierta la pestaña de un componente personalizado, un campo «Proyecto» elige qué circuito exportar.
 
