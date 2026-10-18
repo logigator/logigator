@@ -142,6 +142,32 @@ describe('v1ToV2Migration', () => {
     });
   });
 
+  // A v1 writer predates these options, so what its components did is the
+  // legacy behavior, whatever the catalog defaults to now.
+  it('keeps a v1 component behaving as it did, in the body and in a definition', () => {
+    const legacy: SerializedComponentBody[] = [
+      {
+        type: BuiltInComponentType.CLOCK,
+        pos: [0, 0],
+        options: { speed: 3, mode: 'square' }
+      }
+    ];
+    const migrated = migrate(
+      v1Document(legacy, {
+        definitions: [
+          {
+            ...nestedCustomV1.definitions[0],
+            components: encodeComponentPositions(legacy).components
+          }
+        ] as CircuitFileV1['definitions']
+      })
+    );
+
+    const pinned = { speed: [3], mode: ['pulse'] };
+    expect(migrated.components[0].opt).toEqual(pinned);
+    expect(migrated.definitions[0].components[0].opt).toEqual(pinned);
+  });
+
   it('emits no option columns for a type the catalog does not know', () => {
     const migrated = migrate(
       v1Document([{ type: 1000, pos: [2, 2], options: {} }])

@@ -169,9 +169,13 @@
       <lg-divider class="my-1"></lg-divider>
       <div class="flex flex-col gap-0.5 px-2 text-sm">
         <span class="font-medium">{{ t('toolBar.clocks') }}</span>
-        @for (row of clockRows(); track row.delay) {
+        @for (row of clockRows(); track row.delay + row.mode) {
           <span class="flex justify-between gap-3 text-muted">
-            <span>{{ t('toolBar.clockDelay', { delay: row.delay }) }}</span>
+            <span>{{
+              row.mode === 'square'
+                ? t('toolBar.clockSquare', { delay: row.delay })
+                : t('toolBar.clockPulse', { delay: row.delay })
+            }}</span>
             <span class="tabular-nums">{{ row.frequency }}</span>
           </span>
         }

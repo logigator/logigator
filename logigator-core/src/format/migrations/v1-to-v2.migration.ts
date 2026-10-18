@@ -8,6 +8,8 @@ import {
 } from '../../model/persisted-circuit.types';
 import { decodeComponentPositions } from '../../codecs/position-delta.codec';
 import { encodeComponentBlocks } from '../../codecs/component-block.codec';
+import { BuiltInComponentType } from '../../model/component-type.enum';
+import { SerializedComponentBody } from '../../model/serialized-circuit';
 
 /**
  * Converts v1 (one object per component, positions a running delta chain over
@@ -19,13 +21,35 @@ import { encodeComponentBlocks } from '../../codecs/component-block.codec';
  * Option columns are completed from the catalog — a component that omitted a
  * key gets the schema default, which is what the catalog step used to do on
  * every read — while `wires`, the definition metadata and `attribution` are
- * carried over untouched, v2 changing none of them.
+ * carried over untouched, v2 changing none of them. The one exception to the
+ * defaults is {@link V1_BEHAVIOR}.
  *
  * It also owns the frozen v1 shape checks that reach the decoders. Until this
  * version existed the structural validator ran over v1 documents; now it
  * describes v2, so a v1 document's own structure is checked here, before its
  * numbers feed a prefix sum.
  */
+/**
+ * What a v1 document's components did where v2 made the old behavior an option
+ * and the new one its default: a clock pulsed. A v1 component gets the old
+ * value explicitly, over anything it carries, since no v1 writer knew the key.
+ */
+const V1_BEHAVIOR: Partial<Record<number, Readonly<Record<string, unknown>>>> =
+  {
+    [BuiltInComponentType.CLOCK]: { mode: 'pulse' }
+  };
+
+function withV1Behavior(
+  components: SerializedComponentBody[]
+): SerializedComponentBody[] {
+  return components.map((component) => {
+    const behavior = V1_BEHAVIOR[component.type];
+    return behavior
+      ? { ...component, options: { ...component.options, ...behavior } }
+      : component;
+  });
+}
+
 export const v1ToV2Migration: Migration<CircuitFileV1, CircuitFileV2> = {
   from: 1,
   to: 2,
@@ -34,8 +58,8 @@ export const v1ToV2Migration: Migration<CircuitFileV1, CircuitFileV2> = {
       throw new InvalidFileError('File is not an object');
     }
 
-    const components = decodeComponentPositions(
-      readComponents(input.components, 'components')
+    const components = withV1Behavior(
+      decodeComponentPositions(readComponents(input.components, 'components'))
     );
 
     return {
@@ -61,8 +85,10 @@ function migrateDefinition(
   path: string,
   ctx: MigrationContext
 ): PersistedSnapshotDefinitionV2 {
-  const components = decodeComponentPositions(
-    readComponents(definition.components, `${path}.components`)
+  const components = withV1Behavior(
+    decodeComponentPositions(
+      readComponents(definition.components, `${path}.components`)
+    )
   );
   return {
     ...definition,

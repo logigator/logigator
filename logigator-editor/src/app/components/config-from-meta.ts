@@ -1,4 +1,9 @@
-import { ComponentMeta, OptionSchema, widenMeta } from '@logigator/core';
+import {
+  ComponentMeta,
+  OptionSchema,
+  SelectOptionValue,
+  widenMeta
+} from '@logigator/core';
 import {
   ComponentConfig,
   ComponentConfigView,
@@ -16,6 +21,7 @@ import { TextInputComponentOption } from './component-options/text-input/text-in
 import { TextAreaComponentOption } from './component-options/text-area/text-area.component-option';
 import { MemoryDataComponentOption } from './component-options/memory-data/memory-data.component-option';
 import { NameMapComponentOption } from './component-options/name-map/name-map.component-option';
+import { OptionChoice } from './component-options/option-choice';
 
 /**
  * Meta owns everything both the editor and the server need — identity, option
@@ -57,6 +63,17 @@ export function optionFromSchema(schema: OptionSchema): ComponentOption {
   return schema.hidden ? option.hideFromInspector() : option;
 }
 
+/**
+ * A schema's choice for the renderer. Its caption key is opaque in core;
+ * `meta-translation-keys.ts` is what checks it against the schema.
+ */
+function choiceOf<T>(value: SelectOptionValue<T>): OptionChoice<T> {
+  return {
+    ...value,
+    labelKey: value.labelKey as TranslationKey | undefined
+  };
+}
+
 function buildOption(
   schema: OptionSchema,
   label: TranslationKey
@@ -72,13 +89,13 @@ function buildOption(
     case 'select-button':
       return new SelectButtonComponentOption(
         label,
-        schema.values.map((v) => ({ ...v })),
+        schema.values.map(choiceOf),
         schema.default
       );
     case 'select-dropdown':
       return new SelectDropdownComponentOption(
         label,
-        schema.values.map((v) => ({ ...v })),
+        schema.values.map(choiceOf),
         schema.default
       );
     case 'text':

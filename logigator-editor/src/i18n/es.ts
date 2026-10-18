@@ -140,9 +140,14 @@ const es: TranslationSchema = {
       CLOCK: {
         name: 'Reloj',
         description:
-          'Emite periódicamente un pulso de un tick en su salida. El retardo entre pulsos es configurable; poner la entrada `STP` en ALTO pausa el reloj.',
+          'Conmuta su salida una y otra vez: en BAJO durante el retardo configurado y luego en ALTO. Como onda cuadrada se queda en ALTO tanto tiempo como estuvo en BAJO; como pulso, un tick. Poner la entrada `STP` en ALTO detiene el reloj y mantiene su salida en BAJO, y empieza un ciclo nuevo en cuanto `STP` vuelve a BAJO.',
         options: {
+          mode: 'Forma de onda',
           speed: 'Retardo'
+        },
+        modes: {
+          square: 'Cuadrada',
+          pulse: 'Pulso'
         }
       },
       TUNNEL: {
@@ -822,7 +827,8 @@ const es: TranslationSchema = {
     speedBehind:
       'Más lento que la velocidad fija: el circuito es demasiado grande para seguir el ritmo.',
     clocks: 'Relojes a esta velocidad',
-    clockDelay: 'Reloj, retardo {{delay}}',
+    clockSquare: 'Cuadrada, retardo {{delay}}',
+    clockPulse: 'Pulso, retardo {{delay}}',
     clocksMore: '+{{count}} más',
     ticks: '{{ticks}} ticks'
   },

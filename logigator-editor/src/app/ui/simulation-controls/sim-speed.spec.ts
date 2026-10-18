@@ -52,12 +52,14 @@ describe('sim-speed', () => {
     expect(formatHz(2500, 'de')).toBe('2,5\u00a0kHz');
   });
 
-  // The engine's clock is one tick high and then `delay` ticks low, so delay 2
-  // at 12 Hz is 4 Hz, not the 3 Hz a square wave of half-period 2 would be.
-  it('divides the tick rate by one high tick plus the delay', () => {
-    expect(clockHz(10, 1)).toBe(5);
-    expect(clockHz(12, 2)).toBe(4);
-    expect(clockHz(1000, 3)).toBe(250);
+  // A pulse is one tick high after `delay` ticks low, so delay 2 at 12 Hz is
+  // 4 Hz, where a square wave, high for as long as it is low, runs at 3 Hz.
+  it('divides the tick rate by the ticks of one cycle of either waveform', () => {
+    expect(clockHz(12, 2, 'pulse')).toBe(4);
+    expect(clockHz(12, 2, 'square')).toBe(3);
+    expect(clockHz(1000, 3, 'pulse')).toBe(250);
+    // With a delay of one, both waveforms are the same.
+    expect(clockHz(10, 1, 'square')).toBe(clockHz(10, 1, 'pulse'));
   });
 
   it('formats every stop, and large rates, as text that parses back', () => {

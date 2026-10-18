@@ -141,9 +141,14 @@ const de: TranslationSchema = {
       CLOCK: {
         name: 'Taktgeber',
         description:
-          'Gibt periodisch einen ein Tick langen Puls an seinem Ausgang aus. Die Verzögerung zwischen den Pulsen ist einstellbar; ein HIGH am `STP`-Eingang pausiert den Taktgeber.',
+          'Schaltet seinen Ausgang immer wieder um: für die eingestellte Verzögerung LOW, dann HIGH. Als Rechteck bleibt er so lange HIGH, wie er LOW war, als Puls einen Tick lang. Ein HIGH am `STP`-Eingang hält den Taktgeber an und den Ausgang LOW, und sobald `STP` wieder LOW ist, beginnt er einen neuen Zyklus.',
         options: {
+          mode: 'Signalform',
           speed: 'Verzögerung'
+        },
+        modes: {
+          square: 'Rechteck',
+          pulse: 'Puls'
         }
       },
       TUNNEL: {
@@ -832,7 +837,8 @@ const de: TranslationSchema = {
     speedBehind:
       'Langsamer als die feste Geschwindigkeit: Die Schaltung ist zu groß, um mitzuhalten.',
     clocks: 'Taktgeber bei dieser Geschwindigkeit',
-    clockDelay: 'Taktgeber, Verzögerung {{delay}}',
+    clockSquare: 'Rechteck, Verzögerung {{delay}}',
+    clockPulse: 'Puls, Verzögerung {{delay}}',
     clocksMore: '+{{count}} weitere',
     ticks: '{{ticks}} Ticks'
   },

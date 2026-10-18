@@ -50,6 +50,13 @@ interface TranslatableMeta {
 
 type SchemasOf<M extends TranslatableMeta> = M['options'][keyof M['options']];
 
+/** The caption keys a select schema's choices name; a literal names none. */
+type ChoiceKeys<S> = S extends { readonly values: readonly (infer V)[] }
+  ? V extends { readonly labelKey: infer K }
+    ? K
+    : never
+  : never;
+
 /**
  * Every display string one meta contributes. `placeholder` and `dialogTitle`
  * are picked out of the union rather than indexed: they are optional per
@@ -60,7 +67,8 @@ type MetaKeys<M extends TranslatableMeta> =
   | M['description']
   | SchemasOf<M>['label']
   | Extract<SchemasOf<M>, { placeholder: string }>['placeholder']
-  | Extract<SchemasOf<M>, { dialogTitle: string }>['dialogTitle'];
+  | Extract<SchemasOf<M>, { dialogTitle: string }>['dialogTitle']
+  | ChoiceKeys<SchemasOf<M>>;
 
 export type BuiltInTranslationKeys =
   | MetaKeys<typeof andMeta>

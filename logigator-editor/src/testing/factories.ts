@@ -124,8 +124,14 @@ export function makeRam(
 }
 
 /** ClockComponent with the given delay in ticks, at a grid position. */
-export function makeClock(speed = 1, px = 0, py = 0): ClockComponent {
+export function makeClock(
+  speed = 1,
+  px = 0,
+  py = 0,
+  mode: 'square' | 'pulse' = 'square'
+): ClockComponent {
   const clock = new ClockComponent({
+    mode: clockComponentConfig.options.mode.clone(mode),
     speed: clockComponentConfig.options.speed.clone(speed)
   });
   clock.position.set(px, py);

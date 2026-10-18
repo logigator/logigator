@@ -10,6 +10,9 @@ import { WatchIndex } from './watch-index';
  */
 export const ENGINE_USER_INPUT_TYPE = 200;
 
+/** A clock's waveform: high for `period` ticks, or for one. */
+export type ClockMode = 'square' | 'pulse';
+
 /** One simulator unit: link ids per pin, in the component's pin order. */
 export interface BoardComponentDescriptor {
   type: number;
@@ -25,7 +28,7 @@ export interface BoardComponentDescriptor {
   /** CLK: the ticks it stays low per cycle. */
   period?: number;
   /** CLK: high for `period` ticks (`square`) or for one (`pulse`). */
-  mode?: 'pulse' | 'square';
+  mode?: ClockMode;
   /** RAM: outputs follow the address (`async`) or change on a rising clock. */
   read?: 'async' | 'clocked';
   /** ROM: its contents, bit-packed to the address × word table. */

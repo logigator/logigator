@@ -89,6 +89,11 @@ option, eliding the back edge at runtime — no cycle, no `forwardRef`.
 | `MemoryDataComponentOption`        | button opening `HexEditorComponent` in a dynamic dialog              |
 | `NameMapComponentOption`           | button opening the owner's names editor in a dynamic dialog          |
 
+A select's choice is a literal (`label`, shown as written: `HEX`, `16`) or a
+word (`labelKey`, a translation key `captionedChoices` resolves in the
+renderer, so a language switch re-captions it). `meta-translation-keys.ts`
+holds a meta's `labelKey`s to the translation schema like its labels.
+
 The three dialog-opening kinds share one row, `DialogOptionButtonComponent`
 (`component-options/dialog-option-button/`): a full-width small secondary
 button with an optional icon (the pencil for the two editors), the option's

@@ -1,4 +1,5 @@
 import { MIN_TARGET_HZ } from '../../simulation/worker/pacing';
+import { ClockMode } from '../../simulation/compiler/compiled-board.model';
 
 /**
  * The speed slider's end detents. The text field reaches past both ends: down
@@ -61,11 +62,15 @@ export function parseSpeed(text: string): number | null {
 
 /**
  * The frequency a clock runs at when the simulation ticks at `tickHz`. A clock
- * is high for one tick and then low for `delay` ticks, so one cycle takes
- * `delay + 1` ticks.
+ * is low for `delay` ticks and then high for as many as a square wave, or for
+ * one as a pulse, so one cycle takes `2 × delay` or `delay + 1` ticks.
  */
-export function clockHz(tickHz: number, delay: number): number {
-  return tickHz / (delay + 1);
+export function clockHz(
+  tickHz: number,
+  delay: number,
+  mode: ClockMode
+): number {
+  return tickHz / (mode === 'square' ? 2 * delay : delay + 1);
 }
 
 /**

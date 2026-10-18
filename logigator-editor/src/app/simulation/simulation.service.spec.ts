@@ -283,15 +283,20 @@ describe('SimulationService', () => {
     expect(service.targetHz()).toBe(MIN_TARGET_HZ);
   });
 
-  it('reports the distinct clock delays of the session board', async () => {
-    project.addComponent(makeClock(10, 0, 0));
-    project.addComponent(makeClock(1, 0, 4));
-    project.addComponent(makeClock(10, 0, 8));
+  it('reports the distinct kinds of clock on the session board', async () => {
+    project.addComponent(makeClock(10, 0, 0, 'pulse'));
+    project.addComponent(makeClock(10, 0, 4));
+    project.addComponent(makeClock(1, 0, 8));
+    project.addComponent(makeClock(10, 0, 12));
     await enterAndBoot();
-    expect(service.clockDelays()).toEqual([1, 10]);
+    expect(service.clocks()).toEqual([
+      { delay: 1, mode: 'square' },
+      { delay: 10, mode: 'square' },
+      { delay: 10, mode: 'pulse' }
+    ]);
 
     service.exit();
-    expect(service.clockDelays()).toEqual([]);
+    expect(service.clocks()).toEqual([]);
   });
 
   it('steps only while paused', async () => {

@@ -338,10 +338,10 @@ describe('BoardCompilerService', () => {
     expect(demuxUnit.negInputs).toEqual([1, 2]);
   });
 
-  it('emits a clock unit with its period', () => {
+  it('emits a clock unit with its period and waveform', () => {
     place(
       Component.deserialize(
-        { pos: [0, 0], options: { speed: 7 } },
+        { pos: [0, 0], options: { speed: 7, mode: 'pulse' } },
         clockComponentConfig
       )
     );

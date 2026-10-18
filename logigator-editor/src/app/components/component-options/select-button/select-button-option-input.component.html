@@ -6,7 +6,7 @@
     optionValue="value"
     optionIcon="icon"
     [allowEmpty]="false"
-    [options]="option().options"
+    [options]="choices()"
     [ngModel]="option().value"
     [ngModelOptions]="{ standalone: true }"
     (ngModelChange)="commit()($event)"

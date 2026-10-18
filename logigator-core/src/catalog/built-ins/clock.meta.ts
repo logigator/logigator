@@ -15,6 +15,18 @@ export const clockMeta = {
   name: 'components.def.CLOCK.name',
   description: 'components.def.CLOCK.description',
   options: {
+    mode: {
+      kind: 'select-button',
+      label: 'components.def.CLOCK.options.mode',
+      values: [
+        {
+          value: 'square',
+          labelKey: 'components.def.CLOCK.modes.square'
+        },
+        { value: 'pulse', labelKey: 'components.def.CLOCK.modes.pulse' }
+      ],
+      default: 'square'
+    },
     speed: {
       kind: 'number',
       label: 'components.def.CLOCK.options.speed',

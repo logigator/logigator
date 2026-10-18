@@ -27,7 +27,11 @@ import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import { BuiltInComponentType } from '@logigator/core';
 import { BoardCompilerService } from './compiler/board-compiler.service';
-import { CompiledBoard, TOP_LEVEL_PATH } from './compiler/compiled-board.model';
+import {
+  ClockMode,
+  CompiledBoard,
+  TOP_LEVEL_PATH
+} from './compiler/compiled-board.model';
 import { CompileDiagnostic } from './compiler/compile-error';
 import { HeldInputHistory, heldInputWrite } from './held-input';
 import { LinkStateApplier, SnapshotApplier } from './state/link-state-applier';
@@ -44,6 +48,12 @@ const PULSE_BUTTON_FLASH_MS = 150;
  * worker boots the WASM engine, then `ready` (paused) ⇄ `running`.
  */
 export type SimulationState = 'inactive' | 'starting' | 'ready' | 'running';
+
+/** One kind of clock on a board: its delay in ticks and its waveform. */
+export interface ClockKind {
+  delay: number;
+  mode: ClockMode;
+}
 
 /**
  * Facade for the simulation lifecycle: entering/leaving simulation mode,
@@ -76,13 +86,13 @@ export class SimulationService {
   private readonly _targetHz = signal(1000);
   public readonly targetHz = computed(this._targetHz);
 
-  private readonly _clockDelays = signal<readonly number[]>([]);
+  private readonly _clocks = signal<readonly ClockKind[]>([]);
   /**
-   * The distinct delays, in ticks, of every clock the session's board holds
-   * (custom components' inner clocks included), ascending — what turns a tick
-   * rate into the frequencies the circuit's clocks run at.
+   * The distinct kinds of clock the session's board holds (custom components'
+   * inner clocks included), by delay and square waves first — what turns a
+   * tick rate into the frequencies the circuit's clocks run at.
    */
-  public readonly clockDelays = computed(this._clockDelays);
+  public readonly clocks = computed(this._clocks);
 
   public readonly measuredHz = this.workerService.measuredHz;
   public readonly tick = this.workerService.tick;
@@ -241,7 +251,7 @@ export class SimulationService {
     }
 
     this._board = board;
-    this._clockDelays.set(clockDelaysOf(board));
+    this._clocks.set(clocksOf(board));
     const applier = new LinkStateApplier(
       board.mapping.get(TOP_LEVEL_PATH) ?? []
     );
@@ -330,7 +340,7 @@ export class SimulationService {
       }
     } finally {
       this._board = null;
-      this._clockDelays.set([]);
+      this._clocks.set([]);
       this._applier = null;
       this._project = null;
       this.workModeService.setSimulationMode(false);
@@ -1024,12 +1034,19 @@ function engineFrame(frame: InputFrame): EngineInputFrame {
   };
 }
 
-function clockDelaysOf(board: CompiledBoard): number[] {
-  const delays = new Set<number>();
+function clocksOf(board: CompiledBoard): ClockKind[] {
+  const clocks = new Map<string, ClockKind>();
   for (const unit of board.descriptor.components) {
-    if (unit.type === BuiltInComponentType.CLOCK && unit.period) {
-      delays.add(unit.period);
+    if (unit.type === BuiltInComponentType.CLOCK && unit.period && unit.mode) {
+      clocks.set(`${unit.period}:${unit.mode}`, {
+        delay: unit.period,
+        mode: unit.mode
+      });
     }
   }
-  return [...delays].sort((a, b) => a - b);
+  return [...clocks.values()].sort(
+    (a, b) =>
+      a.delay - b.delay ||
+      Number(a.mode === 'pulse') - Number(b.mode === 'pulse')
+  );
 }

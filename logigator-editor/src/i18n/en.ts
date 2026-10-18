@@ -141,9 +141,14 @@ const en = {
       CLOCK: {
         name: 'Clock',
         description:
-          'Periodically emits a one-tick pulse on its output. The delay between pulses is configurable; driving the `STP` input HIGH pauses the clock.',
+          'Switches its output over and over: LOW for the configured delay, then HIGH. As a square wave it stays HIGH as long as it was LOW, as a pulse for one tick. Driving the `STP` input HIGH stops the clock and holds its output LOW, and it starts a new cycle once `STP` is LOW again.',
         options: {
+          mode: 'Waveform',
           speed: 'Delay'
+        },
+        modes: {
+          square: 'Square',
+          pulse: 'Pulse'
         }
       },
       TUNNEL: {
@@ -817,7 +822,8 @@ const en = {
     speedBehind:
       'Slower than the fixed speed: the circuit is too large to keep up.',
     clocks: 'Clocks at this speed',
-    clockDelay: 'Clock, delay {{delay}}',
+    clockSquare: 'Square wave, delay {{delay}}',
+    clockPulse: 'Pulse, delay {{delay}}',
     clocksMore: '+{{count}} more',
     ticks: '{{ticks}} ticks'
   },

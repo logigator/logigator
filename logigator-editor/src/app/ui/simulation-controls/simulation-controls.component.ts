@@ -154,15 +154,16 @@ export class SimulationControlsComponent {
       return [];
     }
     return this.simulationService
-      .clockDelays()
+      .clocks()
       .slice(0, MAX_CLOCK_ROWS)
-      .map((delay) => ({
+      .map(({ delay, mode }) => ({
         delay,
-        frequency: formatHz(clockHz(rate, delay), this.lang())
+        mode,
+        frequency: formatHz(clockHz(rate, delay, mode), this.lang())
       }));
   });
   protected readonly hiddenClocks = computed(() =>
-    Math.max(0, this.simulationService.clockDelays().length - MAX_CLOCK_ROWS)
+    Math.max(0, this.simulationService.clocks().length - MAX_CLOCK_ROWS)
   );
 
   protected playSimulation(): void {

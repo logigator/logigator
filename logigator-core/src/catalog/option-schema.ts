@@ -10,7 +10,13 @@
 /** One choice offered by a select option. */
 export interface SelectOptionValue<T = unknown> {
   readonly value: T;
+  /** Shown as written, for a literal such as `HEX` or `16`. */
   readonly label?: string;
+  /**
+   * Translation key of a choice that is a word rather than a literal, opaque
+   * here like a schema's `label`; it wins over `label`.
+   */
+  readonly labelKey?: string;
   readonly icon?: string;
 }
 

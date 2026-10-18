@@ -140,9 +140,14 @@ const fr: TranslationSchema = {
       CLOCK: {
         name: 'Horloge',
         description:
-          "Émet périodiquement une impulsion d'un tick sur sa sortie. Le délai entre les impulsions est configurable ; mettre l'entrée `STP` à HIGH met l'horloge en pause.",
+          "Fait basculer sa sortie en boucle : LOW pendant le retard configuré, puis HIGH. En signal carré, elle reste HIGH aussi longtemps qu'elle était LOW ; en impulsion, pendant un tick. Mettre l'entrée `STP` à HIGH arrête l'horloge et maintient sa sortie à LOW ; elle recommence un cycle dès que `STP` repasse à LOW.",
         options: {
+          mode: "Forme d'onde",
           speed: 'Retard'
+        },
+        modes: {
+          square: 'Carré',
+          pulse: 'Impulsion'
         }
       },
       TUNNEL: {
@@ -829,7 +834,8 @@ const fr: TranslationSchema = {
     speedBehind:
       'Plus lent que la vitesse fixe : le circuit est trop grand pour suivre.',
     clocks: 'Horloges à cette vitesse',
-    clockDelay: 'Horloge, retard {{delay}}',
+    clockSquare: 'Carré, retard {{delay}}',
+    clockPulse: 'Impulsion, retard {{delay}}',
     clocksMore: '+{{count}} autres',
     ticks: '{{ticks}} ticks'
   },

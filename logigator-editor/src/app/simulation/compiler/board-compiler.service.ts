@@ -18,6 +18,7 @@ import { Wire } from '../../wires/wire';
 import {
   BoardComponentDescriptor,
   BoardComponentParams,
+  ClockMode,
   CompiledBoard,
   ENGINE_USER_INPUT_TYPE,
   LinkRenderTargets,
@@ -193,7 +194,7 @@ export class BoardCompilerService {
   /**
    * Per-type engine parameters: ROM contents bit-packed to a byte table sized
    * `addressSize` × `wordSize` (`rom-data.codec.ts`), the clock's delay (the
-   * ticks it stays low between one-tick pulses), and the RAM's read mode.
+   * ticks it stays low per cycle) and waveform, and the RAM's read mode.
    */
   private _paramsFor(component: Component): BoardComponentParams | undefined {
     switch (component.config.type) {
@@ -210,7 +211,7 @@ export class BoardCompilerService {
       case BuiltInComponentType.CLOCK:
         return {
           period: component.options['speed'].value as number,
-          mode: 'pulse'
+          mode: component.options['mode'].value as ClockMode
         };
       case BuiltInComponentType.RAM:
         return { read: 'clocked' };
@@ -296,10 +297,13 @@ export class BoardCompilerService {
     );
     const linkCount = linkOfClass.size;
 
-    const targets: LinkRenderTargets[] = Array.from({ length: linkCount }, () => ({
-      wires: [],
-      ports: []
-    }));
+    const targets: LinkRenderTargets[] = Array.from(
+      { length: linkCount },
+      () => ({
+        wires: [],
+        ports: []
+      })
+    );
     nets.forEach((net, netIndex) => {
       const link = linkOfClass.get(ctx.uf.find(netNodes[netIndex]));
       if (link === undefined) return;
