@@ -23,7 +23,11 @@ import { clockComponentConfig } from '../../components/component-types/clock/clo
 import { tunnelComponentConfig } from '../../components/component-types/tunnel/tunnel.config';
 import { ledMatrixComponentConfig } from '../../components/component-types/led-matrix/led-matrix.config';
 import { bytesToBase64 } from '../../utils/packed-buffer';
-import { SerializedCircuitBody, WireDirection } from '@logigator/core';
+import {
+  BuiltInComponentType,
+  SerializedCircuitBody,
+  WireDirection
+} from '@logigator/core';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
 import { BoardCompilerService } from './board-compiler.service';
@@ -154,7 +158,6 @@ describe('BoardCompilerService', () => {
     // Emission order is ascending component id; link ids are dense in
     // pin-visit order: NOT.in, NOT.out, AND.in1, AND.out.
     expect(board.descriptor).toEqual({
-      links: 4,
       components: [
         { type: 1, inputs: [0], outputs: [1] },
         { type: 2, inputs: [1, 2], outputs: [3] }
@@ -181,7 +184,6 @@ describe('BoardCompilerService', () => {
     const board = compiler.compile(project);
 
     expect(board.descriptor).toEqual({
-      links: 3,
       components: [{ type: 2, inputs: [0, 1], outputs: [2] }]
     });
   });
@@ -207,7 +209,7 @@ describe('BoardCompilerService', () => {
 
     const board = compiler.compile(project);
 
-    expect(board.descriptor.links).toBe(2);
+    expect(board.linkCount).toBe(2);
     const targets = board.mapping.get('')!;
     expect(targets.every((t) => !t.wires.includes(loneWire))).toBe(true);
   });
@@ -242,7 +244,8 @@ describe('BoardCompilerService', () => {
 
     const board = compiler.compile(project);
 
-    expect(board.descriptor).toEqual({ links: 0, components: [] });
+    expect(board.descriptor).toEqual({ components: [] });
+    expect(board.linkCount).toBe(0);
     expect(board.diagnostics).toEqual([]);
   });
 
@@ -278,7 +281,7 @@ describe('BoardCompilerService', () => {
     ).toBe(true);
   });
 
-  it('emits a ROM unit with its contents bit-packed into ops', () => {
+  it('emits a ROM unit with its contents bit-packed into its data', () => {
     // 1-bit address, 4-bit word: addr0 → output 0 high (value 1), addr1 →
     // output 3 high (value 8) packs LSB-first to the single byte 0x81.
     const data = bytesToBase64(Uint8Array.from([0x81]));
@@ -296,14 +299,46 @@ describe('BoardCompilerService', () => {
 
     expect(board.diagnostics).toEqual([]);
     expect(board.descriptor).toEqual({
-      links: 5,
       components: [
-        { type: 12, inputs: [0], outputs: [1, 2, 3, 4], ops: [0x81] }
+        {
+          type: 12,
+          inputs: [0],
+          outputs: [1, 2, 3, 4],
+          data: new Uint8Array([0x81])
+        }
       ]
     });
   });
 
-  it('emits a clock unit with its period in ops', () => {
+  it('hands the engine a DEMUX’s data input, and its negation, behind the select bits', () => {
+    // Ports: data, S0, S1, with data and S1 negated.
+    const demux = place(
+      Component.deserialize(
+        { pos: [10, 0], options: { selectLines: 2 }, negInputs: [0, 2] },
+        provider.getComponent(BuiltInComponentType.DEMUX)!
+      )
+    );
+    const data = demux.connectionPoints[0];
+    const not = makeNot();
+    const out = not.connectionPoints[1];
+    not.position.set(
+      not.position.x + data.x - 2 - out.x,
+      not.position.y + data.y - out.y
+    );
+    place(not);
+    placeWire(not.connectionPoints[1], data);
+
+    const board = compiler.compile(project);
+
+    const [demuxUnit, notUnit] = board.descriptor.components;
+    // The demux is emitted first, so its pins take links 0–2 in engine
+    // order; the NOT's output shares the data input's.
+    expect(demuxUnit.inputs).toEqual([0, 1, 2]);
+    expect(notUnit.outputs).toEqual([2]);
+    expect(demuxUnit.negInputs).toEqual([1, 2]);
+  });
+
+  it('emits a clock unit with its period', () => {
     place(
       Component.deserialize(
         { pos: [0, 0], options: { speed: 7 } },
@@ -315,8 +350,9 @@ describe('BoardCompilerService', () => {
 
     expect(board.diagnostics).toEqual([]);
     expect(board.descriptor).toEqual({
-      links: 2,
-      components: [{ type: 6, inputs: [0], outputs: [1], ops: [7] }]
+      components: [
+        { type: 6, inputs: [0], outputs: [1], period: 7, mode: 'pulse' }
+      ]
     });
   });
 
@@ -335,7 +371,7 @@ describe('BoardCompilerService', () => {
     expect(unit.type).toBe(204);
     expect(unit.inputs).toHaveLength(7); // A0,A1, D0..D3, CLK
     expect(unit.outputs).toHaveLength(16); // 4×4 cells
-    expect(unit.ops).toEqual([4]); // data-bus width
+    expect(unit.dataBus).toBe(4);
 
     // Every cell link renders back onto the component past the input range.
     const targets = board.mapping.get('')!;
@@ -355,7 +391,6 @@ describe('BoardCompilerService', () => {
     const board = compiler.compile(project);
 
     expect(board.descriptor).toEqual({
-      links: 4,
       components: [
         { type: 1, inputs: [0], outputs: [1] },
         { type: 1, inputs: [2], outputs: [3] }
@@ -418,7 +453,6 @@ describe('BoardCompilerService', () => {
     const board = compiler.compile(project);
 
     expect(board.descriptor).toEqual({
-      links: 2,
       components: [{ type: 1, inputs: [0], outputs: [1] }]
     });
     expect(board.diagnostics).toEqual([]);
@@ -483,7 +517,7 @@ describe('BoardCompilerService', () => {
     expect(board.diagnostics[0].instancePath).toBe(String(instance.id));
   });
 
-  it('propagates a nested ROM’s ops through template flattening', () => {
+  it('propagates a nested ROM’s data through template flattening', () => {
     const data = bytesToBase64(Uint8Array.from([0x81]));
     const rom = Component.deserialize(
       {
@@ -510,9 +544,13 @@ describe('BoardCompilerService', () => {
 
     expect(board.diagnostics).toEqual([]);
     expect(board.descriptor).toEqual({
-      links: 5,
       components: [
-        { type: 12, inputs: [0], outputs: [1, 2, 3, 4], ops: [0x81] }
+        {
+          type: 12,
+          inputs: [0],
+          outputs: [1, 2, 3, 4],
+          data: new Uint8Array([0x81])
+        }
       ]
     });
   });
@@ -538,7 +576,6 @@ describe('BoardCompilerService', () => {
     // All emit the engine's UserInput type (200); it rejects any other id.
     // Which input it is only shows in the frames sent to it.
     expect(board.descriptor).toEqual({
-      links: 4,
       components: [
         { type: 200, inputs: [], outputs: [0] },
         { type: 200, inputs: [], outputs: [1] },

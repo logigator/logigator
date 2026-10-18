@@ -29,7 +29,6 @@ function loadEngine(): void {
  */
 export function userInputBoard(count: number, width = 1): BoardDescriptor {
   return {
-    links: count * width,
     components: Array.from({ length: count }, (_, unit) => ({
       type: ENGINE_USER_INPUT_TYPE,
       inputs: [],

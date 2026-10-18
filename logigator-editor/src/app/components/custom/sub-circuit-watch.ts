@@ -319,7 +319,7 @@ export class SubCircuitWatch extends ComponentInspection {
     return {
       name,
       path,
-      session: new WatchSession(circuit, info, this.board.descriptor.links),
+      session: new WatchSession(circuit, info, this.board.linkCount),
       needsFit: true
     };
   }

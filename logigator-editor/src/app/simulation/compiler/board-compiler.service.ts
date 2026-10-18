@@ -11,12 +11,13 @@ import {
   CustomComponentDefinition
 } from '@logigator/core';
 import { instantiateBody } from '../../persistence/circuit-builder';
-import { encodeRomOps } from '../../components/component-types/rom/rom-data.codec';
+import { encodeRomData } from '../../components/component-types/rom/rom-data.codec';
 import { ledMatrixShape } from '@logigator/core';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
 import {
   BoardComponentDescriptor,
+  BoardComponentParams,
   CompiledBoard,
   ENGINE_USER_INPUT_TYPE,
   LinkRenderTargets,
@@ -66,20 +67,22 @@ interface EmittedUnit {
   /** Negated pin indices into inputs[]/outputs[]; survive node remaps. */
   negInputs?: number[];
   negOutputs?: number[];
-  /** Per-type parameter blob (e.g. ROM contents); survives node remaps. */
-  ops?: number[];
+  /** Per-type parameters (e.g. ROM contents); survive node remaps. */
+  params?: BoardComponentParams;
 }
 
-/** Pin remaps preserve pin *order*, so negated indices and ops carry over. */
-function copyNegation(unit: EmittedUnit): {
+/**
+ * A unit's fields past its pins, as the descriptor spells them. Pin remaps
+ * preserve pin *order*, so negated indices and parameters carry over.
+ */
+function carriedFields(unit: EmittedUnit): {
   negInputs?: number[];
   negOutputs?: number[];
-  ops?: number[];
-} {
+} & BoardComponentParams {
   return {
     ...(unit.negInputs ? { negInputs: unit.negInputs } : {}),
     ...(unit.negOutputs ? { negOutputs: unit.negOutputs } : {}),
-    ...(unit.ops ? { ops: unit.ops } : {})
+    ...unit.params
   };
 }
 
@@ -188,26 +191,55 @@ export class BoardCompilerService {
   }
 
   /**
-   * Per-type `ops` blob for the engine: ROM contents bit-packed to a byte table
-   * sized `addressSize` × `wordSize` (`rom-data.codec.ts`), the clock's delay
-   * (the ticks it stays low between one-tick pulses), the MUX's select-line
-   * count.
+   * Per-type engine parameters: ROM contents bit-packed to a byte table sized
+   * `addressSize` × `wordSize` (`rom-data.codec.ts`), the clock's delay (the
+   * ticks it stays low between one-tick pulses), and the RAM's read mode.
    */
-  private _opsFor(component: Component): { ops?: number[] } {
+  private _paramsFor(component: Component): BoardComponentParams | undefined {
     switch (component.config.type) {
       case BuiltInComponentType.ROM: {
         const contents = (component.options['data']?.value as string) ?? '';
         return {
-          ops: encodeRomOps(contents, component.numInputs, component.numOutputs)
+          data: encodeRomData(
+            contents,
+            component.numInputs,
+            component.numOutputs
+          )
         };
       }
       case BuiltInComponentType.CLOCK:
-        return { ops: [component.options['speed'].value as number] };
-      case BuiltInComponentType.MUX:
-        return { ops: [component.options['selectLines'].value as number] };
+        return {
+          period: component.options['speed'].value as number,
+          mode: 'pulse'
+        };
+      case BuiltInComponentType.RAM:
+        return { read: 'clocked' };
       default:
-        return {};
+        return undefined;
     }
+  }
+
+  /**
+   * The unit's input pins and their negations in the engine's pin order. A
+   * DEMUX's data input is its first port and the engine's last, after the
+   * select bits; every other type's ports are already in engine order.
+   */
+  private _enginePinOrder(
+    component: Component,
+    inputs: number[],
+    negInputs: number[] | undefined
+  ): { inputs: number[]; negInputs?: number[] } {
+    if (component.config.type !== BuiltInComponentType.DEMUX) {
+      return { inputs, ...(negInputs ? { negInputs } : {}) };
+    }
+    const last = inputs.length - 1;
+    const toEngine = (pin: number) => (pin === 0 ? last : pin - 1);
+    return {
+      inputs: [...inputs.slice(1), inputs[0]],
+      ...(negInputs
+        ? { negInputs: negInputs.map(toEngine).sort((a, b) => a - b) }
+        : {})
+    };
   }
 
   public compile(project: Project): CompiledBoard {
@@ -259,12 +291,12 @@ export class BoardCompilerService {
         type: unit.type,
         inputs: unit.inputs.map(linkFor),
         outputs: unit.outputs.map(linkFor),
-        ...copyNegation(unit)
+        ...carriedFields(unit)
       })
     );
-    const links = linkOfClass.size;
+    const linkCount = linkOfClass.size;
 
-    const targets: LinkRenderTargets[] = Array.from({ length: links }, () => ({
+    const targets: LinkRenderTargets[] = Array.from({ length: linkCount }, () => ({
       wires: [],
       ports: []
     }));
@@ -306,14 +338,15 @@ export class BoardCompilerService {
     }
 
     this.logging.info(
-      `compiled board: ${descriptorComponents.length} units, ${links} links, ` +
+      `compiled board: ${descriptorComponents.length} units, ${linkCount} links, ` +
         `${ctx.diagnostics.length} diagnostics`,
       'BoardCompiler'
     );
     done();
 
     return {
-      descriptor: { links, components: descriptorComponents },
+      descriptor: { components: descriptorComponents },
+      linkCount,
       mapping: new Map([[TOP_LEVEL_PATH, targets]]),
       userInputs: ctx.userInputs,
       stateUnits: ctx.stateUnits,
@@ -382,7 +415,7 @@ export class BoardCompilerService {
 
     if (type === BuiltInComponentType.LED_MATRIX) {
       // Cells are unit outputs with no editor port: fresh nodes on no net.
-      // ops[0] is the data-bus width the engine derives the pin split from.
+      // `dataBus` is the data-bus width the engine derives the pin split from.
       const { size, dataBits } = ledMatrixShape(
         component.options['size'].value as number
       );
@@ -394,7 +427,7 @@ export class BoardCompilerService {
         type,
         inputs: pinNodes,
         outputs: cellNodes,
-        ops: [dataBits],
+        params: { dataBus: dataBits },
         ...this._negationFor(component)
       });
       return;
@@ -409,12 +442,18 @@ export class BoardCompilerService {
       if (STATE_TYPES.has(type)) {
         ctx.stateUnits.set(component.id, ctx.units.length);
       }
+      const { negInputs, negOutputs } = this._negationFor(component);
+      const params = this._paramsFor(component);
       ctx.units.push({
         type,
-        inputs: pinNodes.slice(0, component.numInputs),
+        ...this._enginePinOrder(
+          component,
+          pinNodes.slice(0, component.numInputs),
+          negInputs
+        ),
         outputs: pinNodes.slice(component.numInputs),
-        ...this._opsFor(component),
-        ...this._negationFor(component)
+        ...(negOutputs ? { negOutputs } : {}),
+        ...(params ? { params } : {})
       });
       return;
     }
@@ -509,10 +548,9 @@ export class BoardCompilerService {
 
     for (const unit of template.units) {
       ctx.units.push({
-        type: unit.type,
+        ...unit,
         inputs: unit.inputs.map((node) => localNodes[node]),
-        outputs: unit.outputs.map((node) => localNodes[node]),
-        ...copyNegation(unit)
+        outputs: unit.outputs.map((node) => localNodes[node])
       });
     }
     for (const diagnostic of template.diagnostics) {
@@ -666,10 +704,9 @@ export class BoardCompilerService {
         return id;
       };
       const units = ctx.units.map((unit) => ({
-        type: unit.type,
+        ...unit,
         inputs: unit.inputs.map(localId),
-        outputs: unit.outputs.map(localId),
-        ...copyNegation(unit)
+        outputs: unit.outputs.map(localId)
       }));
       const inputBindings = inputBindingNodes.map(localId);
       const outputBindings = outputBindingNodes.map(localId);

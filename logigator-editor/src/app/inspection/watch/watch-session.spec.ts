@@ -134,7 +134,7 @@ describe('WatchSession', () => {
     const board = simulation.board!;
     const info = board.watch.infoFor(String(instanceId))!;
     const definition = registry.getDefinition(info.typeId)!;
-    return new WatchSession(definition.circuit!, info, board.descriptor.links);
+    return new WatchSession(definition.circuit!, info, board.linkCount);
   }
 
   /** Full-snapshot bits with exactly the given links powered. */
@@ -174,7 +174,7 @@ describe('WatchSession', () => {
       ...packSnapshot(
         undefined,
         null,
-        fullBits(simulation.board!.descriptor.links, [switchLink])
+        fullBits(simulation.board!.linkCount, [switchLink])
       )
     });
 
@@ -200,7 +200,7 @@ describe('WatchSession', () => {
       ...packSnapshot(
         undefined,
         null,
-        fullBits(simulation.board!.descriptor.links, [switchLink])
+        fullBits(simulation.board!.linkCount, [switchLink])
       )
     });
     session.onFrame();
@@ -251,7 +251,7 @@ describe('WatchSession', () => {
       ...packSnapshot(
         undefined,
         null,
-        fullBits(simulation.board!.descriptor.links, [switchLink])
+        fullBits(simulation.board!.linkCount, [switchLink])
       )
     });
 
@@ -269,7 +269,7 @@ describe('WatchSession', () => {
     };
 
     expect(
-      () => new WatchSession(mutilated, info, board.descriptor.links)
+      () => new WatchSession(mutilated, info, board.linkCount)
     ).toThrow(/does not match/);
   });
 });

@@ -16,28 +16,37 @@ export interface BoardComponentDescriptor {
   inputs: number[];
   outputs: number[];
   /**
-   * Per-type parameter blob (e.g. a ROM's bit-packed contents table). Opaque to
-   * the compiler, invariant under pin remapping, omitted when the type takes
-   * none. The engine arity-checks it against the type.
-   */
-  ops?: number[];
-  /**
    * Negated input-pin indices (into `inputs[]`) the engine inverts before the
    * kernel runs; `negOutputs` into `outputs[]`, inverted after. Sparse index
    * arrays, not a bitmask. Omitted when empty.
    */
   negInputs?: number[];
   negOutputs?: number[];
+  /** CLK: the ticks it stays low per cycle. */
+  period?: number;
+  /** CLK: high for `period` ticks (`square`) or for one (`pulse`). */
+  mode?: 'pulse' | 'square';
+  /** RAM: outputs follow the address (`async`) or change on a rising clock. */
+  read?: 'async' | 'clocked';
+  /** ROM: its contents, bit-packed to the address × word table. */
+  data?: Uint8Array;
+  /** LED matrix (the engine's addressable register): its data-bus width. */
+  dataBus?: number;
 }
 
+/** The per-type parameters of a {@link BoardComponentDescriptor}. */
+export type BoardComponentParams = Pick<
+  BoardComponentDescriptor,
+  'period' | 'mode' | 'read' | 'data' | 'dataBus'
+>;
+
 /**
- * The WASM simulator's board format (JSON-ready). A link id indexes the
- * simulator's link state. The component order is the submission order that
- * defines `submitInput` comp ids, the input numbering of `inputProgress` and
- * the `getOutputs()` layout.
+ * The WASM simulator's board format. A link id indexes the simulator's link
+ * state; the links are numbered from 0 to the highest id a pin names. The
+ * component order is the submission order that defines `submitInput` comp
+ * ids, the input numbering of `inputProgress` and the `getOutputs()` layout.
  */
 export interface BoardDescriptor {
-  links: number;
   components: BoardComponentDescriptor[];
 }
 
@@ -71,6 +80,8 @@ export type LinkMapping = ReadonlyMap<string, LinkRenderTargets[]>;
  */
 export interface CompiledBoard {
   descriptor: BoardDescriptor;
+  /** Links the descriptor's pins name, every id below it used. */
+  linkCount: number;
   mapping: LinkMapping;
   /**
    * Top-level user input `Component.id` → its unit's board submission index;

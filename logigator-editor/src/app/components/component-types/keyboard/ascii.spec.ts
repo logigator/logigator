@@ -408,14 +408,15 @@ function latchBoard(
   strobeGates: number
 ): { board: BoardDescriptor; clock: number; q: number[] } {
   const board = userInputBoard(1, KEYBOARD_OUTPUTS);
+  let links = KEYBOARD_OUTPUTS;
   const delayed = (link: number, gates: number): number => {
     for (let gate = 0; gate < gates; gate++) {
       board.components.push({
         type: BuiltInComponentType.DELAY,
         inputs: [link],
-        outputs: [board.links]
+        outputs: [links]
       });
-      link = board.links++;
+      link = links++;
     }
     return link;
   };
@@ -423,13 +424,13 @@ function latchBoard(
   const q: number[] = [];
   for (let bit = 0; bit < KEYBOARD_DATA_BITS; bit++) {
     const data = delayed(bit, dataGates);
-    q.push(board.links);
+    q.push(links);
     board.components.push({
       type: BuiltInComponentType.D_FF,
       inputs: [data, clock],
-      outputs: [board.links, board.links + 1]
+      outputs: [links, links + 1]
     });
-    board.links += 2;
+    links += 2;
   }
   return { board, clock, q };
 }

@@ -1027,8 +1027,8 @@ function engineFrame(frame: InputFrame): EngineInputFrame {
 function clockDelaysOf(board: CompiledBoard): number[] {
   const delays = new Set<number>();
   for (const unit of board.descriptor.components) {
-    if (unit.type === BuiltInComponentType.CLOCK && unit.ops) {
-      delays.add(unit.ops[0]);
+    if (unit.type === BuiltInComponentType.CLOCK && unit.period) {
+      delays.add(unit.period);
     }
   }
   return [...delays].sort((a, b) => a - b);

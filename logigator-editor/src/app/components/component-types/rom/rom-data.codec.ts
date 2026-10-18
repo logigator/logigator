@@ -7,7 +7,7 @@ import {
 /**
  * The ROM semantics on top of a plain bit-packed byte buffer: how the address
  * size maps to a word count, and how the buffer reaches the `@logigator/sim`
- * ROM (type 12) as its `ops` table. Persisted as base64, verbatim in both the
+ * ROM (type 12) as its `data` table. Persisted as base64, verbatim in both the
  * legacy v0 `s` slot and the native format.
  */
 
@@ -22,15 +22,17 @@ export function romByteLength(addressSize: number, wordSize: number): number {
 }
 
 /**
- * Encodes the stored base64 contents into the `@logigator/sim` ROM `ops` blob:
- * a byte array sized to the address/word dimensions, zero-padded.
+ * Encodes the stored base64 contents into the `@logigator/sim` ROM `data`
+ * table: bytes sized to the address/word dimensions, zero-padded, and cut to
+ * the table, which the engine refuses data longer than.
  */
-export function encodeRomOps(
+export function encodeRomData(
   base64: string,
   addressSize: number,
   wordSize: number
-): number[] {
-  return Array.from(
-    resizeBuffer(base64ToBytes(base64), romByteLength(addressSize, wordSize))
+): Uint8Array {
+  return resizeBuffer(
+    base64ToBytes(base64),
+    romByteLength(addressSize, wordSize)
   );
 }

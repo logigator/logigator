@@ -18,7 +18,6 @@ const RAM_BYTES = packedByteLength(1 << ADDRESS_SIZE, WORD_SIZE);
 function ramBoard(): BoardDescriptor {
   const inputs = ADDRESS_SIZE + WORD_SIZE + 2;
   return {
-    links: inputs + WORD_SIZE,
     components: [
       {
         type: ENGINE_USER_INPUT_TYPE,

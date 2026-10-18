@@ -84,15 +84,23 @@ numbering and its output layout.
   staying removable through either.
 - Anything else — a blocking `unsupported` diagnostic.
 
-Four types carry an engine `ops` blob (`_opsFor`): `ROM` (contents bit-packed by
-`rom-data.codec.ts` to the byte table the engine reads, LSB-first, bit
-`address × wordSize + k`), `CLOCK` (period in ticks), `MUX` (select lines) and
-`LED_MATRIX` (data-bus width). `ops` and the negation index arrays survive node
-remapping and flattening unchanged (`copyNegation`): remapping changes pin
-_values_, never pin _order_.
+Four types carry named engine parameters (`_paramsFor`): `ROM` (`data`, its
+contents bit-packed by `rom-data.codec.ts` to the byte table the engine reads,
+LSB-first, bit `address × wordSize + k`), `CLOCK` (`period` in ticks and its
+`mode`), `RAM` (its `read` mode) and `LED_MATRIX` (`dataBus`, the data-bus
+width). Parameters and the negation index arrays survive node remapping and
+flattening unchanged: remapping changes pin _values_, never pin _order_.
+
+Pins are emitted in `connectionPoints` order with one exception,
+`_enginePinOrder`: a `DEMUX`'s data input is its first port and the engine's
+last input, after the select bits, so the compiler moves it there and remaps
+its negated input indices with it.
 
 Afterwards, classes referenced by ≥1 unit pin get **dense link ids** in emission
 order; wire-only and plug-only classes get none and stay permanently unpowered.
+The descriptor carries no link count, the engine numbering its links up to the
+highest id a pin names; `CompiledBoard.linkCount` keeps it for the editor's
+own tables.
 
 Every `CompileDiagnostic` is **blocking** (`unsupported`, `missing-circuit`,
 `recursive-definition`, `plug-mismatch`): a board with silently dropped
@@ -306,7 +314,7 @@ accumulate future deltas over darkness.
 
 What a component holds inside — a RAM's memory — never reaches a link, so
 the engine exposes it as **state**: per unit, a byte layout its type documents
-(a RAM's is its words bit-packed LSB-first, the layout of a ROM's `ops` and of
+(a RAM's is its words bit-packed LSB-first, the layout of a ROM's `data` and of
 `utils/packed-buffer.ts`) and a `u32` **version** that moves on every write
 changing a stored bit. Reads never change state, and on WASM a read between
 ticks belongs to the tick a snapshot taken there shows.
@@ -653,7 +661,9 @@ queue. Nothing merges into a press, which ends in an event.
 1. Implement the type in `@logigator/sim` and bump the dependency.
 2. Add its `BuiltInComponentType` id to `UNIT_TYPES`; it then emits as a plain
    unit with pins in `connectionPoints` order.
-3. Encode any per-type engine `ops` in `_opsFor` (`ROM` is the worked example).
+3. Pass any per-type engine parameters in `_paramsFor` (`ROM` is the worked
+   example), and reorder pins in `_enginePinOrder` if the engine's order is not
+   the ports'.
 4. A user input instead implements `UserInput`, with one slot per output port,
    choosing a `drive` (what the engine receives: `level` or `pulse`) and a
    `gesture` (how a pointer operates it: `hold`, `toggle` or `tap`). It needs

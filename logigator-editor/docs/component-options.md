@@ -122,7 +122,7 @@ derivation stays on its side (`bindRomOptions` passes `() => 1 << addressSize`)
 and both the config's options, edited while placing, and every instance's read
 their own sizes. The renderer decodes the blob into the dialog and
 trims + re-encodes on save. For ROM that same blob is the legacy v0 `s`-slot
-value and, via `rom-data.codec.ts`, the engine's ROM `ops` table; the buffer/bit
+value and, via `rom-data.codec.ts`, the engine's ROM `data` table; the buffer/bit
 math is `utils/packed-buffer.ts`.
 
 `NameMapComponentOption` is generic in the same way: custom names for a fixed
