@@ -1027,6 +1027,7 @@ const fr: TranslationSchema = {
     background: 'Arrière-plan',
     backgroundHint: 'Couleur du thème et grille',
     quality: 'Qualité',
+    lossless: 'Sans perte',
     dimensions: '{{width}} × {{height}} px',
     clampedHint: "(réduit pour respecter les limites de l'appareil)",
     export: 'Exporter',

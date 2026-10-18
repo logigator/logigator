@@ -1011,6 +1011,7 @@ const en = {
     background: 'Background',
     backgroundHint: 'Theme color and grid',
     quality: 'Quality',
+    lossless: 'Lossless',
     dimensions: '{{width}} × {{height}} px',
     clampedHint: '(reduced to fit device limits)',
     export: 'Export',

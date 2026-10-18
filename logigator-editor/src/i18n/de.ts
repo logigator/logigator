@@ -1034,6 +1034,7 @@ const de: TranslationSchema = {
     background: 'Hintergrund',
     backgroundHint: 'Design-Farbe und Raster',
     quality: 'Qualität',
+    lossless: 'Verlustfrei',
     dimensions: '{{width}} × {{height}} px',
     clampedHint: '(reduziert, um Gerätegrenzen einzuhalten)',
     export: 'Exportieren',

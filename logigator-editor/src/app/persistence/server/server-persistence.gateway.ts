@@ -26,7 +26,11 @@ import { ComponentProviderService } from '../../components/component-provider.se
 import { buildProject, instantiateBody } from '../circuit-builder';
 import { warnSkippedCustoms } from '../load-warnings';
 import { AuthRequiredError, formatHttpError } from '../persistence-errors';
-import { BoardSnapshotService } from '../../rendering/board-snapshot.service';
+import {
+  BoardSnapshotService,
+  PREVIEW_SIZE
+} from '../../rendering/board-snapshot.service';
+import { WebpSupportService } from '../../rendering/webp-support.service';
 import { UserService } from '../../user/user.service';
 import { whenIdle } from '../../utils/scheduling';
 
@@ -92,6 +96,7 @@ export class ServerPersistenceGateway {
   private readonly logging = inject(LoggingService);
   private readonly translation = inject(TranslationService);
   private readonly snapshot = inject(BoardSnapshotService);
+  private readonly webpSupport = inject(WebpSupportService);
   private readonly userService = inject(UserService);
 
   /**
@@ -868,9 +873,11 @@ export class ServerPersistenceGateway {
       return;
     }
 
+    // The API reads the format from the bytes; the name only has to be honest.
+    const extension = rendered.light.type === 'image/webp' ? 'webp' : 'png';
     const formData = new FormData();
-    formData.append('light', rendered.light, 'preview-light.png');
-    formData.append('dark', rendered.dark, 'preview-dark.png');
+    formData.append('light', rendered.light, `preview-light.${extension}`);
+    formData.append('dark', rendered.dark, `preview-dark.${extension}`);
     if (kind === 'project') {
       await firstValueFrom(this.projectApi.setPreview(id, formData));
     } else {
@@ -881,14 +888,19 @@ export class ServerPersistenceGateway {
 
   /**
    * `null` where nothing can be drawn — no renderer yet, or the project was
-   * closed before its turn came.
+   * closed before its turn came. Lossless WebP where the browser writes it,
+   * PNG elsewhere: the API re-encodes either, and both arrive exact.
    */
   private async _renderPreview(
     project: Project
   ): Promise<PreviewRender | null> {
     if (project.destroyed) return null;
     if (project.isEmpty) return 'empty';
-    return this.snapshot.generatePreviews(project);
+    return this.snapshot.generatePreviews(
+      project,
+      PREVIEW_SIZE,
+      this.webpSupport.lossless ? 'lossless-webp' : 'png'
+    );
   }
 
   private _warnPreviewFailed(err: unknown): void {

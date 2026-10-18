@@ -1020,6 +1020,7 @@ const es: TranslationSchema = {
     background: 'Fondo',
     backgroundHint: 'Color del tema y cuadrícula',
     quality: 'Calidad',
+    lossless: 'Sin pérdida',
     dimensions: '{{width}} × {{height}} px',
     clampedHint: '(reducido para ajustarse a los límites del dispositivo)',
     export: 'Exportar',

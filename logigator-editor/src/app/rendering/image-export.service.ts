@@ -13,6 +13,7 @@ import { downloadBlob } from '../utils/download';
 import { environment } from '../../environments/environment';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { WEBP_LOSSLESS_QUALITY } from './webp-support';
 
 export type ImageFormat = 'png' | 'jpeg' | 'webp';
 
@@ -23,8 +24,13 @@ export interface ImageExportOptions {
   multiplier: number;
   /** `true` = theme color + dot-grid; `false` = transparent (png/webp) / white (jpeg). */
   background: boolean;
-  /** 0–1, applied to jpeg/webp. */
+  /** 0–1, applied to jpeg and lossy webp. */
   quality?: number;
+  /**
+   * WebP only: encode losslessly, ignoring `quality`. Only where
+   * `WebpSupportService.lossless` says the browser can.
+   */
+  lossless?: boolean;
   /** File name without extension; defaults to the project's metadata name. */
   fileName?: string;
 }
@@ -62,6 +68,12 @@ const EXTENSION: Record<ImageFormat, string> = {
   webp: 'webp'
 };
 const DEFAULT_QUALITY = 0.92;
+/**
+ * The most a lossy WebP is asked for: Chromium reads
+ * {@link WEBP_LOSSLESS_QUALITY} as a request for lossless, and that is the
+ * `lossless` option's to make, not the top of the quality slider's.
+ */
+const MAX_LOSSY_WEBP_QUALITY = 0.99;
 const DEFAULT_NAME = 'circuit';
 
 /**
@@ -219,10 +231,21 @@ export class ImageExportService {
       options.format === 'jpeg' && !options.background
         ? this._flattenOnWhite(canvas)
         : canvas;
-    const quality = options.quality ?? DEFAULT_QUALITY;
     return new Promise((resolve) =>
-      source.toBlob((blob) => resolve(blob), MIME[options.format], quality)
+      source.toBlob(
+        (blob) => resolve(blob),
+        MIME[options.format],
+        this._quality(options)
+      )
     );
+  }
+
+  private _quality(options: ImageExportOptions): number {
+    const quality = options.quality ?? DEFAULT_QUALITY;
+    if (options.format !== 'webp') return quality;
+    return options.lossless
+      ? WEBP_LOSSLESS_QUALITY
+      : Math.min(quality, MAX_LOSSY_WEBP_QUALITY);
   }
 
   /** JPEG cannot store alpha; composite a transparent render onto white. */

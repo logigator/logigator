@@ -59,6 +59,17 @@
       t('imageExport.backgroundHint')
     }}</span>
   </div>
+  @if (showLossless()) {
+    <div class="flex items-center gap-2">
+      <lg-checkbox
+        inputId="export-lossless"
+        [ngModel]="lossless()"
+        (ngModelChange)="lossless.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+      <label for="export-lossless">{{ t('imageExport.lossless') }}</label>
+    </div>
+  }
   @if (showQuality()) {
     <div class="flex flex-col gap-1">
       <label for="export-quality"

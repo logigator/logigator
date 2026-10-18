@@ -18,6 +18,7 @@ import { Project } from '../project/project';
 import { ZOOM_STEP_BASE, ZOOM_STEP_MIN } from '../project/viewport-controller';
 import { nextAnimationFrame } from '../utils/scheduling';
 import { environment } from '../../environments/environment';
+import { WEBP_LOSSLESS_QUALITY } from './webp-support';
 
 export type SnapshotBackground = 'grid' | 'solid' | 'transparent';
 
@@ -59,6 +60,12 @@ export const EXPORT_MARGIN_GRID = 1;
 export const EMPTY_FALLBACK_GRID = 16;
 /** Default edge length (px) of a server-save preview. */
 export const PREVIEW_SIZE = 1024;
+
+/**
+ * How a preview is encoded. Both are lossless; WebP is smaller, but only
+ * where `WebpSupportService.lossless` says the browser writes it.
+ */
+export type PreviewEncoding = 'png' | 'lossless-webp';
 /** Below this multiplier a preview hides text: glyphs are sub-pixel smears. */
 const PREVIEW_HIDE_TEXT_BELOW = 0.5;
 /** Grid units per export-grid chunk; matches the live {@link Grid}. */
@@ -219,8 +226,8 @@ export class BoardSnapshotService {
   }
 
   /**
-   * Dark- and light-themed square PNG previews with a transparent background
-   * and the content centered. Resolves `null` when no renderer is available,
+   * Dark- and light-themed square previews with a transparent background and
+   * the content centered, encoded as `encoding` asks. Resolves `null` when no renderer is available,
    * so the save flow skips the upload.
    *
    * The non-live theme comes from briefly switching the global theme and
@@ -234,7 +241,8 @@ export class BoardSnapshotService {
    */
   public async generatePreviews(
     project: Project,
-    sizePx: number = PREVIEW_SIZE
+    sizePx: number = PREVIEW_SIZE,
+    encoding: PreviewEncoding = 'png'
   ): Promise<{ dark: Blob; light: Blob } | null> {
     if (!this.available || project.destroyed) return null;
 
@@ -288,8 +296,8 @@ export class BoardSnapshotService {
         supersample
       );
       const [dark, light] = await Promise.all([
-        this._canvasToBlob(darkCanvas),
-        this._canvasToBlob(lightCanvas)
+        this._canvasToBlob(darkCanvas, encoding),
+        this._canvasToBlob(lightCanvas, encoding)
       ]);
       return dark && light ? { dark, light } : null;
     } finally {
@@ -309,9 +317,18 @@ export class BoardSnapshotService {
     );
   }
 
-  private _canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
+  private _canvasToBlob(
+    canvas: HTMLCanvasElement,
+    encoding: PreviewEncoding
+  ): Promise<Blob | null> {
     return new Promise((resolve) =>
-      canvas.toBlob((blob) => resolve(blob), 'image/png')
+      encoding === 'png'
+        ? canvas.toBlob((blob) => resolve(blob), 'image/png')
+        : canvas.toBlob(
+            (blob) => resolve(blob),
+            'image/webp',
+            WEBP_LOSSLESS_QUALITY
+          )
     );
   }
 

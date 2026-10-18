@@ -56,7 +56,11 @@ import type { UserResponse } from '@logigator/contract';
 import { makeUser } from '../../testing/user-fixtures';
 import { makeNot } from '../../testing/factories';
 import { UserService } from '../user/user.service';
-import { BoardSnapshotService } from '../rendering/board-snapshot.service';
+import {
+  BoardSnapshotService,
+  PreviewEncoding
+} from '../rendering/board-snapshot.service';
+import { WebpSupportService } from '../rendering/webp-support.service';
 
 /**
  * A stable uuid for a readable label. Every id the API answers with is a uuid,
@@ -2713,7 +2717,12 @@ describe('PersistenceService', () => {
   });
   describe('previews', () => {
     /** Each render the gateway asked for, and whether its project was alive. */
-    let renders: { project: Project; destroyed: boolean }[];
+    let renders: {
+      project: Project;
+      destroyed: boolean;
+      encoding: PreviewEncoding | undefined;
+    }[];
+    let webpLossless: boolean;
 
     const ONE_GATE: SerializedCircuitBody = {
       components: [
@@ -2760,12 +2769,41 @@ describe('PersistenceService', () => {
       const snapshot = TestBed.inject(BoardSnapshotService);
       vi.spyOn(snapshot, 'whenAvailable').mockResolvedValue();
       vi.spyOn(snapshot, 'generatePreviews').mockImplementation(
-        async (project) => {
-          renders.push({ project, destroyed: project.destroyed });
-          return { dark: new Blob(['dark']), light: new Blob(['light']) };
+        async (project, _size, encoding) => {
+          renders.push({ project, destroyed: project.destroyed, encoding });
+          const type =
+            encoding === 'lossless-webp' ? 'image/webp' : 'image/png';
+          return {
+            dark: new Blob(['dark'], { type }),
+            light: new Blob(['light'], { type })
+          };
         }
       );
+      webpLossless = false;
+      vi.spyOn(
+        TestBed.inject(WebpSupportService),
+        'lossless',
+        'get'
+      ).mockImplementation(() => webpLossless);
     });
+
+    it.each([
+      { lossless: true, encoding: 'lossless-webp', file: 'preview-light.webp' },
+      { lossless: false, encoding: 'png', file: 'preview-light.png' }
+    ])(
+      'uploads a $encoding preview where lossless WebP support is $lossless',
+      async ({ lossless, encoding, file }) => {
+        webpLossless = lossless;
+        await openServerProject(projectDetailResponse({ body: ONE_GATE }));
+
+        const upload = await expectPreviewUpload('projects', uuid('test-uuid'));
+        expect(renders.map((r) => r.encoding)).toEqual([encoding]);
+        expect(
+          ((upload.request.body as FormData).get('light') as File).name
+        ).toBe(file);
+        upload.flush(projectSummaryResponse());
+      }
+    );
 
     it('uploads a server component´s preview when it is saved', async () => {
       registry.createMaster(
