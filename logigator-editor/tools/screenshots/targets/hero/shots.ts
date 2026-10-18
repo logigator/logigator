@@ -76,7 +76,9 @@ function region(matrices: GridRect, content: GridRect): GridRect {
 async function marqueeFrames(ed: Editor, count: number): Promise<Buffer[]> {
   await ed.load(CIRCUIT);
   const [clock] = await ed.componentsOfType('clk');
-  const period = Number(clock.options['speed']) + 1;
+  // Low for `speed` ticks, then high for as many, or for one as a pulse.
+  const speed = Number(clock.options['speed']);
+  const period = clock.options['mode'] === 'pulse' ? speed + 1 : 2 * speed;
   const frameTicks = PULSES_PER_FRAME * period;
   const matrices = await boundsOf(ed, await ed.componentsOfType(MATRIX));
   const area = region(matrices, await ed.contentBounds());
