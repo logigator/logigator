@@ -155,6 +155,11 @@ describe('v1ToV2Migration', () => {
         type: BuiltInComponentType.RAM,
         pos: [5, 0],
         options: { wordSize: 8, addressSize: 2 }
+      },
+      {
+        type: BuiltInComponentType.DEMUX,
+        pos: [10, 0],
+        options: { selectLines: 2 }
       }
     ];
     const migrated = migrate(
@@ -170,7 +175,8 @@ describe('v1ToV2Migration', () => {
 
     const pinned = [
       { mode: ['pulse'], speed: [3] },
-      { wordSize: [8], addressSize: [2], read: ['clocked'] }
+      { wordSize: [8], addressSize: [2], read: ['clocked'] },
+      { selectLines: [2], pinOrder: ['dataFirst'] }
     ];
     for (const blocks of [
       migrated.components,

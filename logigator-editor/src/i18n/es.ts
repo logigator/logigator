@@ -233,7 +233,8 @@ const es: TranslationSchema = {
         description:
           'Encamina la entrada de datos `I` hacia la salida direccionada por las líneas de selección.',
         options: {
-          selectLines: 'Líneas de selección'
+          selectLines: 'Líneas de selección',
+          pinOrder: 'Orden de los pines'
         }
       },
       TEXT: {

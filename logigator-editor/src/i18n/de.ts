@@ -234,7 +234,8 @@ const de: TranslationSchema = {
         description:
           'Leitet den Dateneingang `I` an den durch die Auswahlleitungen adressierten Ausgang.',
         options: {
-          selectLines: 'Auswahlleitungen'
+          selectLines: 'Auswahlleitungen',
+          pinOrder: 'Pin-Reihenfolge'
         }
       },
       TEXT: {

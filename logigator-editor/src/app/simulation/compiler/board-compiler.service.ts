@@ -223,15 +223,19 @@ export class BoardCompilerService {
 
   /**
    * The unit's input pins and their negations in the engine's pin order. A
-   * DEMUX's data input is its first port and the engine's last, after the
-   * select bits; every other type's ports are already in engine order.
+   * DEMUX from a document older than its `pinOrder` takes its data input first,
+   * where the engine reads it last, after the select bits; every other
+   * component's ports are already in engine order.
    */
   private _enginePinOrder(
     component: Component,
     inputs: number[],
     negInputs: number[] | undefined
   ): { inputs: number[]; negInputs?: number[] } {
-    if (component.config.type !== BuiltInComponentType.DEMUX) {
+    if (
+      component.config.type !== BuiltInComponentType.DEMUX ||
+      component.options['pinOrder'].value !== 'dataFirst'
+    ) {
       return { inputs, ...(negInputs ? { negInputs } : {}) };
     }
     const last = inputs.length - 1;

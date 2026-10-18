@@ -318,15 +318,22 @@ describe('BoardCompilerService', () => {
     expect(unit.read).toBe('clocked');
   });
 
-  it('hands the engine a DEMUX’s data input, and its negation, behind the select bits', () => {
-    // Ports: data, S0, S1, with data and S1 negated.
+  /**
+   * A DEMUX on its data pin, through a NOT it is emitted before, so its pins
+   * take links 0–2 in the order handed to the engine and the NOT's output
+   * names the data input's.
+   */
+  function demuxDataLink(
+    pinOrder: string,
+    negInputs: number[]
+  ): { inputs: number[]; negInputs?: number[]; data: number } {
     const demux = place(
       Component.deserialize(
-        { pos: [10, 0], options: { selectLines: 2 }, negInputs: [0, 2] },
+        { pos: [10, 0], options: { selectLines: 2, pinOrder }, negInputs },
         provider.getComponent(BuiltInComponentType.DEMUX)!
       )
     );
-    const data = demux.connectionPoints[0];
+    const data = demux.connectionPoints[pinOrder === 'dataFirst' ? 0 : 2];
     const not = makeNot();
     const out = not.connectionPoints[1];
     not.position.set(
@@ -336,14 +343,31 @@ describe('BoardCompilerService', () => {
     place(not);
     placeWire(not.connectionPoints[1], data);
 
-    const board = compiler.compile(project);
+    const [demuxUnit, notUnit] =
+      compiler.compile(project).descriptor.components;
+    return {
+      inputs: demuxUnit.inputs,
+      negInputs: demuxUnit.negInputs,
+      data: notUnit.outputs[0]
+    };
+  }
 
-    const [demuxUnit, notUnit] = board.descriptor.components;
-    // The demux is emitted first, so its pins take links 0–2 in engine
-    // order; the NOT's output shares the data input's.
-    expect(demuxUnit.inputs).toEqual([0, 1, 2]);
-    expect(notUnit.outputs).toEqual([2]);
-    expect(demuxUnit.negInputs).toEqual([1, 2]);
+  it('hands the engine a DEMUX’s select bits, then its data input', () => {
+    // Ports: S0, S1, data, with S1 and data negated.
+    expect(demuxDataLink('selectFirst', [1, 2])).toEqual({
+      inputs: [0, 1, 2],
+      negInputs: [1, 2],
+      data: 2
+    });
+  });
+
+  it('moves an older DEMUX’s data input, and its negation, behind the select bits', () => {
+    // Ports: data, S0, S1, with data and S1 negated.
+    expect(demuxDataLink('dataFirst', [0, 2])).toEqual({
+      inputs: [0, 1, 2],
+      negInputs: [1, 2],
+      data: 2
+    });
   });
 
   it('emits a clock unit with its period and waveform', () => {

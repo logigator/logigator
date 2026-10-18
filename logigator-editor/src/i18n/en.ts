@@ -234,7 +234,8 @@ const en = {
         description:
           'Routes the data input `I` to the output addressed by the select lines.',
         options: {
-          selectLines: 'Select lines'
+          selectLines: 'Select lines',
+          pinOrder: 'Pin order'
         }
       },
       TEXT: {

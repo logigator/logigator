@@ -3,11 +3,13 @@ import { ComponentConfig } from '../../component-config.model';
 import { configFromMeta } from '../../config-from-meta';
 import { ComponentOption } from '../../component-option';
 import { NumberComponentOption } from '../../component-options/number/number.component-option';
+import { SelectButtonComponentOption } from '../../component-options/select-button/select-button.component-option';
 import { DemuxComponent } from './demux.component';
 
 export interface DemuxOptions {
   [key: string]: ComponentOption;
   selectLines: NumberComponentOption;
+  pinOrder: SelectButtonComponentOption<string>;
 }
 
 export const demuxComponentConfig: ComponentConfig<DemuxOptions> =

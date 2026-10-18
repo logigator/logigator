@@ -233,7 +233,8 @@ const fr: TranslationSchema = {
         description:
           "Achemine l'entrée de données `I` vers la sortie désignée par les lignes de sélection.",
         options: {
-          selectLines: 'Lignes de sélection'
+          selectLines: 'Lignes de sélection',
+          pinOrder: 'Ordre des broches'
         }
       },
       TEXT: {
