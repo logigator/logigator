@@ -23,14 +23,14 @@ const LAP_FRAMES = 128;
 /** Where the loop starts within a lap, which is what the still shows. */
 const START_FRAME = 46;
 /**
- * Ticks past a frame boundary each frame is sampled at: the matrices' clock
- * is high for the next frame's first half-row, so the lines into them are lit,
- * while the display still holds the finished frame — that row is blank, and
- * the first one with text latches over a hundred ticks later. Found by
- * stepping across the boundary a tick at a time; the shots check the display
- * against the boundary's, so a retimed circuit fails rather than tearing.
+ * Ticks past a frame boundary each frame is sampled at: the clock is high on
+ * the next frame's first pulse, so its lines are lit, while the display still
+ * holds the finished frame, the matrices latching nothing before a row's third
+ * pulse. Found by stepping across the boundary a tick at a time; the shots
+ * check the display against the boundary's, so a retimed circuit fails rather
+ * than tearing.
  */
-const SAMPLE_PHASE = 20;
+const SAMPLE_PHASE = 10;
 /**
  * Frames between two the loop stores whole. A browser decodes a frame it
  * skipped to from the last whole one — a page coming back from the
