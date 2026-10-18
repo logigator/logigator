@@ -194,8 +194,8 @@ describe('encoded previews', () => {
    * produce a complete, plausible-looking set.
    */
   it('keep the render of each theme in its own slot', async () => {
-    const light = await pixel(files.get('light-256.webp') as Buffer, 128, 128);
-    const dark = await pixel(files.get('dark-256.webp') as Buffer, 128, 128);
+    const light = await pixel(files.get('light-512.webp') as Buffer, 256, 256);
+    const dark = await pixel(files.get('dark-512.webp') as Buffer, 256, 256);
 
     expect(light.r).toBeGreaterThan(200);
     expect(dark.r).toBeLessThan(60);
@@ -207,12 +207,59 @@ describe('encoded previews', () => {
    * renders on.
    */
   it('pad to square instead of cropping, on transparency', async () => {
-    const content = files.get('light-256.png') as Buffer;
+    const content = files.get('light-512.png') as Buffer;
 
-    expect(await pixel(content, 128, 8)).toMatchObject({ alpha: 0 });
-    expect(await pixel(content, 128, 128)).toMatchObject({ alpha: 255 });
+    expect(await pixel(content, 256, 16)).toMatchObject({ alpha: 0 });
+    expect(await pixel(content, 256, 256)).toMatchObject({ alpha: 255 });
+  });
+
+  /**
+   * Near-lossless, not lossy: anti-aliased hairlines are what a lossy encoder
+   * smears first, so every WebP rung stays within two levels of the exact PNG
+   * of the same size.
+   */
+  it('keep WebP within two levels of the exact render', async () => {
+    const hairlines = await sharp(
+      Buffer.from(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024">' +
+          Array.from(
+            { length: 40 },
+            (_, i) =>
+              `<line x1="0" y1="${i * 25.3}" x2="1024" y2="${i * 25.3 + 300}" stroke="#27ae60" stroke-width="1.3"/>`
+          ).join('') +
+          '</svg>'
+      )
+    )
+      .png()
+      .toBuffer();
+    const encoded = byName(
+      await images.encodePreviews({ light: hairlines, dark: hairlines })
+    );
+
+    for (const spec of PREVIEW_VARIANTS.filter((s) => s.format === 'webp')) {
+      const exact = encoded.get(spec.file.replace('.webp', '.png')) as Buffer;
+      expect({
+        file: spec.file,
+        difference: await largestDifference(
+          encoded.get(spec.file) as Buffer,
+          exact
+        )
+      }).toEqual({ file: spec.file, difference: expect.toBeOneOf([0, 1, 2]) });
+    }
   });
 });
+
+/** The largest difference in any channel, alpha included, between two images. */
+async function largestDifference(a: Buffer, b: Buffer): Promise<number> {
+  const [left, right] = await Promise.all(
+    [a, b].map((image) => sharp(image).ensureAlpha().raw().toBuffer())
+  );
+  let largest = 0;
+  for (let i = 0; i < left.length; i++) {
+    largest = Math.max(largest, Math.abs(left[i] - right[i]));
+  }
+  return largest;
+}
 
 describe('an upload that is not a usable image', () => {
   beforeAll(() => {

@@ -23,7 +23,7 @@ import { TranslationService } from '../translation/translation.service';
  * The theme is picked here rather than by the markup: both themes are separate
  * renders and no `<picture>` can negotiate a colour scheme, so hiding one with
  * CSS would download both. Square, because the render is: `PREVIEW_VARIANTS` is
- * 256 and 1024, and a wider frame only bands or crops it.
+ * 512 and 1024, and a wider frame only bands or crops it.
  *
  * The frame carries the editor's dot ground under whatever it draws: a render
  * is line art on transparency, so the ground is what makes it the board it was

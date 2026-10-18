@@ -64,9 +64,12 @@ export const AVATAR_VARIANTS: readonly ImageVariantSpec[] = matrix(
 );
 
 /**
- * Previews: 256 for listing grids, 1024 for a detail view and for the grid at
- * twice the device pixel ratio. 1024 is what the editor renders, so that rung
- * is a transcode rather than a resize.
+ * Previews: 512 for a listing on a standard-density screen, 1024 for a detail
+ * view, the zoom, and a listing at twice the device pixel ratio or more. 1024
+ * is what the editor renders, so that rung is a transcode rather than a
+ * resize. No listing draws a preview much below 300px, so a 256 rung was never
+ * picked; and nothing between the two pays, since a downscale blends the
+ * render's one-pixel lines — at 640 it is as many bytes as 1024, at 768 more.
  *
  * PNG fallback, not JPEG: a circuit render is line art on a transparent ground,
  * which JPEG cannot carry and whose one-pixel wires it smears. Anti-aliased
@@ -74,7 +77,7 @@ export const AVATAR_VARIANTS: readonly ImageVariantSpec[] = matrix(
  * a lossless one.
  */
 export const PREVIEW_VARIANTS: readonly ImageVariantSpec[] =
-  IMAGE_SLOTS.flatMap((slot) => matrix([256, 1024], ['webp', 'png'], slot));
+  IMAGE_SLOTS.flatMap((slot) => matrix([512, 1024], ['webp', 'png'], slot));
 
 /**
  * The file one rung of a matrix was written as, for the one consumer that reads
