@@ -12,32 +12,32 @@ Every component takes one tick to pass a change on to its output. The tables lis
 
 ### Basic
 
-| Component | What it does                                                                                                                 | Options                    |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| NOT Gate  | Inverts its input.                                                                                                           |                            |
-| AND Gate  | Outputs 1 when every input is 1.                                                                                             | Inputs, 2 to 64            |
-| OR Gate   | Outputs 1 when at least one input is 1.                                                                                      | Inputs, 2 to 64            |
-| XOR Gate  | Outputs 1 when an odd number of inputs are 1.                                                                                | Inputs, 2 to 64            |
-| Delay     | Passes its input through unchanged, one tick later.                                                                          |                            |
-| Clock     | Sends a one-tick pulse, then stays at 0 for Delay ticks, and repeats. While its STP input is 1, it stays at 0.               | Delay, from 1              |
-| Tunnel    | Connects to every other tunnel with the same label, without a wire. See [Wires and connections](docs:wires-and-connections). | Label, up to 10 characters |
+| Component | What it does                                                                                                                                                                                              | Options                    |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| NOT Gate  | Inverts its input.                                                                                                                                                                                        |                            |
+| AND Gate  | Outputs 1 when every input is 1.                                                                                                                                                                          | Inputs, 2 to 64            |
+| OR Gate   | Outputs 1 when at least one input is 1.                                                                                                                                                                   | Inputs, 2 to 64            |
+| XOR Gate  | Outputs 1 when an odd number of inputs are 1.                                                                                                                                                             | Inputs, 2 to 64            |
+| Delay     | Passes its input through unchanged, one tick later.                                                                                                                                                       |                            |
+| Clock     | Stays at 0 for Delay ticks, then at 1 for as many ticks as a square wave or for one tick as a pulse, and repeats. While its STP input is 1, it stays at 0, and it starts a new cycle once STP is 0 again. | Waveform, Delay from 1     |
+| Tunnel    | Connects to every other tunnel with the same label, without a wire. See [Wires and connections](docs:wires-and-connections).                                                                              | Label, up to 10 characters |
 
 ### Advanced
 
-| Component               | What it does                                                                                                              | Options                                                |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| Half Adder              | Adds A and B. S is the sum bit, C the carry.                                                                              |                                                        |
-| Full Adder              | Adds A, B and the carry-in Cin. S is the sum bit, C the carry.                                                            |                                                        |
-| ROM                     | Outputs the stored word at the address on its inputs. It has no clock.                                                    | Word Size 1 to 64, Address Size 1 to 11, Edit contents |
-| D Flip-Flop             | Stores D on the rising edge of CLK. Q is the stored bit, !Q its inverse.                                                  |                                                        |
-| JK Flip-Flop            | On the rising edge of CLK, J sets the bit, K resets it, and both together toggle it.                                      |                                                        |
-| SR Flip-Flop            | On the rising edge of CLK, S sets the bit and R resets it.                                                                |                                                        |
-| Random Number Generator | Puts a new random value on its outputs on every rising edge of CLK.                                                       | Outputs, 1 to 64                                       |
-| RAM                     | On the rising edge of CLK, reads the word at the address onto the outputs, or stores the data inputs there while WE is 1. | Word Size 1 to 64, Address Size 1 to 16                |
-| Decoder                 | Turns on the one output whose number is the binary value on the inputs.                                                   | Inputs, 1 to 6                                         |
-| Encoder                 | Outputs the number of the highest input that is 1.                                                                        | Outputs, 1 to 6                                        |
-| Multiplexer             | Passes the data input chosen by the select lines to its output. There are 2ⁿ data inputs for n select lines.              | Select lines, 1 to 6                                   |
-| Demultiplexer           | Passes input I to the output chosen by the select lines.                                                                  | Select lines, 1 to 6                                   |
+| Component               | What it does                                                                                                                                                                                                  | Options                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Half Adder              | Adds A and B. S is the sum bit, C the carry.                                                                                                                                                                  |                                                        |
+| Full Adder              | Adds A, B and the carry-in Cin. S is the sum bit, C the carry.                                                                                                                                                |                                                        |
+| ROM                     | Outputs the stored word at the address on its inputs. It has no clock.                                                                                                                                        | Word Size 1 to 64, Address Size 1 to 11, Edit contents |
+| D Flip-Flop             | Stores D on the rising edge of CLK. Q is the stored bit, !Q its inverse.                                                                                                                                      |                                                        |
+| JK Flip-Flop            | On the rising edge of CLK, J sets the bit, K resets it, and both together toggle it.                                                                                                                          |                                                        |
+| SR Flip-Flop            | On the rising edge of CLK, S sets the bit and R resets it.                                                                                                                                                    |                                                        |
+| Random Number Generator | Puts a new random value on its outputs on every rising edge of CLK.                                                                                                                                           | Outputs, 1 to 64                                       |
+| RAM                     | Outputs the word stored at the address on its inputs. On the rising edge of CLK, it stores the data inputs there while WE is 1. With Read set to On clock, the outputs change only on the rising edge of CLK. | Word Size 1 to 64, Address Size 1 to 16, Read          |
+| Decoder                 | Turns on the one output whose number is the binary value on the inputs.                                                                                                                                       | Inputs, 1 to 6                                         |
+| Encoder                 | Outputs the number of the highest input that is 1.                                                                                                                                                            | Outputs, 1 to 6                                        |
+| Multiplexer             | Passes the data input chosen by the select lines to its output. There are 2ⁿ data inputs for n select lines.                                                                                                  | Select lines, 1 to 6                                   |
+| Demultiplexer           | Passes input I to the output chosen by the select lines, which come first, as on the Multiplexer. A demultiplexer from an older circuit keeps I first; the labels on the component show the order.            | Select lines, 1 to 6                                   |
 
 ### Inputs / Outputs
 

@@ -37,7 +37,7 @@ El botón de velocidad muestra el ajuste actual. Un clic abre un panel con tres 
 
 ![El panel de velocidad con una velocidad fija de 10 Hz.](./images/simulation-speed.webp)
 
-Bajo los modos, «Relojes a esta velocidad» lista la frecuencia que da cada retardo de reloj del circuito. Un reloj está activo un tick e inactivo durante Retardo ticks, así que un ciclo dura Retardo + 1 ticks: a 10 Hz, un reloj con retardo 1 funciona a 5 Hz y uno con retardo 4 a 2 Hz. Con velocidad fija, la lista aparece enseguida. En los otros dos modos hay que medir antes el ritmo, así que la lista aparece alrededor de un segundo después de que el circuito arranque.
+Bajo los modos, «Relojes a esta velocidad» lista la frecuencia de cada tipo de reloj del circuito. Una onda cuadrada está inactiva durante Retardo ticks y luego activa otros tantos, así que un ciclo dura 2 × Retardo ticks. Un pulso está activo un tick tras Retardo ticks inactivo, así que un ciclo dura Retardo + 1 ticks. A 10 Hz, una onda cuadrada con retardo 1 funciona a 5 Hz y una con retardo 5 a 1 Hz, y un pulso con retardo 4 a 2 Hz. Con velocidad fija, la lista aparece enseguida. En los otros dos modos hay que medir antes el ritmo, así que la lista aparece alrededor de un segundo después de que el circuito arranque.
 
 ## Usar las entradas
 

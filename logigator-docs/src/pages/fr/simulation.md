@@ -37,7 +37,7 @@ Le bouton de vitesse affiche le réglage actuel. Un clic ouvre un panneau avec t
 
 ![Le panneau de vitesse avec une vitesse fixe de 10 Hz.](./images/simulation-speed.webp)
 
-Sous les modes, « Horloges à cette vitesse » liste la fréquence que donne chaque retard d'horloge du circuit. Une horloge est active pendant un tick puis inactive pendant Retard ticks, donc un cycle dure Retard + 1 ticks : à 10 Hz, une horloge de retard 1 tourne à 5 Hz et une de retard 4 à 2 Hz. En vitesse fixe, la liste est là tout de suite. Dans les deux autres modes, le rythme doit d'abord être mesuré, et la liste apparaît environ une seconde après le démarrage du circuit.
+Sous les modes, « Horloges à cette vitesse » liste la fréquence de chaque sorte d'horloge du circuit. Un signal carré est inactif pendant Retard ticks puis actif aussi longtemps, donc un cycle dure 2 × Retard ticks. Une impulsion est active pendant un tick après Retard ticks d'inactivité, donc un cycle dure Retard + 1 ticks. À 10 Hz, un signal carré de retard 1 tourne à 5 Hz et un de retard 5 à 1 Hz, et une impulsion de retard 4 tourne à 2 Hz. En vitesse fixe, la liste est là tout de suite. Dans les deux autres modes, le rythme doit d'abord être mesuré, et la liste apparaît environ une seconde après le démarrage du circuit.
 
 ## Utiliser les entrées
 

@@ -37,7 +37,7 @@ The speed button shows the current setting. Clicking it opens a panel with three
 
 ![The speed panel with Fixed speed set to 10 Hz.](./images/simulation-speed.webp)
 
-Under the modes, Clocks at this speed lists the frequency each clock delay in the circuit produces. A clock is on for one tick and off for Delay ticks, so one cycle takes Delay + 1 ticks: at 10 Hz, a clock with delay 1 runs at 5 Hz and one with delay 4 at 2 Hz. With Fixed speed the list is there right away. In the other two modes the rate has to be measured first, so the list appears about a second after the circuit starts running.
+Under the modes, Clocks at this speed lists the frequency of each kind of clock in the circuit. A square wave is off for Delay ticks and then on for as many, so one cycle takes 2 × Delay ticks. A pulse is on for one tick after Delay ticks off, so one cycle takes Delay + 1 ticks. At 10 Hz, a square wave with delay 1 runs at 5 Hz and one with delay 5 at 1 Hz, and a pulse with delay 4 runs at 2 Hz. With Fixed speed the list is there right away. In the other two modes the rate has to be measured first, so the list appears about a second after the circuit starts running.
 
 ## Operating inputs
 

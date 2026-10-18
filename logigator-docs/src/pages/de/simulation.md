@@ -37,7 +37,7 @@ Die Geschwindigkeits-Schaltfläche zeigt die aktuelle Einstellung. Ein Klick dar
 
 ![Das Geschwindigkeitsfeld mit fester Geschwindigkeit von 10 Hz.](./images/simulation-speed.webp)
 
-Unter den Modi listet „Taktgeber bei dieser Geschwindigkeit“ die Frequenz, die jede Verzögerung eines Taktgebers in der Schaltung ergibt. Ein Taktgeber ist einen Tick an und Verzögerung Ticks aus, ein Zyklus dauert also Verzögerung + 1 Ticks: Bei 10 Hz läuft ein Taktgeber mit Verzögerung 1 mit 5 Hz, einer mit Verzögerung 4 mit 2 Hz. Bei fester Geschwindigkeit steht die Liste sofort da. In den beiden anderen Modi muss die Rate erst gemessen werden, daher erscheint die Liste etwa eine Sekunde, nachdem die Schaltung losgelaufen ist.
+Unter den Modi listet „Taktgeber bei dieser Geschwindigkeit“ die Frequenz jeder Art von Taktgeber in der Schaltung. Ein Rechteck ist Verzögerung Ticks aus und dann ebenso lange an, ein Zyklus dauert also 2 × Verzögerung Ticks. Ein Puls ist nach Verzögerung Ticks aus einen Tick an, ein Zyklus dauert also Verzögerung + 1 Ticks. Bei 10 Hz läuft ein Rechteck mit Verzögerung 1 mit 5 Hz und eines mit Verzögerung 5 mit 1 Hz, ein Puls mit Verzögerung 4 mit 2 Hz. Bei fester Geschwindigkeit steht die Liste sofort da. In den beiden anderen Modi muss die Rate erst gemessen werden, daher erscheint die Liste etwa eine Sekunde, nachdem die Schaltung losgelaufen ist.
 
 ## Eingaben bedienen
 
