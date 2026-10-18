@@ -13,23 +13,24 @@ const MATRIX = 'LED Matrix';
 
 /**
  * Clock pulses per displayed frame. A fact of the circuit's design that its
- * file does not state: each of the 16 display rows takes 8 pulses — read,
- * shift and write back both half-rows.
+ * file does not state: each of the 16 display rows takes 4 pulses — latch the
+ * bits that cross into the left half-row, shift and write back both half-rows,
+ * and one idle pulse that keeps the counter a plain binary one.
  */
-const PULSES_PER_FRAME = 16 * 8;
+const PULSES_PER_FRAME = 16 * 4;
 /** Frames in a lap: the text is a 128-column strip scrolled a column a frame. */
 const LAP_FRAMES = 128;
 /** Where the loop starts within a lap, which is what the still shows. */
 const START_FRAME = 46;
 /**
  * Ticks past a frame boundary each frame is sampled at: the matrices' clock
- * fires for the next frame's first half-row, so the lines into them are lit,
- * while the display still holds the finished frame — it latches a few ticks
- * later. Found by stepping across the boundary a tick at a time; the shots
- * check the display against the boundary's, so a retimed circuit fails rather
- * than tearing.
+ * is high for the next frame's first half-row, so the lines into them are lit,
+ * while the display still holds the finished frame — that row is blank, and
+ * the first one with text latches over a hundred ticks later. Found by
+ * stepping across the boundary a tick at a time; the shots check the display
+ * against the boundary's, so a retimed circuit fails rather than tearing.
  */
-const SAMPLE_PHASE = 33;
+const SAMPLE_PHASE = 20;
 /**
  * Frames between two the loop stores whole. A browser decodes a frame it
  * skipped to from the last whole one — a page coming back from the
