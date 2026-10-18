@@ -23,14 +23,19 @@ const LAP_FRAMES = 128;
 /** Where the loop starts within a lap, which is what the still shows. */
 const START_FRAME = 46;
 /**
- * Ticks past a frame boundary each frame is sampled at: the clock is high on
- * the next frame's first pulse, so its lines are lit, while the display still
- * holds the finished frame, the matrices latching nothing before a row's third
- * pulse. Found by stepping across the boundary a tick at a time; the shots
- * check the display against the boundary's, so a retimed circuit fails rather
- * than tearing.
+ * Ticks past a frame boundary each frame is sampled at. A frame's rows are
+ * drawn from the middle, row 8 first, so the frame is whole once that row has
+ * latched its second half, 26 ticks in, until the next row latches at 74:
+ * sampled in between, the data lines under the matrices carry a row of text.
+ * At 40 the clock is high as well, so its lines are lit. Found by stepping
+ * through a frame a tick at a time.
  */
-const SAMPLE_PHASE = 10;
+const SAMPLE_PHASE = 40;
+/**
+ * Ticks before the sample the display must already show the same picture.
+ * The shots check it, so a retimed circuit fails rather than tearing.
+ */
+const HOLD_TICKS = 12;
 /**
  * Frames between two the loop stores whole. A browser decodes a frame it
  * skipped to from the last whole one — a page coming back from the
@@ -87,15 +92,18 @@ async function marqueeFrames(ed: Editor, count: number): Promise<Buffer[]> {
     ed.renderImage({ multiplier, region: area, margin: 0 });
   await ed.enterSimulation();
 
-  await ed.stepSimulation(frameTicks * (LAP_FRAMES + START_FRAME));
+  await ed.stepSimulation(
+    frameTicks * (LAP_FRAMES + START_FRAME) + SAMPLE_PHASE - HOLD_TICKS
+  );
   // The rows above the pins, which light at the sampling tick by design.
   const display = { ...matrices, height: matrices.height - 2 };
   const finished = await render(display, 0.5);
-  await ed.stepSimulation(SAMPLE_PHASE);
+  await ed.stepSimulation(HOLD_TICKS);
   if (!(await render(display, 0.5)).equals(finished)) {
     throw new Error(
-      `the display is redrawing ${SAMPLE_PHASE} ticks past a frame boundary ` +
-        '— find SAMPLE_PHASE again for the edited circuit'
+      `the display is redrawing within ${HOLD_TICKS} ticks before the ` +
+        `sample, ${SAMPLE_PHASE} ticks past a frame boundary — find ` +
+        'SAMPLE_PHASE again for the edited circuit'
     );
   }
 
