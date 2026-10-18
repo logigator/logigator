@@ -1,4 +1,3 @@
-import sharp from 'sharp';
 import type { GridRect } from '../../../../src/app/automation/automation-api.model.ts';
 import type { Editor } from '../../lib/editor.ts';
 import type { Shot } from '../../lib/target.ts';
@@ -40,9 +39,11 @@ const HOLD_TICKS = 12;
  * Frames between two the loop stores whole. A browser decodes a frame it
  * skipped to from the last whole one — a page coming back from the
  * background skips to where the loop is by the clock — so this bounds that
- * work, at the price of one whole frame of bytes per interval.
+ * work, at the price of one whole frame of bytes per interval. Chromium
+ * spends about 5 ms a frame on it: 12 keeps the stall near 60 ms for 12%
+ * more bytes than 16, where 8 would take a third more.
  */
-const KEYFRAME_INTERVAL = 16;
+const KEYFRAME_INTERVAL = 12;
 /**
  * How long each frame is held — one column of scroll. A frame is one sample,
  * at the same point of the circuit's cycle every time, so only what changes
@@ -50,23 +51,36 @@ const KEYFRAME_INTERVAL = 16;
  */
 const FRAME_DELAY = 125;
 
-/** Output px per grid unit over the grid size — 20 px a cell. */
-const MULTIPLIER = 1.25;
+/**
+ * Output px per grid unit over the grid size — 16 px a cell. Whole, because
+ * the export keeps line weights at their 1 px of the 100% board and scales
+ * them with the rest: at a fraction every wire and grid dot would spill into
+ * a blended neighbouring pixel, which is softer and costs bytes.
+ */
+const MULTIPLIER = 1;
 
 /**
- * What the pictures cover: the matrices, everything right of them, and the
- * board to their left as far as puts the matrices' centre at three-quarters
- * of the width — the centre of the right half, which a narrow page doubles
- * about the top-right corner to show. A wide page shows the rest beside its
- * copy, which covers what lies further left, so that is not rendered. The
- * circuit's whole height, either way, with more room above it than below:
- * both pages pin the picture to their top edge, and the social card crops it
- * from there.
+ * Grid columns left off the frame's left edge. Beside the copy the home
+ * page's scrim is opaque over the frame's first 27.5 columns at every width,
+ * so a render starting a little inside that never shows its edge; one
+ * starting where the scrim has begun to lift does, as a faint vertical line.
+ */
+const HIDDEN_COLUMNS = 25;
+
+/**
+ * What the pictures cover. The frame is the matrices, everything right of
+ * them, and the board to their left as far as puts the matrices' centre at
+ * three-quarters of its width — the centre of its right half, which a narrow
+ * page zooms onto; a wide page shows the rest beside its copy. The render is
+ * the frame less {@link HIDDEN_COLUMNS}. The home page's stylesheet sizes it
+ * by its width in columns, so a change here is a change there. The circuit's
+ * whole height, either way, with more room above it than below: both pages
+ * pin the picture to their top edge, and the social card crops it from there.
  */
 function region(matrices: GridRect, content: GridRect): GridRect {
   const right = content.x + content.width + 3;
   const centre = matrices.x + matrices.width / 2;
-  const width = 4 * (right - centre);
+  const width = 4 * (right - centre) - HIDDEN_COLUMNS;
   return {
     x: right - width,
     y: content.y - 6,
@@ -131,45 +145,10 @@ async function boundsOf(
 }
 
 /**
- * The rows a sequence moves in: from the top down to the lowest pixel that
- * differs between any two consecutive frames. Everything below is the same in
- * every frame, so the still under the loop already shows it.
- */
-async function movingRows(frames: readonly Buffer[]): Promise<number> {
-  let previous: Buffer | null = null;
-  let width = 0;
-  let bottom = 0;
-  for (const frame of frames) {
-    const { data, info } = await sharp(frame)
-      .raw()
-      .toBuffer({ resolveWithObject: true });
-    width = info.width * info.channels;
-    if (previous) {
-      for (let row = info.height - 1; row >= bottom; row--) {
-        const start = row * width;
-        if (
-          !data
-            .subarray(start, start + width)
-            .equals(previous.subarray(start, start + width))
-        ) {
-          bottom = row + 1;
-          break;
-        }
-      }
-    }
-    previous = data;
-  }
-  return bottom;
-}
-
-/**
  * The board behind the home page's headline, through the editor's own image
- * export. The page lays the loop over the still: the still is the whole board
- * and the loop's first frame, the loop only the top of the board, where
- * anything moves — a third of the picture to decode per frame, which is what
- * a browser pays again for every frame it skips when a page comes back from
- * the background. Both start at the board's top edge, so they line up by
- * sharing a width.
+ * export. The page shows the loop, and the still only to a reader who asked
+ * for reduced motion; the social card is composed from the still. Both cover
+ * the same region, the still being the loop's first frame.
  */
 export const SHOTS: Shot[] = [
   {
@@ -192,23 +171,7 @@ export const SHOTS: Shot[] = [
             '— update PULSES_PER_FRAME or LAP_FRAMES for the edited circuit'
         );
       }
-      ed.report('cropping to the rows that move');
-      // The wrap from the last frame back to the first moves pixels too.
-      const height = await movingRows([...frames, frames[0]]);
-      const { width } = await sharp(frames[0]).metadata();
-      const strip = await Promise.all(
-        frames.map((frame) =>
-          sharp(frame)
-            .extract({ left: 0, top: 0, width: width!, height })
-            .png()
-            .toBuffer()
-        )
-      );
-      return {
-        frames: strip,
-        delay: FRAME_DELAY,
-        keyframes: KEYFRAME_INTERVAL
-      };
+      return { frames, delay: FRAME_DELAY, keyframes: KEYFRAME_INTERVAL };
     }
   }
 ];

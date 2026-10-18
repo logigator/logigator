@@ -1,8 +1,8 @@
 <ng-container *webTranslate="let t">
   <section class="relative flex flex-col overflow-hidden lg:block">
     <!-- Beside the copy once there is room for it; below it until then, as a
-         band of the render doubled about its top-right corner: the render
-         centres the matrices in its right half. The zoom is relative to the
+         band of the render's top-right corner, the matrices centred in it.
+         The zoom is relative to the
          band, so it eases as the band widens, keeping the matrices a sensible
          size and letting the board around them in. Beside the copy it keeps
          one size, about 10.4px a grid cell, and its place relative to the
@@ -12,7 +12,7 @@
       class="relative order-last aspect-2/1 overflow-hidden sm:aspect-5/2 lg:static lg:order-none lg:aspect-auto"
     >
       <div
-        class="hero-board absolute inset-0 bg-size-[200%_auto] bg-right-top bg-no-repeat sm:bg-size-[150%_auto]"
+        class="hero-board absolute inset-0 bg-right-top bg-no-repeat"
         aria-hidden="true"
       ></div>
       <!-- Down the band, a tint that blends its edges into the page; across

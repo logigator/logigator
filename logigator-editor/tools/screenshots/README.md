@@ -225,25 +225,27 @@ yarn capture hero ../../../logigator-web
 
 Two files per colour scheme, which the home page names in its stylesheet:
 `hero-board-<scheme>.webp`, the still, and `hero-board-animated-<scheme>.webp`,
-the loop. The page lays the loop over the still, and drops the loop under
-`prefers-reduced-motion`. The still is the whole board and the loop's first
-frame; the loop is only the top of the board, down to the lowest row any frame
-changes, which the shot finds by comparing the frames. That keeps each frame a
-third of the board to decode, which is what a browser pays for every frame it
-skips when a page comes back from the background, and lets the small still
-paint before the loop has arrived. Every sixteenth frame is stored whole — see
-[Framing and encoding](#framing-and-encoding) — so that skip decodes back no
-further than that: in Chromium, a fresh decoder reaches frame 120 in about
-40 ms rather than 560. The target writes no registry — its names are fixed.
+the loop. The page shows the loop, and the still instead under
+`prefers-reduced-motion`; the social card is cut from the dark still. Both
+cover the same region, the still being the loop's first frame. A page coming
+back from the background skips to where the loop is by the clock, and Chromium
+decodes every frame between the last whole one and that one, about 5 ms each
+whatever their size. So every twelfth frame is stored whole — see
+[Framing and encoding](#framing-and-encoding) — which bounds that stall at
+about 60 ms; every sixteenth was 90 ms, every eighth 40 ms at a third more
+bytes. The target writes no registry — its names are fixed.
 
 Neither is a screenshot. The frames come out of the editor's own image export
 (`editor.renderImage`, over the automation API's `renderImage`), with the
 simulation's state in them, whatever the window and the camera. They cover
 only what the page shows: the matrices, the board right of them, and the board
-left of them as far as centres the matrices in the render's right half — which
-is what a narrow page zooms onto, the rest lying under a wide page's copy. The
-region is computed from where the matrices are (`getBounds`), so a redrawn
-circuit moves it along.
+left of them as far as centres the matrices in the right half of a frame,
+which is what a narrow page zooms onto, less that frame's first
+`HIDDEN_COLUMNS`, which lie under the opaque part of a wide page's scrim at
+every width. The page sizes the board by its width in columns
+(`--hero-columns`), so a change to either is a change to both. The region is
+computed from where the matrices are (`getBounds`), so a redrawn circuit moves
+it along.
 
 The shot boots the simulation, runs one lap to fill the RAM, and then takes one
 frame per displayed frame for a lap — 128 frames at 125 ms — always at the same
@@ -305,8 +307,9 @@ yarn social-card   # from logigator-editor/tools/screenshots
 It passes the website's package root, which is the one argument
 `social-card.ts` takes. Everything a later adjustment
 touches is a named constant at the top of the file: `HEADLINE` (the line, broken
-by hand, with the accented words marked), `BOARD` (zoom and focus of the crop,
-read like `object-position`), `SCRIM`, `WORDMARK` and `DOMAIN`. A re-shot hero is
+by hand, with the accented words marked), `BOARD_SCALE` (the board's size,
+pinned top-right as the page pins it), `SCRIM`, `WORDMARK` and `DOMAIN`. A
+re-shot hero is
 a re-run away from a matching card.
 
 It is PNG, not WebP: link unfurlers rather than browsers read an `og:image`,

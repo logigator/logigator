@@ -59,12 +59,13 @@ const COLORS = {
 } as const;
 
 /**
- * How the board is cut out of the hero render. `zoom` is on top of covering
- * the card, and `focusX`/`focusY` place the crop the way `object-position`
- * does, `0` pinning the render's left or top edge and `1` its right or bottom.
- * The home page pins it top-right, where the matrices are.
+ * The hero render's scale on the card: from its 16px a grid cell to 10.4px,
+ * the size a wide home page draws it at. It is pinned to the card's top-right
+ * corner, as the page pins it, where the matrices are; the render ends short
+ * of the card's left edge, under the scrim's opaque part, and the ground
+ * shows there.
  */
-const BOARD = { zoom: 1.04, focusX: 1, focusY: 0 } as const;
+const BOARD_SCALE = 0.65;
 
 /**
  * The home page's wide scrim, as offsets across the card and the ground's
@@ -139,7 +140,7 @@ async function main(): Promise<void> {
     }
   })
     .composite([
-      { input: board, left: 0, top: 0 },
+      { input: board, gravity: 'northeast' },
       { input: Buffer.from(overlay()), left: 0, top: 0 },
       { input: wordmark, left: MARGIN_X, top: WORDMARK.y }
     ])
@@ -151,21 +152,21 @@ async function main(): Promise<void> {
   console.log(`wrote ${out} (${(png.length / 1024).toFixed(0)} kB)`);
 }
 
-/** The hero render, covering the card at `BOARD`'s zoom and focus. */
+/** The hero render at `BOARD_SCALE`, as much of its top-right as the card holds. */
 async function boardLayer(file: string): Promise<Buffer> {
   const source = sharp(file);
   const { width = 0, height = 0 } = await source.metadata();
-  const scale = Math.max(WIDTH / width, HEIGHT / height) * BOARD.zoom;
-  const scaledWidth = Math.round(width * scale);
-  const scaledHeight = Math.round(height * scale);
+  const scaledWidth = Math.round(width * BOARD_SCALE);
+  const scaledHeight = Math.round(height * BOARD_SCALE);
+  const cutWidth = Math.min(WIDTH, scaledWidth);
 
   return source
     .resize(scaledWidth, scaledHeight, { kernel: 'lanczos3' })
     .extract({
-      left: Math.round((scaledWidth - WIDTH) * BOARD.focusX),
-      top: Math.round((scaledHeight - HEIGHT) * BOARD.focusY),
-      width: WIDTH,
-      height: HEIGHT
+      left: scaledWidth - cutWidth,
+      top: 0,
+      width: cutWidth,
+      height: Math.min(HEIGHT, scaledHeight)
     })
     .png()
     .toBuffer();

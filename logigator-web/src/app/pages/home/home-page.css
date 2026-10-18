@@ -11,11 +11,11 @@
  * under reduced motion. The loop paints from its first frame, a small part of
  * the file, while the rest is still downloading.
  *
- * The loop is only the top of the board, the rows that move: 1193 of the
- * still's 1300. Beside the copy that is 622px of board, which the tallest
- * hero (the Spanish one, 583px) stays inside, and below it the band is
- * always shorter than the render. A hero that grows past it shows the
- * board's bottom edge.
+ * The render is only what the page shows, and its sizes here count grid
+ * columns: `--hero-columns` is the render's width, which has to match the
+ * capture tool's; the band below the copy shows 60 of them across, 80 from
+ * `sm`, and beside the copy a column is about 10.4px. Its left edge lies
+ * under the scrim's opaque part at every width.
  *
  * Beside the copy, the composition is the one a 1440px page shows, held
  * relative to the centred column above that: the board's right edge stays
@@ -52,6 +52,17 @@
   }
 }
 
+.hero-board {
+  --hero-columns: 95;
+  background-size: calc(var(--hero-columns) / 60 * 100%) auto;
+}
+
+@media (min-width: 640px) {
+  .hero-board {
+    background-size: calc(var(--hero-columns) / 80 * 100%) auto;
+  }
+}
+
 .hero-scrim {
   background: linear-gradient(
     to bottom,
@@ -66,7 +77,7 @@
   .hero-board {
     left: auto;
     right: var(--hero-gap);
-    width: 78.25rem;
+    width: calc(var(--hero-columns) * 0.6521rem);
     background-size: 100% auto;
   }
 
