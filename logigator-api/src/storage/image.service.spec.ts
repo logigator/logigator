@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Logger } from '@nestjs/common';
-import sharp from 'sharp';
+import sharp, { type Sharp } from 'sharp';
 import type { AssetFile } from './file-storage.service';
 import { ImageService } from './image.service';
 import { AVATAR_VARIANTS, PREVIEW_VARIANTS } from './image-variants';
@@ -219,19 +219,7 @@ describe('encoded previews', () => {
    * of the same size.
    */
   it('keep WebP within two levels of the exact render', async () => {
-    const hairlines = await sharp(
-      Buffer.from(
-        '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024">' +
-          Array.from(
-            { length: 40 },
-            (_, i) =>
-              `<line x1="0" y1="${i * 25.3}" x2="1024" y2="${i * 25.3 + 300}" stroke="#27ae60" stroke-width="1.3"/>`
-          ).join('') +
-          '</svg>'
-      )
-    )
-      .png()
-      .toBuffer();
+    const hairlines = await hairlineRender().png().toBuffer();
     const encoded = byName(
       await images.encodePreviews({ light: hairlines, dark: hairlines })
     );
@@ -247,7 +235,50 @@ describe('encoded previews', () => {
       }).toEqual({ file: spec.file, difference: expect.toBeOneOf([0, 1, 2]) });
     }
   });
+
+  /**
+   * The editor uploads lossless WebP where the browser writes it and PNG
+   * elsewhere, so which one arrived must not show in what is served.
+   */
+  it('come out the same from a lossless WebP render as from a PNG one', async () => {
+    const [fromPng, fromWebp] = await Promise.all(
+      [
+        hairlineRender().png().toBuffer(),
+        hairlineRender().webp({ lossless: true }).toBuffer()
+      ].map(async (render) => {
+        const source = await render;
+        return byName(
+          await images.encodePreviews({ light: source, dark: source })
+        );
+      })
+    );
+
+    for (const spec of PREVIEW_VARIANTS) {
+      expect({
+        file: spec.file,
+        difference: await largestDifference(
+          fromWebp.get(spec.file) as Buffer,
+          fromPng.get(spec.file) as Buffer
+        )
+      }).toEqual({ file: spec.file, difference: 0 });
+    }
+  });
 });
+
+/** Anti-aliased diagonal hairlines on transparency: a board, as previewed. */
+function hairlineRender(): Sharp {
+  return sharp(
+    Buffer.from(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024">' +
+        Array.from(
+          { length: 40 },
+          (_, i) =>
+            `<line x1="0" y1="${i * 25.3}" x2="1024" y2="${i * 25.3 + 300}" stroke="#27ae60" stroke-width="1.3"/>`
+        ).join('') +
+        '</svg>'
+    )
+  );
+}
 
 /** The largest difference in any channel, alpha included, between two images. */
 async function largestDifference(a: Buffer, b: Buffer): Promise<number> {
