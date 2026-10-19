@@ -2,7 +2,8 @@
 
 Turns the placed circuit into a runnable board, runs it on the external
 [`@logigator/sim`](https://www.npmjs.com/package/@logigator/sim) WebAssembly
-engine inside a Web Worker, and lights up the powered wires and ports. Owns the
+engine inside a Web Worker, and lights up the powered wires and ports, tinting
+the ones in conflict. Owns the
 `SIMULATION` work mode, in which the circuit is locked for editing.
 
 ```
@@ -10,13 +11,15 @@ Project ──compile()──► CompiledBoard ─descriptor─► worker → WA
                           │                                    │ snapshot (pulled per frame)
                           ├─ mapping (link id → wires + ports) ─┴─► SimulationWorkerService
                           ├─ userInputs (input → its unit)             │ applyDelta / applyFull
-                          └─ stateUnits (RAM → its unit)               │ + watched state ranges
+                          └─ stateUnits (RAM → its unit)               │ + applyConflicts
+                                                                       │ + watched state ranges
                                                                        ▼
                                                                 LinkStateApplier
 ```
 
 Compilation yields the **descriptor** the engine simulates and the **mapping**
-saying which canvas wires and ports each link drives. The engine never sees
+saying which canvas wires and ports each link drives, plus the junction dots on
+it. The engine never sees
 canvas objects and the applier never sees the engine; they meet only through
 dense **link ids**. Everything is rebuilt per session and discarded on exit —
 see [Session lifecycle](#session-lifecycle).
@@ -36,7 +39,11 @@ at a half-grid point, so `extractNets` is a union-find over termination points
 keyed `"x,y"`: each wire unions its two endpoints, each port joins whatever
 class its point lands in, and no component unions its own ports.
 `CircuitElements` is the minimal structural view, so one extraction serves both
-the live `Project` and instantiated snapshot bodies.
+the live `Project` and instantiated snapshot bodies. A live `Project` also hands
+over its junction dots (`connectionPoints.cps`): a dot sits where at least three
+terminations meet, so its point is already a node, and sorting it into its net
+is one lookup per dot. The mapping carries them as `LinkRenderTargets.junctions`
+— they never power, they only take a conflict's tint.
 
 ### Units and links
 
@@ -387,8 +394,17 @@ snapshot. The copy target is a pooled `ArrayBuffer` (`packSnapshot`, ids first s
 the `u32` view stays aligned), transferred to the main thread and handed back
 via `returnBuffer` after applying.
 
+Every snapshot, delta or full, also carries the engine's **invalid links** — a
+link whose drivers disagree, or that an SR flip-flop clocked with S and R both
+high drives — as the whole ascending `u32` id set (`invalidPtr`/`invalidLen`),
+packed between the changed ids and the values (`invalidByteLength`, usually
+`0`, so the usual cost is nothing). The editor calls such a link a
+**conflict**; the engine keeps its wired-OR value, so it changes nothing about
+the run.
+
 An **empty delta** means nothing changed and is skipped; falling through to
-`applyFull` would read an empty buffer and clear every link. Input progress and
+`applyFull` would read an empty buffer and clear every link. The conflict set is
+applied regardless, since it is whole in every snapshot. Input progress and
 the watched [state](#component-state) are read after the copy, since either
 call may allocate in linear memory and detach the views it was made from. The engine has no
 reset, so `stop` is destroy + rebuild from the descriptor kept at `init`.
@@ -404,8 +420,20 @@ links that changed, fanning each change out to `wire.setPowered()` and
 watch read-backs: switch pose sync and the per-frame dirty flag driving
 on-demand watch re-renders.
 
-Everything downstream of `setLink` renders powered state as **transform, tint or
-alpha only** (wire and stub cross-axis scale, LED tint, bubble alpha), which
+`applyConflicts(ids)` takes the whole conflict set and merges it against the set
+it last applied (both ascending), so only links entering or leaving conflict
+reach `wire.setConflict()`, `component.setPortConflict()` and the link's
+junction dots (`ConnectionPoint.setConflict()`), and an empty set
+after an empty set returns at once. It keeps a copy, the view pointing into a
+buffer that goes back to the worker's pool. Conflict is its own state beside
+power: an invalid link can be low (an SR flip-flop's Q̄), so a conflicting wire
+keeps the thickness its power says and only changes color. `hasShownConflict`
+says whether some conflicting link has a wire or stub to tint; `reset()` clears
+power and conflicts alike.
+
+Everything downstream of `setLink` and `applyConflicts` renders state as
+**transform, tint or alpha only** (wire and stub cross-axis scale, conflict tint,
+LED tint, bubble alpha), which
 PixiJS patches into existing batches. A context swap, a `visible` toggle or a
 child redraw here would churn the shared context's listener list (a linear scan
 per swap, quadratic across a blinking board) _and_ force a full instruction
@@ -416,7 +444,18 @@ The bridge only sees the `SnapshotApplier` interface. `SimulationService` hands
 it a **fan-out** wrapper: the board applier first, then every watch applier
 registered via `registerApplier()` — each a second `LinkStateApplier` over a
 sparse target array sized to the full link count, so only the watched circuit's
-links carry targets. Registrations do not survive the session.
+links carry targets. The index records no dots, so a watch finds its copy's own
+at its targets' wire ends and port tips — every dot sits on one. Registrations do not survive the session. The same holds
+for conflicts: one on a custom component's inner link shows in a watch over that
+circuit and nowhere on the board, where the link has no target.
+
+The fan-out is also where the **`highlightConflicts`** setting applies: while it
+is off, every applier is handed an empty set. Turning it off mid-session clears
+the tints at once (one repaint, plus a `frame$` for watch canvases); turning it
+on pulls a full snapshot, which carries the set even while paused. The first
+conflict a session shows on the board — `hasShownConflict` on the board applier,
+never a watch's — emits `conflictShown$` once, which `HintService` turns into
+the one-time `wire-conflict` hint.
 
 The bridge owns no frame scheduling: while running the `Project` ticker is
 already `'on'`, and a snapshot applied while idle (a step, or the settle pull

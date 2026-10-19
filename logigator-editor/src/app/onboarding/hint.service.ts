@@ -28,6 +28,7 @@ import { DocumentationService } from '../documentation/documentation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { ProjectService } from '../project/project.service';
+import { SimulationService } from '../simulation/simulation.service';
 import { LoggingService } from '../logging/logging.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { TranslationService } from '../translation/translation.service';
@@ -44,6 +45,13 @@ function shiftRect(rect: DOMRect, dy: number): DOMRect {
     ? rect
     : new DOMRect(rect.x, rect.y + dy, rect.width, rect.height);
 }
+
+/**
+ * How many hints may wait behind the showing one. Two cover the real overlap —
+ * entering a first simulation opens the controls hint, and a conflict already
+ * on the board fires another straight after.
+ */
+const MAX_QUEUED = 2;
 
 /** Everything one showing hint owns; `dismiss` disposes it as a unit. */
 interface HintSession {
@@ -71,8 +79,9 @@ interface HintSession {
  * Fires the just-in-time hints: the first time each trigger fires, a small
  * dismissible popover — unless tips are off, a tutorial is running, the hint
  * was already seen, or its platform/completion gate excludes it. At most one
- * shows at a time; a trigger firing while one is up is dropped. Instantiated
- * for its side effects.
+ * shows at a time; a trigger firing while one is up waits in a short queue and
+ * gets its turn once the showing hint closes — re-checked then, and dropped
+ * unseen if it no longer applies. Instantiated for its side effects.
  *
  * An open hint stays anchored reactively: a per-hint effect re-resolves its
  * target from {@link OnboardingTargetRegistry}, so the popover follows the
@@ -86,6 +95,7 @@ export class HintService {
   private readonly injector = inject(Injector);
   private readonly workMode = inject(WorkModeService);
   private readonly projectService = inject(ProjectService);
+  private readonly simulation = inject(SimulationService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly translation = inject(TranslationService);
   private readonly logging = inject(LoggingService);
@@ -101,12 +111,19 @@ export class HintService {
 
   /** The showing hint, or null (at most one at a time). */
   private session: HintSession | null = null;
+  /** Unseen hints waiting for the showing one to close, oldest first. */
+  private queue: Hint[] = [];
   private readonly onKeydown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') this.dismiss();
   };
 
   constructor() {
     this.mode$.subscribe((mode) => this.onMode(mode));
+
+    // Tips turned off from anywhere: nothing waiting may outlive the switch.
+    effect(() => {
+      if (!this.onboarding.tipsEnabled()) this.queue = [];
+    });
 
     // First compact board load with nothing built yet.
     effect(() => {
@@ -148,9 +165,18 @@ export class HintService {
     this.activeProject$
       .pipe(switchMap((project) => project?.pasteRequest$ ?? EMPTY))
       .subscribe(() => this.fire(hintForTrigger({ kind: 'paste' })));
+
+    // First conflict the board shows — explains the color, which nothing
+    // else on screen does.
+    this.simulation.conflictShown$.subscribe(() =>
+      this.fire(hintForTrigger({ kind: 'wireConflict' }))
+    );
   }
 
   private onMode(mode: WorkMode): void {
+    // A waiting tool hint is for the mode just left, and a waiting conflict
+    // hint for the simulation that just ended; neither may outlast it.
+    this.queue = this.queue.filter((hint) => this.triggerHolds(hint));
     // A tool switch clears a showing tool hint. Hints triggered by anything
     // else survive it: picking a tool is often the very thing they ask for, and
     // a hint shows once, so clearing one would cut it off mid-read for good.
@@ -159,12 +185,48 @@ export class HintService {
   }
 
   private fire(hint: Hint | undefined): void {
-    if (!hint) return;
-    if (this.session) return; // one at a time; drop the newer
+    // A spent hint is the steady state, not a suppression: some triggers fire
+    // on every selection change, so this stays silent.
+    if (!hint || this.onboarding.hasSeenHint(hint.id)) return;
     if (!this.canShow(hint)) {
       this.logging.debug(`hint ${hint.id} suppressed`, 'HintService');
       return;
     }
+    if (this.session) this.enqueue(hint);
+    else this.serve(hint);
+  }
+
+  /**
+   * Parks `hint` behind the showing one. The showing hint is already marked
+   * seen, so it never lands here; neither does a hint already waiting.
+   */
+  private enqueue(hint: Hint): void {
+    if (this.queue.some((queued) => queued.id === hint.id)) return;
+    if (this.queue.length >= MAX_QUEUED || !this.triggerHolds(hint)) {
+      this.logging.debug(`hint ${hint.id} dropped`, 'HintService');
+      return;
+    }
+    this.logging.debug(`queue hint ${hint.id}`, 'HintService');
+    this.queue.push(hint);
+  }
+
+  /**
+   * Serves the oldest waiting hint that still applies. Each is re-checked as it
+   * comes up, since tips, a tutorial or its own trigger may have moved on while
+   * it waited; one that no longer applies goes unseen, free to fire again.
+   */
+  private showNext(): void {
+    while (!this.session && this.queue.length > 0) {
+      const hint = this.queue.shift()!;
+      if (this.canShow(hint) && this.triggerHolds(hint)) {
+        this.serve(hint);
+      } else {
+        this.logging.debug(`hint ${hint.id} dropped`, 'HintService');
+      }
+    }
+  }
+
+  private serve(hint: Hint): void {
     this.onboarding.markHintSeen(hint.id);
     this.logging.debug(`serve hint ${hint.id}`, 'HintService');
     this.open(hint);
@@ -183,6 +245,34 @@ export class HintService {
       return false;
     }
     return true;
+  }
+
+  /**
+   * Whether the situation `hint`'s trigger reported still stands, for a hint
+   * that has to wait its turn. A paste is momentary and its placement's end
+   * is not visible from here, so a paste hint never waits: it stays unseen and
+   * fires on the next paste instead.
+   */
+  private triggerHolds(hint: Hint): boolean {
+    const trigger = hint.trigger;
+    switch (trigger.kind) {
+      case 'workMode':
+        return this.workMode.mode() === trigger.mode;
+      case 'wireConflict':
+        return this.workMode.mode() === WorkMode.SIMULATION;
+      case 'compactEmpty':
+        return !!this.projectService.mainProject() && this.isEmpty();
+      case 'componentEditor': {
+        const project = this.projectService.activeProject();
+        return (
+          !!project && this.metadataStore.getMetadata(project)?.type === 'comp'
+        );
+      }
+      case 'select':
+        return this.selectionSize() >= 2;
+      case 'paste':
+        return false;
+    }
   }
 
   /** Opens a hint, kept anchored as its target comes and goes. */
@@ -279,17 +369,20 @@ export class HintService {
     // A hint counts as seen the moment it is served, so an overlay cdk disposed
     // on navigation is dismissed like one whose anchor went away. Keeping the
     // dead ref would skip the re-mount for the same target and leave the
-    // keydown listener behind.
+    // keydown listener behind. What was waiting goes too: the navigation, or
+    // the app going away, took the context it fired in.
     session.subscriptions.add(
       externalTeardown(session.overlayRef, () => {
         session.overlayRef = null;
+        this.queue = [];
         this.dismiss();
       })
     );
     session.subscriptions.add(
       cmp.instance.disableTips.subscribe(() => {
-        this.dismiss();
+        // Tips off first, so the dismissal serves nothing that was waiting.
         this.onboarding.disableAllTips();
+        this.dismiss();
       })
     );
     const docsPage = session.hint.docsPage;
@@ -297,6 +390,10 @@ export class HintService {
       cmp.setInput('hasDocsLink', true);
       session.subscriptions.add(
         cmp.instance.learnMore.subscribe(() => {
+          // Overlays stack in open order, so a waiting hint served now would
+          // land on top of the documentation just asked for. It goes unseen
+          // instead and fires again on its next trigger.
+          this.queue = [];
           this.dismiss();
           this.documentation.open(docsPage);
         })
@@ -436,6 +533,11 @@ export class HintService {
     session.side = null;
   }
 
+  /**
+   * Closes the showing hint and serves the next waiting one. Its overlay is
+   * disposed here and the next one's mounts from its effect, on a later change
+   * detection, so two bubbles are never up at once.
+   */
   private dismiss(): void {
     const session = this.session;
     if (!session) return;
@@ -443,6 +545,7 @@ export class HintService {
     this.session = null;
     session.effectRef?.destroy();
     this.teardownOverlay(session);
+    this.showNext();
   }
 
   private isEmpty(): boolean {

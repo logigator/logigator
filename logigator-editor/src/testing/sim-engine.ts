@@ -7,11 +7,11 @@ import {
 import { ProgressEngine } from '../app/simulation/worker/input-progress';
 import { StateEngine } from '../app/simulation/worker/state-reads';
 
-let loaded = false;
+let memory: WebAssembly.Memory | null = null;
 
 /** Instantiates the engine's WASM module from the bytes the setup file read. */
 function loadEngine(): void {
-  if (loaded) {
+  if (memory) {
     return;
   }
   const bytes = (globalThis as { __LOGIGATOR_SIM_WASM__?: Uint8Array })
@@ -19,8 +19,7 @@ function loadEngine(): void {
   if (!bytes) {
     throw new Error('The test setup did not load the simulation engine');
   }
-  initSync({ module: bytes });
-  loaded = true;
+  memory = initSync({ module: bytes }).memory;
 }
 
 /**
@@ -90,6 +89,22 @@ export class SimEngine implements ProgressEngine, StateEngine {
   /** Whether link `id` is powered after the last tick. */
   public link(id: number): boolean {
     return this.sim.link(id);
+  }
+
+  /**
+   * The raw `u32` bytes of every invalid link id after the last tick,
+   * ascending, copied out of a snapshot view as the worker copies them.
+   */
+  public invalidLinks(): Uint8Array {
+    const view = this.sim.snapshot(false, 0);
+    try {
+      return new Uint8Array(memory!.buffer).slice(
+        view.invalidPtr,
+        view.invalidPtr + view.invalidLen
+      );
+    } finally {
+      view.free();
+    }
   }
 
   /** Whether the link `unit`'s output `pin` drives is powered. */

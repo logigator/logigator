@@ -38,6 +38,15 @@ export class EditorSettingsService {
     () => this.persist()
   );
 
+  /** Tints a link's wires and port stubs while its drivers conflict. */
+  public readonly highlightConflicts = new EditorSetting(
+    'highlightConflicts',
+    'settings.options.highlightConflicts',
+    'settings.descriptions.highlightConflicts',
+    this.stored['highlightConflicts'] ?? true,
+    () => this.persist()
+  );
+
   public readonly dragSelectionInPanMode = new EditorSetting(
     'dragSelectionInPanMode',
     'settings.options.dragSelectionInPanMode',
@@ -49,6 +58,7 @@ export class EditorSettingsService {
   public readonly settings: readonly EditorSetting[] = [
     this.showGrid,
     this.autoStartSimulation,
+    this.highlightConflicts,
     this.dragSelectionInPanMode,
     this.fpsCounter
   ];

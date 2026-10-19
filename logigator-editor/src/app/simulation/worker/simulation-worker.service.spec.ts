@@ -45,6 +45,7 @@ describe('SimulationWorkerService', () => {
     applier = {
       applyDelta: vi.fn(),
       applyFull: vi.fn(),
+      applyConflicts: vi.fn(),
       reset: vi.fn()
     } as unknown as LinkStateApplier;
     hooks = { applier, repaint: vi.fn(), onError: vi.fn() };
@@ -183,7 +184,7 @@ describe('SimulationWorkerService', () => {
     // empty buffer would read every link as 0 and clear the board.
     const wire = { setPowered: vi.fn() };
     const realApplier = new LinkStateApplier([
-      { wires: [wire], ports: [] }
+      { wires: [wire], ports: [], junctions: [] }
     ] as unknown as ConstructorParameters<typeof LinkStateApplier>[0]);
     const applyFullSpy = vi.spyOn(realApplier, 'applyFull');
     await service.startSession(DESCRIPTOR, { ...hooks, applier: realApplier });
@@ -212,6 +213,41 @@ describe('SimulationWorkerService', () => {
 
     expect(applyFullSpy).not.toHaveBeenCalled();
     expect(wire.setPowered).toHaveBeenCalledExactlyOnceWith(true);
+  });
+
+  it('hands every snapshot its conflict set, an empty delta included', async () => {
+    const wire = { setPowered: vi.fn(), setConflict: vi.fn() };
+    const realApplier = new LinkStateApplier([
+      { wires: [], ports: [], junctions: [] },
+      { wires: [wire], ports: [], junctions: [] }
+    ] as unknown as ConstructorParameters<typeof LinkStateApplier>[0]);
+    await service.startSession(DESCRIPTOR, { ...hooks, applier: realApplier });
+
+    fakeWorker.emit({
+      kind: 'snapshot',
+      reqId: 1,
+      tick: 1,
+      isDelta: false,
+      ...packSnapshot(
+        undefined,
+        null,
+        new Uint8Array([0]),
+        new Uint8Array(new Uint32Array([1]).buffer)
+      )
+    });
+    expect(wire.setConflict).toHaveBeenCalledExactlyOnceWith(true);
+    // The link was never powered: a conflict is not power.
+    expect(wire.setPowered).not.toHaveBeenCalled();
+
+    // Nothing changed but the conflict is gone: the set still arrives.
+    fakeWorker.emit({
+      kind: 'snapshot',
+      reqId: 2,
+      tick: 2,
+      isDelta: true,
+      ...packSnapshot(undefined, new Uint8Array(0), new Uint8Array(0))
+    });
+    expect(wire.setConflict).toHaveBeenLastCalledWith(false);
   });
 
   it('tallies full and delta snapshots (empty deltas included)', async () => {

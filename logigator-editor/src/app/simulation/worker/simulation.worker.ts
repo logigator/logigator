@@ -230,7 +230,12 @@ function sendSnapshot(reqId: number, full: boolean): void {
     const values = view.isDelta
       ? mem.subarray(view.valuesPtr, view.valuesPtr + view.valuesLen)
       : mem.subarray(view.ptr, view.ptr + view.len);
-    const packed = packSnapshot(bufferPool.pop(), ids, values);
+    // The whole invalid set rides along with every snapshot, usually empty.
+    const invalid =
+      view.invalidLen > 0
+        ? mem.subarray(view.invalidPtr, view.invalidPtr + view.invalidLen)
+        : undefined;
+    const packed = packSnapshot(bufferPool.pop(), ids, values, invalid);
     // Read after the copy: `inputProgress` and the state reads may allocate
     // in linear memory, which would detach the views copied from. No tick
     // runs in between, so the state read is the snapshot's tick.

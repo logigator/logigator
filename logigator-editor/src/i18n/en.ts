@@ -96,7 +96,8 @@ const en = {
       fpsCounter: 'FPS Counter',
       showGrid: 'Show Grid',
       autoStartSimulation: 'Auto-start simulation',
-      dragSelectionInPanMode: 'Drag selection in Pan mode'
+      dragSelectionInPanMode: 'Drag selection in Pan mode',
+      highlightConflicts: 'Highlight conflicts'
     },
     descriptions: {
       fpsCounter: 'Shows frames per second in the corner of the board.',
@@ -104,7 +105,9 @@ const en = {
       autoStartSimulation:
         'Starts the circuit running as soon as you enter simulation. Off, it waits paused at tick 0.',
       dragSelectionInPanMode:
-        'A drag with the Pan tool that starts inside the selection moves the selection. Off, every drag pans.'
+        'A drag with the Pan tool that starts inside the selection moves the selection. Off, every drag pans.',
+      highlightConflicts:
+        'During simulation, draws a wire in orange when the outputs driving it disagree, or when an SR flip-flop was clocked with S and R both at 1.'
     },
     info: 'What "{{setting}}" does'
   },
@@ -1092,7 +1095,8 @@ const en = {
   onboarding: {
     settings: {
       showTips: 'Show onboarding tips',
-      showTipsDescription: 'Shows a tip the first time you use certain tools.'
+      showTipsDescription:
+        'Shows a tip the first time you meet something new in the editor.'
     },
     menu: {
       showTipsAgain: 'Show Tips Again'
@@ -1133,7 +1137,9 @@ const en = {
       portsPanelCompact:
         "This component's plugs live here: place <strong>Input</strong> and <strong>Output</strong> from this panel, then drag the rows to set the port order and type to name them.",
       panZoomCompact:
-        'Drag with two fingers to pan, pinch to zoom. One finger pans only in pan mode.'
+        'Drag with two fingers to pan, pinch to zoom. One finger pans only in pan mode.',
+      wireConflict:
+        "An <strong>orange wire</strong> has a conflict: two outputs drive it with different values, or an SR flip-flop was clocked with S and R both at 1. Connect only one output to each wire, and don't set S and R to 1 together. The simulation keeps running. <strong>Highlight conflicts</strong> in the settings turns this off."
     },
     tutorials: {
       gettingStarted: {

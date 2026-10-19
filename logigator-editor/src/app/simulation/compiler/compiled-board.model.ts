@@ -1,4 +1,5 @@
 import { Component } from '../../components/component';
+import { ConnectionPoint } from '../../connection-points/connection-point';
 import { Wire } from '../../wires/wire';
 import { CompileDiagnostic } from './compile-error';
 import { WatchIndex } from './watch-index';
@@ -63,10 +64,14 @@ export interface LinkPortRef {
   portIndex: number;
 }
 
-/** Render targets of one link: the wires and port stubs it powers. */
+/**
+ * Render targets of one link: the wires and port stubs it powers, and the
+ * junction dots on it, which only follow its conflict state.
+ */
 export interface LinkRenderTargets {
   wires: Wire[];
   ports: LinkPortRef[];
+  junctions: ConnectionPoint[];
 }
 
 /** The {@link LinkMapping} key of the top-level circuit. */

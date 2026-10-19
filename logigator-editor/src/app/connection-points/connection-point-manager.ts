@@ -128,6 +128,11 @@ export class ConnectionPointManager {
     return [snap.start, snap.end];
   }
 
+  /** Every dot on the board, in no particular order. */
+  public get cps(): Iterable<ConnectionPoint> {
+    return this._cps;
+  }
+
   public getCpAt(p: Point): ConnectionPoint | undefined {
     return this._cps.get(p);
   }

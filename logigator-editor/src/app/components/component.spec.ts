@@ -34,6 +34,8 @@ import {
   BORDER
 } from '../rendering/graphics/negation-bubble.graphics';
 import { environment } from '../../environments/environment';
+import { ThemingService } from '../theming/theming.service';
+import { ThemeType } from '../theming/theme-type.enum';
 
 describe('Component.deserialize (create() factory)', () => {
   beforeEach(() => {
@@ -680,6 +682,35 @@ describe('Component port power', () => {
     expect(comp.portStubs[1].scale.y).toBeCloseTo(stubScaleY(false), 8);
 
     comp.destroy({ children: true });
+  });
+
+  it('tints a conflicting stub by its own tint alone, across redraws and themes', () => {
+    const theming = TestBed.inject(ThemingService);
+    const originalTheme = theming.currentThemeType();
+    theming.setActiveThemeType(ThemeType.DARK);
+    const comp = makeAnd(2);
+    const sharedContext = provider.getGraphicsContext(WireGraphics);
+
+    // Unpowered and in conflict: the stub stays thin, only its tint changes.
+    comp.setPortConflict(2, true);
+    expect(comp.portStubs[2].tint).toBe(theming.currentTheme().wireConflict);
+    expect(comp.portStubs[2].scale.y).toBeCloseTo(stubScaleY(false), 8);
+    expect(comp.portStubs[2].context).toBe(sharedContext);
+    expect(comp.portStubs[0].tint).toBe(theming.currentTheme().wire);
+
+    comp.redraw();
+    expect(comp.portStubs[2].tint).toBe(theming.currentTheme().wireConflict);
+
+    theming.setActiveThemeType(ThemeType.LIGHT);
+    comp.refreshTheme();
+    expect(comp.portStubs[2].tint).toBe(theming.currentTheme().wireConflict);
+    expect(comp.portStubs[1].tint).toBe(theming.currentTheme().wire);
+
+    comp.setPortConflict(2, false);
+    expect(comp.portStubs[2].tint).toBe(theming.currentTheme().wire);
+
+    comp.destroy({ children: true });
+    theming.setActiveThemeType(originalTheme);
   });
 
   it('clearPortPower resets every stub, including across redraws', () => {

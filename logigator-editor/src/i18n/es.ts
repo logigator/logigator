@@ -95,7 +95,8 @@ const es: TranslationSchema = {
       fpsCounter: 'Contador de FPS',
       showGrid: 'Mostrar cuadrícula',
       autoStartSimulation: 'Iniciar la simulación automáticamente',
-      dragSelectionInPanMode: 'Arrastrar la selección en modo Desplazar'
+      dragSelectionInPanMode: 'Arrastrar la selección en modo Desplazar',
+      highlightConflicts: 'Resaltar conflictos'
     },
     descriptions: {
       fpsCounter:
@@ -105,7 +106,9 @@ const es: TranslationSchema = {
       autoStartSimulation:
         'Pone en marcha el circuito en cuanto entras en la simulación. Desactivado, espera en pausa en el tick 0.',
       dragSelectionInPanMode:
-        'Un arrastre con Desplazar que empieza dentro de la selección mueve la selección. Desactivado, todo arrastre desplaza la vista.'
+        'Un arrastre con Desplazar que empieza dentro de la selección mueve la selección. Desactivado, todo arrastre desplaza la vista.',
+      highlightConflicts:
+        'Durante la simulación, dibuja un cable en naranja cuando las salidas que lo controlan dan valores distintos, o cuando un biestable SR recibió un flanco de reloj con S y R a 1.'
     },
     info: 'Qué hace «{{setting}}»'
   },
@@ -1106,7 +1109,7 @@ const es: TranslationSchema = {
     settings: {
       showTips: 'Mostrar consejos de introducción',
       showTipsDescription:
-        'Muestra un consejo la primera vez que usas ciertas herramientas.'
+        'Muestra un consejo la primera vez que te encuentras con algo nuevo en el editor.'
     },
     menu: {
       showTipsAgain: 'Mostrar los consejos de nuevo'
@@ -1147,7 +1150,9 @@ const es: TranslationSchema = {
       portsPanelCompact:
         'Aquí viven los conectores de este componente: coloca <strong>Entrada</strong> y <strong>Salida</strong> desde este panel, luego arrastra las filas para fijar el orden de los puertos y escribe sus nombres.',
       panZoomCompact:
-        'Arrastra con dos dedos para desplazar, pellizca para hacer zoom. Con un solo dedo solo se desplaza en el modo de desplazamiento.'
+        'Arrastra con dos dedos para desplazar, pellizca para hacer zoom. Con un solo dedo solo se desplaza en el modo de desplazamiento.',
+      wireConflict:
+        'Un <strong>cable naranja</strong> tiene un conflicto: dos salidas le dan valores distintos, o un biestable SR recibió un flanco de reloj con S y R a 1. Conecta una sola salida a cada cable y no pongas S y R a 1 a la vez. La simulación sigue en marcha. El ajuste <strong>Resaltar conflictos</strong> lo desactiva.'
     },
     tutorials: {
       gettingStarted: {

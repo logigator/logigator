@@ -1,32 +1,37 @@
 import { describe, expect, it, vi, Mock } from 'vitest';
 import { Component } from '../../components/component';
+import { ConnectionPoint } from '../../connection-points/connection-point';
 import { Wire } from '../../wires/wire';
 import { LinkRenderTargets } from '../compiler/compiled-board.model';
 import { LinkStateApplier } from './link-state-applier';
 
 interface WireStub {
   setPowered: Mock;
+  setConflict: Mock;
 }
 
 interface ComponentStub {
   setPortPowered: Mock;
+  setPortConflict: Mock;
 }
 
 function stubWire(): WireStub {
-  return { setPowered: vi.fn() };
+  return { setPowered: vi.fn(), setConflict: vi.fn() };
 }
 
 function stubComponent(): ComponentStub {
-  return { setPortPowered: vi.fn() };
+  return { setPortPowered: vi.fn(), setPortConflict: vi.fn() };
 }
 
 function target(
   wires: WireStub[],
-  ports: { component: ComponentStub; portIndex: number }[] = []
+  ports: { component: ComponentStub; portIndex: number }[] = [],
+  junctions: { setConflict: Mock }[] = []
 ): LinkRenderTargets {
   return {
     wires: wires as unknown as Wire[],
-    ports: ports as unknown as { component: Component; portIndex: number }[]
+    ports: ports as unknown as { component: Component; portIndex: number }[],
+    junctions: junctions as unknown as ConnectionPoint[]
   };
 }
 
@@ -142,5 +147,86 @@ describe('LinkStateApplier', () => {
 
     expect(wires[1].setPowered).toHaveBeenLastCalledWith(false);
     expect(wires[0].setPowered).not.toHaveBeenCalled();
+  });
+
+  describe('conflicts', () => {
+    it('touches exactly the links entering or leaving conflict', () => {
+      const wires = Array.from({ length: 6 }, stubWire);
+      const component = stubComponent();
+      const junction = { setConflict: vi.fn() };
+      const applier = new LinkStateApplier(
+        wires.map((wire, link) =>
+          link === 4
+            ? target([wire], [{ component, portIndex: 2 }], [junction])
+            : target([wire])
+        )
+      );
+
+      applier.applyConflicts(new Uint32Array([1, 3]));
+      applier.applyConflicts(new Uint32Array([3, 4]));
+      applier.applyConflicts(new Uint32Array([3, 4]));
+
+      expect(wires[1].setConflict.mock.calls).toEqual([[true], [false]]);
+      expect(wires[3].setConflict).toHaveBeenCalledExactlyOnceWith(true);
+      expect(wires[4].setConflict).toHaveBeenCalledExactlyOnceWith(true);
+      expect(component.setPortConflict).toHaveBeenCalledExactlyOnceWith(
+        2,
+        true
+      );
+      expect(junction.setConflict).toHaveBeenCalledExactlyOnceWith(true);
+      for (const link of [0, 2, 5]) {
+        expect(wires[link].setConflict).not.toHaveBeenCalled();
+      }
+      // Conflict is its own state: power is never touched.
+      for (const wire of wires) {
+        expect(wire.setPowered).not.toHaveBeenCalled();
+      }
+    });
+
+    it('keeps its own copy of the set, so a recycled buffer cannot skew the diff', () => {
+      const wires = Array.from({ length: 6 }, stubWire);
+      const applier = new LinkStateApplier(wires.map((w) => target([w])));
+      const ids = new Uint32Array([2]);
+
+      applier.applyConflicts(ids);
+      // The bridge hands the snapshot buffer back to the worker's pool.
+      ids[0] = 5;
+      applier.applyConflicts(new Uint32Array(0));
+
+      expect(wires[2].setConflict.mock.calls).toEqual([[true], [false]]);
+      expect(wires[5].setConflict).not.toHaveBeenCalled();
+    });
+
+    it('flags and counts only links with something to tint', () => {
+      const wire = stubWire();
+      // Link 0 is an empty sparse slot, link 1 carries a wire.
+      const applier = new LinkStateApplier([target([]), target([wire])]);
+
+      applier.applyConflicts(new Uint32Array([0]));
+      expect(applier.consumeChanged()).toBe(false);
+      expect(applier.hasShownConflict).toBe(false);
+
+      applier.applyConflicts(new Uint32Array([0, 1]));
+      expect(applier.consumeChanged()).toBe(true);
+      expect(applier.hasShownConflict).toBe(true);
+
+      applier.applyConflicts(new Uint32Array([0]));
+      expect(applier.consumeChanged()).toBe(true);
+      expect(applier.hasShownConflict).toBe(false);
+    });
+
+    it('clears every conflict on reset, and starts the next set from none', () => {
+      const wires = [stubWire(), stubWire()];
+      const applier = new LinkStateApplier(wires.map((w) => target([w])));
+
+      applier.applyConflicts(new Uint32Array([1]));
+      applier.reset();
+      expect(wires[1].setConflict).toHaveBeenLastCalledWith(false);
+      expect(applier.hasShownConflict).toBe(false);
+
+      applier.applyConflicts(new Uint32Array([1]));
+      expect(wires[1].setConflict).toHaveBeenLastCalledWith(true);
+      expect(wires[0].setConflict).not.toHaveBeenCalled();
+    });
   });
 });

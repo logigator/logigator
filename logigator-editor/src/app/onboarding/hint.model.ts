@@ -10,7 +10,8 @@ export type HintTrigger =
   | { readonly kind: 'compactEmpty' }
   | { readonly kind: 'select' }
   | { readonly kind: 'paste' }
-  | { readonly kind: 'componentEditor' };
+  | { readonly kind: 'componentEditor' }
+  | { readonly kind: 'wireConflict' };
 
 /**
  * A just-in-time hint: a small dismissible popover, shown once the first time

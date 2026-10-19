@@ -172,7 +172,8 @@ slot)` is the absolute path automation drives.
   `Project` from `instantiateBody` over the level's circuit body, plus a
   `LinkStateApplier` whose targets are **sparse over the full link-id space**
   (only this circuit's links carry targets), resolved through the compiled
-  board's watch index (`board.watch.infoFor(path)`, see `simulation.md`). Index
+  board's watch index (`board.watch.infoFor(path)`, see `simulation.md`); the
+  copy's junction dots join the target of the wire end or port tip they sit on. Index
   tables are keyed by body-array position, so a shape mismatch means the
   definition changed under the session: construction **throws** rather than
   mis-lighting wires. Destroying one sets every high `level` slot of its

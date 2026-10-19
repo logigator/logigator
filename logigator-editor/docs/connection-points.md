@@ -45,8 +45,11 @@ nominal geometry would silently fail to match its own dot.
 `ConnectionPoint` extends `Graphics` and shares one `ConnectionPointGraphics`
 context — a white unit square, `themeIndependent`, cached by
 `GraphicsProviderService`. The dot's colour is therefore its tint
-(`refreshTint()`: `theme.wire`, or `theme.wireSelectColor` while `selected`),
-and a theme change retints in place. It sits at its half-grid `position`,
+(`refreshTint()`: `theme.wire`, `theme.wireSelectColor` while `selected`, or
+`theme.wireConflict` while the simulation reports its link in conflict through
+`setConflict`), and a theme change retints in place. A dot never thickens with
+its link's power; the compiler maps it to its link only for the conflict tint
+(see [simulation.md](./simulation.md), _Net extraction_). It sits at its half-grid `position`,
 pivoted at `(0.5, 0.5)` so the square is centred, and `applyScale` sizes it:
 `scaleForScale` is `DIAMETER` (6 px at 100 % zoom) clamped to a 3–8 px on-screen
 floor and ceiling, so the dot scales with the board only between those bounds.
@@ -74,6 +77,7 @@ keeps it free of a circular dependency and unit-testable on its own.
 | `recomputeAll(wires, components)`                | Clear and rebuild counts and dots in one linear pass                |
 | `refreshTheme()`                                 | Retint every dot; existence depends on the circuit, never the theme |
 | `getCpAt` / `hasCpAt` / `getCpsAtPoints`         | Lookup by exact position                                            |
+| `cps`                                            | Every dot, for the board compiler's per-link targets                |
 | `detachCp` / `reattachCp`                        | Remove from / insert into layer + map without destroying            |
 | `captureDragCps(comps, wires, dragLayer, only?)` | Detach dots at the dragged elements' terminations into `dragLayer`  |
 | `discardDragCps` / `restoreDragCps`              | Destroy them on commit / put them back on cancel                    |

@@ -95,7 +95,8 @@ const fr: TranslationSchema = {
       fpsCounter: 'Compteur FPS',
       showGrid: 'Afficher la grille',
       autoStartSimulation: 'Démarrage automatique de la simulation',
-      dragSelectionInPanMode: 'Faire glisser la sélection en mode Déplacement'
+      dragSelectionInPanMode: 'Faire glisser la sélection en mode Déplacement',
+      highlightConflicts: 'Mettre en évidence les conflits'
     },
     descriptions: {
       fpsCounter:
@@ -105,7 +106,9 @@ const fr: TranslationSchema = {
       autoStartSimulation:
         'Lance le circuit dès que vous entrez en simulation. Désactivé, elle attend en pause au tick 0.',
       dragSelectionInPanMode:
-        'Un glisser avec Déplacement qui commence dans la sélection déplace la sélection. Désactivé, tout glisser déplace la vue.'
+        'Un glisser avec Déplacement qui commence dans la sélection déplace la sélection. Désactivé, tout glisser déplace la vue.',
+      highlightConflicts:
+        "Pendant la simulation, dessine un fil en orange quand les sorties qui le pilotent donnent des valeurs différentes, ou quand une bascule SR a reçu un front d'horloge avec S et R à 1."
     },
     info: 'Ce que fait « {{setting}} »'
   },
@@ -1113,7 +1116,7 @@ const fr: TranslationSchema = {
     settings: {
       showTips: "Afficher les conseils d'intégration",
       showTipsDescription:
-        'Affiche un conseil la première fois que vous utilisez certains outils.'
+        "Affiche un conseil la première fois que vous rencontrez quelque chose de nouveau dans l'éditeur."
     },
     menu: {
       showTipsAgain: 'Afficher à nouveau les conseils'
@@ -1154,7 +1157,9 @@ const fr: TranslationSchema = {
       portsPanelCompact:
         "Les fiches de ce composant se trouvent ici : placez <strong>Entrée</strong> et <strong>Sortie</strong> depuis ce panneau, puis faites glisser les lignes pour définir l'ordre des ports et saisissez leurs noms.",
       panZoomCompact:
-        "Faites glisser avec deux doigts pour vous déplacer, pincez pour zoomer. Un seul doigt ne déplace la vue qu'en mode déplacement."
+        "Faites glisser avec deux doigts pour vous déplacer, pincez pour zoomer. Un seul doigt ne déplace la vue qu'en mode déplacement.",
+      wireConflict:
+        'Un <strong>fil orange</strong> signale un conflit : deux sorties y envoient des valeurs différentes, ou une bascule SR a reçu un front d’horloge avec S et R à 1. Ne reliez qu’une sortie par fil et ne mettez pas S et R à 1 en même temps. La simulation continue. Le paramètre <strong>Mettre en évidence les conflits</strong> désactive ce marquage.'
     },
     tutorials: {
       gettingStarted: {

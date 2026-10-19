@@ -29,6 +29,7 @@ export class Wire extends Graphics implements Connectable {
   private _powered = false;
   private _baseScaleY = 1;
   private _selected = false;
+  private _conflict = false;
 
   public static serialize(wire: Wire): SerializedWire {
     return {
@@ -151,6 +152,19 @@ export class Wire extends Graphics implements Connectable {
     this._applyThickness();
   }
 
+  /**
+   * Tints the wire with the theme's conflict color while its link's drivers
+   * disagree, whatever its power. The same per-frame hot path as
+   * {@link setPowered}: a tint write only, and only when the state flips.
+   */
+  public setConflict(conflict: boolean): void {
+    if (this._conflict === conflict) {
+      return;
+    }
+    this._conflict = conflict;
+    this.refreshTint();
+  }
+
   /** Whether the wire carries the selection color. */
   public get selected(): boolean {
     return this._selected;
@@ -162,13 +176,18 @@ export class Wire extends Graphics implements Connectable {
   }
 
   /**
-   * Re-derives the tint from theme and selection state. The shared context is a
-   * white base, so the tint *is* the wire's color: this is both the
-   * theme-change hook and the way back from a transient tint (collision red).
+   * Re-derives the tint from theme, conflict and selection state. The shared
+   * context is a white base, so the tint *is* the wire's color: this is both
+   * the theme-change hook and the way back from a transient tint (collision
+   * red). A conflict only exists inside a session, where nothing is selected.
    */
   public refreshTint(): void {
     const theme = this.themingService.currentTheme();
-    this.tint = this._selected ? theme.wireSelectColor : theme.wire;
+    this.tint = this._conflict
+      ? theme.wireConflict
+      : this._selected
+        ? theme.wireSelectColor
+        : theme.wire;
   }
 
   public applyScale(scale: number): void {

@@ -28,6 +28,8 @@ import { WireDirection } from '@logigator/core';
 import { ProjectService } from '../project/project.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
+import { ThemingService } from '../theming/theming.service';
+import { ThemeType } from '../theming/theme-type.enum';
 import { SimulationService } from './simulation.service';
 import { TOP_LEVEL_PATH } from './compiler/compiled-board.model';
 import { HELD_INPUT_BACKLOG } from './held-input';
@@ -1003,10 +1005,158 @@ describe('SimulationService', () => {
     expect(trace.at(-1)).toBe(false);
   });
 
+  describe('a link in conflict', () => {
+    let wire: Wire;
+    let and: Component;
+    let not: Component;
+    let reports: number;
+    let tee: Point;
+    let inputTee: Point;
+
+    // Read when asserted: a redraw rebuilds the stubs.
+    const andIn = () => and.portStubs[0];
+    const andOut = () => and.portStubs[2];
+    const notOut = () => not.portStubs[1];
+    const dotAt = (p: Point) => project.connectionPoints.getCpAt(p)!;
+
+    const theme = () => TestBed.inject(ThemingService).currentTheme();
+    const highlight = () =>
+      TestBed.inject(EditorSettingsService).highlightConflicts;
+
+    beforeEach(() => {
+      highlight().set(true);
+      // Outputs joined: an AND with open inputs drives low, a NOT with an
+      // open input drives high, so the engine reports their link invalid.
+      and = makeAnd(2, undefined, 0, 0);
+      not = makeNot();
+      not.position.set(0, 6);
+      not.position.x += and.connectionPoints[2].x - not.connectionPoints[1].x;
+      project.addComponent(and);
+      project.addComponent(not);
+      // The joined outputs' wire tees off a dangling branch, and the AND's
+      // first input sits on a junction of its own net, which has no driver.
+      const out = and.connectionPoints[2];
+      tee = new Point(out.x, out.y + 2);
+      wire = wireBetween(out, tee);
+      project.addWire(wire);
+      project.addWire(wireBetween(tee, not.connectionPoints[1]));
+      project.addWire(wireBetween(tee, new Point(tee.x + 2, tee.y)));
+      inputTee = and.connectionPoints[0];
+      project.addWire(
+        wireBetween(new Point(inputTee.x - 2, inputTee.y), inputTee)
+      );
+      project.addWire(
+        wireBetween(new Point(inputTee.x, inputTee.y - 2), inputTee)
+      );
+      expect(project.connectionPoints.hasCpAt(tee)).toBe(true);
+      expect(project.connectionPoints.hasCpAt(inputTee)).toBe(true);
+      reports = 0;
+      service.conflictShown$.subscribe(() => reports++);
+    });
+
+    afterEach(() => highlight().set(true));
+
+    /** Steps once, settled by the snapshot the step pulls. */
+    async function stepSettled(): Promise<void> {
+      const snapshots = fakeWorker.snapshots.length;
+      service.step();
+      await vi.waitFor(() =>
+        expect(fakeWorker.snapshots.length).toBe(snapshots + 1)
+      );
+    }
+
+    /** Boots and steps until the engine reports the conflict. */
+    async function enterInConflict(): Promise<void> {
+      await enterAndBoot();
+      await stepSettled();
+      await stepSettled();
+      expect(fakeWorker.engine.invalidLinks().byteLength).toBeGreaterThan(0);
+    }
+
+    it('tints its wires, port stubs and junction dots, and only those', async () => {
+      await enterInConflict();
+
+      expect(wire.tint).toBe(theme().wireConflict);
+      expect(andOut().tint).toBe(theme().wireConflict);
+      expect(notOut().tint).toBe(theme().wireConflict);
+      expect(dotAt(tee).tint).toBe(theme().wireConflict);
+      expect(andIn().tint).toBe(theme().wire);
+      expect(dotAt(inputTee).tint).toBe(theme().wire);
+    });
+
+    it('keeps its junction dots tinted across a theme change', async () => {
+      const theming = TestBed.inject(ThemingService);
+      const original = theming.currentThemeType();
+      await enterInConflict();
+
+      theming.setActiveThemeType(
+        original === ThemeType.DARK ? ThemeType.LIGHT : ThemeType.DARK
+      );
+      TestBed.tick();
+
+      expect(dotAt(tee).tint).toBe(theme().wireConflict);
+      expect(dotAt(inputTee).tint).toBe(theme().wire);
+      theming.setActiveThemeType(original);
+    });
+
+    it('is cleared by stop and by exit', async () => {
+      await enterInConflict();
+
+      service.stop();
+      await vi.waitFor(() => expect(wire.tint).toBe(theme().wire));
+      expect(andOut().tint).toBe(theme().wire);
+      expect(dotAt(tee).tint).toBe(theme().wire);
+
+      await stepSettled();
+      await stepSettled();
+      expect(wire.tint).toBe(theme().wireConflict);
+      expect(dotAt(tee).tint).toBe(theme().wireConflict);
+
+      service.exit();
+      expect(wire.tint).toBe(theme().wire);
+      expect(notOut().tint).toBe(theme().wire);
+      expect(dotAt(tee).tint).toBe(theme().wire);
+    });
+
+    it('is reported the first time a session shows it, once', async () => {
+      await enterInConflict();
+      await stepSettled();
+      expect(reports).toBe(1);
+
+      service.exit();
+      await enterInConflict();
+      expect(reports).toBe(2);
+    });
+
+    it('shows and reports nothing while highlighting is off, and follows a toggle at once', async () => {
+      highlight().set(false);
+      await enterInConflict();
+
+      expect(wire.tint).toBe(theme().wire);
+      expect(andOut().tint).toBe(theme().wire);
+      expect(reports).toBe(0);
+
+      // Paused: turning it on pulls the snapshot that carries the set.
+      highlight().set(true);
+      TestBed.tick();
+      await vi.waitFor(() => expect(wire.tint).toBe(theme().wireConflict));
+      expect(reports).toBe(1);
+
+      highlight().set(false);
+      TestBed.tick();
+      expect(wire.tint).toBe(theme().wire);
+      expect(notOut().tint).toBe(theme().wire);
+    });
+  });
+
   it('fans snapshots out to registered watch appliers, seeded by a full one', async () => {
     project.addComponent(makeSwitch());
     await enterAndBoot();
-    const watch = { applyDelta: vi.fn(), applyFull: vi.fn() };
+    const watch = {
+      applyDelta: vi.fn(),
+      applyFull: vi.fn(),
+      applyConflicts: vi.fn()
+    };
 
     const unregister = service.registerApplier(watch);
     service.requestSnapshot();
@@ -1080,7 +1230,11 @@ describe('SimulationService', () => {
   it('drops watch appliers on exit', async () => {
     project.addComponent(makeSwitch());
     await enterAndBoot();
-    const watch = { applyDelta: vi.fn(), applyFull: vi.fn() };
+    const watch = {
+      applyDelta: vi.fn(),
+      applyFull: vi.fn(),
+      applyConflicts: vi.fn()
+    };
     service.registerApplier(watch);
 
     service.exit();

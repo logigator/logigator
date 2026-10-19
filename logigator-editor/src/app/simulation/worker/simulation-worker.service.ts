@@ -635,7 +635,7 @@ export class SimulationWorkerService {
         }
         const applier = this.hooks?.applier;
         if (applier) {
-          const { ids, values } = unpackSnapshot(msg);
+          const { ids, invalid, values } = unpackSnapshot(msg);
           if (msg.isDelta) {
             // An empty delta means nothing changed — hold current state.
             // applyFull would read the empty buffer and clear every link.
@@ -645,6 +645,8 @@ export class SimulationWorkerService {
           } else {
             applier.applyFull(values);
           }
+          // The whole set every time, so an empty delta still carries it.
+          applier.applyConflicts(invalid);
         }
         this._returnBuffer(msg.buffer);
         this.hooks?.onFrame?.();

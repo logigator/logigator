@@ -158,6 +158,6 @@ describe('extractNets', () => {
 
     const nets = extractNets({ components: [], wires: [wire] });
 
-    expect(nets).toEqual([{ wires: [wire], ports: [] }]);
+    expect(nets).toEqual([{ wires: [wire], ports: [], junctions: [] }]);
   });
 });

@@ -23,8 +23,9 @@ rect. Size is `scale.x`, direction is `rotation` (`HORIZONTAL` → 0,
 `VERTICAL` → π/2), color is the per-instance tint — white × tint is the tint
 exactly, so the context is theme-independent and a theme change retints
 instances instead of swapping contexts. `refreshTint()` re-derives it from the
-theme and `selected`, and also restores it after a transient tint (collision
-red).
+theme, the simulation's conflict state (`setConflict`, theme `wireConflict`)
+and `selected`, and also restores it after a transient tint (collision red), so
+a conflict survives both a theme change and a collision tint's way back.
 
 Wires live in `Project._gridSpace` (`scale = gridSize`), so `position` **is**
 the grid coordinate. **Wire endpoints lie on the half-grid lattice** (`n + 0.5`),
@@ -52,7 +53,8 @@ context — reassigning a `Graphics` context detaches and re-attaches listeners 
 the shared one (a linear scan over every attached wire and stub, quadratic
 across a blinking board) and forces a full instruction rebuild, while transform
 changes are patched into the existing batch. The same rule governs port stubs,
-negation bubbles (alpha) and LEDs (tint).
+negation bubbles (alpha), LEDs (tint) and the conflict color, which is a tint
+write on the wire, stub or junction dot alone, made only when the state flips.
 
 ## `Wire` class
 

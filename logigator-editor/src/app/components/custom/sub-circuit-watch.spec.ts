@@ -3,9 +3,11 @@ import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
+  makeAnd,
   makeButton,
   makeGamepad,
   makeKeyboard,
+  makeNot,
   makeSwitch
 } from '../../../testing/factories';
 import {
@@ -31,6 +33,7 @@ import { Project } from '../../project/project';
 import { ProjectService } from '../../project/project.service';
 import { EditorSettingsService } from '../../settings/editor-settings.service';
 import { InspectionService } from '../../inspection/inspection.service';
+import { ThemingService } from '../../theming/theming.service';
 import { SimulationService } from '../../simulation/simulation.service';
 import {
   FRAME_SCHEDULER,
@@ -558,5 +561,66 @@ describe('SubCircuitWatch', () => {
       }
       expect(copyKeyDown()).toBe(false);
     });
+  });
+
+  it('shows a conflict inside the box in a watch alone, never on the board', async () => {
+    // Outputs joined inside the box, no plug: an AND with open inputs drives
+    // low, a NOT with an open input high, and their link reaches nothing on
+    // the board. The joining wire tees off a dangling branch.
+    const and = makeAnd(2, undefined, 0, 0);
+    const not = makeNot();
+    not.position.set(0, 6);
+    not.position.x += and.connectionPoints[2].x - not.connectionPoints[1].x;
+    const out = and.connectionPoints[2];
+    const tee = new Point(out.x, out.y + 2);
+    const box = registry.registerSnapshot({
+      kind: 'snapshot',
+      source: 'browser',
+      name: 'Clash',
+      symbol: 'CL',
+      description: '',
+      numInputs: 0,
+      numOutputs: 0,
+      labels: [],
+      circuit: serializeBody(
+        [and, not],
+        [
+          wireBetween(out, tee),
+          wireBetween(tee, not.connectionPoints[1]),
+          wireBetween(tee, new Point(tee.x + 2, tee.y))
+        ]
+      )
+    });
+    const instance = Component.deserialize(
+      { pos: [0, 0], options: {} },
+      provider.getComponent(box)!
+    ) as CustomComponent;
+    project.addComponent(instance);
+    let reports = 0;
+    simulation.conflictShown$.subscribe(() => reports++);
+    simulation.enter();
+    await vi.waitFor(() => expect(simulation.state()).toBe('ready'));
+
+    for (let step = 1; step <= 2; step++) {
+      simulation.step();
+      await vi.waitFor(() =>
+        expect(fakeWorker.snapshots.length).toBeGreaterThanOrEqual(step)
+      );
+    }
+    expect(fakeWorker.engine.invalidLinks().byteLength).toBeGreaterThan(0);
+    expect(reports).toBe(0);
+    expect(simulation.applier!.hasShownConflict).toBe(false);
+
+    const watch = instance.config.inspection!(instance) as SubCircuitWatch;
+    const session = watch.activeLevel().session;
+    const [wireCopy] = session.wires;
+    const teeCopy = session.project.connectionPoints.getCpAt(tee)!;
+    const conflict = TestBed.inject(ThemingService).currentTheme().wireConflict;
+    // The watch's seeding snapshot carries the set, to its junction dot too.
+    await vi.waitFor(() => expect(wireCopy.tint).toBe(conflict));
+    expect(teeCopy.tint).toBe(conflict);
+    expect(reports).toBe(0);
+
+    watch.destroy();
   });
 });

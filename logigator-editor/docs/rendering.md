@@ -390,11 +390,11 @@ when the collision state flips. `reset()` restores each element's own tint, and
 sessions call it before reattaching or committing so a cancel mid-collision does
 not leak the red onto the board.
 
-| Value                       | Meaning                                                        |
-| --------------------------- | -------------------------------------------------------------- |
-| selection look (`selected`) | Ghost default — theme `selectTint` / `wireSelectColor`         |
-| theme `invalid`             | Collision — per element, never on the drag layer               |
-| `refreshTint()`             | Neutral — each element re-derives its own theme/selection tint |
+| Value                       | Meaning                                                                 |
+| --------------------------- | ----------------------------------------------------------------------- |
+| selection look (`selected`) | Ghost default — theme `selectTint` / `wireSelectColor`                  |
+| theme `invalid`             | Collision — per element, never on the drag layer                        |
+| `refreshTint()`             | Neutral — each element re-derives its own theme/conflict/selection tint |
 
 ---
 

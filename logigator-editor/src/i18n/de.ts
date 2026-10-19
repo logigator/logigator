@@ -96,7 +96,8 @@ const de: TranslationSchema = {
       fpsCounter: 'FPS-Anzeige',
       showGrid: 'Raster anzeigen',
       autoStartSimulation: 'Simulation automatisch starten',
-      dragSelectionInPanMode: 'Auswahl im Schwenkmodus verschieben'
+      dragSelectionInPanMode: 'Auswahl im Schwenkmodus verschieben',
+      highlightConflicts: 'Konflikte hervorheben'
     },
     descriptions: {
       fpsCounter: 'Zeigt die Bilder pro Sekunde in der Ecke der Arbeitsfläche.',
@@ -105,7 +106,9 @@ const de: TranslationSchema = {
       autoStartSimulation:
         'Lässt die Schaltung laufen, sobald du die Simulation betrittst. Aus wartet sie pausiert bei Tick 0.',
       dragSelectionInPanMode:
-        'Ein Ziehen mit „Schwenken“, das in der Auswahl beginnt, verschiebt die Auswahl. Aus verschiebt jedes Ziehen die Ansicht.'
+        'Ein Ziehen mit „Schwenken“, das in der Auswahl beginnt, verschiebt die Auswahl. Aus verschiebt jedes Ziehen die Ansicht.',
+      highlightConflicts:
+        'Zeichnet in der Simulation eine Leitung orange, wenn die Ausgänge an ihr verschiedene Werte ausgeben oder ein SR-Flip-Flop mit S und R gleichzeitig auf 1 getaktet wurde.'
     },
     info: 'Was „{{setting}}“ bewirkt'
   },
@@ -1119,7 +1122,7 @@ const de: TranslationSchema = {
     settings: {
       showTips: 'Einführungstipps anzeigen',
       showTipsDescription:
-        'Zeigt einen Tipp, wenn du bestimmte Werkzeuge zum ersten Mal benutzt.'
+        'Zeigt einen Tipp, wenn dir im Editor zum ersten Mal etwas Neues begegnet.'
     },
     menu: {
       showTipsAgain: 'Tipps erneut anzeigen'
@@ -1160,7 +1163,9 @@ const de: TranslationSchema = {
       portsPanelCompact:
         'Hier liegen die Stecker dieser Komponente: Platziere <strong>Eingang</strong> und <strong>Ausgang</strong> aus diesem Panel, ziehe dann die Zeilen für die Port-Reihenfolge und tippe Namen ein.',
       panZoomCompact:
-        'Ziehe mit zwei Fingern zum Schwenken, spreize sie zum Zoomen. Mit einem Finger wird nur im Schwenkmodus geschwenkt.'
+        'Ziehe mit zwei Fingern zum Schwenken, spreize sie zum Zoomen. Mit einem Finger wird nur im Schwenkmodus geschwenkt.',
+      wireConflict:
+        'Eine <strong>orangefarbene Leitung</strong> hat einen Konflikt: Zwei Ausgänge an ihr geben verschiedene Werte aus, oder ein SR-Flip-Flop wurde mit S und R gleichzeitig auf 1 getaktet. Schließe nur einen Ausgang an eine Leitung an und setze S und R nicht zusammen auf 1. Die Simulation läuft weiter. <strong>Konflikte hervorheben</strong> in den Einstellungen schaltet das ab.'
     },
     tutorials: {
       gettingStarted: {

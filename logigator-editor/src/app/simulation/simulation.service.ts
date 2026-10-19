@@ -1,4 +1,11 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import {
+  computed,
+  effect,
+  inject,
+  Injectable,
+  signal,
+  untracked
+} from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { Component } from '../components/component';
 import type { InputFrame as EngineInputFrame } from '@logigator/sim/wasm';
@@ -34,7 +41,11 @@ import {
 } from './compiler/compiled-board.model';
 import { CompileDiagnostic } from './compiler/compile-error';
 import { HeldInputHistory, heldInputWrite } from './held-input';
-import { LinkStateApplier, SnapshotApplier } from './state/link-state-applier';
+import {
+  LinkStateApplier,
+  NO_CONFLICTS,
+  SnapshotApplier
+} from './state/link-state-applier';
 import { MIN_TARGET_HZ } from './worker/pacing';
 import {
   SimulationRunMode,
@@ -110,6 +121,17 @@ export class SimulationService {
   /** Emits after each applied snapshot (and after a stop()'s visual reset). */
   public readonly frame$: Observable<void> = this._frame$.asObservable();
 
+  private readonly _conflictShown$ = new Subject<void>();
+  /**
+   * Emits the first time in a session a link in conflict shows on the board:
+   * one with a wire or port stub of the main board, while conflicts are
+   * highlighted. Inner links of a custom component never count, even where a
+   * watch shows them.
+   */
+  public readonly conflictShown$: Observable<void> =
+    this._conflictShown$.asObservable();
+  private _conflictReported = false;
+
   // Compiled artifacts live for one session. Editing is locked in between, so
   // the mapping's live object references stay valid.
   private _board: CompiledBoard | null = null;
@@ -149,6 +171,31 @@ export class SimulationService {
       } else {
         void this.enter();
       }
+    });
+
+    // Turned off, the conflicts go now; turned on, they come back with a
+    // full snapshot, which carries the whole set even while paused. Acts on a
+    // change only: the effect's first run is no toggle.
+    let highlighted = this.settings.highlightConflicts.value();
+    effect(() => {
+      const highlight = this.settings.highlightConflicts.value();
+      untracked(() => {
+        if (highlight === highlighted) {
+          return;
+        }
+        highlighted = highlight;
+        if (!this._applier) {
+          return;
+        }
+        if (highlight) {
+          this.workerService.requestSnapshot();
+        } else {
+          this._applyConflicts(NO_CONFLICTS);
+          this._project?.triggerTicker('single');
+          // Watch canvases re-render on the frame pull.
+          this._frame$.next();
+        }
+      });
     });
   }
 
@@ -257,6 +304,7 @@ export class SimulationService {
     );
     this._applier = applier;
     this._project = project;
+    this._conflictReported = false;
     // A negated input reads high while its net is low, and the displays that
     // read it show that only inside a session. The engine reports a link that
     // never changes, so nothing else would tell them.
@@ -284,7 +332,11 @@ export class SimulationService {
             for (const watch of this._watchAppliers) {
               watch.applyFull(bits);
             }
-          }
+          },
+          applyConflicts: (ids) =>
+            this._applyConflicts(
+              this.settings.highlightConflicts.value() ? ids : NO_CONFLICTS
+            )
         },
         repaint: () => this._project?.triggerTicker('single'),
         onFrame: () => this._frame$.next(),
@@ -443,6 +495,25 @@ export class SimulationService {
     }
     this._mode.set(mode);
     this._restartIfRunning();
+  }
+
+  /**
+   * Applies a conflict set to the board applier and every watch applier,
+   * reporting the session's first conflict that shows on the board.
+   */
+  private _applyConflicts(ids: Uint32Array): void {
+    const applier = this._applier;
+    if (!applier) {
+      return;
+    }
+    applier.applyConflicts(ids);
+    for (const watch of this._watchAppliers) {
+      watch.applyConflicts(ids);
+    }
+    if (!this._conflictReported && applier.hasShownConflict) {
+      this._conflictReported = true;
+      this._conflictShown$.next();
+    }
   }
 
   private _paceToTarget(): void {

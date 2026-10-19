@@ -157,6 +157,8 @@ export abstract class Component<
   private _textHidden = false;
   // Survives redraws; _drawConnections re-applies it to the rebuilt stubs.
   private readonly _poweredPorts = new Set<number>();
+  // Ports whose link is in conflict; survives redraws like _poweredPorts.
+  private readonly _conflictPorts = new Set<number>();
 
   // Indexed 0-based within each group; separate sets so an input-count change
   // cannot shift output indices. Out-of-range entries are ignored on read and
@@ -667,6 +669,32 @@ export abstract class Component<
     }
   }
 
+  /**
+   * Tints one port stub with the theme's conflict color while its link's
+   * drivers disagree, independently of its power. The same per-frame hot
+   * path as {@link setPortPowered}: a tint write on the stub only.
+   */
+  public setPortConflict(portIndex: number, conflict: boolean): void {
+    if (this._conflictPorts.has(portIndex) === conflict) {
+      return;
+    }
+    if (conflict) {
+      this._conflictPorts.add(portIndex);
+    } else {
+      this._conflictPorts.delete(portIndex);
+    }
+    const stub = this._portStubs[portIndex];
+    if (stub) {
+      stub.tint = this._stubTint(portIndex);
+    }
+  }
+
+  /** A stub's color: the wire's, or the conflict color while in conflict. */
+  private _stubTint(portIndex: number): number {
+    const theme = this.themingService.currentTheme();
+    return this._conflictPorts.has(portIndex) ? theme.wireConflict : theme.wire;
+  }
+
   /** Powered as last applied by the simulation (`connectionPoints` order). */
   public isPortPowered(portIndex: number): boolean {
     return this._poweredPorts.has(portIndex);
@@ -910,10 +938,9 @@ export abstract class Component<
       const portIndex = type === 'inputs' ? i : this._numInputs + i;
       const wire = new Graphics(geometry);
       // White-base shared context (see WireGraphics), themed by tint; the
-      // selection tint multiplies over it.
-      this.onApplyTheme(
-        () => (wire.tint = this.themingService.currentTheme().wire)
-      );
+      // selection tint multiplies over it. Runs immediately, so a redraw
+      // re-applies a surviving conflict.
+      this.onApplyTheme(() => (wire.tint = this._stubTint(portIndex)));
       wire.position.set(0, i + 0.5);
       wire.scale.x = 0.5;
       // The shared wire rect hangs its thickness on the +y side of the

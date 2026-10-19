@@ -1,4 +1,6 @@
+import { Point } from 'pixi.js';
 import { Component } from '../../components/component';
+import { ConnectionPoint } from '../../connection-points/connection-point';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { KeyboardComponent } from '../../components/component-types/keyboard/keyboard.component';
 import { isUserInput } from '../../components/user-input';
@@ -79,7 +81,8 @@ export class WatchSession {
     // skipped.
     const targets: LinkRenderTargets[] = Array.from({ length: links }, () => ({
       wires: [],
-      ports: []
+      ports: [],
+      junctions: []
     }));
     const linkOf = (localNet: number): number =>
       localNet >= 0 ? info.linkOfLocalNet[localNet] : -1;
@@ -93,6 +96,25 @@ export class WatchSession {
         if (link >= 0) targets[link].ports.push({ component, portIndex });
       });
     });
+    // The copy's own junction dots, found at its targets' termination points:
+    // the index records no dots, and every dot sits on a wire end or a port.
+    const dots = this.project.connectionPoints;
+    const placed = new Set<ConnectionPoint>();
+    const addJunctionAt = (target: LinkRenderTargets, point: Point): void => {
+      const dot = dots.getCpAt(point);
+      if (dot && !placed.has(dot)) {
+        placed.add(dot);
+        target.junctions.push(dot);
+      }
+    };
+    for (const target of targets) {
+      for (const wire of target.wires) {
+        for (const point of wire.connectionPoints) addJunctionAt(target, point);
+      }
+      for (const { component, portIndex } of target.ports) {
+        addJunctionAt(target, component.connectionPoints[portIndex]);
+      }
+    }
 
     this.applier = new LinkStateApplier(targets);
     // Only a *full* snapshot triggers the one-time toggle pose sync; deltas
@@ -102,7 +124,8 @@ export class WatchSession {
       applyFull: (bits) => {
         this.applier.applyFull(bits);
         this.needsSwitchSync = true;
-      }
+      },
+      applyConflicts: (ids) => this.applier.applyConflicts(ids)
     };
     this.unregister = simulation.registerApplier(sessionApplier);
     simulation.requestSnapshot();

@@ -262,7 +262,8 @@ export class BoardCompilerService {
 
     const nets = extractNets({
       components: project.components,
-      wires: project.wires
+      wires: project.wires,
+      junctions: project.connectionPoints.cps
     });
     const netNodes = nets.map(() => ctx.uf.makeSet());
     const portNets = buildPortNetLookup(nets);
@@ -306,7 +307,8 @@ export class BoardCompilerService {
       { length: linkCount },
       () => ({
         wires: [],
-        ports: []
+        ports: [],
+        junctions: []
       })
     );
     nets.forEach((net, netIndex) => {
@@ -316,6 +318,9 @@ export class BoardCompilerService {
       // hold more wires than a spread call has argument slots.
       for (const wire of net.wires) targets[link].wires.push(wire);
       for (const port of net.ports) targets[link].ports.push(port);
+      for (const junction of net.junctions) {
+        targets[link].junctions.push(junction);
+      }
     });
     // LED-matrix cells map back onto their component as pseudo-ports past the
     // input range (row-major), so the standard applier lights them.

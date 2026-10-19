@@ -116,6 +116,30 @@ describe('Wire tint', () => {
 
     wire.destroy();
   });
+
+  it('carries the conflict color independently of power, across a theme change', () => {
+    theming.setActiveThemeType(ThemeType.DARK);
+    const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 4);
+    const context = wire.context;
+    const thinScaleY = wire.scale.y;
+
+    // An unpowered link can be in conflict (an SR flip-flop's Q̄): the
+    // color says conflict, the thickness still says low.
+    wire.setConflict(true);
+    expect(wire.tint).toBe(theming.currentTheme().wireConflict);
+    expect(wire.scale.y).toBeCloseTo(thinScaleY, 8);
+    expect(wire.context).toBe(context);
+
+    // A collision tint's way back (refreshTint) keeps it too.
+    theming.setActiveThemeType(ThemeType.LIGHT);
+    wire.refreshTint();
+    expect(wire.tint).toBe(theming.currentTheme().wireConflict);
+
+    wire.setConflict(false);
+    expect(wire.tint).toBe(theming.currentTheme().wire);
+
+    wire.destroy();
+  });
 });
 
 describe('Wire.intersectsGridBounds', () => {

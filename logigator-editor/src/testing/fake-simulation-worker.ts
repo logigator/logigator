@@ -22,8 +22,9 @@ export interface SentFrame extends InputFrame {
  *
  * With `autoRespond` it behaves like a healthy worker: `ready` after
  * construction, `ok` for every correlated request, an empty-delta snapshot
- * carrying the engine's input progress as the worker reports it per
- * `requestSnapshot` — it and the watched state ranges read beside it through
+ * carrying the engine's invalid links and input progress as the worker
+ * reports them per `requestSnapshot` — those and the watched state ranges read
+ * beside it through
  * the worker's own readers, at the point the request was posted, as the
  * worker reads them between messages — and a `status` with `statusTick` per
  * `requestStatus` — all on microtasks, like real worker messages. Every
@@ -92,6 +93,10 @@ export class FakeSimulationWorker {
       msg.kind === 'requestSnapshot' && this._engine
         ? this.progress?.read(this._engine)
         : undefined;
+    const invalid =
+      msg.kind === 'requestSnapshot' && this._engine
+        ? this._engine.invalidLinks()
+        : undefined;
     queueMicrotask(() => {
       if (this.terminated) {
         return;
@@ -103,7 +108,12 @@ export class FakeSimulationWorker {
             reqId: msg.reqId,
             tick: this.statusTick,
             isDelta: true,
-            ...packSnapshot(undefined, new Uint8Array(0), new Uint8Array(0)),
+            ...packSnapshot(
+              undefined,
+              new Uint8Array(0),
+              new Uint8Array(0),
+              invalid
+            ),
             ...(inputProgress ? { inputProgress } : {}),
             ...(state ? { state } : {})
           };

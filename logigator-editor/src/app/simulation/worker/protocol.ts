@@ -68,11 +68,19 @@ export interface SnapshotMessage {
   /** Byte length of the changed-id `u32` array; `0` for full snapshots. */
   idsByteLength: number;
   /**
+   * Byte length of the `u32` ids of every link in conflict (the engine's
+   * invalid links), ascending — the whole set, delta or full; usually `0`.
+   */
+  invalidByteLength: number;
+  /**
    * Delta: packed changed-link values (bit `i` ↔ id `i`). Full: packed link
    * bits (byte `l>>3`, bit `l&7`).
    */
   valuesByteLength: number;
-  /** Transferred payload: ids at offset 0, values right after. */
+  /**
+   * Transferred payload: ids at offset 0, the invalid ids right after, then
+   * the values.
+   */
   buffer: ArrayBuffer;
   /**
    * `[unit, event frames not yet applied]` for every input holding one,
@@ -123,22 +131,28 @@ export type MainRequest = DistributiveOmit<
 export interface PackedSnapshot {
   buffer: ArrayBuffer;
   idsByteLength: number;
+  invalidByteLength: number;
   valuesByteLength: number;
 }
 
 /**
  * Copies a snapshot's bytes into `pool` (reused when large enough): ids at
- * offset 0, values right after. `ids` are the raw bytes of the changed-id
- * `u32` array, `null` for full snapshots. Copying is mandatory — the source
- * views point into WASM linear memory and are valid only until the next tick.
+ * offset 0, invalid ids right after, then values. `ids` are the raw bytes of
+ * the changed-id `u32` array, `null` for full snapshots; `invalid` the raw
+ * bytes of the invalid-id `u32` array, omitted when there are none. Copying
+ * is mandatory — the source views point into WASM linear memory and are valid
+ * only until the next tick.
  */
 export function packSnapshot(
   pool: ArrayBuffer | undefined,
   ids: Uint8Array | null,
-  values: Uint8Array
+  values: Uint8Array,
+  invalid?: Uint8Array
 ): PackedSnapshot {
   const idsByteLength = ids?.byteLength ?? 0;
-  const needed = idsByteLength + values.byteLength;
+  const invalidByteLength = invalid?.byteLength ?? 0;
+  const valuesOffset = idsByteLength + invalidByteLength;
+  const needed = valuesOffset + values.byteLength;
   const buffer =
     pool !== undefined && pool.byteLength >= needed
       ? pool
@@ -147,16 +161,26 @@ export function packSnapshot(
   if (ids) {
     target.set(ids, 0);
   }
-  target.set(values, idsByteLength);
-  return { buffer, idsByteLength, valuesByteLength: values.byteLength };
+  if (invalid) {
+    target.set(invalid, idsByteLength);
+  }
+  target.set(values, valuesOffset);
+  return {
+    buffer,
+    idsByteLength,
+    invalidByteLength,
+    valuesByteLength: values.byteLength
+  };
 }
 
 /**
  * Views into a snapshot message's transferred buffer. `ids` is `null` for full
- * snapshots; the id offset is 0, so the `u32` view is always aligned.
+ * snapshots; both id arrays start at a multiple of 4 (the first at 0, the
+ * second after whole `u32`s), so their views are always aligned.
  */
 export function unpackSnapshot(msg: SnapshotMessage): {
   ids: Uint32Array | null;
+  invalid: Uint32Array;
   values: Uint8Array;
 } {
   return {
@@ -164,6 +188,15 @@ export function unpackSnapshot(msg: SnapshotMessage): {
       msg.idsByteLength > 0
         ? new Uint32Array(msg.buffer, 0, msg.idsByteLength / 4)
         : null,
-    values: new Uint8Array(msg.buffer, msg.idsByteLength, msg.valuesByteLength)
+    invalid: new Uint32Array(
+      msg.buffer,
+      msg.idsByteLength,
+      msg.invalidByteLength / 4
+    ),
+    values: new Uint8Array(
+      msg.buffer,
+      msg.idsByteLength + msg.invalidByteLength,
+      msg.valuesByteLength
+    )
   };
 }

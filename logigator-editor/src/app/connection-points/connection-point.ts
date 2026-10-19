@@ -26,6 +26,7 @@ export class ConnectionPoint extends Graphics {
   private readonly _themingService = getStaticDI(ThemingService);
 
   private _selected = false;
+  private _conflict = false;
 
   constructor(position: Point) {
     super();
@@ -53,11 +54,30 @@ export class ConnectionPoint extends Graphics {
   }
 
   /**
-   * Re-derives the tint from theme and selection state. The shared context is a
-   * white base, so the tint *is* the dot's color; also the theme-change hook.
+   * Tints the dot with the theme's conflict color while its link's drivers
+   * disagree, like the wires meeting at it. A tint write only, and only when
+   * the state flips: this runs on the per-snapshot path.
+   */
+  public setConflict(conflict: boolean): void {
+    if (this._conflict === conflict) {
+      return;
+    }
+    this._conflict = conflict;
+    this.refreshTint();
+  }
+
+  /**
+   * Re-derives the tint from theme, conflict and selection state. The shared
+   * context is a white base, so the tint *is* the dot's color; also the
+   * theme-change hook. A conflict only exists inside a session, where nothing
+   * is selected.
    */
   public refreshTint(): void {
     const theme = this._themingService.currentTheme();
-    this.tint = this._selected ? theme.wireSelectColor : theme.wire;
+    this.tint = this._conflict
+      ? theme.wireConflict
+      : this._selected
+        ? theme.wireSelectColor
+        : theme.wire;
   }
 }

@@ -1,10 +1,13 @@
 import { Component } from '../../components/component';
+import type { ConnectionPoint } from '../../connection-points/connection-point';
 import { Wire } from '../../wires/wire';
 
 /** Structural view of a circuit: a live Project or an instantiated body. */
 export interface CircuitElements {
   components: Iterable<Component>;
   wires: Iterable<Wire>;
+  /** Junction dots to sort into their nets; a live Project's only. */
+  junctions?: Iterable<ConnectionPoint>;
 }
 
 export interface NetPortRef {
@@ -23,6 +26,8 @@ export interface NetPortRef {
 export interface Net {
   wires: Wire[];
   ports: NetPortRef[];
+  /** The junction dots at its termination points. */
+  junctions: ConnectionPoint[];
 }
 
 /**
@@ -60,6 +65,9 @@ export class UnionFind {
  * points: each wire unions its two endpoints, each component port joins
  * whatever class its point lands in, and a component never unions its own
  * ports. A net is one class — a dangling port yields a singleton.
+ *
+ * A junction dot sits where at least three terminations meet, so its point is
+ * already a node: sorting the dots in is one lookup each.
  */
 export function extractNets(circuit: CircuitElements): Net[] {
   const uf = new UnionFind();
@@ -95,7 +103,7 @@ export function extractNets(circuit: CircuitElements): Net[] {
     const root = uf.find(node);
     let net = netOfClass.get(root);
     if (!net) {
-      net = { wires: [], ports: [] };
+      net = { wires: [], ports: [], junctions: [] };
       netOfClass.set(root, net);
       nets.push(net);
     }
@@ -106,6 +114,10 @@ export function extractNets(circuit: CircuitElements): Net[] {
   }
   for (const [port, node] of portNodes) {
     netFor(node).ports.push(port);
+  }
+  for (const junction of circuit.junctions ?? []) {
+    const node = nodes.get(`${junction.x},${junction.y}`);
+    if (node !== undefined) netFor(node).junctions.push(junction);
   }
   return nets;
 }

@@ -45,6 +45,13 @@ export const HINTS: readonly Hint[] = [
     docsPage: 'simulation'
   },
   {
+    id: 'wire-conflict',
+    // Floats: the conflict is somewhere on the board, which no target names.
+    trigger: { kind: 'wireConflict' },
+    text: 'onboarding.hints.wireConflict',
+    docsPage: 'simulation'
+  },
+  {
     id: 'selection-actions',
     trigger: { kind: 'select' },
     // Desktop-only: the payload is keyboard shortcuts, and arrow-key move has
