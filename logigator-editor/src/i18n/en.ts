@@ -97,7 +97,16 @@ const en = {
       showGrid: 'Show Grid',
       autoStartSimulation: 'Auto-start simulation',
       dragSelectionInPanMode: 'Drag selection in Pan mode'
-    }
+    },
+    descriptions: {
+      fpsCounter: 'Shows frames per second in the corner of the board.',
+      showGrid: 'Draws the dot grid. Components snap to the grid either way.',
+      autoStartSimulation:
+        'Starts the circuit running as soon as you enter simulation. Off, it waits paused at tick 0.',
+      dragSelectionInPanMode:
+        'A drag with the Pan tool that starts inside the selection moves the selection. Off, every drag pans.'
+    },
+    info: 'What "{{setting}}" does'
   },
   minimap: {
     expand: 'Show minimap',
@@ -1082,7 +1091,8 @@ const en = {
   },
   onboarding: {
     settings: {
-      showTips: 'Show onboarding tips'
+      showTips: 'Show onboarding tips',
+      showTipsDescription: 'Shows a tip the first time you use certain tools.'
     },
     menu: {
       showTipsAgain: 'Show Tips Again'

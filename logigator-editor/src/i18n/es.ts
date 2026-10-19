@@ -96,7 +96,18 @@ const es: TranslationSchema = {
       showGrid: 'Mostrar cuadrícula',
       autoStartSimulation: 'Iniciar la simulación automáticamente',
       dragSelectionInPanMode: 'Arrastrar la selección en modo Desplazar'
-    }
+    },
+    descriptions: {
+      fpsCounter:
+        'Muestra los fotogramas por segundo en la esquina del tablero.',
+      showGrid:
+        'Dibuja la cuadrícula de puntos. Los componentes se ajustan a ella en cualquier caso.',
+      autoStartSimulation:
+        'Pone en marcha el circuito en cuanto entras en la simulación. Desactivado, espera en pausa en el tick 0.',
+      dragSelectionInPanMode:
+        'Un arrastre con Desplazar que empieza dentro de la selección mueve la selección. Desactivado, todo arrastre desplaza la vista.'
+    },
+    info: 'Qué hace «{{setting}}»'
   },
   minimap: {
     expand: 'Mostrar minimapa',
@@ -1093,7 +1104,9 @@ const es: TranslationSchema = {
   },
   onboarding: {
     settings: {
-      showTips: 'Mostrar consejos de introducción'
+      showTips: 'Mostrar consejos de introducción',
+      showTipsDescription:
+        'Muestra un consejo la primera vez que usas ciertas herramientas.'
     },
     menu: {
       showTipsAgain: 'Mostrar los consejos de nuevo'

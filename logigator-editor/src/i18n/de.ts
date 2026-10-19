@@ -97,7 +97,17 @@ const de: TranslationSchema = {
       showGrid: 'Raster anzeigen',
       autoStartSimulation: 'Simulation automatisch starten',
       dragSelectionInPanMode: 'Auswahl im Schwenkmodus verschieben'
-    }
+    },
+    descriptions: {
+      fpsCounter: 'Zeigt die Bilder pro Sekunde in der Ecke der Arbeitsfläche.',
+      showGrid:
+        'Zeichnet das Punktraster. Komponenten rasten in beiden Fällen ein.',
+      autoStartSimulation:
+        'Lässt die Schaltung laufen, sobald du die Simulation betrittst. Aus wartet sie pausiert bei Tick 0.',
+      dragSelectionInPanMode:
+        'Ein Ziehen mit „Schwenken“, das in der Auswahl beginnt, verschiebt die Auswahl. Aus verschiebt jedes Ziehen die Ansicht.'
+    },
+    info: 'Was „{{setting}}“ bewirkt'
   },
   minimap: {
     expand: 'Minimap anzeigen',
@@ -1107,7 +1117,9 @@ const de: TranslationSchema = {
   },
   onboarding: {
     settings: {
-      showTips: 'Einführungstipps anzeigen'
+      showTips: 'Einführungstipps anzeigen',
+      showTipsDescription:
+        'Zeigt einen Tipp, wenn du bestimmte Werkzeuge zum ersten Mal benutzt.'
     },
     menu: {
       showTipsAgain: 'Tipps erneut anzeigen'

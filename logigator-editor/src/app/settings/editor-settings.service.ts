@@ -17,6 +17,7 @@ export class EditorSettingsService {
   public readonly fpsCounter = new EditorSetting(
     'fpsCounter',
     'settings.options.fpsCounter',
+    'settings.descriptions.fpsCounter',
     this.stored['fpsCounter'] ?? false,
     () => this.persist()
   );
@@ -24,6 +25,7 @@ export class EditorSettingsService {
   public readonly showGrid = new EditorSetting(
     'showGrid',
     'settings.options.showGrid',
+    'settings.descriptions.showGrid',
     this.stored['showGrid'] ?? true,
     () => this.persist()
   );
@@ -31,6 +33,7 @@ export class EditorSettingsService {
   public readonly autoStartSimulation = new EditorSetting(
     'autoStartSimulation',
     'settings.options.autoStartSimulation',
+    'settings.descriptions.autoStartSimulation',
     this.stored['autoStartSimulation'] ?? true,
     () => this.persist()
   );
@@ -38,6 +41,7 @@ export class EditorSettingsService {
   public readonly dragSelectionInPanMode = new EditorSetting(
     'dragSelectionInPanMode',
     'settings.options.dragSelectionInPanMode',
+    'settings.descriptions.dragSelectionInPanMode',
     this.stored['dragSelectionInPanMode'] ?? true,
     () => this.persist()
   );

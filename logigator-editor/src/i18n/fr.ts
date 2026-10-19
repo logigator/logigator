@@ -96,7 +96,18 @@ const fr: TranslationSchema = {
       showGrid: 'Afficher la grille',
       autoStartSimulation: 'Démarrage automatique de la simulation',
       dragSelectionInPanMode: 'Faire glisser la sélection en mode Déplacement'
-    }
+    },
+    descriptions: {
+      fpsCounter:
+        'Affiche les images par seconde dans le coin du plan de travail.',
+      showGrid:
+        "Dessine la grille de points. Les composants s'alignent sur la grille dans tous les cas.",
+      autoStartSimulation:
+        'Lance le circuit dès que vous entrez en simulation. Désactivé, elle attend en pause au tick 0.',
+      dragSelectionInPanMode:
+        'Un glisser avec Déplacement qui commence dans la sélection déplace la sélection. Désactivé, tout glisser déplace la vue.'
+    },
+    info: 'Ce que fait « {{setting}} »'
   },
   minimap: {
     expand: 'Afficher la minicarte',
@@ -1100,7 +1111,9 @@ const fr: TranslationSchema = {
   },
   onboarding: {
     settings: {
-      showTips: "Afficher les conseils d'intégration"
+      showTips: "Afficher les conseils d'intégration",
+      showTipsDescription:
+        'Affiche un conseil la première fois que vous utilisez certains outils.'
     },
     menu: {
       showTipsAgain: 'Afficher à nouveau les conseils'

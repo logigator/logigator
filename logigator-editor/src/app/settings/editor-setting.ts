@@ -13,6 +13,8 @@ export class EditorSetting {
   constructor(
     public readonly key: string,
     public readonly labelKey: TranslationKey,
+    /** One or two sentences on what the setting changes, shown beside it. */
+    public readonly descriptionKey: TranslationKey,
     initialValue: boolean,
     private readonly onChange: () => void
   ) {

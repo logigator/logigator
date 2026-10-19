@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LgToggleSwitch } from '@logigator/ui';
+import { LgToggleSwitch, LgTooltip } from '@logigator/ui';
 import { EditorSettingsService } from './editor-settings.service';
 import { EditorSetting } from './editor-setting';
 import { OnboardingService } from '../onboarding/onboarding.service';
@@ -11,7 +11,7 @@ import { TranslateDirective } from '../translation/translate.directive';
 /** Renders an on/off toggle for every setting in `EditorSettingsService`. */
 @Component({
   selector: 'app-settings',
-  imports: [FormsModule, LgToggleSwitch, TranslateDirective],
+  imports: [FormsModule, LgToggleSwitch, LgTooltip, TranslateDirective],
   templateUrl: './settings.component.html'
 })
 export class SettingsComponent {
