@@ -23,7 +23,7 @@ En una ventana de 1024 px de ancho o menos, el editor cambia a una vista táctil
 
 En tu primera visita, una tarjeta sobre el tablero ofrece un tutorial en el que construyes una puerta Y con dos interruptores y un LED. Dura alrededor de un minuto. «Empezar el tutorial» lo inicia, la ✕ cierra la tarjeta y «Omitir el tutorial» lo termina en cualquier paso.
 
-La primera vez que usas ciertas herramientas, como la herramienta de cable o el corte en el borde de la selección, un breve consejo las explica. Cada consejo aparece una sola vez. «Desactivar todos los consejos» en un consejo, o el ajuste «Mostrar consejos de introducción», los apaga. Ayuda → Mostrar los consejos de nuevo los vuelve a activar, muestra otra vez los que ya viste y recupera la tarjeta del tutorial.
+La primera vez que usas ciertas herramientas, como la herramienta de cable o el corte en el borde de la selección, un breve consejo las explica. Otro consejo explica el cable naranja la primera vez que aparece un [conflicto](docs:simulation) durante la simulación. Cada consejo aparece una sola vez. «Desactivar todos los consejos» en un consejo, o el ajuste «Mostrar consejos de introducción», los apaga. Ayuda → Mostrar los consejos de nuevo los vuelve a activar, muestra otra vez los que ya viste y recupera la tarjeta del tutorial.
 
 ## El menú Ayuda
 

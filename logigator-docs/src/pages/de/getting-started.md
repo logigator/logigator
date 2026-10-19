@@ -23,7 +23,7 @@ In einem Fenster mit 1024 px Breite oder weniger wechselt der Editor zu einer To
 
 Beim ersten Besuch bietet eine Karte über der Arbeitsfläche ein Tutorial an, in dem du ein UND-Gatter mit zwei Schaltern und einer LED baust. Es dauert etwa eine Minute. „Tutorial starten“ beginnt es, das ✕ schließt die Karte, und „Tutorial überspringen“ beendet das Tutorial bei jedem Schritt.
 
-Wenn du bestimmte Werkzeuge zum ersten Mal benutzt, etwa das Leitungswerkzeug oder das Schneiden an der Auswahlkante, erklärt ein kurzer Tipp sie. Jeder Tipp erscheint einmal. „Alle Tipps deaktivieren“ in einem Tipp oder die Einstellung „Einführungstipps anzeigen“ schaltet sie ab. Hilfe → Tipps erneut anzeigen schaltet sie wieder ein, zeigt auch die schon gesehenen noch einmal und bringt die Tutorial-Karte zurück.
+Wenn du bestimmte Werkzeuge zum ersten Mal benutzt, etwa das Leitungswerkzeug oder das Schneiden an der Auswahlkante, erklärt ein kurzer Tipp sie. Ein weiterer Tipp erklärt die orangefarbene Leitung, wenn in der Simulation zum ersten Mal ein [Konflikt](docs:simulation) auftritt. Jeder Tipp erscheint einmal. „Alle Tipps deaktivieren“ in einem Tipp oder die Einstellung „Einführungstipps anzeigen“ schaltet sie ab. Hilfe → Tipps erneut anzeigen schaltet sie wieder ein, zeigt auch die schon gesehenen noch einmal und bringt die Tutorial-Karte zurück.
 
 ## Das Hilfe-Menü
 

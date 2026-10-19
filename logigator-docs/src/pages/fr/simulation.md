@@ -91,6 +91,21 @@ En pause, les touches attendent « Pas à pas ». Une touche enfoncée puis rel�
 
 Fermer la fenêtre, cliquer en dehors ou passer à un autre onglet relâche toutes les touches maintenues. « Arrêter » efface les caractères du champ. Pour un clavier placé dans un composant personnalisé, tapez depuis une [surveillance](docs:inspection#surveillances). Sur un téléphone ou une tablette, la fenêtre s'ouvre dans le panneau en bas de l'écran (voir [Téléphones et tablettes](docs:phones-and-tablets#simulation-et-inspection)).
 
+## Signaux en conflit
+
+Un fil dessiné en orange signale un conflit. Il y a deux causes :
+
+- Deux sorties ou plus pilotent le même fil, et à ce moment l'une est à 1 et une autre à 0. Des sorties qui donnent la même valeur ne sont pas marquées, si bien que l'orange peut apparaître et disparaître quand les valeurs changent.
+- Une bascule SR a reçu un front d'horloge avec S et R tous deux à 1. Q passe à 1 et !Q à 0, et les deux restent en orange jusqu'à un front d'horloge où seul S ou seul R est à 1.
+
+La simulation continue sans changement : un fil relié à plusieurs sorties est à 1 dès que l'une d'elles est à 1. L'orange est une indication sur votre circuit. Sur du matériel réel, le premier cas serait un court-circuit, et le second est une combinaison d'entrées qu'une bascule SR n'admet pas.
+
+Pour le premier cas, ne reliez qu'une seule sortie à chaque fil. Pour combiner plusieurs sources, faites-les passer par une porte OU, et pour en choisir une, utilisez un multiplexeur. Pour une bascule SR, ne mettez pas S et R à 1 en même temps, ou utilisez plutôt une bascule D ou JK.
+
+Un conflit à l'intérieur d'un composant personnalisé n'apparaît pas sur le plan de travail. Cliquez sur le composant pour ouvrir une [surveillance](docs:inspection#surveillances), où ses fils le montrent.
+
+Le paramètre « Mettre en évidence les conflits », activé par défaut, désactive ce marquage en orange. Voir [Paramètres](docs:settings).
+
 ## Quand la simulation ne démarre pas
 
 L'éditeur refuse de démarrer et affiche un message nommant le composant quand :
@@ -105,5 +120,5 @@ Corrigez le composant nommé et relancez. Si le message indique que le moteur de
 
 - [Inspection et surveillances](docs:inspection) : contenu des ROM et des RAM, et surveillances
 - [Composants et options](docs:components-and-options) : ce que fait chaque entrée et affichage
-- [Paramètres](docs:settings) : le démarrage automatique de la simulation
+- [Paramètres](docs:settings) : le démarrage automatique de la simulation et la mise en évidence des conflits
 - [Téléphones et tablettes](docs:phones-and-tablets) : les commandes en disposition tactile

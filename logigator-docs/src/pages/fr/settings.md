@@ -10,18 +10,19 @@ Thème bascule entre Clair et Sombre. Sombre est la valeur par défaut. Langue p
 
 ## Paramètres de l'éditeur
 
-| Paramètre                                      | Par défaut | Effet                                                                                                                    |
-| ---------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Afficher la grille                             | activé     | Dessine la grille de points. Les composants s'alignent sur la grille dans tous les cas.                                  |
-| Démarrage automatique de la simulation         | activé     | Lance le circuit dès que vous entrez en [simulation](docs:simulation). Désactivé, elle attend en pause au tick 0.        |
-| Faire glisser la sélection en mode Déplacement | activé     | Un glisser avec Déplacement qui commence dans la sélection déplace la sélection. Désactivé, tout glisser déplace la vue. |
-| Compteur FPS                                   | désactivé  | Affiche les images par seconde dans le coin du plan de travail.                                                          |
-| Afficher les conseils d'intégration            | activé     | Affiche un conseil la première fois que vous utilisez certains outils. Voir [Prise en main](docs:getting-started).       |
+| Paramètre                                      | Par défaut | Effet                                                                                                                                                                                                                       |
+| ---------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Afficher la grille                             | activé     | Dessine la grille de points. Les composants s'alignent sur la grille dans tous les cas.                                                                                                                                     |
+| Démarrage automatique de la simulation         | activé     | Lance le circuit dès que vous entrez en [simulation](docs:simulation). Désactivé, elle attend en pause au tick 0.                                                                                                           |
+| Mettre en évidence les conflits                | activé     | Pendant la [simulation](docs:simulation#signaux-en-conflit), dessine un fil en orange quand les sorties qui le pilotent donnent des valeurs différentes, ou quand une bascule SR a reçu un front d'horloge avec S et R à 1. |
+| Faire glisser la sélection en mode Déplacement | activé     | Un glisser avec Déplacement qui commence dans la sélection déplace la sélection. Désactivé, tout glisser déplace la vue.                                                                                                    |
+| Compteur FPS                                   | désactivé  | Affiche les images par seconde dans le coin du plan de travail.                                                                                                                                                             |
+| Afficher les conseils d'intégration            | activé     | Affiche un conseil la première fois que vous rencontrez quelque chose de nouveau dans l'éditeur. Voir [Prise en main](docs:getting-started).                                                                                |
 
-Ces cinq paramètres, vos raccourcis clavier et l'état de la minicarte sont enregistrés uniquement dans ce navigateur. Un autre navigateur ou appareil démarre avec les valeurs par défaut, et effacer les données du site les réinitialise.
+Ces six paramètres, vos raccourcis clavier et l'état de la minicarte sont enregistrés uniquement dans ce navigateur. Un autre navigateur ou appareil démarre avec les valeurs par défaut, et effacer les données du site les réinitialise.
 
 ## Voir aussi
 
 - [Prise en main](docs:getting-started) : le tutoriel et les conseils
-- [Simulation](docs:simulation) : où agit le démarrage automatique
+- [Simulation](docs:simulation) : où agissent le démarrage automatique et la mise en évidence des conflits
 - [Cloud et partage](docs:cloud) : connexion et compte

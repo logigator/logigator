@@ -91,6 +91,21 @@ Ist die Simulation pausiert, warten Tasten auf „Einzelschritt“. Eine Taste, 
 
 Schließt du das Fenster, klickst daneben oder wechselst in einen anderen Tab, werden alle gehaltenen Tasten losgelassen. „Stopp“ leert die Zeichen im Feld. In eine Tastatur in einer benutzerdefinierten Komponente tippst du aus einer [Beobachtung](docs:inspection#beobachtungen) heraus. Auf einem Smartphone oder Tablet öffnet sich das Fenster in der Leiste am unteren Bildschirmrand (siehe [Smartphones und Tablets](docs:phones-and-tablets#simulation-und-inspektion)).
 
+## Widersprüchliche Signale
+
+Eine orange gezeichnete Leitung hat einen Konflikt. Dafür gibt es zwei Ursachen:
+
+- Zwei oder mehr Ausgänge sind an dieselbe Leitung angeschlossen, und in diesem Moment gibt einer 1 aus und ein anderer 0. Ausgänge, die übereinstimmen, werden nicht markiert, das Orange kann also kommen und gehen, wenn sich die Werte ändern.
+- Ein SR-Flip-Flop wurde mit S und R gleichzeitig auf 1 getaktet. Q geht auf 1 und !Q auf 0, und beide bleiben orange, bis eine Taktflanke kommt, bei der nur S oder nur R auf 1 ist.
+
+Die Simulation läuft unverändert weiter: Eine Leitung mit mehreren Ausgängen ist 1, sobald einer davon 1 ist. Das Orange ist ein Hinweis auf deine Schaltung. In echter Hardware wäre der erste Fall ein Kurzschluss, und der zweite ist eine Eingangsbelegung, die ein SR-Flip-Flop nicht erlaubt.
+
+Für den ersten Fall schließt du an jede Leitung nur einen Ausgang an. Willst du mehrere Quellen zusammenführen, leite sie durch ein ODER-Gatter, und um eine davon auszuwählen, nimm einen Multiplexer. Beim SR-Flip-Flop setzt du S und R nicht gleichzeitig auf 1, oder du nimmst stattdessen ein D- oder JK-Flip-Flop.
+
+Ein Konflikt in einer benutzerdefinierten Komponente erscheint nicht auf der Arbeitsfläche. Klicke auf die Komponente, um eine [Beobachtung](docs:inspection#beobachtungen) zu öffnen, in der ihre Leitungen ihn zeigen.
+
+Die Einstellung „Konflikte hervorheben“, standardmäßig an, schaltet das Orange ab. Siehe [Einstellungen](docs:settings).
+
 ## Wenn die Simulation nicht startet
 
 Der Editor startet nicht und zeigt eine Meldung mit der betroffenen Komponente, wenn
@@ -105,5 +120,5 @@ Behebe das bei der genannten Komponente und starte erneut. Sagt die Meldung, das
 
 - [Inspektion und Beobachtungen](docs:inspection): ROM- und RAM-Inhalte und Beobachtungen
 - [Komponenten und Optionen](docs:components-and-options): was jede Eingabe und Anzeige tut
-- [Einstellungen](docs:settings): „Simulation automatisch starten“
+- [Einstellungen](docs:settings): „Simulation automatisch starten“ und „Konflikte hervorheben“
 - [Smartphones und Tablets](docs:phones-and-tablets): die Steuerung in der Touch-Ansicht

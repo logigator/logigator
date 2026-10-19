@@ -23,7 +23,7 @@ In a window 1024 px wide or narrower, the editor switches to a touch layout with
 
 On your first visit, a card over the board offers a tutorial that builds an AND gate with two switches and an LED. It takes about a minute. Start tutorial begins it, the ✕ closes the card, and Skip tutorial ends the tutorial at any step.
 
-The first time you use certain tools, such as the Wire tool or scissor select, a short tip explains them. Each tip appears once. Turn off all tips in any tip, or the Show onboarding tips setting, stops them. Help → Show tips again turns them back on, shows the ones you have already seen again, and brings back the tutorial card.
+The first time you use certain tools, such as the Wire tool or scissor select, a short tip explains them. Another tip explains the orange wire the first time a [conflict](docs:simulation) appears during simulation. Each tip appears once. Turn off all tips in any tip, or the Show onboarding tips setting, stops them. Help → Show tips again turns them back on, shows the ones you have already seen again, and brings back the tutorial card.
 
 ## Help menu
 

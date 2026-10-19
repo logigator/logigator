@@ -10,18 +10,19 @@ Design wechselt zwischen Hell und Dunkel. Standard ist Dunkel. Unter Sprache ste
 
 ## Editor-Einstellungen
 
-| Einstellung                         | Standard | Was sie bewirkt                                                                                                          |
-| ----------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Raster anzeigen                     | an       | Zeichnet das Punktraster. Komponenten rasten in beiden Fällen ein.                                                       |
-| Simulation automatisch starten      | an       | Lässt die Schaltung laufen, sobald du die [Simulation](docs:simulation) betrittst. Aus wartet sie pausiert bei Tick 0.   |
-| Auswahl im Schwenkmodus verschieben | an       | Ein Ziehen mit „Schwenken“, das in der Auswahl beginnt, verschiebt die Auswahl. Aus verschiebt jedes Ziehen die Ansicht. |
-| FPS-Anzeige                         | aus      | Zeigt die Bilder pro Sekunde in der Ecke der Arbeitsfläche.                                                              |
-| Einführungstipps anzeigen           | an       | Zeigt einen Tipp, wenn du bestimmte Werkzeuge zum ersten Mal benutzt. Siehe [Einstieg](docs:getting-started).            |
+| Einstellung                         | Standard | Was sie bewirkt                                                                                                                                                                                                       |
+| ----------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Raster anzeigen                     | an       | Zeichnet das Punktraster. Komponenten rasten in beiden Fällen ein.                                                                                                                                                    |
+| Simulation automatisch starten      | an       | Lässt die Schaltung laufen, sobald du die [Simulation](docs:simulation) betrittst. Aus wartet sie pausiert bei Tick 0.                                                                                                |
+| Konflikte hervorheben               | an       | Zeichnet in der [Simulation](docs:simulation#widersprüchliche-signale) eine Leitung orange, wenn die Ausgänge an ihr verschiedene Werte ausgeben oder ein SR-Flip-Flop mit S und R gleichzeitig auf 1 getaktet wurde. |
+| Auswahl im Schwenkmodus verschieben | an       | Ein Ziehen mit „Schwenken“, das in der Auswahl beginnt, verschiebt die Auswahl. Aus verschiebt jedes Ziehen die Ansicht.                                                                                              |
+| FPS-Anzeige                         | aus      | Zeigt die Bilder pro Sekunde in der Ecke der Arbeitsfläche.                                                                                                                                                           |
+| Einführungstipps anzeigen           | an       | Zeigt einen Tipp, wenn dir im Editor zum ersten Mal etwas Neues begegnet. Siehe [Einstieg](docs:getting-started).                                                                                                     |
 
-Diese fünf Einstellungen, deine Tastaturbefehle und der Zustand der Minimap werden nur in diesem Browser gespeichert. Ein anderer Browser oder ein anderes Gerät beginnt mit den Standardwerten, und das Löschen der Website-Daten setzt sie zurück.
+Diese sechs Einstellungen, deine Tastaturbefehle und der Zustand der Minimap werden nur in diesem Browser gespeichert. Ein anderer Browser oder ein anderes Gerät beginnt mit den Standardwerten, und das Löschen der Website-Daten setzt sie zurück.
 
 ## Siehe auch
 
 - [Einstieg](docs:getting-started): das Tutorial und die Tipps
-- [Simulation](docs:simulation): wo „Simulation automatisch starten“ wirkt
+- [Simulation](docs:simulation): wo „Simulation automatisch starten“ und „Konflikte hervorheben“ wirken
 - [Cloud und Teilen](docs:cloud): Anmeldung und dein Account

@@ -91,6 +91,21 @@ Con la simulación en pausa, las teclas esperan a «Paso». Una tecla que pulsas
 
 Al cerrar la ventana, hacer clic fuera de ella o cambiar a otra pestaña se sueltan todas las teclas pulsadas. «Detener» borra los caracteres del campo. En un teclado dentro de un componente personalizado se escribe desde un [monitor](docs:inspection#monitores). En un móvil o una tableta, la ventana se abre en el panel de la parte inferior de la pantalla (consulta [Móviles y tabletas](docs:phones-and-tablets#simulación-e-inspección)).
 
+## Señales en conflicto
+
+Un cable dibujado en naranja tiene un conflicto. Hay dos causas:
+
+- Dos o más salidas controlan el mismo cable y, en ese momento, una está a 1 y otra a 0. Las salidas que coinciden no se marcan, así que el naranja puede aparecer y desaparecer según cambian los valores.
+- Un biestable SR recibió un flanco de reloj con S y R a 1 a la vez. Q pasa a 1 y !Q a 0, y ambas siguen en naranja hasta un flanco de reloj con solo S o solo R a 1.
+
+La simulación sigue igual: un cable con varias salidas está a 1 en cuanto una de ellas está a 1. El naranja es un aviso sobre tu circuito. En hardware real, el primer caso sería un cortocircuito, y el segundo es una combinación de entradas que un biestable SR no admite.
+
+Para el primer caso, conecta una sola salida a cada cable. Para combinar varias fuentes, pásalas por una puerta O, y para elegir una de ellas, usa un multiplexor. En un biestable SR, no pongas S y R a 1 a la vez, o usa un biestable D o JK en su lugar.
+
+Un conflicto dentro de un componente personalizado no se muestra en el tablero. Haz clic en el componente para abrir un [monitor](docs:inspection#monitores), donde sus cables lo muestran.
+
+El ajuste «Resaltar conflictos», activado de forma predeterminada, quita el naranja. Consulta [Ajustes](docs:settings).
+
 ## Cuando la simulación no arranca
 
 El editor no arranca y muestra un mensaje con el componente afectado cuando:
@@ -105,5 +120,5 @@ Corrige el componente indicado y vuelve a empezar. Si el mensaje dice que el mot
 
 - [Inspección y monitores](docs:inspection): contenido de ROMs y RAMs, y monitores
 - [Componentes y opciones](docs:components-and-options): qué hace cada entrada y pantalla
-- [Ajustes](docs:settings): el inicio automático de la simulación
+- [Ajustes](docs:settings): el inicio automático de la simulación y el resaltado de conflictos
 - [Móviles y tabletas](docs:phones-and-tablets): los controles en la vista táctil

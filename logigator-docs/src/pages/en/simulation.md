@@ -91,6 +91,21 @@ While the simulation is paused, keys wait for Step. A key you press and let go i
 
 Closing the window, clicking outside it and switching to another tab let go of every held key. Stop clears the characters in the field. A keyboard inside a custom component is typed into from a [watch](docs:inspection#watches). On a phone or tablet, the window opens in the sheet at the bottom of the screen (see [Phones and tablets](docs:phones-and-tablets#simulation-and-inspection)).
 
+## Conflicting signals
+
+A wire drawn in orange carries a conflict. There are two causes:
+
+- Two or more outputs drive the same wire, and at that moment one is 1 and another is 0. Outputs that agree are not marked, so the orange can come and go as the values change.
+- An SR flip-flop was clocked with S and R both at 1. Q goes to 1 and !Q to 0, and both stay orange until a clock edge with only S or only R at 1.
+
+The simulation keeps running as before: a wire with several outputs on it is 1 as soon as one of them is 1. The orange is a hint about your circuit. On real hardware, the first case would be a short circuit, and the second is an input an SR flip-flop does not allow.
+
+To fix the first case, connect only one output to each wire. To combine several sources, feed them into an OR gate, and to choose one of them, use a multiplexer. For an SR flip-flop, don't set S and R to 1 at the same time, or use a D or JK flip-flop instead.
+
+A conflict inside a custom component is not shown on the board. Click the component to open a [watch](docs:inspection#watches), where its wires show it.
+
+The Highlight conflicts setting, on by default, turns the orange off. See [Settings](docs:settings).
+
 ## When the simulation won't start
 
 The editor refuses to start and shows a message naming the component when:
@@ -105,5 +120,5 @@ Fix the named component and start again. If the message says the simulation engi
 
 - [Inspection and watches](docs:inspection): ROM and RAM contents, and watches
 - [Components and options](docs:components-and-options): what each input and display does
-- [Settings](docs:settings): Auto-start simulation
+- [Settings](docs:settings): Auto-start simulation and Highlight conflicts
 - [Phones and tablets](docs:phones-and-tablets): the run controls in the touch layout
