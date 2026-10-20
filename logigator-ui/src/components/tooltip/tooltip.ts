@@ -1,4 +1,4 @@
-import { AriaDescriber } from '@angular/cdk/a11y';
+import { AriaDescriber, FocusMonitor } from '@angular/cdk/a11y';
 import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import {
@@ -28,14 +28,16 @@ import { LgTooltipPanel } from './tooltip-panel';
  * `tooltipShortcut` renders as key chips after the text. The bubble is a
  * connected overlay with a caret tracking the anchor; the directive never
  * steals pointer or focus, and registers the text with `AriaDescriber`.
+ *
+ * Focus opens it only when `FocusMonitor` attributes the focus to the
+ * keyboard: focus moved by code (a dialog's initial focus, focus restored to
+ * a trigger) or by a click or tap leaves it to hover.
  */
 @Directive({
   selector: '[lgTooltip]',
   host: {
     '(mouseenter)': 'show()',
     '(mouseleave)': 'hide()',
-    '(focusin)': 'show()',
-    '(focusout)': 'hide()',
     '(keydown.escape)': 'hide()'
   }
 })
@@ -50,10 +52,20 @@ export class LgTooltip implements OnDestroy {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly viewContainerRef = inject(ViewContainerRef);
   private readonly ariaDescriber = inject(AriaDescriber);
+  private readonly focusMonitor = inject(FocusMonitor);
 
   private overlayRef: OverlayRef | null = null;
   private panelRef: ComponentRef<LgTooltipPanel> | null = null;
   private subscriptions: Subscription | null = null;
+  private readonly focusSubscription = this.focusMonitor
+    .monitor(this.host, true)
+    .subscribe((origin) => {
+      if (origin === 'keyboard') {
+        this.show();
+      } else if (!origin) {
+        this.hide();
+      }
+    });
 
   constructor() {
     // Cleanup removes the previous hidden description on change and destroy.
@@ -84,6 +96,8 @@ export class LgTooltip implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.focusSubscription.unsubscribe();
+    this.focusMonitor.stopMonitoring(this.host);
     this.hide();
   }
 
