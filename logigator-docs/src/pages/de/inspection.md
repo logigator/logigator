@@ -4,9 +4,9 @@ Während einer [Simulation](docs:simulation), ob laufend oder pausiert, lassen s
 
 ![Ein Beobachtungsfenster neben der laufenden Schaltung, zu der es gehört.](./images/inspection-showcase.webp)
 
-Am Desktop öffnet sich jede Ansicht als Fenster, das du verschieben und in der Größe ändern kannst. Ein erneuter Klick auf die Komponente holt ihr Fenster nach vorn. In der [Touch-Ansicht](docs:phones-and-tablets#simulation-und-inspektion) teilen sich ROM-, RAM- und Terminal-Ansichten eine Leiste am unteren Bildschirmrand, und eine Beobachtung füllt den ganzen Bildschirm. Verlässt du die Simulation, schließen sich alle.
+Am Desktop öffnet sich jede Ansicht als Fenster, das du verschieben und in der Größe ändern kannst. Ein erneuter Klick auf die Komponente holt ihr Fenster nach vorn. In der [Touch-Ansicht](docs:phones-and-tablets#simulation-and-inspection) teilen sich ROM-, RAM- und Terminal-Ansichten eine Leiste am unteren Bildschirmrand, und eine Beobachtung füllt den ganzen Bildschirm. Verlässt du die Simulation, schließen sich alle.
 
-## ROM-Inhalt
+## ROM-Inhalt {#rom-contents}
 
 ![Die ROM-Ansicht folgt der Adresse, während sie sich ändert.](./images/rom-inspection.webp)
 
@@ -14,13 +14,13 @@ Die Ansicht ist schreibgeschützt; den Inhalt änderst du beim Bearbeiten in den
 
 Die Schaltflächen über der Tabelle wählen Wörter oder Bytes und das Zahlensystem: Hex, Dezimal, Oktal oder Binär. Um zu einer Adresse zu springen, tippe sie hexadezimal in das Feld „Adresse…“. „Kopieren“ legt die ganze Tabelle als Text in die Zwischenablage, in der gewählten Ansicht und Basis.
 
-## RAM-Inhalt
+## RAM-Inhalt {#ram-contents}
 
 Die Ansicht eines RAM hat dieselbe Tabelle, dieselben Schaltflächen und „Folgen“ wie die eines ROM, das Wort an der Adresse an seinen Eingängen hervorgehoben. Sie zeigt, was die Schaltung gespeichert hat, und ändert sich, während die Schaltung schreibt, ob laufend oder schrittweise. Auch sie ist schreibgeschützt: In ein RAM schreibt nur die Schaltung. Beim Start der Simulation ist jedes Wort 0, und „Stopp“ setzt alle wieder auf 0.
 
 Ein großes RAM wird nur rund um die sichtbaren Zeilen gelesen. Eine Zeile, die ins Bild scrollt, zeigt Punkte, bis sie gelesen ist, was einen Moment dauert, und die Zeile unten zeigt für eine solche Zelle „Nicht geladen“. „Kopieren“ legt die Tabelle so in die Zwischenablage, wie du sie siehst, Punkte eingeschlossen.
 
-## Terminal-Ausgabe
+## Terminal-Ausgabe {#terminal-output}
 
 Das Fenster eines Terminals zeigt den Verlauf, die älteste Zeile zuerst, und darunter den Bildschirm auf einem getönten Band mit dem Cursor. Text erscheint, sobald die Schaltung ihn ausgibt, ob laufend oder schrittweise. Was jeder Code bewirkt, steht unter [Terminal](docs:outputs#terminal).
 
@@ -36,7 +36,7 @@ Die Simulation hält für jedes Terminal die letzten 65.536 Zeichen, die es beko
 - sagt eine Zeile im Verlauf, wie viele Zeichen verloren gingen,
 - macht der Bildschirm mit den Zeichen weiter, die danach kamen.
 
-## Beobachtungen
+## Beobachtungen {#watches}
 
 ![Eine Beobachtung, von Outer in Inner hineingegangen, mit dem Pfad im Titel.](./images/inspection-window-multilayer.webp)
 
@@ -52,11 +52,11 @@ Ein Klick auf eine Komponente innerhalb einer Beobachtung öffnet:
 
 Ein Terminal in einer Beobachtung zeigt dort auch seinen Bildschirm: Öffnest du seine Ebene, spielt es die Zeichen ab, die die Simulation von ihm noch hält, und zeigt so, was ausgegeben wurde, bevor du hingesehen hast.
 
-Das Fenster eines Gamepads oder einer Tastatur funktioniert wie auf der Arbeitsfläche (siehe [Gamepad](docs:inputs#gamepad) und [Tastatur](docs:inputs#tastatur)), und was du dort drückst, erreicht die Komponente in der Beobachtung. Gehst du über ihre Ebene hinaus nach oben oder schließt die Beobachtung, schließt sich auch dieses Fenster.
+Das Fenster eines Gamepads oder einer Tastatur funktioniert wie auf der Arbeitsfläche (siehe [Gamepad](docs:inputs#gamepad) und [Tastatur](docs:inputs#keyboard)), und was du dort drückst, erreicht die Komponente in der Beobachtung. Gehst du über ihre Ebene hinaus nach oben oder schließt die Beobachtung, schließt sich auch dieses Fenster.
 
 Meldet die Beobachtung, dass die innere Schaltung nicht zur kompilierten Simulation passt, wurde die Komponente nach dem Start der Simulation geändert. Verlasse die Simulation und starte sie neu.
 
-## Siehe auch
+## Siehe auch {#see-also}
 
 - [Simulation](docs:simulation): eine Schaltung laufen lassen
 - [Benutzerdefinierte Komponenten](docs:custom-components): die Komponenten bauen, die du beobachtest

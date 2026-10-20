@@ -164,7 +164,7 @@ async function runTarget(
     return;
   }
   if (!target.writeRegistry) return;
-  const file = target.writeRegistry(path.resolve(options.out));
+  const file = await target.writeRegistry(path.resolve(options.out));
   console.log(`registry → ${path.relative(process.cwd(), file)}`);
 }
 

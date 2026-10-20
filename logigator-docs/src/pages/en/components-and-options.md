@@ -4,13 +4,13 @@ Components are the parts a circuit is made of: gates, memories, inputs and displ
 
 ![The component palette.](./images/component-palette.webp)
 
-## The palette
+## The palette {#the-palette}
 
 The search field at the top filters the palette by name. The categories are Logic gates, Adders and selectors, Memory, Timing, Inputs and Outputs, plus User Components once you have built a [custom component](docs:custom-components). Click a category header to fold it. How placing works is described in [Board and tools](docs:board-and-tools#placing-components).
 
 Every component takes one tick to pass a change on to its output. The tables below follow the order of the palette.
 
-### Logic gates
+### Logic gates {#logic-gates}
 
 | Component                                    | What it does                                                        |
 | -------------------------------------------- | ------------------------------------------------------------------- |
@@ -20,7 +20,7 @@ Every component takes one tick to pass a change on to its output. The tables bel
 | [XOR Gate](docs:logic-gates#xor-gate)        | Outputs 1 when an odd number of inputs are 1.                       |
 | [Tunnel](docs:wires-and-connections#tunnels) | Connects to every other tunnel with the same label, without a wire. |
 
-### Adders and selectors
+### Adders and selectors {#adders-and-selectors}
 
 | Component                                                | What it does                                                    |
 | -------------------------------------------------------- | --------------------------------------------------------------- |
@@ -31,7 +31,7 @@ Every component takes one tick to pass a change on to its output. The tables bel
 | [Decoder](docs:adders-and-selectors#decoder)             | Turns on the one output whose number is on the inputs.          |
 | [Encoder](docs:adders-and-selectors#encoder)             | Outputs the number of the highest input that is 1.              |
 
-### Memory
+### Memory {#memory}
 
 | Component                                | What it does                                                           |
 | ---------------------------------------- | ---------------------------------------------------------------------- |
@@ -41,7 +41,7 @@ Every component takes one tick to pass a change on to its output. The tables bel
 | [ROM](docs:memory#rom)                   | Outputs the stored word at the address on its inputs.                  |
 | [RAM](docs:memory#ram)                   | Stores the words the circuit writes and outputs the one at an address. |
 
-### Timing
+### Timing {#timing}
 
 | Component                                                                | What it does                                                        |
 | ------------------------------------------------------------------------ | ------------------------------------------------------------------- |
@@ -49,7 +49,7 @@ Every component takes one tick to pass a change on to its output. The tables bel
 | [Delay](docs:clock-and-timing#delay)                                     | Passes its input through unchanged, one tick later.                 |
 | [Random Number Generator](docs:clock-and-timing#random-number-generator) | Puts a new random value on its outputs on every rising edge of CLK. |
 
-### Inputs
+### Inputs {#inputs}
 
 | Component                                | What it does                                                        |
 | ---------------------------------------- | ------------------------------------------------------------------- |
@@ -59,7 +59,7 @@ Every component takes one tick to pass a change on to its output. The tables bel
 | [Gamepad](docs:inputs#gamepad)           | One output per button of a controller you play during a simulation. |
 | [Keyboard](docs:inputs#keyboard)         | Puts the code of each key you type on its outputs.                  |
 
-### Outputs
+### Outputs {#outputs}
 
 | Component                                       | What it does                                                        |
 | ----------------------------------------------- | ------------------------------------------------------------------- |
@@ -68,7 +68,7 @@ Every component takes one tick to pass a change on to its output. The tables bel
 | [LED Matrix](docs:outputs#led-matrix)           | A square grid of LEDs, written one row at a time.                   |
 | [Terminal](docs:outputs#terminal)               | A text screen that prints one character on each rising edge of CLK. |
 
-## The settings card
+## The settings card {#the-settings-card}
 
 Selecting a single component, or picking one to place, shows its settings card next to the board: the name, a description, and the options. The card is hidden during a simulation.
 
@@ -78,7 +78,7 @@ Selecting a single component, or picking one to place, shows its settings card n
 - Changing Inputs, Outputs or a size option changes the number of ports right away.
 - The other options are described with each component, such as the contents of a [ROM](docs:memory#rom), the button names of a [Gamepad](docs:inputs#gamepad) and the screen size of a [Terminal](docs:outputs#terminal).
 
-## Negating a port
+## Negating a port {#negating-a-port}
 
 With the Wire tool, tap an input or output port to add a negation bubble. The signal through that port is then inverted, with no extra delay. Tap the bubble again to remove it. While you hover a port, the Wire tool shows what a tap would do. A bubble on a [flip-flop's](docs:memory) CLK input makes it react to the falling edge instead.
 
@@ -86,11 +86,11 @@ Tunnels, Input and Output plugs and the ports of a placed custom component can't
 
 ![An OR gate with a negated output.](./images/negated-gate.webp)
 
-## Text labels
+## Text labels {#text-labels}
 
 Text isn't in the palette. With the Text tool (`T`), click the board to place a label reading "[insert text]". Edit text in its settings card opens a dialog for the text, which can run over several lines, and Font size ranges from 2 to 128. Wires pass through labels without connecting. Clicking a wire that runs under a label selects the wire.
 
-## See also
+## See also {#see-also}
 
 - [Logic gates](docs:logic-gates): the first of the component pages
 - [Inputs](docs:inputs): switches, buttons, the gamepad and the keyboard

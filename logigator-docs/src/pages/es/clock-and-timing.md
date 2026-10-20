@@ -2,7 +2,7 @@
 
 Estos componentes trabajan con el tiempo, contado en ticks de simulación. Un reloj enciende y apaga su salida por sí solo, un retardo pasa una señal un tick después, y un generador de números aleatorios pone bits aleatorios nuevos en sus salidas cuando recibe un flanco de reloj.
 
-## Reloj
+## Reloj {#clock}
 
 ![Un reloj con un interruptor apagado en STP y un LED en su salida, mostrado a un tick por fotograma. Con Retardo 1, el LED se enciende y se apaga cada tick.](./images/component-clock.webp)
 
@@ -35,9 +35,9 @@ La velocidad del reloj en segundos depende de la velocidad de la simulación: di
 | Cuadrada      | 5       | 10 ticks      | 1 Hz       |
 | Pulso         | 4       | 5 ticks       | 2 Hz       |
 
-El panel de velocidad lista estas frecuencias para cada reloj del circuito en «Relojes a esta velocidad». Consulta [Velocidad](docs:simulation#velocidad).
+El panel de velocidad lista estas frecuencias para cada reloj del circuito en «Relojes a esta velocidad». Consulta [Velocidad](docs:simulation#speed).
 
-## Retardo
+## Retardo {#delay}
 
 ![Un interruptor que controla un LED directamente y un segundo LED a través de un retardo, mostrado a un tick por fotograma. El LED que va detrás del retardo se enciende y se apaga un tick después que el otro.](./images/component-delay.webp)
 
@@ -50,7 +50,7 @@ Un retardo deja pasar su entrada sin cambios, un tick después. Como cualquier o
 
 No tiene más opciones que Dirección.
 
-## Generador de números aleatorios
+## Generador de números aleatorios {#random-number-generator}
 
 ![Un generador de números aleatorios con Salidas en 4, un botón de pulso en CLK y un display de segmentos en sus salidas, que muestra un número nuevo después de cada pulso.](./images/component-random-number-generator.webp)
 
@@ -65,9 +65,9 @@ Un generador de números aleatorios pone un valor aleatorio nuevo en sus salidas
 | ------- | ------- | -------------- |
 | Salidas | 1 a 64  | 1              |
 
-Con una [burbuja de negación](docs:components-and-options#negar-un-puerto) en CLK, genera un valor nuevo en el flanco de bajada.
+Con una [burbuja de negación](docs:components-and-options#negating-a-port) en CLK, genera un valor nuevo en el flanco de bajada.
 
-## Ver también
+## Ver también {#see-also}
 
 - [Simulación](docs:simulation): ticks, controles y velocidad de la simulación
 - [Entradas](docs:inputs): interruptores y botones para controlar STP o CLK a mano

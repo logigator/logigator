@@ -2,7 +2,7 @@
 
 Inputs are the components you operate during a simulation: switches, buttons, a gamepad and a keyboard. Each one drives its outputs from what you click, press or type, and the rest of the circuit reacts.
 
-## Switch
+## Switch {#switch}
 
 ![A switch wired to an LED, off and then on, the LED lighting with it.](./images/component-switch.webp)
 
@@ -14,7 +14,7 @@ A Switch toggles between 0 and 1 with each click during a simulation and stays w
 
 It has no options besides Direction.
 
-## Button
+## Button {#button}
 
 ![A button wired to an LED, released and then held down, the LED lit while it is held.](./images/component-button.webp)
 
@@ -28,7 +28,7 @@ It has no options besides Direction.
 
 A Button passes on what is held now. When you click far ahead of a slow or paused simulation, it skips older presses, but your last click always arrives.
 
-## Pulse button
+## Pulse button {#pulse-button}
 
 ![A pulse button wired to an LED, shown one tick per frame: idle, the one-tick pulse with the LED lit, then idle again.](./images/component-pulse-button.webp)
 
@@ -42,7 +42,7 @@ It has no options besides Direction.
 
 A Pulse button never skips a click, however far ahead of the simulation you are. Each click arrives as its own pulse.
 
-## Gamepad
+## Gamepad {#gamepad}
 
 ![A gamepad with the default buttons and an LED on each of its eight outputs, with right and A held so that those two LEDs are lit.](./images/component-gamepad.webp)
 
@@ -80,7 +80,7 @@ A button held in the window sets its output to 1 until you let go, and lights up
 
 Closing the window or leaving the simulation lets go of every button.
 
-### Keyboard, mouse and touch
+### Keyboard, mouse and touch {#keyboard-mouse-and-touch}
 
 The window takes the keyboard when it opens, and the line at the bottom reads Keyboard active. After you click the board or another window it reads Click here to use the keyboard, and keys no longer reach the gamepad. The key for each button is shown under it.
 
@@ -94,7 +94,7 @@ The default keys and how to change them are in [Keyboard shortcuts](docs:shortcu
 
 With the mouse or a finger, a button stays pressed for as long as you hold it. On a touchscreen, each finger holds its own button. The D-pad has eight directions: pressing between two arms holds both, and sliding your thumb moves from one direction to the next without lifting it. Pressing the centre of the D-pad holds no direction.
 
-### Game controllers
+### Game controllers {#game-controllers}
 
 A game controller connected to your computer can play a gamepad as well. The browser reports a controller only after you press one of its buttons while the editor is open. Do that with a gamepad window open, and the controller is connected to that window and appears in the Controller menu at the bottom.
 
@@ -116,19 +116,19 @@ Buttons are matched by position, whatever they are labelled:
 
 Controllers that the browser doesn't report with the standard layout are listed but can't be chosen.
 
-### Button names
+### Button names {#button-names}
 
 Button names, in the settings card, opens a picture of the controller with a field at each button. A name of up to 8 characters replaces the button's port label on the board and is shown beside the button in the controller window. An empty field keeps the default label. Characters the board can't draw are left out of the port label, and the dialog says so.
 
 Names of buttons you switch off are kept and come back when you switch them on again.
 
-### Gamepads in watches and the touch layout
+### Gamepads in watches and the touch layout {#gamepads-in-watches-and-the-touch-layout}
 
 A gamepad inside a custom component is played from a [watch](docs:inspection#watches). Its window is titled with the path, such as Outer › Inner › Gamepad.
 
 In the touch layout, the controller opens in the sheet at the bottom of the screen. The key labels appear there once you press a key on a keyboard, and the Controller menu once a controller is connected.
 
-## Keyboard
+## Keyboard {#keyboard}
 
 ![A keyboard wired to a terminal, D0 to D7 to D0 to D7 and STB to CLK, after typing Hello, world! The terminal shows the text and the keyboard shows the last key, !.](./images/component-keyboard.webp)
 
@@ -142,7 +142,7 @@ A Keyboard puts the code of each key you press on its outputs. During a simulati
 
 It has no options besides Direction.
 
-### The keyboard window
+### The keyboard window {#the-keyboard-window}
 
 ![The keyboard window with hello and world typed and d held, beside the keyboard showing d on the board.](./images/keyboard-window.webp)
 
@@ -154,7 +154,7 @@ The window has a typing field at the top. While the field has the focus, the key
 
 Which keys go to the circuit instead of the editor is listed in [Keyboard shortcuts](docs:shortcuts#keys-in-a-keyboard-window).
 
-### What a key press does
+### What a key press does {#what-a-key-press-does}
 
 A key going down puts its code on D0 to D7, sends a one-tick pulse on STB and sets KD to 1. A key you press and let go, like each character of a pasted text, takes four ticks:
 
@@ -176,7 +176,7 @@ A key you hold keeps KD at 1 after tick 3 until you let go. D keeps the code aft
 
 Closing the window, clicking outside it and switching to another tab let go of every held key. Stop clears the characters in the field.
 
-### Character codes
+### Character codes {#character-codes}
 
 The code is Latin-1: ASCII plus the accented letters and symbols of Western European languages. Printable characters, from space to `~` and from `0xA0` to ÿ, are sent as themselves, so ä arrives as `0xE4`. No-break space (`0xA0`) and the soft hyphen (`0xAD`) are shown as NBS and SHY, since they have no visible mark.
 
@@ -210,7 +210,7 @@ Some keys and characters send nothing or something else:
 | Characters typed with `AltGr`, such as @ on a German keyboard | the character                                             |
 | Combinations with `Ctrl`, `Alt` or `⌘`                        | nothing, they are left to the browser                     |
 
-### Pasting text
+### Pasting text {#pasting-text}
 
 A paste sends the pasted text one character at a time. Type text…, at the bottom of the window, opens a dialog where you can write or paste a longer text, a program for example. It says how many of its characters will be skipped before you send it.
 
@@ -230,7 +230,7 @@ The limits:
 - At most 21,845 characters can wait at once.
 - A paste or a Send that does not fit behind the characters already waiting is not sent at all, not even in part. The window or the dialog asks you to wait for them instead.
 
-### Stepping while paused
+### Stepping while paused {#stepping-while-paused}
 
 While the simulation is paused, keys wait for Step. Each step is one tick of the table in [What a key press does](#what-a-key-press-does):
 
@@ -244,13 +244,13 @@ While the simulation is paused, keys wait for Step. Each step is one tick of the
 
 A pasted text therefore takes four steps per character.
 
-### Keyboards in watches and the touch layout
+### Keyboards in watches and the touch layout {#keyboards-in-watches-and-the-touch-layout}
 
 A keyboard inside a custom component is typed into from a [watch](docs:inspection#watches). Its window is titled with the path, as a gamepad's is.
 
 On a phone or tablet, the window opens in the sheet at the bottom of the screen (see [Phones and tablets](docs:phones-and-tablets#simulation-and-inspection)).
 
-## See also
+## See also {#see-also}
 
 - [Simulation](docs:simulation): running, pausing and stepping a circuit
 - [Outputs](docs:outputs): LEDs, displays and the terminal

@@ -2,7 +2,7 @@
 
 The board is the grid you build on. Components and wires snap to it, and the status bar at the bottom shows the grid position under the cursor.
 
-## Moving around
+## Moving around {#moving-around}
 
 The mouse wheel zooms at the pointer, and so does a two-finger swipe or pinch on a trackpad. The zoom buttons in the toolbar and View → Zoom In, Zoom Out and Zoom 100% do the same in fixed steps.
 
@@ -10,7 +10,7 @@ To pan, drag with the right or middle mouse button. That works with every tool. 
 
 The minimap in the bottom-right corner shows the whole circuit with a frame around the part in view. Click or drag in it to move the view there. Hide minimap collapses it, and the editor remembers that.
 
-## Tools
+## Tools {#tools}
 
 One tool is active at a time. Each has a button in the toolbar and a single-key shortcut.
 
@@ -26,13 +26,13 @@ A click without dragging selects the element under the pointer in Pan, Wire tool
 
 ![The five tool buttons in the toolbar.](./images/tool-buttons.webp)
 
-## Placing components
+## Placing components {#placing-components}
 
 Click a component in the palette and it follows the cursor as a ghost. Click the board to drop it. The ghost stays attached afterwards, so you can drop several in a row. `R` and `Shift+R` turn the ghost before you drop it, and the next one keeps that direction.
 
 Nothing is placed where the ghost overlaps another component. Press `Escape` or pick a tool to stop placing.
 
-## Selecting and moving
+## Selecting and moving {#selecting-and-moving}
 
 With Select, drag a box over the elements you want. Every component and wire the box touches is selected. Hold `Ctrl` (`⌘` on a Mac) to change the selection instead of replacing it: a click adds or removes one element, and a box adds what it covers. This works in Pan and the Wire tool too.
 
@@ -44,7 +44,7 @@ Drag the selection to move it. `R` rotates it clockwise, `Shift+R` counter-clock
 2. Clears the selection.
 3. Switches to Pan.
 
-## Cutting wires at the selection edge
+## Cutting wires at the selection edge {#cutting-wires-at-the-selection-edge}
 
 Normally a selection box takes whole wires. In scissor mode it cuts every wire that crosses its edge and selects only the pieces inside, which lets you lift a section out of the middle of a bus.
 
@@ -52,17 +52,17 @@ While Select is active, a Cut wires button floats at the top of the board and sw
 
 ![The Cut wires button above a wire cut at the edge of the selection.](./images/scissor-select.webp)
 
-## Copy, paste and delete
+## Copy, paste and delete {#copy-paste-and-delete}
 
 Copy (`Ctrl+C`), Cut (`Ctrl+X`), Paste (`Ctrl+V`) and Delete (`Delete`) are in the toolbar and the Edit menu. Pasted elements appear as a ghost under the cursor, or in the middle of the view if the pointer is not over the board. Drag the ghost to a free spot and release to drop it. `Escape` or a click outside the ghost cancels.
 
 Undo (`Ctrl+Z`) and Redo (`Ctrl+Shift+Z`) cover every edit.
 
-## Erasing
+## Erasing {#erasing}
 
 With the Eraser, click an element to delete it or drag across several. Pressing `Escape` before you let go brings back everything that drag erased.
 
-## See also
+## See also {#see-also}
 
 - [Wires and connections](docs:wires-and-connections): drawing wires and connecting crossings
 - [Components and options](docs:components-and-options): the parts you place

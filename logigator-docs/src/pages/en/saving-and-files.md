@@ -2,7 +2,7 @@
 
 A project is stored in one of two places: in this browser (Local) or in your Logigator account (Cloud). Files on your device are for exporting and importing, not a third place to save to. The editor doesn't save automatically.
 
-## Saving a project
+## Saving a project {#saving-a-project}
 
 File → Save, the toolbar's save button or `Ctrl+S` saves the open project. A new project is a Draft until its first save, which opens the Save dialog:
 
@@ -16,7 +16,7 @@ Later saves go straight back to the same place. The one exception is a cloud pro
 
 Local projects stay in the browser that saved them. As the Save dialog warns, they are not persisted across devices and may be lost when the browser's site data is cleared. Save anything you want to keep to the cloud or export it to a file.
 
-## Where a project is stored
+## Where a project is stored {#where-a-project-is-stored}
 
 The chip next to the project name shows where the open project lives:
 
@@ -31,7 +31,7 @@ A Fork chip beside it means the project was copied from someone else's. Hover it
 
 The status bar shows Saved or Unsaved changes. Opening another project or starting a new one with unsaved changes asks whether to discard them, and the browser warns you before you close the tab.
 
-## Opening, renaming and deleting
+## Opening, renaming and deleting {#opening-renaming-and-deleting}
 
 File → Open (`Ctrl+O`) has three tabs: Local Projects, Cloud Projects and From File. Each list can be searched, and each row has buttons to rename or delete the project. Local rows can also be uploaded to the cloud, and cloud rows shared.
 
@@ -39,7 +39,7 @@ File → Open (`Ctrl+O`) has three tabs: Local Projects, Cloud Projects and From
 
 The pencil next to the project name in the title bar renames the open project.
 
-## Circuit files
+## Circuit files {#circuit-files}
 
 File → Export to file downloads the open project as a `.lgix` file. The file contains the board and a copy of every custom component it uses, so it opens complete on any computer. It is compressed but not encrypted or signed, so anyone can read it. Exporting doesn't change where the project is saved.
 
@@ -47,7 +47,7 @@ To import, open File → Open → From File and choose a file. The editor reads 
 
 A project opened from a share link can't be exported. Clone it first (see [Cloud and sharing](docs:cloud#opening-someone-else-s-link)).
 
-## Exporting an image
+## Exporting an image {#exporting-an-image}
 
 File → Generate image opens the Export image dialog:
 
@@ -61,7 +61,7 @@ The dialog shows the final size in pixels before you export. With a custom compo
 
 ![The Export image dialog.](./images/export-image.webp)
 
-## See also
+## See also {#see-also}
 
 - [Cloud and sharing](docs:cloud): uploading, sharing and cloning
 - [Custom components](docs:custom-components): the components a file carries

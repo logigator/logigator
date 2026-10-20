@@ -2,7 +2,7 @@
 
 Addierer addieren einzelne Bits und liefern ein Summenbit und einen Übertrag. Selektoren leiten Signale nach einer Binärzahl: Ein Multiplexer wählt einen von mehreren Eingängen, ein Demultiplexer schickt einen Eingang an einen von mehreren Ausgängen, ein Dekodierer macht aus einer Zahl einen einzelnen Ausgang auf 1, und ein Enkodierer macht aus dem höchsten Eingang auf 1 wieder eine Zahl. Alle sechs stehen in der Kategorie Addierer und Selektoren der Palette.
 
-## Halbaddierer
+## Halbaddierer {#half-adder}
 
 ![Ein Halbaddierer mit Schaltern an A und B und LEDs an S und C, der die vier Eingangsbelegungen durchläuft. Sind beide an, ist S aus und C leuchtet.](./images/component-half-adder.webp)
 
@@ -24,7 +24,7 @@ Außer Richtung hat er keine Optionen.
 | 1   | 0   | 1   | 0   |
 | 1   | 1   | 0   | 1   |
 
-## Volladdierer
+## Volladdierer {#full-adder}
 
 ![Ein Volladdierer mit Schaltern an A, B und Cin und LEDs an S und C, der keine, eine, zwei (C leuchtet) und drei Einsen (S und C leuchten) addiert.](./images/component-full-adder.webp)
 
@@ -53,7 +53,7 @@ Außer Richtung hat er keine Optionen.
 
 Um Zahlen aus mehreren Bits zu addieren, nimm einen Addierer pro Bit und verbinde C jedes Addierers mit Cin des Addierers für das nächsthöhere Bit. Für das niedrigste Bit genügt ein Halbaddierer, da es keinen Übertragseingang hat.
 
-## Multiplexer
+## Multiplexer {#multiplexer}
 
 ![Ein Multiplexer mit Schaltern an S0 und den Dateneingängen 0 und 1, Eingang 0 an, und einer LED am Ausgang. Die LED leuchtet, solange S0 aus ist, und geht aus, wenn S0 Eingang 1 wählt.](./images/component-multiplexer.webp)
 
@@ -80,7 +80,7 @@ Mit 2 Auswahlleitungen:
 | 1   | 0   | Eingang 2 |
 | 1   | 1   | Eingang 3 |
 
-## Demultiplexer
+## Demultiplexer {#demultiplexer}
 
 ![Ein Demultiplexer mit Schaltern an S0 und I, I an, und LEDs an den Ausgängen 0 und 1. Die leuchtende LED wechselt von Ausgang 0 zu Ausgang 1, wenn S0 eingeschaltet wird.](./images/component-demultiplexer.webp)
 
@@ -107,7 +107,7 @@ Mit 2 Auswahlleitungen:
 
 Die Auswahlleitungen kommen zuerst, wie beim Multiplexer. Ein Demultiplexer aus einer älteren Schaltung behält I als ersten Eingang, vor den Auswahlleitungen, und funktioniert sonst genauso. Die Beschriftung am Bauteil zeigt die Reihenfolge.
 
-## Dekodierer
+## Dekodierer {#decoder}
 
 ![Ein Dekodierer mit Schaltern an seinen Eingängen 1 und 2 und LEDs an seinen vier Ausgängen, der von 0 bis 3 zählt, sodass die leuchtende LED von Ausgang 0 bis Ausgang 3 wandert.](./images/component-decoder.webp)
 
@@ -131,7 +131,7 @@ Mit 2 Eingängen:
 | 1   | 0   | 2             |
 | 1   | 1   | 3             |
 
-## Enkodierer
+## Enkodierer {#encoder}
 
 ![Ein Enkodierer mit der Option Ausgänge auf 2, Schaltern an seinen vier Eingängen und LEDs an den Ausgängen 1, 2 und V. Ist kein Eingang an, ist V aus. Eingang 0 allein lässt nur V leuchten, und die Eingänge 2 und dann 3 ergeben 2 und dann 3, den höchsten Eingang, der an ist.](./images/component-encoder.webp)
 
@@ -159,7 +159,7 @@ Mit 2 Ausgängen, wobei x heißt, dass der Eingang 0 oder 1 sein kann:
 
 Ein Enkodierer aus einer älteren Schaltung hat kein V.
 
-## Siehe auch
+## Siehe auch {#see-also}
 
 - [Komponenten und Optionen](docs:components-and-options): die Palette und die Einstellungskarte
 - [Logikgatter](docs:logic-gates): NICHT, UND, ODER und XOR

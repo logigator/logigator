@@ -47,6 +47,18 @@ describe('resolveMarkdownUrls', () => {
     ).toBe('[manual](media/manual-H4SH.pdf#page-2) [top](#top)');
   });
 
+  it('maps a destination to the URL of a picture given with its size', () => {
+    expect(
+      resolveMarkdownUrls('![alt](images/intro-banner.png)', {
+        'images/intro-banner.png': {
+          url: 'media/intro-banner-H4SH.png',
+          width: 640,
+          height: 360
+        }
+      })
+    ).toBe('![alt](media/intro-banner-H4SH.png)');
+  });
+
   it('matches destinations verbatim, not inherited object properties', () => {
     expect(resolveMarkdownUrls('[a](constructor)', urls)).toBe(
       '[a](constructor)'
@@ -271,6 +283,145 @@ describe('LgMarkdown content interaction', () => {
   });
 });
 
+describe('LgMarkdown heading ids', () => {
+  @Component({
+    imports: [LgMarkdown],
+    template: `<lg-markdown [data]="data" />`
+  })
+  class HeadingHost {
+    data =
+      '# Simulation\n\n' +
+      '## Steuerung {#run-controls}\n\n' +
+      '## Takt mit `clk` {#clock}\n\n' +
+      '## Ohne Id\n\n' +
+      '[jump](#run-controls)';
+  }
+
+  async function render() {
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(HeadingHost);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+    const el = fixture.nativeElement as HTMLElement;
+    const headings = Array.from(el.querySelectorAll('h2'));
+    for (const heading of headings) {
+      heading.scrollIntoView = vi.fn();
+    }
+    const markdown = fixture.debugElement.query(By.directive(LgMarkdown))
+      .componentInstance as LgMarkdown;
+    return { el, headings, markdown };
+  }
+
+  it('moves a closing {#id} off the heading text onto the heading', async () => {
+    const { headings } = await render();
+
+    expect(headings.map((heading) => heading.textContent)).toEqual([
+      'Steuerung',
+      'Takt mit clk',
+      'Ohne Id'
+    ]);
+    expect(headings.map((heading) => heading.id)).toEqual([
+      'run-controls',
+      'clock',
+      ''
+    ]);
+  });
+
+  it('resolves an anchor by id, and by slug only for a heading without one', async () => {
+    const { headings, markdown } = await render();
+    const [controls, , plain] = headings;
+
+    markdown.scrollToHeading('steuerung');
+    expect(controls.scrollIntoView).not.toHaveBeenCalled();
+
+    markdown.scrollToHeading('run-controls');
+    expect(controls.scrollIntoView).toHaveBeenCalledTimes(1);
+
+    markdown.scrollToHeading('ohne-id');
+    expect(plain.scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+
+  it('follows an in-page link to the heading carrying its id', async () => {
+    const { el, headings } = await render();
+
+    el.querySelector('a')!.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true })
+    );
+
+    expect(headings[0].scrollIntoView).toHaveBeenCalledWith({
+      block: 'start'
+    });
+  });
+});
+
+describe('LgMarkdown image sizes', () => {
+  @Component({
+    imports: [LgMarkdown],
+    template: `<lg-markdown
+      [data]="data"
+      [assetUrls]="assets"
+      (ready)="onReady()"
+    />`
+  })
+  class SizedHost {
+    data =
+      '![Wide](./wide.webp)\n\n![Tall](./tall.webp)\n\n![Plain](./plain.webp)';
+    assets = {
+      './wide.webp': { url: 'media/wide-H4SH.webp', width: 1200, height: 300 },
+      './tall.webp': { url: 'media/tall-H4SH.webp', width: 300, height: 900 },
+      './plain.webp': 'media/plain-H4SH.webp'
+    };
+    /** Each image's class list at the moment `ready` fired. */
+    classesAtReady: string[][] = [];
+    el?: HTMLElement;
+    onReady(): void {
+      this.classesAtReady = Array.from(
+        this.el!.querySelectorAll('img'),
+        (image) => Array.from(image.classList)
+      );
+    }
+  }
+
+  async function render() {
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(SizedHost);
+    fixture.componentInstance.el = fixture.nativeElement;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+    const el = fixture.nativeElement as HTMLElement;
+    const image = (alt: string) =>
+      el.querySelector<HTMLImageElement>(`img[alt=${alt}]`)!;
+    return { host: fixture.componentInstance, image };
+  }
+
+  /**
+   * A consumer scrolls to a heading on `ready`; a box still growing after
+   * that moves the heading off the spot it was scrolled to.
+   */
+  it('gives a sized picture its box before ready, with no file loaded', async () => {
+    const { host, image } = await render();
+
+    expect(host.classesAtReady).toEqual([
+      ['lg-sized'],
+      ['lg-sized', 'lg-portrait'],
+      []
+    ]);
+    const wide = image('Wide');
+    expect(wide.style.getPropertyValue('--lg-image-width')).toBe('1200');
+    expect(wide.style.getPropertyValue('--lg-image-height')).toBe('300');
+  });
+
+  it('leaves a picture mapped to a bare URL to size itself on load', async () => {
+    const { image } = await render();
+    const plain = image('Plain');
+
+    expect(plain.getAttribute('src')).toBe('media/plain-H4SH.webp');
+    expect(plain.style.getPropertyValue('--lg-image-width')).toBe('');
+  });
+});
+
 describe('LgMarkdown match marking', () => {
   /**
    * jsdom implements neither the registry nor `Highlight`, so they are stood
@@ -404,6 +555,16 @@ describe('LgMarkdown user content', () => {
     expect(host.querySelector('img')).toBeNull();
     expect(host.querySelector('b')).toBeNull();
     expect(host.textContent).toContain('<b>bold</b>');
+  });
+
+  it('gives a member’s heading no id of their choosing', () => {
+    const fixture = render('## Notes {#run-controls}');
+    const heading = (fixture.nativeElement as HTMLElement).querySelector(
+      'h1, h2, h3, h4, h5, h6'
+    );
+
+    expect(heading?.id).toBe('');
+    expect(heading?.textContent).toBe('Notes {#run-controls}');
   });
 
   it('marks a link as a visitor’s in the markup a crawler reads', () => {

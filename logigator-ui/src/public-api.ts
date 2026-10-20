@@ -63,6 +63,10 @@ export type {
   LgTextRange
 } from './components/markdown/markdown';
 // The slug a `#fragment` inside rendered markdown resolves against. Exported
+export type {
+  LgMarkdownAsset,
+  LgMarkdownImage
+} from './internal/markdown-urls';
 // because content that links to its own headings — the site's legal pages —
 // has to author those links by the same rule the renderer resolves them by.
 export { headingSlug } from './components/markdown/markdown';

@@ -67,11 +67,6 @@ describe('documentation search', () => {
     expect(page().querySelector('.ph-file-text')).toBeNull();
   });
 
-  /**
-   * The anchor is a heading slug the renderer resolves, so a result that named
-   * a heading the page does not have would scroll nowhere. Every one of them
-   * has to be a heading in the page it points at.
-   */
   it('marks the words it matched, in the heading and in the quote', async () => {
     const page = await (await navigator())('/en/docs?q=simulation%20speed');
 
@@ -165,22 +160,29 @@ describe('documentation search', () => {
   });
 
   /**
-   * The renderer emits no heading ids, so the router's own anchor scrolling
-   * finds nothing; a fragment resolves against the slug of a heading's own
-   * text. Without this a shared deep link — and every search result — lands at
-   * the top of the page.
+   * The headings are written after the router's own anchor scrolling has run.
+   * Without this a shared deep link — and every search result — lands at the
+   * top of the page. The anchor is the same in every language.
    */
-  it('scrolls a doc page to the heading its fragment names', async () => {
-    const scrolls = vi.fn();
-    Element.prototype.scrollIntoView = scrolls;
+  it.each([
+    { lang: 'en', heading: 'Run controls' },
+    { lang: 'de', heading: 'Steuerung' }
+  ])(
+    'scrolls a $lang doc page to the heading its fragment names',
+    async ({ lang, heading }) => {
+      const scrolls = vi.fn();
+      Element.prototype.scrollIntoView = scrolls;
 
-    const page = await (await navigator())('/en/docs/simulation#run-controls');
+      const page = await (
+        await navigator()
+      )(`/${lang}/docs/simulation#run-controls`);
 
-    await vi.waitFor(() => {
-      page();
-      expect(scrolls).toHaveBeenCalled();
-      const scrolled = scrolls.mock.instances[0] as HTMLElement;
-      expect(scrolled.textContent).toBe('Run controls');
-    }, WAIT);
-  });
+      await vi.waitFor(() => {
+        page();
+        expect(scrolls).toHaveBeenCalled();
+        const scrolled = scrolls.mock.instances[0] as HTMLElement;
+        expect(scrolled.textContent).toBe(heading);
+      }, WAIT);
+    }
+  );
 });

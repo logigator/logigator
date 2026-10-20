@@ -2,7 +2,7 @@
 
 Adders add single bits and produce a sum bit and a carry. Selectors route signals by a binary number: a multiplexer picks one of several inputs, a demultiplexer sends one input to one of several outputs, a decoder turns a number into a single output at 1, and an encoder turns the highest input at 1 back into a number. All six are in the Adders and selectors category of the palette.
 
-## Half Adder
+## Half Adder {#half-adder}
 
 ![A half adder with switches on A and B and LEDs on S and C, going through the four input combinations. With both on, S is off and C is lit.](./images/component-half-adder.webp)
 
@@ -24,7 +24,7 @@ It has no options besides Direction.
 | 1   | 0   | 1   | 0   |
 | 1   | 1   | 0   | 1   |
 
-## Full Adder
+## Full Adder {#full-adder}
 
 ![A full adder with switches on A, B and Cin and LEDs on S and C, adding no ones, one, two (C lit) and three (S and C lit).](./images/component-full-adder.webp)
 
@@ -53,7 +53,7 @@ It has no options besides Direction.
 
 To add numbers of several bits, use one adder per bit and connect each adder's C to the Cin of the adder for the next higher bit. The lowest bit can use a half adder, since it has no carry-in.
 
-## Multiplexer
+## Multiplexer {#multiplexer}
 
 ![A multiplexer with switches on S0 and data inputs 0 and 1, input 0 on, and an LED on its output. The LED is lit while S0 is off and goes dark when S0 selects input 1.](./images/component-multiplexer.webp)
 
@@ -80,7 +80,7 @@ With 2 select lines:
 | 1   | 0   | Input 2 |
 | 1   | 1   | Input 3 |
 
-## Demultiplexer
+## Demultiplexer {#demultiplexer}
 
 ![A demultiplexer with switches on S0 and I, I on, and LEDs on outputs 0 and 1. The lit LED moves from output 0 to output 1 when S0 is switched on.](./images/component-demultiplexer.webp)
 
@@ -107,7 +107,7 @@ With 2 select lines:
 
 The select lines come first, as on the Multiplexer. A demultiplexer from an older circuit keeps I first, before the select lines, and works the same way otherwise. The labels on the component show the order.
 
-## Decoder
+## Decoder {#decoder}
 
 ![A decoder with switches on its inputs 1 and 2 and LEDs on its four outputs, counting from 0 to 3 so that the lit LED steps from output 0 to output 3.](./images/component-decoder.webp)
 
@@ -131,7 +131,7 @@ With 2 inputs:
 | 1   | 0   | 2           |
 | 1   | 1   | 3           |
 
-## Encoder
+## Encoder {#encoder}
 
 ![An encoder with Outputs set to 2, switches on its four inputs and LEDs on outputs 1, 2 and V. With no input on, V is off. Input 0 alone lights only V, and inputs 2 and then 3 give 2 and then 3, the highest input that is on.](./images/component-encoder.webp)
 
@@ -159,7 +159,7 @@ With 2 outputs, where x means the input can be 0 or 1:
 
 An encoder from an older circuit has no V.
 
-## See also
+## See also {#see-also}
 
 - [Components and options](docs:components-and-options): the palette and the settings card
 - [Logic gates](docs:logic-gates): NOT, AND, OR and XOR

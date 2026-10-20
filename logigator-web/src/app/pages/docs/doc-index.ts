@@ -5,7 +5,6 @@ import {
   DocsIndex,
   DocsSearchEntry
 } from '@logigator/docs';
-import { headingSlug } from '@logigator/ui';
 import { loadDocPage } from './doc-content';
 
 /**
@@ -41,8 +40,5 @@ async function build(lang: LanguageId): Promise<DocsIndex> {
       }
     })
   );
-  return buildDocsIndex(
-    entries.filter((entry) => entry !== null),
-    headingSlug
-  );
+  return buildDocsIndex(entries.filter((entry) => entry !== null));
 }

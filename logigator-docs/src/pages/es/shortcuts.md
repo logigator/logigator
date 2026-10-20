@@ -2,7 +2,7 @@
 
 Estos son los atajos predeterminados, en el orden en que los lista Editar → Atajos de teclado. En Mac, `⌘` funciona en todos los sitios donde la tabla dice `Ctrl`, y `Ctrl` también funciona.
 
-## Atajos predeterminados
+## Atajos predeterminados {#default-bindings}
 
 | Acción                                                        | Predeterminado |
 | ------------------------------------------------------------- | -------------- |
@@ -33,11 +33,11 @@ Estos son los atajos predeterminados, en el orden en que los lista Editar → At
 
 Mientras escribes en un campo de texto, ningún atajo responde salvo `Escape`. Durante una simulación, los atajos de edición están desactivados y `Escape` sale de la simulación.
 
-## Teclas mantenidas
+## Teclas mantenidas {#held-keys}
 
-Las dos acciones marcadas con «mantener» actúan mientras la tecla está pulsada, en lugar de dispararse una vez. Mantén `Alt` al soltar un marco de selección para cortar los cables en su borde (consulta [Tablero y herramientas](docs:board-and-tools#cortar-cables-en-el-borde-de-la-selección)). Mantén `Ctrl` al hacer clic o trazar un marco para añadir a la selección o quitar de ella. Funciona con Seleccionar, Desplazar y la herramienta de cable.
+Las dos acciones marcadas con «mantener» actúan mientras la tecla está pulsada, en lugar de dispararse una vez. Mantén `Alt` al soltar un marco de selección para cortar los cables en su borde (consulta [Tablero y herramientas](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Mantén `Ctrl` al hacer clic o trazar un marco para añadir a la selección o quitar de ella. Funciona con Seleccionar, Desplazar y la herramienta de cable.
 
-## Cambiar un atajo
+## Cambiar un atajo {#changing-a-binding}
 
 ![El gestor de atajos de teclado.](./images/shortcut-manager.webp)
 
@@ -47,9 +47,9 @@ Si la combinación ya pertenece a otra acción, esa acción la pierde y un mensa
 
 Tus atajos se guardan en este navegador. Borrar los datos del sitio los restablece.
 
-## Teclas del mando
+## Teclas del mando {#gamepad-keys}
 
-Un [mando](docs:inputs#mando) tiene sus propias teclas, aparte de los atajos de arriba. Funcionan mientras su ventana tiene el teclado, y ahí van antes que los atajos: `Enter` pulsa Start.
+Un [mando](docs:inputs#gamepad) tiene sus propias teclas, aparte de los atajos de arriba. Funcionan mientras su ventana tiene el teclado, y ahí van antes que los atajos: `Enter` pulsa Start.
 
 | Botón                                | Tecla predeterminada |
 | ------------------------------------ | -------------------- |
@@ -75,9 +75,9 @@ Mientras asignas, `Escape` cancela, y `Backspace` o `Delete` deja el botón sin 
 
 Las teclas son las mismas para todos los mandos de todos los proyectos y se guardan en este navegador, como los atajos. Un cambio aparece al momento en cada ventana de mando abierta, también en otras pestañas.
 
-## Teclas en la ventana de un teclado
+## Teclas en la ventana de un teclado {#keys-in-a-keyboard-window}
 
-Mientras el campo de escritura de la [ventana de un teclado](docs:inputs#teclado) tiene el foco, las teclas van al circuito y los atajos de arriba no hacen nada. Estas teclas se comportan ahí de otra manera:
+Mientras el campo de escritura de la [ventana de un teclado](docs:inputs#keyboard) tiene el foco, las teclas van al circuito y los atajos de arriba no hacen nada. Estas teclas se comportan ahí de otra manera:
 
 | Tecla       | En el campo de escritura                 |
 | ----------- | ---------------------------------------- |
@@ -89,7 +89,7 @@ Mientras el campo de escritura de la [ventana de un teclado](docs:inputs#teclado
 
 Las combinaciones con `Ctrl`, `Alt` o `⌘` van al navegador, así que `Ctrl+V` pega texto en el teclado. `AltGr` no es una de ellas: un carácter escrito con ella se envía. Una tecla envía el carácter que le da la distribución de tu teclado, por eso estas teclas no se reasignan como las de un mando.
 
-## Ver también
+## Ver también {#see-also}
 
 - [Tablero y herramientas](docs:board-and-tools): las herramientas y acciones detrás de estas teclas
 - [Simulación](docs:simulation): qué hacen Enter y Escape allí

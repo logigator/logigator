@@ -117,136 +117,546 @@ import simulationSpeedEs from './pages/es/images/simulation-speed.webp';
 import terminalWindowEs from './pages/es/images/terminal-window.webp';
 import uploadToCloudEs from './pages/es/images/upload-to-cloud.webp';
 
+/**
+ * A screenshot: its URL in the consuming build, and its size in pixels — one
+ * frame's, for an animation — so a page can give it its box before the file
+ * arrives.
+ */
+export interface DocImage {
+  url: string;
+  width: number;
+  height: number;
+}
+
 /** One language's screenshots, keyed by the destination the markdown uses. */
-const en: Readonly<Record<string, string>> = {
-  './images/account-menu.webp': accountMenuEn,
-  './images/board-overview.webp': boardOverviewEn,
-  './images/component-and-gate.webp': componentAndGateEn,
-  './images/component-button.webp': componentButtonEn,
-  './images/component-clock.webp': componentClockEn,
-  './images/component-d-flip-flop.webp': componentDFlipFlopEn,
-  './images/component-decoder.webp': componentDecoderEn,
-  './images/component-delay.webp': componentDelayEn,
-  './images/component-demultiplexer.webp': componentDemultiplexerEn,
-  './images/component-encoder.webp': componentEncoderEn,
-  './images/component-full-adder.webp': componentFullAdderEn,
-  './images/component-gamepad.webp': componentGamepadEn,
-  './images/component-half-adder.webp': componentHalfAdderEn,
-  './images/component-jk-flip-flop.webp': componentJkFlipFlopEn,
-  './images/component-keyboard.webp': componentKeyboardEn,
-  './images/component-led-matrix.webp': componentLedMatrixEn,
-  './images/component-led.webp': componentLedEn,
-  './images/component-multiplexer.webp': componentMultiplexerEn,
-  './images/component-not-gate.webp': componentNotGateEn,
-  './images/component-or-gate.webp': componentOrGateEn,
-  './images/component-palette.webp': componentPaletteEn,
-  './images/component-pulse-button.webp': componentPulseButtonEn,
-  './images/component-ram.webp': componentRamEn,
-  './images/component-random-number-generator.webp':
-    componentRandomNumberGeneratorEn,
-  './images/component-rom.webp': componentRomEn,
-  './images/component-segment-display.webp': componentSegmentDisplayEn,
-  './images/component-settings.webp': componentSettingsEn,
-  './images/component-sr-flip-flop.webp': componentSrFlipFlopEn,
-  './images/component-switch.webp': componentSwitchEn,
-  './images/component-terminal.webp': componentTerminalEn,
-  './images/component-xor-gate.webp': componentXorGateEn,
-  './images/custom-component-showcase.webp': customComponentShowcaseEn,
-  './images/custom-component-tab.webp': customComponentTabEn,
-  './images/export-image.webp': exportImageEn,
-  './images/gamepad-window.webp': gamepadWindowEn,
-  './images/inspection-showcase.webp': inspectionShowcaseEn,
-  './images/inspection-window-multilayer.webp': inspectionWindowMultilayerEn,
-  './images/keyboard-window.webp': keyboardWindowEn,
-  './images/negated-gate.webp': negatedGateEn,
-  './images/open-cloud.webp': openCloudEn,
-  './images/open-file.webp': openFileEn,
-  './images/phone-layout.webp': phoneLayoutEn,
-  './images/rom-inspection.webp': romInspectionEn,
-  './images/save-project.webp': saveProjectEn,
-  './images/scissor-select.webp': scissorSelectEn,
-  './images/share-component.webp': shareComponentEn,
-  './images/shortcut-manager.webp': shortcutManagerEn,
-  './images/simulation-controls.webp': simulationControlsEn,
-  './images/simulation-showcase.webp': simulationShowcaseEn,
-  './images/simulation-speed.webp': simulationSpeedEn,
-  './images/terminal-window.webp': terminalWindowEn,
-  './images/tool-buttons.webp': toolButtonsEn,
-  './images/tunnel.webp': tunnelEn,
-  './images/upload-to-cloud.webp': uploadToCloudEn,
-  './images/wire-junction.webp': wireJunctionEn
+const en: Readonly<Record<string, DocImage>> = {
+  './images/account-menu.webp': {
+    url: accountMenuEn,
+    width: 610,
+    height: 1354
+  },
+  './images/board-overview.webp': {
+    url: boardOverviewEn,
+    width: 2560,
+    height: 1440
+  },
+  './images/component-and-gate.webp': {
+    url: componentAndGateEn,
+    width: 1050,
+    height: 276
+  },
+  './images/component-button.webp': {
+    url: componentButtonEn,
+    width: 552,
+    height: 222
+  },
+  './images/component-clock.webp': {
+    url: componentClockEn,
+    width: 1162,
+    height: 276
+  },
+  './images/component-d-flip-flop.webp': {
+    url: componentDFlipFlopEn,
+    width: 1106,
+    height: 276
+  },
+  './images/component-decoder.webp': {
+    url: componentDecoderEn,
+    width: 1106,
+    height: 388
+  },
+  './images/component-delay.webp': {
+    url: componentDelayEn,
+    width: 884,
+    height: 332
+  },
+  './images/component-demultiplexer.webp': {
+    url: componentDemultiplexerEn,
+    width: 1106,
+    height: 276
+  },
+  './images/component-encoder.webp': {
+    url: componentEncoderEn,
+    width: 1106,
+    height: 388
+  },
+  './images/component-full-adder.webp': {
+    url: componentFullAdderEn,
+    width: 1106,
+    height: 332
+  },
+  './images/component-gamepad.webp': {
+    url: componentGamepadEn,
+    width: 718,
+    height: 608
+  },
+  './images/component-half-adder.webp': {
+    url: componentHalfAdderEn,
+    width: 1106,
+    height: 276
+  },
+  './images/component-jk-flip-flop.webp': {
+    url: componentJkFlipFlopEn,
+    width: 1106,
+    height: 332
+  },
+  './images/component-keyboard.webp': {
+    url: componentKeyboardEn,
+    width: 1162,
+    height: 718
+  },
+  './images/component-led-matrix.webp': {
+    url: componentLedMatrixEn,
+    width: 940,
+    height: 552
+  },
+  './images/component-led.webp': {
+    url: componentLedEn,
+    width: 552,
+    height: 332
+  },
+  './images/component-multiplexer.webp': {
+    url: componentMultiplexerEn,
+    width: 1106,
+    height: 332
+  },
+  './images/component-not-gate.webp': {
+    url: componentNotGateEn,
+    width: 1050,
+    height: 222
+  },
+  './images/component-or-gate.webp': {
+    url: componentOrGateEn,
+    width: 1050,
+    height: 276
+  },
+  './images/component-palette.webp': {
+    url: componentPaletteEn,
+    width: 638,
+    height: 3398
+  },
+  './images/component-pulse-button.webp': {
+    url: componentPulseButtonEn,
+    width: 552,
+    height: 222
+  },
+  './images/component-ram.webp': {
+    url: componentRamEn,
+    width: 1106,
+    height: 608
+  },
+  './images/component-random-number-generator.webp': {
+    url: componentRandomNumberGeneratorEn,
+    width: 1272,
+    height: 388
+  },
+  './images/component-rom.webp': {
+    url: componentRomEn,
+    width: 1106,
+    height: 388
+  },
+  './images/component-segment-display.webp': {
+    url: componentSegmentDisplayEn,
+    width: 774,
+    height: 388
+  },
+  './images/component-settings.webp': {
+    url: componentSettingsEn,
+    width: 800,
+    height: 684
+  },
+  './images/component-sr-flip-flop.webp': {
+    url: componentSrFlipFlopEn,
+    width: 1106,
+    height: 332
+  },
+  './images/component-switch.webp': {
+    url: componentSwitchEn,
+    width: 552,
+    height: 222
+  },
+  './images/component-terminal.webp': {
+    url: componentTerminalEn,
+    width: 1492,
+    height: 718
+  },
+  './images/component-xor-gate.webp': {
+    url: componentXorGateEn,
+    width: 1050,
+    height: 276
+  },
+  './images/custom-component-showcase.webp': {
+    url: customComponentShowcaseEn,
+    width: 784,
+    height: 600
+  },
+  './images/custom-component-tab.webp': {
+    url: customComponentTabEn,
+    width: 940,
+    height: 564
+  },
+  './images/export-image.webp': { url: exportImageEn, width: 896, height: 752 },
+  './images/gamepad-window.webp': {
+    url: gamepadWindowEn,
+    width: 1454,
+    height: 884
+  },
+  './images/inspection-showcase.webp': {
+    url: inspectionShowcaseEn,
+    width: 2420,
+    height: 1120
+  },
+  './images/inspection-window-multilayer.webp': {
+    url: inspectionWindowMultilayerEn,
+    width: 1280,
+    height: 600
+  },
+  './images/keyboard-window.webp': {
+    url: keyboardWindowEn,
+    width: 1374,
+    height: 774
+  },
+  './images/negated-gate.webp': {
+    url: negatedGateEn,
+    width: 1050,
+    height: 276
+  },
+  './images/open-cloud.webp': { url: openCloudEn, width: 1280, height: 956 },
+  './images/open-file.webp': { url: openFileEn, width: 1280, height: 692 },
+  './images/phone-layout.webp': {
+    url: phoneLayoutEn,
+    width: 780,
+    height: 1520
+  },
+  './images/rom-inspection.webp': {
+    url: romInspectionEn,
+    width: 2378,
+    height: 912
+  },
+  './images/save-project.webp': { url: saveProjectEn, width: 896, height: 896 },
+  './images/scissor-select.webp': {
+    url: scissorSelectEn,
+    width: 716,
+    height: 438
+  },
+  './images/share-component.webp': {
+    url: shareComponentEn,
+    width: 1024,
+    height: 952
+  },
+  './images/shortcut-manager.webp': {
+    url: shortcutManagerEn,
+    width: 1280,
+    height: 1476
+  },
+  './images/simulation-controls.webp': {
+    url: simulationControlsEn,
+    width: 834,
+    height: 100
+  },
+  './images/simulation-showcase.webp': {
+    url: simulationShowcaseEn,
+    width: 2420,
+    height: 628
+  },
+  './images/simulation-speed.webp': {
+    url: simulationSpeedEn,
+    width: 892,
+    height: 854
+  },
+  './images/terminal-window.webp': {
+    url: terminalWindowEn,
+    width: 2492,
+    height: 882
+  },
+  './images/tool-buttons.webp': { url: toolButtonsEn, width: 476, height: 108 },
+  './images/tunnel.webp': { url: tunnelEn, width: 1216, height: 222 },
+  './images/upload-to-cloud.webp': {
+    url: uploadToCloudEn,
+    width: 896,
+    height: 976
+  },
+  './images/wire-junction.webp': {
+    url: wireJunctionEn,
+    width: 1492,
+    height: 608
+  }
 };
 
-const de: Readonly<Record<string, string>> = {
-  './images/account-menu.webp': accountMenuDe,
-  './images/board-overview.webp': boardOverviewDe,
-  './images/component-palette.webp': componentPaletteDe,
-  './images/component-settings.webp': componentSettingsDe,
-  './images/export-image.webp': exportImageDe,
-  './images/gamepad-window.webp': gamepadWindowDe,
-  './images/inspection-showcase.webp': inspectionShowcaseDe,
-  './images/keyboard-window.webp': keyboardWindowDe,
-  './images/open-cloud.webp': openCloudDe,
-  './images/open-file.webp': openFileDe,
-  './images/phone-layout.webp': phoneLayoutDe,
-  './images/rom-inspection.webp': romInspectionDe,
-  './images/save-project.webp': saveProjectDe,
-  './images/scissor-select.webp': scissorSelectDe,
-  './images/share-component.webp': shareComponentDe,
-  './images/shortcut-manager.webp': shortcutManagerDe,
-  './images/simulation-controls.webp': simulationControlsDe,
-  './images/simulation-showcase.webp': simulationShowcaseDe,
-  './images/simulation-speed.webp': simulationSpeedDe,
-  './images/terminal-window.webp': terminalWindowDe,
-  './images/upload-to-cloud.webp': uploadToCloudDe
+const de: Readonly<Record<string, DocImage>> = {
+  './images/account-menu.webp': {
+    url: accountMenuDe,
+    width: 748,
+    height: 1354
+  },
+  './images/board-overview.webp': {
+    url: boardOverviewDe,
+    width: 2560,
+    height: 1440
+  },
+  './images/component-palette.webp': {
+    url: componentPaletteDe,
+    width: 638,
+    height: 3334
+  },
+  './images/component-settings.webp': {
+    url: componentSettingsDe,
+    width: 800,
+    height: 684
+  },
+  './images/export-image.webp': { url: exportImageDe, width: 896, height: 752 },
+  './images/gamepad-window.webp': {
+    url: gamepadWindowDe,
+    width: 1454,
+    height: 884
+  },
+  './images/inspection-showcase.webp': {
+    url: inspectionShowcaseDe,
+    width: 2420,
+    height: 1120
+  },
+  './images/keyboard-window.webp': {
+    url: keyboardWindowDe,
+    width: 1438,
+    height: 774
+  },
+  './images/open-cloud.webp': { url: openCloudDe, width: 1280, height: 956 },
+  './images/open-file.webp': { url: openFileDe, width: 1280, height: 692 },
+  './images/phone-layout.webp': {
+    url: phoneLayoutDe,
+    width: 780,
+    height: 1520
+  },
+  './images/rom-inspection.webp': {
+    url: romInspectionDe,
+    width: 2378,
+    height: 912
+  },
+  './images/save-project.webp': { url: saveProjectDe, width: 896, height: 896 },
+  './images/scissor-select.webp': {
+    url: scissorSelectDe,
+    width: 716,
+    height: 438
+  },
+  './images/share-component.webp': {
+    url: shareComponentDe,
+    width: 1024,
+    height: 952
+  },
+  './images/shortcut-manager.webp': {
+    url: shortcutManagerDe,
+    width: 1280,
+    height: 1476
+  },
+  './images/simulation-controls.webp': {
+    url: simulationControlsDe,
+    width: 820,
+    height: 100
+  },
+  './images/simulation-showcase.webp': {
+    url: simulationShowcaseDe,
+    width: 2420,
+    height: 628
+  },
+  './images/simulation-speed.webp': {
+    url: simulationSpeedDe,
+    width: 892,
+    height: 854
+  },
+  './images/terminal-window.webp': {
+    url: terminalWindowDe,
+    width: 2492,
+    height: 882
+  },
+  './images/upload-to-cloud.webp': {
+    url: uploadToCloudDe,
+    width: 896,
+    height: 1112
+  }
 };
 
-const fr: Readonly<Record<string, string>> = {
-  './images/account-menu.webp': accountMenuFr,
-  './images/board-overview.webp': boardOverviewFr,
-  './images/component-palette.webp': componentPaletteFr,
-  './images/component-settings.webp': componentSettingsFr,
-  './images/export-image.webp': exportImageFr,
-  './images/gamepad-window.webp': gamepadWindowFr,
-  './images/inspection-showcase.webp': inspectionShowcaseFr,
-  './images/keyboard-window.webp': keyboardWindowFr,
-  './images/open-cloud.webp': openCloudFr,
-  './images/open-file.webp': openFileFr,
-  './images/phone-layout.webp': phoneLayoutFr,
-  './images/rom-inspection.webp': romInspectionFr,
-  './images/save-project.webp': saveProjectFr,
-  './images/scissor-select.webp': scissorSelectFr,
-  './images/share-component.webp': shareComponentFr,
-  './images/shortcut-manager.webp': shortcutManagerFr,
-  './images/simulation-controls.webp': simulationControlsFr,
-  './images/simulation-showcase.webp': simulationShowcaseFr,
-  './images/simulation-speed.webp': simulationSpeedFr,
-  './images/terminal-window.webp': terminalWindowFr,
-  './images/upload-to-cloud.webp': uploadToCloudFr
+const fr: Readonly<Record<string, DocImage>> = {
+  './images/account-menu.webp': {
+    url: accountMenuFr,
+    width: 828,
+    height: 1354
+  },
+  './images/board-overview.webp': {
+    url: boardOverviewFr,
+    width: 2560,
+    height: 1440
+  },
+  './images/component-palette.webp': {
+    url: componentPaletteFr,
+    width: 638,
+    height: 3494
+  },
+  './images/component-settings.webp': {
+    url: componentSettingsFr,
+    width: 800,
+    height: 684
+  },
+  './images/export-image.webp': { url: exportImageFr, width: 896, height: 752 },
+  './images/gamepad-window.webp': {
+    url: gamepadWindowFr,
+    width: 1454,
+    height: 884
+  },
+  './images/inspection-showcase.webp': {
+    url: inspectionShowcaseFr,
+    width: 2420,
+    height: 1120
+  },
+  './images/keyboard-window.webp': {
+    url: keyboardWindowFr,
+    width: 1374,
+    height: 774
+  },
+  './images/open-cloud.webp': { url: openCloudFr, width: 1280, height: 956 },
+  './images/open-file.webp': { url: openFileFr, width: 1280, height: 692 },
+  './images/phone-layout.webp': {
+    url: phoneLayoutFr,
+    width: 780,
+    height: 1520
+  },
+  './images/rom-inspection.webp': {
+    url: romInspectionFr,
+    width: 2378,
+    height: 912
+  },
+  './images/save-project.webp': { url: saveProjectFr, width: 896, height: 952 },
+  './images/scissor-select.webp': {
+    url: scissorSelectFr,
+    width: 716,
+    height: 438
+  },
+  './images/share-component.webp': {
+    url: shareComponentFr,
+    width: 1024,
+    height: 996
+  },
+  './images/shortcut-manager.webp': {
+    url: shortcutManagerFr,
+    width: 1280,
+    height: 1476
+  },
+  './images/simulation-controls.webp': {
+    url: simulationControlsFr,
+    width: 870,
+    height: 100
+  },
+  './images/simulation-showcase.webp': {
+    url: simulationShowcaseFr,
+    width: 2420,
+    height: 628
+  },
+  './images/simulation-speed.webp': {
+    url: simulationSpeedFr,
+    width: 892,
+    height: 934
+  },
+  './images/terminal-window.webp': {
+    url: terminalWindowFr,
+    width: 2492,
+    height: 882
+  },
+  './images/upload-to-cloud.webp': {
+    url: uploadToCloudFr,
+    width: 896,
+    height: 1120
+  }
 };
 
-const es: Readonly<Record<string, string>> = {
-  './images/account-menu.webp': accountMenuEs,
-  './images/board-overview.webp': boardOverviewEs,
-  './images/component-palette.webp': componentPaletteEs,
-  './images/component-settings.webp': componentSettingsEs,
-  './images/export-image.webp': exportImageEs,
-  './images/gamepad-window.webp': gamepadWindowEs,
-  './images/inspection-showcase.webp': inspectionShowcaseEs,
-  './images/keyboard-window.webp': keyboardWindowEs,
-  './images/open-cloud.webp': openCloudEs,
-  './images/open-file.webp': openFileEs,
-  './images/phone-layout.webp': phoneLayoutEs,
-  './images/rom-inspection.webp': romInspectionEs,
-  './images/save-project.webp': saveProjectEs,
-  './images/scissor-select.webp': scissorSelectEs,
-  './images/share-component.webp': shareComponentEs,
-  './images/shortcut-manager.webp': shortcutManagerEs,
-  './images/simulation-controls.webp': simulationControlsEs,
-  './images/simulation-showcase.webp': simulationShowcaseEs,
-  './images/simulation-speed.webp': simulationSpeedEs,
-  './images/terminal-window.webp': terminalWindowEs,
-  './images/upload-to-cloud.webp': uploadToCloudEs
+const es: Readonly<Record<string, DocImage>> = {
+  './images/account-menu.webp': {
+    url: accountMenuEs,
+    width: 752,
+    height: 1354
+  },
+  './images/board-overview.webp': {
+    url: boardOverviewEs,
+    width: 2560,
+    height: 1440
+  },
+  './images/component-palette.webp': {
+    url: componentPaletteEs,
+    width: 638,
+    height: 3494
+  },
+  './images/component-settings.webp': {
+    url: componentSettingsEs,
+    width: 800,
+    height: 636
+  },
+  './images/export-image.webp': { url: exportImageEs, width: 896, height: 752 },
+  './images/gamepad-window.webp': {
+    url: gamepadWindowEs,
+    width: 1454,
+    height: 884
+  },
+  './images/inspection-showcase.webp': {
+    url: inspectionShowcaseEs,
+    width: 2420,
+    height: 1120
+  },
+  './images/keyboard-window.webp': {
+    url: keyboardWindowEs,
+    width: 1374,
+    height: 774
+  },
+  './images/open-cloud.webp': { url: openCloudEs, width: 1280, height: 956 },
+  './images/open-file.webp': { url: openFileEs, width: 1280, height: 692 },
+  './images/phone-layout.webp': {
+    url: phoneLayoutEs,
+    width: 780,
+    height: 1520
+  },
+  './images/rom-inspection.webp': {
+    url: romInspectionEs,
+    width: 2378,
+    height: 912
+  },
+  './images/save-project.webp': { url: saveProjectEs, width: 896, height: 896 },
+  './images/scissor-select.webp': {
+    url: scissorSelectEs,
+    width: 716,
+    height: 438
+  },
+  './images/share-component.webp': {
+    url: shareComponentEs,
+    width: 1024,
+    height: 952
+  },
+  './images/shortcut-manager.webp': {
+    url: shortcutManagerEs,
+    width: 1280,
+    height: 1476
+  },
+  './images/simulation-controls.webp': {
+    url: simulationControlsEs,
+    width: 894,
+    height: 100
+  },
+  './images/simulation-showcase.webp': {
+    url: simulationShowcaseEs,
+    width: 2420,
+    height: 628
+  },
+  './images/simulation-speed.webp': {
+    url: simulationSpeedEs,
+    width: 892,
+    height: 854
+  },
+  './images/terminal-window.webp': {
+    url: terminalWindowEs,
+    width: 2492,
+    height: 882
+  },
+  './images/upload-to-cloud.webp': {
+    url: uploadToCloudEs,
+    width: 896,
+    height: 1064
+  }
 };
 
 /**
@@ -270,11 +680,11 @@ const es: Readonly<Record<string, string>> = {
  * capturing it and running the `docs` target, which writes this file.
  */
 export const DOC_IMAGES: Readonly<
-  Record<string, Readonly<Record<string, string>>>
+  Record<string, Readonly<Record<string, DocImage>>>
 > = { en, de, fr, es };
 
 /** A language's screenshots: its own where it has them, English elsewhere. */
-export function docImages(lang: string): Readonly<Record<string, string>> {
+export function docImages(lang: string): Readonly<Record<string, DocImage>> {
   const localized = DOC_IMAGES[lang];
   return localized ? { ...DOC_IMAGES['en'], ...localized } : DOC_IMAGES['en'];
 }

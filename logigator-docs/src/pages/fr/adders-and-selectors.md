@@ -2,7 +2,7 @@
 
 Les additionneurs additionnent des bits isolés et produisent un bit de somme et une retenue. Les sélecteurs aiguillent des signaux d'après un nombre binaire : un multiplexeur choisit une entrée parmi plusieurs, un démultiplexeur envoie une entrée vers une sortie parmi plusieurs, un décodeur transforme un nombre en une seule sortie à 1, et un encodeur retransforme l'entrée à 1 la plus haute en nombre. Les six se trouvent dans la catégorie Additionneurs et sélecteurs de la palette.
 
-## Demi-additionneur
+## Demi-additionneur {#half-adder}
 
 ![Un demi-additionneur avec des interrupteurs sur A et B et des LED sur S et C, qui passe par les quatre combinaisons d'entrées. Avec les deux activés, S est éteinte et C allumée.](./images/component-half-adder.webp)
 
@@ -24,7 +24,7 @@ Il n'a pas d'autre option que Direction.
 | 1   | 0   | 1   | 0   |
 | 1   | 1   | 0   | 1   |
 
-## Additionneur complet
+## Additionneur complet {#full-adder}
 
 ![Un additionneur complet avec des interrupteurs sur A, B et Cin et des LED sur S et C, qui additionne zéro, un, deux (C allumée) et trois uns (S et C allumées).](./images/component-full-adder.webp)
 
@@ -53,7 +53,7 @@ Il n'a pas d'autre option que Direction.
 
 Pour additionner des nombres de plusieurs bits, utilisez un additionneur par bit et reliez la sortie C de chacun à l'entrée Cin de l'additionneur du bit de rang supérieur. Le bit de poids faible peut utiliser un demi-additionneur, puisqu'il n'a pas de retenue entrante.
 
-## Multiplexeur
+## Multiplexeur {#multiplexer}
 
 ![Un multiplexeur avec des interrupteurs sur S0 et sur les entrées de données 0 et 1, l'entrée 0 activée, et une LED sur sa sortie. La LED est allumée tant que S0 est éteint et s'éteint quand S0 choisit l'entrée 1.](./images/component-multiplexer.webp)
 
@@ -80,7 +80,7 @@ Avec 2 lignes de sélection :
 | 1   | 0   | Entrée 2 |
 | 1   | 1   | Entrée 3 |
 
-## Démultiplexeur
+## Démultiplexeur {#demultiplexer}
 
 ![Un démultiplexeur avec des interrupteurs sur S0 et I, I activé, et des LED sur les sorties 0 et 1. La LED allumée passe de la sortie 0 à la sortie 1 quand S0 est activé.](./images/component-demultiplexer.webp)
 
@@ -107,7 +107,7 @@ Avec 2 lignes de sélection :
 
 Les lignes de sélection viennent en premier, comme sur le multiplexeur. Un démultiplexeur d'un circuit plus ancien garde I en premier, avant les lignes de sélection, et fonctionne pour le reste de la même façon. Les étiquettes du composant montrent l'ordre.
 
-## Décodeur
+## Décodeur {#decoder}
 
 ![Un décodeur avec des interrupteurs sur ses entrées 1 et 2 et des LED sur ses quatre sorties, qui compte de 0 à 3 si bien que la LED allumée avance de la sortie 0 à la sortie 3.](./images/component-decoder.webp)
 
@@ -131,7 +131,7 @@ Avec 2 entrées :
 | 1   | 0   | 2          |
 | 1   | 1   | 3          |
 
-## Encodeur
+## Encodeur {#encoder}
 
 ![Un encodeur avec Sorties réglé sur 2, des interrupteurs sur ses quatre entrées et des LED sur les sorties 1, 2 et V. Sans entrée activée, V est éteinte. L'entrée 0 seule n'allume que V, et les entrées 2 puis 3 donnent 2 puis 3, l'entrée activée la plus haute.](./images/component-encoder.webp)
 
@@ -159,7 +159,7 @@ Avec 2 sorties, où x signifie que l'entrée peut être à 0 ou à 1 :
 
 Un encodeur d'un circuit plus ancien n'a pas de V.
 
-## Voir aussi
+## Voir aussi {#see-also}
 
 - [Composants et options](docs:components-and-options) : la palette et la carte de paramètres
 - [Portes logiques](docs:logic-gates) : NON, ET, OU et XOR

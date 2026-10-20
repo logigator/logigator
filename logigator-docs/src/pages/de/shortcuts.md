@@ -2,7 +2,7 @@
 
 Das sind die Standardbelegungen, in der Reihenfolge, in der Bearbeiten → Tastaturbefehle sie auflistet. Auf dem Mac funktioniert `⌘` überall, wo die Tabelle `Ctrl` nennt, und `Ctrl` funktioniert ebenfalls.
 
-## Standardbelegung
+## Standardbelegung {#default-bindings}
 
 | Aktion                                                 | Standard       |
 | ------------------------------------------------------ | -------------- |
@@ -33,11 +33,11 @@ Das sind die Standardbelegungen, in der Reihenfolge, in der Bearbeiten → Tasta
 
 Während du in ein Textfeld tippst, reagiert kein Kürzel außer `Escape`. In einer Simulation sind die Bearbeitungskürzel abgeschaltet, und `Escape` verlässt die Simulation.
 
-## Gehaltene Tasten
+## Gehaltene Tasten {#held-keys}
 
-Die beiden mit „halten“ markierten Aktionen wirken, solange die Taste gedrückt ist, statt einmal auszulösen. Halte `Alt`, während du einen Auswahlrahmen loslässt, um die Leitungen an seiner Kante zu schneiden (siehe [Arbeitsfläche und Werkzeuge](docs:board-and-tools#leitungen-an-der-auswahlkante-schneiden)). Halte `Ctrl` beim Klicken oder Aufziehen eines Rahmens, um zur Auswahl hinzuzufügen oder daraus zu entfernen. Das funktioniert mit Auswählen, Schwenken und dem Leitungswerkzeug.
+Die beiden mit „halten“ markierten Aktionen wirken, solange die Taste gedrückt ist, statt einmal auszulösen. Halte `Alt`, während du einen Auswahlrahmen loslässt, um die Leitungen an seiner Kante zu schneiden (siehe [Arbeitsfläche und Werkzeuge](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Halte `Ctrl` beim Klicken oder Aufziehen eines Rahmens, um zur Auswahl hinzuzufügen oder daraus zu entfernen. Das funktioniert mit Auswählen, Schwenken und dem Leitungswerkzeug.
 
-## Eine Belegung ändern
+## Eine Belegung ändern {#changing-a-binding}
 
 ![Die Verwaltung der Tastaturbefehle.](./images/shortcut-manager.webp)
 
@@ -47,7 +47,7 @@ Gehört die Kombination schon zu einer anderen Aktion, verliert diese sie, und e
 
 Deine Belegungen werden in diesem Browser gespeichert. Löschst du die Website-Daten, gelten wieder die Standardwerte.
 
-## Tasten des Gamepads
+## Tasten des Gamepads {#gamepad-keys}
 
 Ein [Gamepad](docs:inputs#gamepad) hat eigene Tasten, getrennt von den Tastaturbefehlen oben. Sie wirken, solange sein Controller-Fenster die Tastatur hat, und gehen dort den Tastaturbefehlen vor: `Enter` drückt Start.
 
@@ -75,9 +75,9 @@ Während du zuweist, bricht `Escape` ab, und `Backspace` oder `Delete` lässt di
 
 Die Tasten gelten für jedes Gamepad in jedem Projekt und werden wie die Tastaturbefehle in diesem Browser gespeichert. Eine Änderung erscheint sofort in jedem offenen Gamepad-Fenster, auch in anderen Tabs.
 
-## Tasten im Fenster einer Tastatur
+## Tasten im Fenster einer Tastatur {#keys-in-a-keyboard-window}
 
-Solange das Eingabefeld im [Fenster einer Tastatur](docs:inputs#tastatur) den Fokus hat, gehen Tasten an die Schaltung, und die Tastaturbefehle oben tun nichts. Diese Tasten verhalten sich dort anders:
+Solange das Eingabefeld im [Fenster einer Tastatur](docs:inputs#keyboard) den Fokus hat, gehen Tasten an die Schaltung, und die Tastaturbefehle oben tun nichts. Diese Tasten verhalten sich dort anders:
 
 | Taste       | Im Eingabefeld                          |
 | ----------- | --------------------------------------- |
@@ -89,7 +89,7 @@ Solange das Eingabefeld im [Fenster einer Tastatur](docs:inputs#tastatur) den Fo
 
 Tastenkombinationen mit `Ctrl`, `Alt` oder `⌘` gehen an den Browser, sodass `Ctrl+V` Text in die Tastatur einfügt. `AltGr` gehört nicht dazu: Ein Zeichen, das du damit tippst, wird gesendet. Eine Taste sendet das Zeichen, das deine Tastaturbelegung ihr gibt, deshalb lassen sich diese Tasten nicht neu zuweisen wie die eines Gamepads.
 
-## Siehe auch
+## Siehe auch {#see-also}
 
 - [Arbeitsfläche und Werkzeuge](docs:board-and-tools): die Werkzeuge und Aktionen hinter diesen Tasten
 - [Simulation](docs:simulation): was Enter und Escape dort tun

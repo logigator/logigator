@@ -2,7 +2,7 @@
 
 Los sumadores suman bits sueltos y dan un bit de suma y un acarreo. Los selectores encaminan señales según un número binario: un multiplexor elige una de varias entradas, un demultiplexor envía una entrada a una de varias salidas, un decodificador convierte un número en una sola salida a 1, y un codificador convierte la entrada más alta a 1 de nuevo en un número. Los seis están en la categoría Sumadores y selectores de la paleta.
 
-## Semisumador
+## Semisumador {#half-adder}
 
 ![Un semisumador con interruptores en A y B y LEDs en S y C, recorriendo las cuatro combinaciones de entradas. Con los dos encendidos, S está apagado y C encendido.](./images/component-half-adder.webp)
 
@@ -24,7 +24,7 @@ No tiene más opciones que Dirección.
 | 1   | 0   | 1   | 0   |
 | 1   | 1   | 0   | 1   |
 
-## Sumador completo
+## Sumador completo {#full-adder}
 
 ![Un sumador completo con interruptores en A, B y Cin y LEDs en S y C, sumando ningún uno, uno, dos (C encendido) y tres (S y C encendidos).](./images/component-full-adder.webp)
 
@@ -53,7 +53,7 @@ No tiene más opciones que Dirección.
 
 Para sumar números de varios bits, usa un sumador por bit y conecta la C de cada sumador a la Cin del sumador del bit inmediato superior. El bit más bajo puede usar un semisumador, ya que no tiene acarreo de entrada.
 
-## Multiplexor
+## Multiplexor {#multiplexer}
 
 ![Un multiplexor con interruptores en S0 y en las entradas de datos 0 y 1, con la entrada 0 encendida, y un LED en su salida. El LED está encendido mientras S0 está apagado y se apaga cuando S0 selecciona la entrada 1.](./images/component-multiplexer.webp)
 
@@ -80,7 +80,7 @@ Con 2 líneas de selección:
 | 1   | 0   | Entrada 2 |
 | 1   | 1   | Entrada 3 |
 
-## Demultiplexor
+## Demultiplexor {#demultiplexer}
 
 ![Un demultiplexor con interruptores en S0 e I, con I encendido, y LEDs en las salidas 0 y 1. El LED encendido pasa de la salida 0 a la salida 1 cuando se enciende S0.](./images/component-demultiplexer.webp)
 
@@ -107,7 +107,7 @@ Con 2 líneas de selección:
 
 Las líneas de selección van primero, como en el multiplexor. Un demultiplexor de un circuito más antiguo mantiene I primero, antes de las líneas de selección, y por lo demás funciona igual. Las etiquetas del componente muestran el orden.
 
-## Decodificador
+## Decodificador {#decoder}
 
 ![Un decodificador con interruptores en sus entradas 1 y 2 y LEDs en sus cuatro salidas, contando de 0 a 3, de modo que el LED encendido avanza de la salida 0 a la salida 3.](./images/component-decoder.webp)
 
@@ -131,7 +131,7 @@ Con 2 entradas:
 | 1   | 0   | 2          |
 | 1   | 1   | 3          |
 
-## Codificador
+## Codificador {#encoder}
 
 ![Un codificador con Salidas en 2, interruptores en sus cuatro entradas y LEDs en las salidas 1, 2 y V. Sin ninguna entrada encendida, V está apagado. La entrada 0 sola enciende solo V, y las entradas 2 y luego 3 dan 2 y luego 3, la entrada más alta que está encendida.](./images/component-encoder.webp)
 
@@ -159,7 +159,7 @@ Con 2 salidas, donde x significa que la entrada puede ser 0 o 1:
 
 Un codificador de un circuito más antiguo no tiene V.
 
-## Ver también
+## Ver también {#see-also}
 
 - [Componentes y opciones](docs:components-and-options): la paleta y la tarjeta de ajustes
 - [Puertas lógicas](docs:logic-gates): NO, Y, O y XOR

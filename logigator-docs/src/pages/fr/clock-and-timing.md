@@ -2,7 +2,7 @@
 
 Ces composants travaillent avec le temps, compté en ticks de simulation. Une horloge allume et éteint sa sortie d'elle-même, un retard transmet un signal un tick plus tard, et un générateur de nombres aléatoires place de nouveaux bits aléatoires sur ses sorties quand il reçoit un front d'horloge.
 
-## Horloge
+## Horloge {#clock}
 
 ![Une horloge avec un interrupteur éteint sur STP et une LED sur sa sortie, montrée à raison d'un tick par image. Avec Retard à 1, la LED s'allume et s'éteint à chaque tick.](./images/component-clock.webp)
 
@@ -35,9 +35,9 @@ La vitesse de l'horloge en secondes dépend de la vitesse de simulation : divise
 | Carré        | 5      | 10 ticks      | 1 Hz      |
 | Impulsion    | 4      | 5 ticks       | 2 Hz      |
 
-Le panneau de vitesse liste ces fréquences pour chaque horloge du circuit sous « Horloges à cette vitesse ». Voir [Vitesse](docs:simulation#vitesse).
+Le panneau de vitesse liste ces fréquences pour chaque horloge du circuit sous « Horloges à cette vitesse ». Voir [Vitesse](docs:simulation#speed).
 
-## Retard
+## Retard {#delay}
 
 ![Un interrupteur qui pilote une LED directement et une seconde LED à travers un retard, montré à raison d'un tick par image. La LED derrière le retard s'allume et s'éteint un tick après l'autre.](./images/component-delay.webp)
 
@@ -50,7 +50,7 @@ Un retard transmet son entrée telle quelle, un tick plus tard. Comme tout autre
 
 Il n'a pas d'autre option que Direction.
 
-## Générateur de nombres aléatoires
+## Générateur de nombres aléatoires {#random-number-generator}
 
 ![Un générateur de nombres aléatoires avec Sorties réglé sur 4, un bouton à impulsion sur CLK et un affichage à segments sur ses sorties, qui montre un nouveau nombre après chaque impulsion.](./images/component-random-number-generator.webp)
 
@@ -65,9 +65,9 @@ Un générateur de nombres aléatoires place une nouvelle valeur aléatoire sur 
 | ------- | ------- | ---------- |
 | Sorties | 1 à 64  | 1          |
 
-Avec une [bulle d'inversion](docs:components-and-options#inverser-un-port) sur CLK, il produit une nouvelle valeur au front descendant.
+Avec une [bulle d'inversion](docs:components-and-options#negating-a-port) sur CLK, il produit une nouvelle valeur au front descendant.
 
-## Voir aussi
+## Voir aussi {#see-also}
 
 - [Simulation](docs:simulation) : les ticks, les commandes et la vitesse de simulation
 - [Entrées](docs:inputs) : des interrupteurs et des boutons pour piloter STP ou CLK à la main

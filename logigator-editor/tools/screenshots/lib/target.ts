@@ -52,7 +52,7 @@ export interface Target {
    * whose captures have fixed names, imported by the consumer directly, has
    * none.
    */
-  writeRegistry?(dest: string): string;
+  writeRegistry?(dest: string): string | Promise<string>;
   /** Staging every shot of a pass gets, beneath the shot's own. */
   before?(pass: Pass): OpenOptions;
 }

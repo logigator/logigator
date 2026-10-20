@@ -4,7 +4,7 @@ Quand la fenêtre fait 1024 px de large ou moins, l'éditeur passe à une dispos
 
 ![La disposition tactile avec une porte sélectionnée et la barre d'actions au-dessus des outils.](./images/phone-layout.webp)
 
-## Où trouver quoi
+## Où trouver quoi {#where-things-are}
 
 - En haut à gauche, votre avatar ouvre le panneau Compte avec le thème, la langue, les paramètres de l'éditeur et la connexion ou déconnexion.
 - Un appui sur le nom du projet ouvre le menu du projet : Nouveau projet, Nouveau composant, Ouvrir, Téléverser vers le cloud ou Partager, Exporter vers un fichier, Générer une image, Réparer les fils et les entrées du menu Aide.
@@ -15,27 +15,27 @@ Quand la fenêtre fait 1024 px de large ou moins, l'éditeur passe à une dispos
 
 Cette disposition n'a pas de barre d'état, donc l'indicateur « Enregistré » / « Modifications non enregistrées » et l'étiquette de stockage à côté du nom du projet manquent. Les raccourcis clavier fonctionnent toujours avec un clavier branché, mais vous ne pouvez les modifier que dans la disposition large.
 
-## Gestes
+## Gestes {#gestures}
 
 Faites glisser avec deux doigts pour déplacer la vue et pincez pour zoomer. L'effet d'un glisser à un doigt dépend de l'outil : il trace un fil, un cadre de sélection ou un coup de gomme, et ne déplace la vue qu'avec Déplacement.
 
 Pour placer un composant, appuyez sur +, choisissez-le dans le panneau et appuyez sur le plan de travail à l'endroit voulu.
 
-## Sélection et presse-papiers
+## Sélection et presse-papiers {#selection-and-clipboard}
 
 Quand quelque chose est sélectionné, une barre au-dessus des outils indique le nombre d'éléments, avec des boutons pour Copier, Couper, Supprimer et les deux rotations, plus Coller dès que le presse-papiers contient quelque chose. Si un seul composant est sélectionné, un bouton Paramètres ouvre ses options dans un panneau.
 
 Après une copie, la barre reste affichée avec Coller, même sans sélection. Son ✕ vide le presse-papiers et ferme la barre. Les éléments collés arrivent au milieu de la vue : faites-les glisser vers une place libre et levez le doigt pour les poser, ou appuyez ailleurs pour annuler.
 
-## Simulation et inspection
+## Simulation et inspection {#simulation-and-inspection}
 
 Le bouton lecture en haut démarre la simulation. Les commandes apparaissent alors dans une barre le long du bord inférieur, et en haut le bouton pour quitter remplace Annuler, Rétablir et Enregistrer.
 
 Un appui sur une ROM, une RAM ou un terminal ouvre son affichage dans un panneau en bas de l'écran. Le plan de travail au-dessus reste utilisable, et plusieurs affichages partagent le panneau sous forme d'onglets. La surveillance d'un composant personnalisé occupe tout l'écran, et sa flèche de retour ramène au plan de travail. Voir [Inspection et surveillances](docs:inspection).
 
-La fenêtre d'un clavier s'ouvre dans le même panneau. Touchez son champ de saisie, qui indique « Touchez ici pour taper », pour faire apparaître le clavier virtuel ; le panneau remonte et reste au-dessus de lui. Le texte que le clavier virtuel insère d'un coup, comme un mot suggéré, est envoyé caractère par caractère, comme un collage. La façon dont les touches atteignent le circuit est décrite sous [Clavier](docs:inputs#clavier).
+La fenêtre d'un clavier s'ouvre dans le même panneau. Touchez son champ de saisie, qui indique « Touchez ici pour taper », pour faire apparaître le clavier virtuel ; le panneau remonte et reste au-dessus de lui. Le texte que le clavier virtuel insère d'un coup, comme un mot suggéré, est envoyé caractère par caractère, comme un collage. La façon dont les touches atteignent le circuit est décrite sous [Clavier](docs:inputs#keyboard).
 
-## Voir aussi
+## Voir aussi {#see-also}
 
 - [Plan de travail et outils](docs:board-and-tools) : ce que fait chaque outil
 - [Simulation](docs:simulation) : commandes et vitesse

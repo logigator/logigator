@@ -1,8 +1,8 @@
 # Logikgatter
 
-Logikgatter arbeiten mit einzelnen Bits. Das NICHT-Gatter invertiert seinen einen Eingang, und UND-, ODER- und XOR-Gatter verknüpfen 2 bis 64 Eingänge zu einem Ausgang. Alle vier stehen in der Kategorie Logikgatter der Palette. Ihre Anschlüsse haben keine Beschriftung; das Symbol auf dem Kasten unterscheidet sie. Die Kategorie enthält außerdem den Tunnel, der unter [Tunnel](docs:wires-and-connections#tunnel) beschrieben ist.
+Logikgatter arbeiten mit einzelnen Bits. Das NICHT-Gatter invertiert seinen einen Eingang, und UND-, ODER- und XOR-Gatter verknüpfen 2 bis 64 Eingänge zu einem Ausgang. Alle vier stehen in der Kategorie Logikgatter der Palette. Ihre Anschlüsse haben keine Beschriftung; das Symbol auf dem Kasten unterscheidet sie. Die Kategorie enthält außerdem den Tunnel, der unter [Tunnel](docs:wires-and-connections#tunnels) beschrieben ist.
 
-## NICHT-Gatter
+## NICHT-Gatter {#not-gate}
 
 ![Ein NICHT-Gatter mit einem Schalter am Eingang und einer LED am Ausgang. Die LED leuchtet, solange der Schalter aus ist, und geht aus, wenn er eingeschaltet wird.](./images/component-not-gate.webp)
 
@@ -20,9 +20,9 @@ Außer Richtung hat es keine Optionen.
 | 0       | 1       |
 | 1       | 0       |
 
-Ein Negationskreis invertiert das Signal eines Anschlusses ohne zusätzliche Verzögerung, vor einer anderen Komponente brauchst du also oft kein NICHT-Gatter. Siehe [Einen Anschluss negieren](docs:components-and-options#einen-anschluss-negieren).
+Ein Negationskreis invertiert das Signal eines Anschlusses ohne zusätzliche Verzögerung, vor einer anderen Komponente brauchst du also oft kein NICHT-Gatter. Siehe [Einen Anschluss negieren](docs:components-and-options#negating-a-port).
 
-## UND-Gatter
+## UND-Gatter {#and-gate}
 
 ![Ein UND-Gatter mit zwei Schaltern an den Eingängen und einer LED am Ausgang, das die vier Eingangsbelegungen durchläuft. Die LED leuchtet nur, wenn beide Schalter an sind.](./images/component-and-gate.webp)
 
@@ -48,7 +48,7 @@ Mit mehr Eingängen ist der Ausgang nur 1, solange alle 1 sind. Eine einzige 0 m
 
 Mit negiertem Ausgang wird das UND-Gatter zum NAND-Gatter.
 
-## ODER-Gatter
+## ODER-Gatter {#or-gate}
 
 ![Ein ODER-Gatter mit zwei Schaltern an den Eingängen und einer LED am Ausgang, das die vier Eingangsbelegungen durchläuft. Die LED leuchtet, wenn mindestens ein Schalter an ist.](./images/component-or-gate.webp)
 
@@ -72,9 +72,9 @@ Das ODER-Gatter gibt 1 aus, wenn mindestens ein Eingang 1 ist. Auf seinem Kasten
 
 Mit mehr Eingängen ist der Ausgang nur 0, solange alle 0 sind. Eine einzige 1 macht ihn 1.
 
-Mit negiertem Ausgang wird das ODER-Gatter zum NOR-Gatter. Um mehrere Ausgänge auf einer Leitung zusammenzuführen, leite sie durch ein ODER-Gatter, statt sie direkt zu verbinden (siehe [Widersprüchliche Signale](docs:simulation#widersprüchliche-signale)).
+Mit negiertem Ausgang wird das ODER-Gatter zum NOR-Gatter. Um mehrere Ausgänge auf einer Leitung zusammenzuführen, leite sie durch ein ODER-Gatter, statt sie direkt zu verbinden (siehe [Widersprüchliche Signale](docs:simulation#conflicting-signals)).
 
-## XOR-Gatter
+## XOR-Gatter {#xor-gate}
 
 ![Ein XOR-Gatter mit zwei Schaltern an den Eingängen und einer LED am Ausgang, das die vier Eingangsbelegungen durchläuft. Die LED leuchtet, wenn genau ein Schalter an ist.](./images/component-xor-gate.webp)
 
@@ -100,7 +100,7 @@ Mit mehr Eingängen zählt das Gatter die Einsen: Ein oder drei Eingänge auf 1 
 
 Mit negiertem Ausgang wird das XOR-Gatter zum XNOR-Gatter.
 
-## Siehe auch
+## Siehe auch {#see-also}
 
 - [Komponenten und Optionen](docs:components-and-options): die Palette, die Einstellungskarte und einen Anschluss negieren
 - [Speicher](docs:memory): Flip-Flops, ROM und RAM

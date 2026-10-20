@@ -10,15 +10,6 @@ import {
 } from './docs-search';
 import { DocPageId } from './docs-structure';
 
-/** The renderer's rule, as both viewers pass it in. */
-function slug(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^\p{L}\p{N}]+/gu, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
 function entry(page: DocPageId, markdown: string): DocsSearchEntry {
   return { page, markdown };
 }
@@ -30,11 +21,11 @@ const SIMULATION = entry(
     '',
     'Press play to run the circuit.',
     '',
-    '## Speed Modes',
+    '## Speed Modes {#speed-modes}',
     '',
     'The engine free-runs, or paces itself to a target frequency.',
     '',
-    '## Simulación en vivo',
+    '## Simulación en vivo {#live-simulation}',
     '',
     'El circuito se ejecuta mientras lo editas.'
   ].join('\n')
@@ -55,10 +46,10 @@ const TABLE = [
 
 const SHORTCUTS = entry(
   'shortcuts',
-  ['# Keyboard Shortcuts', '', '## File', '', TABLE].join('\n')
+  ['# Keyboard Shortcuts', '', '## File {#file}', '', TABLE].join('\n')
 );
 
-const index = buildDocsIndex([SIMULATION, CLOUD], slug);
+const index = buildDocsIndex([SIMULATION, CLOUD]);
 
 /** A hit's parts, back as the string they were split from. */
 function joined(parts: DocsTextPart[]): string {
@@ -68,8 +59,8 @@ function joined(parts: DocsTextPart[]): string {
 describe('searchDocs', () => {
   /**
    * The anchor is the whole point of a hit: it is fed straight to the
-   * renderer's `scrollToHeading`, which matches the slug of a heading's own
-   * text. A page's own title gets none — that is the top of the page.
+   * renderer's `scrollToHeading`, which matches a heading's `{#id}`. A page's
+   * own title gets none — that is the top of the page.
    */
   it('anchors a hit to the heading its section is under', () => {
     const [hit] = searchDocs(index, 'free-runs');
@@ -129,7 +120,7 @@ describe('searchDocs', () => {
     const [hit] = searchDocs(index, 'simulacion en vivo');
 
     expect(hit.heading).toBe('Simulación en vivo');
-    expect(hit.anchor).toBe('simulación-en-vivo');
+    expect(hit.anchor).toBe('live-simulation');
   });
 
   it('quotes the prose around the match, not the section opening', () => {
@@ -141,7 +132,7 @@ describe('searchDocs', () => {
         `${'Filler sentence about nothing in particular. '.repeat(6)}The keyboard shortcut manager lives here.`
       ].join('\n')
     );
-    const [hit] = searchDocs(buildDocsIndex([long], slug), 'shortcut');
+    const [hit] = searchDocs(buildDocsIndex([long]), 'shortcut');
 
     expect(joined(hit.snippetParts)).toContain('shortcut manager');
   });
@@ -156,7 +147,7 @@ describe('searchDocs', () => {
    * reference is nothing else, so what a hit quotes has to be the row.
    */
   it('quotes a table row rather than its markup', () => {
-    const [hit] = searchDocs(buildDocsIndex([SHORTCUTS], slug), 'save');
+    const [hit] = searchDocs(buildDocsIndex([SHORTCUTS]), 'save');
 
     expect(joined(hit.snippetParts)).toContain('Save — Ctrl+S');
     expect(joined(hit.snippetParts)).not.toContain('|');

@@ -2,11 +2,11 @@
 
 Une bascule mémorise un bit. La ROM et la RAM stockent des mots de plusieurs bits, chacun à une adresse numérotée. Les cinq se trouvent dans la catégorie Mémoire de la palette.
 
-Une bascule ne change son bit que lorsque son entrée CLK monte de 0 à 1 ; Q porte le bit et !Q son inverse. Chaque bascule démarre avec Q à 0 et !Q à 1. Entre deux fronts montants, les changements sur les autres entrées sont sans effet. Une bulle d'inversion sur CLK fait réagir une bascule au front descendant, quand CLK passe de 1 à 0 (voir [Inverser un port](docs:components-and-options#inverser-un-port)). Une [horloge](docs:clock-and-timing#horloge) est la source habituelle de CLK.
+Une bascule ne change son bit que lorsque son entrée CLK monte de 0 à 1 ; Q porte le bit et !Q son inverse. Chaque bascule démarre avec Q à 0 et !Q à 1. Entre deux fronts montants, les changements sur les autres entrées sont sans effet. Une bulle d'inversion sur CLK fait réagir une bascule au front descendant, quand CLK passe de 1 à 0 (voir [Inverser un port](docs:components-and-options#negating-a-port)). Une [horloge](docs:clock-and-timing#clock) est la source habituelle de CLK.
 
 Une ROM contient ce que vous y mettez pendant l'édition, et le circuit ne peut que le lire. Une RAM démarre vide et c'est le circuit qui y écrit. Pendant une simulation, un clic sur une ROM ou une RAM ouvre une vue de son contenu (voir [Inspection et surveillances](docs:inspection)).
 
-## Bascule D
+## Bascule D {#d-flip-flop}
 
 ![Une bascule D avec des interrupteurs sur D et CLK et des LED sur Q et !Q. Q prend la valeur de D quand CLK monte et la garde quand D change pendant que CLK est à 0.](./images/component-d-flip-flop.webp)
 
@@ -26,7 +26,7 @@ Elle n'a pas d'autre option que Direction.
 | 0   | 0                        |
 | 1   | 1                        |
 
-## Bascule JK
+## Bascule JK {#jk-flip-flop}
 
 ![Une bascule JK avec des interrupteurs sur J, CLK et K et des LED sur Q et !Q. Sur des fronts montants successifs de CLK, elle est mise à 1 avec J activé, remise à 0 avec K activé, puis inversée deux fois avec J et K tous deux activés.](./images/component-jk-flip-flop.webp)
 
@@ -51,7 +51,7 @@ Elle n'a pas d'autre option que Direction.
 
 Avec J et K tous deux à 1, Q change à chaque front montant ; il bat donc à la moitié de la fréquence du signal sur CLK.
 
-## Bascule SR
+## Bascule SR {#sr-flip-flop}
 
 ![Une bascule SR avec des interrupteurs sur S, CLK et R et des LED sur Q et !Q. Un front montant avec S activé met Q à 1, et un front montant avec R activé le remet à 0.](./images/component-sr-flip-flop.webp)
 
@@ -74,9 +74,9 @@ Elle n'a pas d'autre option que Direction.
 | 0   | 1   | 0                        | 1                         |
 | 1   | 1   | 1, conflit               | 0, conflit                |
 
-S et R tous deux à 1 est une combinaison d'entrées qu'une bascule SR n'admet pas. La simulation met Q à 1 et !Q à 0 et dessine les deux fils de sortie en orange jusqu'à un front montant où seul S ou seul R est à 1. Voir [Signaux en conflit](docs:simulation#signaux-en-conflit). Là où les deux peuvent être à 1 en même temps, utilisez plutôt une bascule D ou JK.
+S et R tous deux à 1 est une combinaison d'entrées qu'une bascule SR n'admet pas. La simulation met Q à 1 et !Q à 0 et dessine les deux fils de sortie en orange jusqu'à un front montant où seul S ou seul R est à 1. Voir [Signaux en conflit](docs:simulation#conflicting-signals). Là où les deux peuvent être à 1 en même temps, utilisez plutôt une bascule D ou JK.
 
-## ROM
+## ROM {#rom}
 
 ![Une ROM avec quatre interrupteurs sur ses entrées d'adresse réglés sur l'adresse 3 et quatre LED sur ses sorties qui montrent le mot stocké 0111.](./images/component-rom.webp)
 
@@ -95,7 +95,7 @@ La ROM donne le mot stocké à l'adresse présente sur ses entrées A. Elle n'a 
 
 Taille de mot fixe le nombre de bits par mot, et donc le nombre de sorties. Taille d'adresse fixe le nombre d'entrées d'adresse. Une ROM contient 2ⁿ mots pour une taille d'adresse de n : 16 mots par défaut, 2 048 au plus.
 
-### Modification du contenu
+### Modification du contenu {#editing-the-contents}
 
 « Modifier le contenu », dans la carte de paramètres, indique combien de mots sont remplis, par exemple « 3 sur 16 mots remplis », ou « Vide ». Un clic ouvre « Modifier le contenu de la ROM », un tableau avec une cellule par mot. Les mots que vous ne remplissez pas valent 0.
 
@@ -107,9 +107,9 @@ Taille de mot fixe le nombre de bits par mot, et donc le nombre de sorties. Tail
 - « Effacer » remet chaque mot à 0, après confirmation.
 - « Enregistrer » garde les modifications et « Annuler » les abandonne.
 
-Le contenu est enregistré avec le circuit. Pendant une simulation, la vue de la ROM met en surbrillance le mot à l'adresse actuelle (voir [Contenu d'une ROM](docs:inspection#contenu-d-une-rom)).
+Le contenu est enregistré avec le circuit. Pendant une simulation, la vue de la ROM met en surbrillance le mot à l'adresse actuelle (voir [Contenu d'une ROM](docs:inspection#rom-contents)).
 
-## RAM
+## RAM {#ram}
 
 ![Une RAM avec Taille d'adresse à 2, des interrupteurs sur A0, A1, D0 à D3, WE et CLK, et des LED sur ses sorties. 0101 est stocké à l'adresse 0 quand CLK monte avec WE activé, reste sur les sorties une fois les interrupteurs de données remis à 0, disparaît quand l'adresse 1 est choisie et revient avec l'adresse 0.](./images/component-ram.webp)
 
@@ -140,11 +140,11 @@ Lecture détermine quand les sorties changent :
 | Immédiate   | Chaque fois que l'adresse change ou qu'un nouveau mot y est stocké.                                     |
 | Sur horloge | Seulement au front montant de CLK, qui lit le mot à l'adresse ou montre celui qu'elle vient de stocker. |
 
-Avec une bulle d'inversion sur CLK, la RAM stocke, et lit avec Sur horloge, au front descendant (voir [Inverser un port](docs:components-and-options#inverser-un-port)).
+Avec une bulle d'inversion sur CLK, la RAM stocke, et lit avec Sur horloge, au front descendant (voir [Inverser un port](docs:components-and-options#negating-a-port)).
 
-Chaque mot vaut 0 au démarrage de la simulation, et « Arrêter » les remet tous à 0. Le contenu n'est pas enregistré avec le circuit ; pour démarrer avec un contenu fixe, utilisez une ROM. Pendant une simulation, la vue de la RAM montre ce que le circuit a stocké (voir [Contenu d'une RAM](docs:inspection#contenu-d-une-ram)).
+Chaque mot vaut 0 au démarrage de la simulation, et « Arrêter » les remet tous à 0. Le contenu n'est pas enregistré avec le circuit ; pour démarrer avec un contenu fixe, utilisez une ROM. Pendant une simulation, la vue de la RAM montre ce que le circuit a stocké (voir [Contenu d'une RAM](docs:inspection#ram-contents)).
 
-## Voir aussi
+## Voir aussi {#see-also}
 
 - [Composants et options](docs:components-and-options) : inverser un port, comme CLK
 - [Temporisation](docs:clock-and-timing) : des signaux d'horloge pour CLK

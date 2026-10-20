@@ -4,7 +4,7 @@ A custom component turns a circuit into a single part with its own symbol and na
 
 ![A gate circuit and the custom component made from it, running side by side.](./images/custom-component-showcase.webp)
 
-## Creating a component
+## Creating a component {#creating-a-component}
 
 1. Choose File → New Component (`Alt+N`), or the New Component button in the toolbar. A dialog opens.
 2. Fill in the dialog:
@@ -16,7 +16,7 @@ A custom component turns a circuit into a single part with its own symbol and na
 4. Build its circuit and give it [ports](#ports).
 5. Save (`Ctrl+S`) in that tab to save the component.
 
-## Ports
+## Ports {#ports}
 
 While a component's tab is active, a Ports panel sits above the palette. Place Input and Output plugs from it and wire them into the circuit. Each plug becomes one port of the finished component.
 
@@ -24,7 +24,7 @@ The panel lists the plugs. Type into a row to name the port, with up to 5 charac
 
 ![A component's tab with its Input and Output plugs.](./images/custom-component-tab.webp)
 
-## Placing and updating
+## Placing and updating {#placing-and-updating}
 
 Saved components appear in the palette under User Components, the most recently edited first. Place them like any other part. Each copy on the board is a box with the symbol and one port per plug.
 
@@ -45,17 +45,17 @@ The settings card of a placed copy, or of the palette tile, has these actions:
 
 Both updates can be undone.
 
-## Nesting
+## Nesting {#nesting}
 
 Components can contain other components. A component can never contain itself, directly or through another one, so while you edit one, the palette hides every component that would create such a loop.
 
 When you save, share or export a circuit, the components it uses are included, so it opens complete anywhere.
 
-## Deleting
+## Deleting {#deleting}
 
 Delete in the settings card removes the component from your library. Copies already placed stay in their circuits and show an Embedded chip. Restore & edit on such a copy brings it back into your local library. Deleting a cloud component also stops its share link from working.
 
-## See also
+## See also {#see-also}
 
 - [Components and options](docs:components-and-options): the built-in parts
 - [Inspection and watches](docs:inspection): looking inside a running copy

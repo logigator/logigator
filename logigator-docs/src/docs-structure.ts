@@ -7,7 +7,11 @@
  * To add a page: drop `<id>.md` under `pages/<lang>/`, list its id here, and
  * add the import and the title key in both apps — {@link DocPageId} makes each
  * of those a compile error until it is done. In-page cross links use the id,
- * `[label](docs:<page-id>)`.
+ * `[label](docs:<page-id>)`, or `docs:<page-id>#<heading-id>` for a section.
+ *
+ * Every H2 and H3 ends in `{#<heading-id>}`, the slug of its English heading,
+ * and the translations carry the same ids in the same order, so an anchor
+ * names one section in every language.
  */
 export interface DocSection {
   id: string;

@@ -2,7 +2,7 @@
 
 Les entrées sont les composants que vous utilisez pendant une simulation : interrupteurs, boutons, une manette et un clavier. Chacune pilote ses sorties d'après ce que vous cliquez, appuyez ou tapez, et le reste du circuit réagit.
 
-## Interrupteur
+## Interrupteur {#switch}
 
 ![Un interrupteur relié à une LED, éteint puis allumé, la LED s'allumant avec lui.](./images/component-switch.webp)
 
@@ -14,7 +14,7 @@ Un interrupteur bascule entre 0 et 1 à chaque clic pendant une simulation et re
 
 Il n'a pas d'autre option que Direction.
 
-## Bouton
+## Bouton {#button}
 
 ![Un bouton relié à une LED, relâché puis maintenu enfoncé, la LED allumée tant qu'il est enfoncé.](./images/component-button.webp)
 
@@ -28,7 +28,7 @@ Il n'a pas d'autre option que Direction.
 
 Un bouton transmet ce qui est enfoncé maintenant. Si vous cliquez bien plus vite qu'une simulation lente ou en pause n'avance, il saute les appuis les plus anciens, mais votre dernier clic arrive toujours.
 
-## Bouton à impulsion
+## Bouton à impulsion {#pulse-button}
 
 ![Un bouton à impulsion relié à une LED, montré à raison d'un tick par image : au repos, l'impulsion d'un tick avec la LED allumée, puis de nouveau au repos.](./images/component-pulse-button.webp)
 
@@ -42,7 +42,7 @@ Il n'a pas d'autre option que Direction.
 
 Un bouton à impulsion ne saute jamais de clic, quelle que soit votre avance sur la simulation. Chaque clic arrive comme une impulsion distincte.
 
-## Manette
+## Manette {#gamepad}
 
 ![Une manette avec les boutons par défaut et une LED sur chacune de ses huit sorties, Droite et A enfoncés si bien que ces deux LED sont allumées.](./images/component-gamepad.webp)
 
@@ -80,7 +80,7 @@ Un bouton maintenu enfoncé dans la fenêtre met sa sortie à 1 jusqu'à ce que 
 
 Fermer la fenêtre ou quitter la simulation relâche tous les boutons.
 
-### Clavier, souris et écran tactile
+### Clavier, souris et écran tactile {#keyboard-mouse-and-touch}
 
 La fenêtre prend le clavier à son ouverture, et la ligne du bas indique « Clavier actif ». Après un clic sur le plan de travail ou dans une autre fenêtre, elle indique « Cliquez ici pour utiliser le clavier », et les touches n'atteignent plus la manette. La touche de chaque bouton est affichée sous celui-ci.
 
@@ -90,11 +90,11 @@ Tant que la fenêtre a le clavier :
 - `Escape` ferme toujours la fenêtre,
 - les raccourcis avec `Ctrl` ou `Alt` fonctionnent toujours.
 
-Les touches par défaut et la façon de les modifier sont décrites dans [Raccourcis clavier](docs:shortcuts#touches-de-la-manette).
+Les touches par défaut et la façon de les modifier sont décrites dans [Raccourcis clavier](docs:shortcuts#gamepad-keys).
 
 À la souris ou au doigt, un bouton reste enfoncé tant que vous appuyez dessus. Sur un écran tactile, chaque doigt tient son propre bouton. La croix directionnelle a huit directions : appuyer entre deux branches enfonce les deux, et faire glisser le pouce passe d'une direction à la suivante sans le lever. Le centre de la croix n'enfonce aucune direction.
 
-### Manettes physiques
+### Manettes physiques {#game-controllers}
 
 Une manette physique branchée à votre ordinateur peut aussi jouer. Le navigateur ne signale une manette qu'après l'appui sur l'un de ses boutons pendant que l'éditeur est ouvert. Faites-le avec une fenêtre de manette ouverte : la manette physique est reliée à cette fenêtre et apparaît dans le menu Manette en bas.
 
@@ -116,19 +116,19 @@ Les boutons sont associés par position, quelle que soit leur inscription :
 
 Les manettes que le navigateur ne signale pas avec la disposition standard figurent dans la liste mais ne peuvent pas être choisies.
 
-### Noms des boutons
+### Noms des boutons {#button-names}
 
 « Noms des boutons », dans la carte de paramètres, ouvre une image de la manette avec un champ à chaque bouton. Un nom de 8 caractères au plus remplace le libellé du port de ce bouton sur le plan de travail et s'affiche à côté du bouton dans la fenêtre de la manette. Un champ vide garde le libellé par défaut. Les caractères que le plan de travail ne peut pas dessiner sont omis du libellé du port, et la fenêtre le signale.
 
 Les noms des boutons que vous désactivez sont conservés et reviennent quand vous les réactivez.
 
-### Manettes dans les surveillances et la disposition tactile
+### Manettes dans les surveillances et la disposition tactile {#gamepads-in-watches-and-the-touch-layout}
 
-Une manette placée dans un composant personnalisé se joue depuis une [surveillance](docs:inspection#surveillances). Le titre de sa fenêtre montre le chemin, par exemple Outer › Inner › Manette.
+Une manette placée dans un composant personnalisé se joue depuis une [surveillance](docs:inspection#watches). Le titre de sa fenêtre montre le chemin, par exemple Outer › Inner › Manette.
 
 En disposition tactile, la manette s'ouvre dans le panneau en bas de l'écran. Les touches s'y affichent dès que vous appuyez sur une touche d'un clavier, et le menu Manette dès qu'une manette physique est connectée.
 
-## Clavier
+## Clavier {#keyboard}
 
 ![Un clavier relié à un terminal, D0 à D7 sur D0 à D7 et STB sur CLK, après la saisie de Hello, world! Le terminal affiche le texte et le clavier la dernière touche, !.](./images/component-keyboard.webp)
 
@@ -142,7 +142,7 @@ Un clavier place sur ses sorties le code de chaque touche sur laquelle vous appu
 
 Il n'a pas d'autre option que Direction.
 
-### La fenêtre du clavier
+### La fenêtre du clavier {#the-keyboard-window}
 
 ![La fenêtre d'un clavier avec hello et world tapés et d maintenu, à côté du clavier qui affiche d sur le plan de travail.](./images/keyboard-window.webp)
 
@@ -152,9 +152,9 @@ La fenêtre a un champ de saisie en haut. Tant que ce champ a le focus, les touc
 - En dessous, « Sur D » donne le code que le circuit reçoit à cet instant : le caractère, sa valeur hexadécimale et ses 8 bits.
 - La ligne suivante indique « Vous tapez dans le circuit · Maj+Tab pour sortir » tant que le champ a le focus. Après un clic ailleurs, elle indique « Cliquez ici pour taper », et les touches n'atteignent plus le clavier jusqu'à ce que vous cliquiez de nouveau dans la fenêtre.
 
-Les touches qui vont au circuit plutôt qu'à l'éditeur sont décrites dans [Raccourcis clavier](docs:shortcuts#touches-dans-la-fenêtre-d-un-clavier).
+Les touches qui vont au circuit plutôt qu'à l'éditeur sont décrites dans [Raccourcis clavier](docs:shortcuts#keys-in-a-keyboard-window).
 
-### Effet d'un appui sur une touche
+### Effet d'un appui sur une touche {#what-a-key-press-does}
 
 Une touche enfoncée met son code sur D0 à D7, envoie une impulsion d'un tick sur STB et met KD à 1. Une touche enfoncée puis relâchée, comme chaque caractère d'un texte collé, prend quatre ticks :
 
@@ -176,7 +176,7 @@ Une touche maintenue garde KD à 1 après le tick 3 jusqu'à ce que vous la rel�
 
 Fermer la fenêtre, cliquer en dehors ou passer à un autre onglet relâche toutes les touches maintenues. « Arrêter » efface les caractères du champ.
 
-### Codes de caractères
+### Codes de caractères {#character-codes}
 
 Le code est le Latin-1 : l'ASCII plus les lettres accentuées et les symboles des langues d'Europe occidentale. Les caractères imprimables, de l'espace à `~` et de `0xA0` à ÿ, sont envoyés tels quels : é arrive donc comme `0xE9`. L'espace insécable (`0xA0`) et le trait d'union conditionnel (`0xAD`) sont affichés NBS et SHY, car ils ne se voient pas.
 
@@ -210,7 +210,7 @@ Certaines touches et certains caractères n'envoient rien ou envoient autre chos
 | Caractères tapés avec `AltGr`, comme @ sur un clavier AZERTY | le caractère                                                   |
 | Combinaisons avec `Ctrl`, `Alt` ou `⌘`                       | rien, elles restent au navigateur                              |
 
-### Collage de texte
+### Collage de texte {#pasting-text}
 
 Un collage envoie le texte collé caractère par caractère. « Saisir du texte… », en bas de la fenêtre, ouvre une boîte de dialogue où vous pouvez écrire ou coller un texte plus long, un programme par exemple. Elle indique avant l'envoi combien de caractères seront ignorés.
 
@@ -220,7 +220,7 @@ Dans un texte collé ou envoyé :
 - les autres caractères de contrôle sont omis,
 - les caractères hors Latin-1 sont ignorés, comme à la frappe.
 
-Chaque caractère arrive comme une touche enfoncée puis relâchée, en quatre ticks comme le montre [Effet d'un appui sur une touche](#effet-d-un-appui-sur-une-touche), et le suivant arrive au cinquième. KD est à 0 pendant un tick après chaque caractère, si bien qu'une lettre double arrive comme deux impulsions sur KD.
+Chaque caractère arrive comme une touche enfoncée puis relâchée, en quatre ticks comme le montre [Effet d'un appui sur une touche](#what-a-key-press-does), et le suivant arrive au cinquième. KD est à 0 pendant un tick après chaque caractère, si bien qu'une lettre double arrive comme deux impulsions sur KD.
 
 Tant que des caractères attendent, la fenêtre affiche « Envoi : » suivi du nombre restant, et un ✕ qui abandonne le reste. Un caractère dont l'impulsion sur STB a déjà commencé arrive quand même, et KD repasse à 0. « Envoi : » apparaît aussi quand vous tapez plus vite que la simulation n'avance, à une vitesse fixe basse par exemple.
 
@@ -230,9 +230,9 @@ Les limites :
 - Au plus 21 845 caractères peuvent attendre à la fois.
 - Un collage ou un envoi qui ne tient pas derrière les caractères qui attendent déjà n'est pas envoyé du tout, pas même en partie. La fenêtre ou la boîte de dialogue vous demande plutôt de les attendre.
 
-### Avance pas à pas en pause
+### Avance pas à pas en pause {#stepping-while-paused}
 
-En pause, les touches attendent « Pas à pas ». Chaque pas correspond à un tick du tableau de [Effet d'un appui sur une touche](#effet-d-un-appui-sur-une-touche) :
+En pause, les touches attendent « Pas à pas ». Chaque pas correspond à un tick du tableau de [Effet d'un appui sur une touche](#what-a-key-press-does) :
 
 | Après le pas | Ce que reçoit le circuit           |
 | ------------ | ---------------------------------- |
@@ -244,13 +244,13 @@ En pause, les touches attendent « Pas à pas ». Chaque pas correspond à un ti
 
 Un texte collé demande donc quatre pas par caractère.
 
-### Claviers dans les surveillances et la disposition tactile
+### Claviers dans les surveillances et la disposition tactile {#keyboards-in-watches-and-the-touch-layout}
 
-Pour un clavier placé dans un composant personnalisé, tapez depuis une [surveillance](docs:inspection#surveillances). Le titre de sa fenêtre montre le chemin, comme pour une manette.
+Pour un clavier placé dans un composant personnalisé, tapez depuis une [surveillance](docs:inspection#watches). Le titre de sa fenêtre montre le chemin, comme pour une manette.
 
-Sur un téléphone ou une tablette, la fenêtre s'ouvre dans le panneau en bas de l'écran (voir [Téléphones et tablettes](docs:phones-and-tablets#simulation-et-inspection)).
+Sur un téléphone ou une tablette, la fenêtre s'ouvre dans le panneau en bas de l'écran (voir [Téléphones et tablettes](docs:phones-and-tablets#simulation-and-inspection)).
 
-## Voir aussi
+## Voir aussi {#see-also}
 
 - [Simulation](docs:simulation) : lancer, mettre en pause et faire avancer pas à pas un circuit
 - [Sorties](docs:outputs) : LED, affichages et terminal

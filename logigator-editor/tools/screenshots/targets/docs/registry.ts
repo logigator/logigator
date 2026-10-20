@@ -7,6 +7,7 @@
  * the folders rather than a hand-kept list.
  */
 import path from 'node:path';
+import sharp from 'sharp';
 import { LOCALES } from '../../lib/config.ts';
 import {
   camelCase,
@@ -25,7 +26,7 @@ import {
  * harm commits. Reaching here with nothing to describe means the out-dir is
  * not the tree the run captured into.
  */
-export function writeRegistry(dest: string): string {
+export async function writeRegistry(dest: string): Promise<string> {
   const root = path.resolve(dest, 'src');
   const registry = path.join(root, 'images.ts');
 
@@ -57,16 +58,34 @@ export function writeRegistry(dest: string): string {
     )
     .join('\n');
 
-  const maps = groups
-    .map(({ lang, files }) => {
-      const entries = files
-        .map((file) => `  './images/${file}': ${ident(lang, file)}`)
-        .join(',\n');
-      return `const ${lang}: Readonly<Record<string, string>> = {\n${entries}\n};`;
-    })
-    .join('\n\n');
+  const maps = (
+    await Promise.all(
+      groups.map(async ({ lang, files }) => {
+        const entries = await Promise.all(
+          files.map(async (file) => {
+            const { width, height } = await frameSize(
+              path.join(root, 'pages', lang, 'images', file)
+            );
+            return `  './images/${file}': { url: ${ident(lang, file)}, width: ${width}, height: ${height} }`;
+          })
+        );
+        return `const ${lang}: Readonly<Record<string, DocImage>> = {\n${entries.join(',\n')}\n};`;
+      })
+    )
+  ).join('\n\n');
 
   const source = `${imports}
+
+/**
+ * A screenshot: its URL in the consuming build, and its size in pixels — one
+ * frame's, for an animation — so a page can give it its box before the file
+ * arrives.
+ */
+export interface DocImage {
+  url: string;
+  width: number;
+  height: number;
+}
 
 /** One language's screenshots, keyed by the destination the markdown uses. */
 ${maps}
@@ -92,11 +111,11 @@ ${maps}
  * capturing it and running the \`docs\` target, which writes this file.
  */
 export const DOC_IMAGES: Readonly<
-  Record<string, Readonly<Record<string, string>>>
+  Record<string, Readonly<Record<string, DocImage>>>
 > = { ${groups.map((group) => group.lang).join(', ')} };
 
 /** A language's screenshots: its own where it has them, English elsewhere. */
-export function docImages(lang: string): Readonly<Record<string, string>> {
+export function docImages(lang: string): Readonly<Record<string, DocImage>> {
   const localized = DOC_IMAGES[lang];
   return localized ? { ...DOC_IMAGES['en'], ...localized } : DOC_IMAGES['en'];
 }
@@ -107,4 +126,18 @@ export function docImages(lang: string): Readonly<Record<string, string>> {
     source,
     groups.map((group) => `${group.lang}: ${group.files.length}`).join('  ')
   );
+}
+
+/**
+ * A capture's size, read from the file. An animation's frames share one clip,
+ * and sharp reports one frame's height unless asked for every page.
+ */
+async function frameSize(
+  file: string
+): Promise<{ width: number; height: number }> {
+  const { width, height } = await sharp(file).metadata();
+  if (!width || !height) {
+    throw new Error(`${file} has no readable size`);
+  }
+  return { width, height };
 }

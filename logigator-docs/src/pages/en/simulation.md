@@ -4,7 +4,7 @@ Start simulation, at the right end of the toolbar, powers the circuit: powered w
 
 ![A clock driving an LED in a running simulation.](./images/simulation-showcase.webp)
 
-## Entering and leaving
+## Entering and leaving {#entering-and-leaving}
 
 The simulation always runs the main project. If a custom component's tab is open, the editor switches back to Main project first.
 
@@ -12,7 +12,7 @@ While it runs, the board is locked. You can pan and zoom, operate inputs and [in
 
 With the Auto-start simulation setting on (the default), the circuit starts running as soon as you enter. With it off, the simulation waits paused at tick 0 so you can step from the start.
 
-## Run controls
+## Run controls {#run-controls}
 
 While a simulation is active, the toolbar is replaced by four buttons, the speed button and a readout.
 
@@ -27,7 +27,7 @@ The readout shows the ticks since the start and, while running, the speed actual
 
 ![The run controls and the speed button.](./images/simulation-controls.webp)
 
-## Speed
+## Speed {#speed}
 
 The speed button shows the current setting. Clicking it opens a panel with three modes, which you can switch while the circuit runs.
 
@@ -43,7 +43,7 @@ For Fixed speed, the slider goes from 1 Hz to 10 MHz. In the box next to it you 
 
 Under the modes, Clocks at this speed lists the frequency of each kind of clock in the circuit, by waveform and delay, such as Square wave, delay 5. How many ticks one cycle of a clock takes is described under [Clock](docs:clock-and-timing#clock). With Fixed speed the list is there right away. In the other two modes the rate has to be measured first, so the list appears about a second after the circuit starts running.
 
-## Operating inputs
+## Operating inputs {#operating-inputs}
 
 | Component    | How you operate it                                                        | Details                                  |
 | ------------ | ------------------------------------------------------------------------- | ---------------------------------------- |
@@ -55,16 +55,16 @@ Under the modes, Clocks at this speed lists the frequency of each kind of clock 
 
 Dragging from anywhere else on the board pans it.
 
-## Conflicting signals
+## Conflicting signals {#conflicting-signals}
 
 A wire drawn in orange carries a conflict. The orange is a hint about your circuit and doesn't change how the simulation runs.
 
-### Causes
+### Causes {#causes}
 
 - Two or more outputs drive the same wire, and at that moment one is 1 and another is 0. Outputs that agree are not marked, so the orange can come and go as the values change. On real hardware, this would be a short circuit.
 - An SR flip-flop was clocked with S and R both at 1. Q goes to 1 and !Q to 0, and both stay orange until a clock edge with only S or only R at 1. On real hardware, this is an input an SR flip-flop does not allow.
 
-### Effect on the simulation
+### Effect on the simulation {#effect-on-the-simulation}
 
 The simulation keeps running as before: a wire with several outputs on it is 1 as soon as one of them is 1.
 
@@ -72,14 +72,14 @@ A conflict inside a custom component is not shown on the board. Click the compon
 
 Switching off the Highlight conflicts setting, which is on by default, turns the orange off. See [Settings](docs:settings#editor-settings).
 
-### Fixes
+### Fixes {#fixes}
 
 | Cause                       | Fix                                                                                                                                                                                                         |
 | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Several outputs on one wire | Connect only one output to each wire. To combine several sources, feed them into an [OR gate](docs:logic-gates#or-gate). To choose one of them, use a [multiplexer](docs:adders-and-selectors#multiplexer). |
 | S and R both at 1           | Don't set S and R to 1 at the same time, or use a [D or JK flip-flop](docs:memory#d-flip-flop) instead.                                                                                                     |
 
-## When the simulation won't start
+## When the simulation won't start {#when-the-simulation-won-t-start}
 
 The editor refuses to start and shows a message naming the component when:
 
@@ -89,7 +89,7 @@ The editor refuses to start and shows a message naming the component when:
 
 Fix the named component and start again. If the message says the simulation engine could not start, your browser does not support WebAssembly.
 
-## See also
+## See also {#see-also}
 
 - [Inspection and watches](docs:inspection): ROM and RAM contents, terminal output, and watches
 - [Inputs](docs:inputs): switches, buttons, the gamepad and the keyboard

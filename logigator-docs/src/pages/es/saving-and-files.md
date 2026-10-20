@@ -2,13 +2,13 @@
 
 Un proyecto se guarda en uno de dos sitios: en este navegador (Local) o en tu cuenta de Logigator (Nube). Los archivos de tu dispositivo sirven para exportar e importar, no son un tercer lugar donde guardar. El editor no guarda automáticamente.
 
-## Guardar un proyecto
+## Guardar un proyecto {#saving-a-project}
 
 Archivo → Guardar, el botón de guardar de la barra de herramientas o `Ctrl+S` guarda el proyecto abierto. Un proyecto nuevo es un borrador hasta que lo guardas por primera vez, lo que abre el diálogo «Guardar»:
 
 - Nombre, hasta 20 caracteres.
 - Destino, Local o Nube. Nube requiere haber iniciado sesión y en ese caso viene preseleccionada.
-- Quién puede abrirlo, solo con Nube. Viene preseleccionado Todo el mundo: el proyecto aparece entonces en la comunidad y los buscadores pueden encontrarlo. Elige «Solo tú» para mantenerlo privado. Consulta [Nube y compartir](docs:cloud#compartir).
+- Quién puede abrirlo, solo con Nube. Viene preseleccionado Todo el mundo: el proyecto aparece entonces en la comunidad y los buscadores pueden encontrarlo. Elige «Solo tú» para mantenerlo privado. Consulta [Nube y compartir](docs:cloud#sharing).
 
 ![El diálogo «Guardar» con Nube elegida y las opciones de visibilidad debajo.](./images/save-project.webp)
 
@@ -16,7 +16,7 @@ Las siguientes veces se guarda directamente en el mismo sitio. La única excepci
 
 Los proyectos locales se quedan en el navegador que los guardó. Como advierte el diálogo, no se conservan entre dispositivos y pueden perderse si se borran los datos del sitio. Guarda en la nube o exporta a un archivo lo que quieras conservar.
 
-## Dónde está guardado un proyecto
+## Dónde está guardado un proyecto {#where-a-project-is-stored}
 
 La etiqueta junto al nombre del proyecto indica dónde está el proyecto abierto:
 
@@ -31,7 +31,7 @@ Una etiqueta Bifurcar al lado indica que el proyecto se copió del de otra perso
 
 La barra de estado muestra «Guardado» o «Cambios sin guardar». Si abres otro proyecto o empiezas uno nuevo con cambios sin guardar, el editor pregunta si quieres descartarlos, y el navegador te avisa antes de cerrar la pestaña.
 
-## Abrir, renombrar y eliminar
+## Abrir, renombrar y eliminar {#opening-renaming-and-deleting}
 
 Archivo → Abrir (`Ctrl+O`) tiene tres pestañas: Proyectos locales, Proyectos en la nube y Desde archivo. En cada lista se puede buscar, y cada fila tiene botones para renombrar o eliminar el proyecto. Las filas locales se pueden además subir a la nube, y las de la nube compartir.
 
@@ -39,15 +39,15 @@ Archivo → Abrir (`Ctrl+O`) tiene tres pestañas: Proyectos locales, Proyectos 
 
 El lápiz junto al nombre del proyecto, en la barra de título, cambia el nombre del proyecto abierto.
 
-## Archivos de circuito
+## Archivos de circuito {#circuit-files}
 
 Archivo → Exportar a archivo descarga el proyecto abierto como archivo `.lgix`. El archivo contiene el tablero y una copia de cada componente personalizado que usa, así que se abre completo en cualquier ordenador. Está comprimido, pero no cifrado ni firmado: cualquiera puede leerlo. Exportar no cambia dónde está guardado el proyecto.
 
 Para importar, abre Archivo → Abrir → Desde archivo y elige un archivo. El editor lee archivos `.lgix` y los archivos `.json` que exportaba el antiguo editor de Logigator. La importación se guarda al momento como un proyecto local nuevo.
 
-Un proyecto abierto desde un enlace para compartir no se puede exportar. Clónalo primero (consulta [Nube y compartir](docs:cloud#abrir-el-enlace-de-otra-persona)).
+Un proyecto abierto desde un enlace para compartir no se puede exportar. Clónalo primero (consulta [Nube y compartir](docs:cloud#opening-someone-else-s-link)).
 
-## Exportar una imagen
+## Exportar una imagen {#exporting-an-image}
 
 Archivo → Generar imagen abre el diálogo «Exportar imagen»:
 
@@ -61,7 +61,7 @@ El diálogo muestra el tamaño final en píxeles antes de exportar. Si hay abier
 
 ![El diálogo «Exportar imagen».](./images/export-image.webp)
 
-## Ver también
+## Ver también {#see-also}
 
 - [Nube y compartir](docs:cloud): subir, compartir y clonar
 - [Componentes personalizados](docs:custom-components): los componentes que lleva un archivo

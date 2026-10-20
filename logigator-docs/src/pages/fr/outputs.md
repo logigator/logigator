@@ -2,7 +2,7 @@
 
 Les sorties montrent ce que fait un circuit : une LED pour un seul signal, un affichage à segments pour un nombre, une matrice de LED pour une image et un terminal pour du texte. Elles n'ont que des entrées et changent au fil de la simulation.
 
-## LED
+## LED {#led}
 
 ![Deux interrupteurs, chacun relié à une LED. L'interrupteur du haut est allumé et sa LED aussi ; celui du bas est éteint et sa LED aussi.](./images/component-led.webp)
 
@@ -14,7 +14,7 @@ Une LED s'allume tant que son entrée est à 1.
 
 Elle n'a pas d'autre option que Direction.
 
-## Affichage à segments
+## Affichage à segments {#segment-display}
 
 ![Un affichage à segments avec quatre interrupteurs sur ses entrées, qui affiche 00, 05, 10 et 15 à mesure que les interrupteurs changent.](./images/component-segment-display.webp)
 
@@ -36,7 +36,7 @@ Le nombre est complété par des zéros jusqu'au nombre de chiffres qu'exige la 
 | 4       | 00 à 15   | 0 à f   | 00 à 17   |
 | 8       | 000 à 255 | 00 à ff | 000 à 377 |
 
-## Matrice de LED
+## Matrice de LED {#led-matrix}
 
 ![Une matrice de LED 4 × 4 avec des interrupteurs sur A0, A1 et D0 à D3 et un bouton à impulsion sur CLK, qui dessine un X une ligne par impulsion.](./images/component-led-matrix.webp)
 
@@ -62,9 +62,9 @@ La taille fixe le nombre d'entrées d'adresse et de données :
 
 En 16 × 16, l'adresse 0 est la moitié gauche de la ligne 0, l'adresse 1 sa moitié droite, l'adresse 2 la moitié gauche de la ligne 1, et ainsi de suite. D0 est la LED la plus à gauche de la ligne ou de la demi-ligne. La ligne 0 est en haut, et quand vous tournez la matrice, la grille reste droite et seuls les ports changent de place.
 
-Avec une [bulle d'inversion](docs:components-and-options#inverser-un-port) sur CLK, la matrice écrit au front descendant.
+Avec une [bulle d'inversion](docs:components-and-options#negating-a-port) sur CLK, la matrice écrit au front descendant.
 
-## Terminal
+## Terminal {#terminal}
 
 ![Un terminal à sa taille par défaut, alimenté par un clavier, avec trois lignes de texte affichées.](./images/component-terminal.webp)
 
@@ -83,19 +83,19 @@ Un terminal est un écran de texte. Il affiche un caractère chaque fois que son
 
 L'écran fait Colonnes caractères de large et Lignes lignes de haut, et le composant grandit avec lui. Grande dessine chaque caractère une fois et demie plus grand que Petite. Quand vous tournez un terminal, son écran reste droit et seuls les ports changent de place.
 
-Le caractère suivant s'écrit à la place du curseur en bloc, que l'écran ne montre que pendant une simulation. Avec une [bulle d'inversion](docs:components-and-options#inverser-un-port) sur CLK, le terminal affiche au front descendant.
+Le caractère suivant s'écrit à la place du curseur en bloc, que l'écran ne montre que pendant une simulation. Avec une [bulle d'inversion](docs:components-and-options#negating-a-port) sur CLK, le terminal affiche au front descendant.
 
-Pour voir ce que vous tapez, reliez D0 à D7 d'un [clavier](docs:inputs#clavier) à D0 à D7 du terminal, et sa sortie STB à CLK. `Enter` commence alors une nouvelle ligne, `Backspace` efface le caractère avant le curseur, et les flèches et `Home` déplacent le curseur.
+Pour voir ce que vous tapez, reliez D0 à D7 d'un [clavier](docs:inputs#keyboard) à D0 à D7 du terminal, et sa sortie STB à CLK. `Enter` commence alors une nouvelle ligne, `Backspace` efface le caractère avant le curseur, et les flèches et `Home` déplacent le curseur.
 
-Pendant une simulation, un clic sur un terminal ouvre une fenêtre avec tout ce qu'il a affiché. Cette fenêtre est décrite dans [Inspection et surveillances](docs:inspection#sortie-d-un-terminal).
+Pendant une simulation, un clic sur un terminal ouvre une fenêtre avec tout ce qu'il a affiché. Cette fenêtre est décrite dans [Inspection et surveillances](docs:inspection#terminal-output).
 
 ![La fenêtre d'un terminal avec hello et world dans l'historique au-dessus de l'écran, à côté d'un clavier relié au terminal sur le plan de travail.](./images/terminal-window.webp)
 
-### Caractères affichés
+### Caractères affichés {#printed-characters}
 
 Les codes sont en Latin-1, comme sur le clavier. Les codes de l'espace à `~` et de `0xA0` à ÿ s'affichent comme leur caractère : `0x41` affiche A et `0xE9` affiche é. L'espace insécable s'affiche comme une espace et le trait d'union conditionnel comme un trait d'union.
 
-### Codes de contrôle
+### Codes de contrôle {#control-codes}
 
 Ces codes déplacent le curseur ou effacent :
 
@@ -115,16 +115,16 @@ Ces codes déplacent le curseur ou effacent :
 
 RT, LT, UP et DN s'arrêtent aux bords de l'écran ; seul LF fait défiler. Tout autre code, dont ESC et `0x80` à `0x9F`, est ignoré.
 
-### Retour à la ligne
+### Retour à la ligne {#line-wrapping}
 
 - Un caractère affiché dans la dernière colonne y laisse le curseur.
 - Le caractère suivant va au début de la ligne suivante, l'écran défilant si le curseur était sur la dernière ligne.
 - Une ligne pleine suivie de LF ne laisse donc pas de ligne vide.
 - Un code qui déplace le curseur annule ce retour à la ligne : un BS juste après la dernière colonne efface le caractère qui y est affiché.
 
-### Historique
+### Historique {#scrollback}
 
-Une ligne qui sort de l'écran par le haut va dans l'historique telle qu'elle était, et les codes de déplacement ne peuvent plus la modifier. L'historique garde les 10 000 dernières lignes et s'affiche dans la [fenêtre](docs:inspection#sortie-d-un-terminal) du terminal.
+Une ligne qui sort de l'écran par le haut va dans l'historique telle qu'elle était, et les codes de déplacement ne peuvent plus la modifier. L'historique garde les 10 000 dernières lignes et s'affiche dans la [fenêtre](docs:inspection#terminal-output) du terminal.
 
 | Action                | Écran    | Historique |
 | --------------------- | -------- | ---------- |
@@ -132,7 +132,7 @@ Une ligne qui sort de l'écran par le haut va dans l'historique telle qu'elle é
 | Arrêter               | effacé   | effacé     |
 | Quitter la simulation | effacé   | effacé     |
 
-## Voir aussi
+## Voir aussi {#see-also}
 
 - [Entrées](docs:inputs) : les interrupteurs, les boutons et le clavier qui pilotent ces sorties
 - [Inspection et surveillances](docs:inspection) : la fenêtre du terminal et les surveillances

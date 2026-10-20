@@ -2,11 +2,11 @@
 
 Ein Flip-Flop speichert ein Bit. ROM und RAM speichern Wörter aus mehreren Bits, jedes an einer nummerierten Adresse. Alle fünf stehen in der Kategorie Speicher der Palette.
 
-Ein Flip-Flop ändert sein Bit nur, wenn sein Eingang CLK von 0 auf 1 steigt. Q führt das Bit und !Q sein Gegenteil. Jedes Flip-Flop beginnt mit Q auf 0 und !Q auf 1. Zwischen steigenden Flanken haben Änderungen an den anderen Eingängen keine Wirkung. Ein Negationskreis an CLK lässt ein Flip-Flop stattdessen auf die fallende Flanke reagieren, wenn CLK von 1 auf 0 geht (siehe [Einen Anschluss negieren](docs:components-and-options#einen-anschluss-negieren)). Die übliche Quelle für CLK ist ein [Taktgeber](docs:clock-and-timing#taktgeber).
+Ein Flip-Flop ändert sein Bit nur, wenn sein Eingang CLK von 0 auf 1 steigt. Q führt das Bit und !Q sein Gegenteil. Jedes Flip-Flop beginnt mit Q auf 0 und !Q auf 1. Zwischen steigenden Flanken haben Änderungen an den anderen Eingängen keine Wirkung. Ein Negationskreis an CLK lässt ein Flip-Flop stattdessen auf die fallende Flanke reagieren, wenn CLK von 1 auf 0 geht (siehe [Einen Anschluss negieren](docs:components-and-options#negating-a-port)). Die übliche Quelle für CLK ist ein [Taktgeber](docs:clock-and-timing#clock).
 
 Ein ROM hält einen Inhalt, den du beim Bearbeiten festlegst, und die Schaltung kann ihn nur lesen. Ein RAM ist anfangs leer, und die Schaltung schreibt hinein. Während einer Simulation öffnet ein Klick auf ein ROM oder ein RAM eine Ansicht mit seinem Inhalt (siehe [Inspektion und Beobachtungen](docs:inspection)).
 
-## D-Flip-Flop
+## D-Flip-Flop {#d-flip-flop}
 
 ![Ein D-Flip-Flop mit Schaltern an D und CLK und LEDs an Q und !Q. Q übernimmt den Wert von D, wenn CLK steigt, und behält ihn, wenn sich D ändert, während CLK 0 ist.](./images/component-d-flip-flop.webp)
 
@@ -26,7 +26,7 @@ Außer Richtung hat es keine Optionen.
 | 0   | 0                            |
 | 1   | 1                            |
 
-## JK-Flip-Flop
+## JK-Flip-Flop {#jk-flip-flop}
 
 ![Ein JK-Flip-Flop mit Schaltern an J, CLK und K und LEDs an Q und !Q. Bei aufeinanderfolgenden steigenden Flanken von CLK wird es mit J an gesetzt, mit K an zurückgesetzt und dann mit J und K an zweimal gekippt.](./images/component-jk-flip-flop.webp)
 
@@ -51,7 +51,7 @@ Außer Richtung hat es keine Optionen.
 
 Sind J und K beide 1, wechselt Q bei jeder steigenden Flanke und läuft so mit der halben Frequenz des Signals an CLK.
 
-## SR-Flip-Flop
+## SR-Flip-Flop {#sr-flip-flop}
 
 ![Ein SR-Flip-Flop mit Schaltern an S, CLK und R und LEDs an Q und !Q. Eine steigende Flanke mit S an setzt Q, und eine steigende Flanke mit R an setzt es zurück.](./images/component-sr-flip-flop.webp)
 
@@ -74,9 +74,9 @@ Außer Richtung hat es keine Optionen.
 | 0   | 1   | 0                            | 1                             |
 | 1   | 1   | 1, Konflikt                  | 0, Konflikt                   |
 
-S und R gleichzeitig auf 1 ist eine Eingangsbelegung, die ein SR-Flip-Flop nicht erlaubt. Die Simulation setzt Q auf 1 und !Q auf 0 und zeichnet beide Ausgangsleitungen orange, bis eine steigende Flanke kommt, bei der nur S oder nur R auf 1 ist. Siehe [Widersprüchliche Signale](docs:simulation#widersprüchliche-signale). Wo beide gleichzeitig 1 sein können, nimm stattdessen ein D- oder JK-Flip-Flop.
+S und R gleichzeitig auf 1 ist eine Eingangsbelegung, die ein SR-Flip-Flop nicht erlaubt. Die Simulation setzt Q auf 1 und !Q auf 0 und zeichnet beide Ausgangsleitungen orange, bis eine steigende Flanke kommt, bei der nur S oder nur R auf 1 ist. Siehe [Widersprüchliche Signale](docs:simulation#conflicting-signals). Wo beide gleichzeitig 1 sein können, nimm stattdessen ein D- oder JK-Flip-Flop.
 
-## ROM
+## ROM {#rom}
 
 ![Ein ROM mit vier Schaltern an seinen Adresseingängen, auf Adresse 3 gestellt, und vier LEDs an seinen Ausgängen, die das gespeicherte Wort 0111 zeigen.](./images/component-rom.webp)
 
@@ -95,7 +95,7 @@ Das ROM gibt das Wort aus, das an der Adresse an seinen A-Eingängen gespeichert
 
 Wortbreite legt fest, wie viele Bits ein Wort hat, und damit die Zahl der Ausgänge. Adressgröße legt die Zahl der Adresseingänge fest. Ein ROM mit Adressgröße n hält 2ⁿ Wörter: standardmäßig 16, höchstens 2.048.
 
-### Den Inhalt bearbeiten
+### Den Inhalt bearbeiten {#editing-the-contents}
 
 „Inhalt bearbeiten“ in der Einstellungskarte zeigt, wie viele Wörter belegt sind, etwa „3 von 16 Wörtern belegt“, oder „Leer“. Ein Klick darauf öffnet „ROM-Inhalt bearbeiten“, eine Tabelle mit einer Zelle pro Wort. Wörter, die du nicht belegst, sind 0.
 
@@ -107,9 +107,9 @@ Wortbreite legt fest, wie viele Bits ein Wort hat, und damit die Zahl der Ausgä
 - „Leeren“ setzt nach einer Rückfrage jedes Wort auf 0.
 - „Speichern“ übernimmt die Änderungen, „Abbrechen“ verwirft sie.
 
-Der Inhalt wird mit der Schaltung gespeichert. Während einer Simulation hebt die Ansicht des ROM das Wort an der aktuellen Adresse hervor (siehe [ROM-Inhalt](docs:inspection#rom-inhalt)).
+Der Inhalt wird mit der Schaltung gespeichert. Während einer Simulation hebt die Ansicht des ROM das Wort an der aktuellen Adresse hervor (siehe [ROM-Inhalt](docs:inspection#rom-contents)).
 
-## RAM
+## RAM {#ram}
 
 ![Ein RAM mit Adressgröße 2, Schaltern an A0, A1, D0 bis D3, WE und CLK und LEDs an seinen Ausgängen. 0101 wird an Adresse 0 gespeichert, wenn CLK bei eingeschaltetem WE steigt, bleibt an den Ausgängen, nachdem die Datenschalter ausgeschaltet sind, verschwindet, wenn Adresse 1 gewählt wird, und kommt mit Adresse 0 zurück.](./images/component-ram.webp)
 
@@ -140,11 +140,11 @@ Lesen legt fest, wann sich die Ausgänge ändern:
 | Sofort   | Immer, wenn sich die Adresse ändert oder dort ein neues Wort gespeichert wird.                        |
 | Bei Takt | Nur bei der steigenden Flanke von CLK, die das Wort an der Adresse liest oder das gespeicherte zeigt. |
 
-Mit einem Negationskreis an CLK speichert das RAM, und liest bei „Bei Takt“, stattdessen bei der fallenden Flanke (siehe [Einen Anschluss negieren](docs:components-and-options#einen-anschluss-negieren)).
+Mit einem Negationskreis an CLK speichert das RAM, und liest bei „Bei Takt“, stattdessen bei der fallenden Flanke (siehe [Einen Anschluss negieren](docs:components-and-options#negating-a-port)).
 
-Beim Start der Simulation ist jedes Wort 0, und „Stopp“ setzt alle wieder auf 0. Der Inhalt wird nicht mit der Schaltung gespeichert; für einen festen Anfangsinhalt nimm ein ROM. Während einer Simulation zeigt die Ansicht des RAM, was die Schaltung gespeichert hat (siehe [RAM-Inhalt](docs:inspection#ram-inhalt)).
+Beim Start der Simulation ist jedes Wort 0, und „Stopp“ setzt alle wieder auf 0. Der Inhalt wird nicht mit der Schaltung gespeichert; für einen festen Anfangsinhalt nimm ein ROM. Während einer Simulation zeigt die Ansicht des RAM, was die Schaltung gespeichert hat (siehe [RAM-Inhalt](docs:inspection#ram-contents)).
 
-## Siehe auch
+## Siehe auch {#see-also}
 
 - [Komponenten und Optionen](docs:components-and-options): einen Anschluss negieren, etwa CLK
 - [Zeitsteuerung](docs:clock-and-timing): Taktsignale für CLK

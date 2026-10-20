@@ -190,9 +190,10 @@ export const LG_PROSE_STYLES = `
   }
 
   .lg-prose img {
+    --lg-image-max-height: 24rem;
     display: block;
     max-width: 100%;
-    max-height: 24rem;
+    max-height: var(--lg-image-max-height);
     margin: auto;
   }
 `;

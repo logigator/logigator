@@ -7,7 +7,7 @@ import {
 import express from 'express';
 import { join, sep } from 'node:path';
 import { isAvailableLanguage } from '@logigator/core';
-import { isDocPageId } from '@logigator/docs';
+import { isDocPageId, stripHeadingIds } from '@logigator/docs';
 import { resolveMarkdownUrls } from '@logigator/ui/internal/markdown-urls';
 import { docDestinations } from './app/pages/docs/doc-destinations';
 import { loadDocPage } from './app/pages/docs/doc-content';
@@ -272,7 +272,8 @@ const DOC_TWIN_PATH = /^\/([a-z]{2})\/docs\/([a-z0-9-]+)\.md$/;
  * screenshot resolves to the file the build emitted and a cross link to the
  * twin of the page it names. Rooted, unlike the rendered page's: markdown
  * carries no `<base>`, so a relative `media/…` would resolve under this URL's
- * own folder.
+ * own folder. The headings' `{#id}`s come off: they are the renderer's syntax,
+ * not markdown, and would read as part of the heading.
  */
 app.use((req, res, next) => {
   const match =
@@ -300,7 +301,7 @@ app.use((req, res, next) => {
         'Cache-Control',
         `public, max-age=${MUTABLE_ASSET_MAX_AGE}`
       );
-      res.send(resolveMarkdownUrls(markdown, destinations));
+      res.send(resolveMarkdownUrls(stripHeadingIds(markdown), destinations));
     })
     .catch(next);
 });

@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { headingSlug } from '@logigator/ui';
 import {
   buildDocsIndex,
   DOC_PAGE_IDS,
@@ -146,12 +145,7 @@ export class DocsSearchService {
     );
     return new Promise((resolve) => {
       forkJoin(pages).subscribe((entries) =>
-        resolve(
-          buildDocsIndex(
-            entries.filter((entry) => entry !== null),
-            headingSlug
-          )
-        )
+        resolve(buildDocsIndex(entries.filter((entry) => entry !== null)))
       );
     });
   }

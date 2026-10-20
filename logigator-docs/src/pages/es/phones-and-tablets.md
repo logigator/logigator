@@ -4,7 +4,7 @@ Cuando la ventana mide 1024 px de ancho o menos, el editor cambia a una vista t�
 
 ![La vista táctil con una puerta seleccionada y la barra de acciones sobre las herramientas.](./images/phone-layout.webp)
 
-## Dónde está cada cosa
+## Dónde está cada cosa {#where-things-are}
 
 - Arriba a la izquierda, tu avatar abre el panel Cuenta con el tema, el idioma, los ajustes del editor y el inicio o cierre de sesión.
 - Tocar el nombre del proyecto abre el menú del proyecto: Nuevo proyecto, Nuevo componente, Abrir, Subir a la nube o Compartir, Exportar a archivo, Generar imagen, Reparar cables y las entradas del menú Ayuda.
@@ -15,27 +15,27 @@ Cuando la ventana mide 1024 px de ancho o menos, el editor cambia a una vista t�
 
 Esta vista no tiene barra de estado, así que faltan el indicador «Guardado» / «Cambios sin guardar» y la etiqueta de almacenamiento junto al nombre del proyecto. Los atajos de teclado siguen funcionando con un teclado conectado, pero solo puedes cambiarlos en la vista ancha.
 
-## Gestos
+## Gestos {#gestures}
 
 Arrastra con dos dedos para desplazar la vista y pellizca para hacer zoom. Lo que hace un arrastre con un dedo depende de la herramienta: traza un cable, un marco de selección o un trazo de borrador, y solo desplaza la vista con Desplazar.
 
 Para colocar un componente, toca +, elígelo en el panel y toca el tablero donde deba ir.
 
-## Selección y portapapeles
+## Selección y portapapeles {#selection-and-clipboard}
 
 Cuando hay algo seleccionado, una barra sobre las herramientas indica cuántos elementos son, con botones para Copiar, Cortar, Eliminar y los dos giros, además de Pegar en cuanto el portapapeles contiene algo. Con un solo componente seleccionado, un botón Ajustes abre sus opciones en un panel.
 
 Después de copiar, la barra sigue visible con Pegar aunque no haya nada seleccionado. Su ✕ vacía el portapapeles y cierra la barra. Los elementos pegados aparecen en el centro de la vista: arrástralos a un sitio libre y levanta el dedo para colocarlos, o toca en otro sitio para cancelar.
 
-## Simulación e inspección
+## Simulación e inspección {#simulation-and-inspection}
 
 El botón de reproducción de arriba inicia la simulación. Los controles aparecen entonces en una barra en el borde inferior, y arriba el botón para salir sustituye a Deshacer, Rehacer y Guardar.
 
 Tocar una ROM, una RAM o un terminal abre su vista en un panel en la parte inferior de la pantalla. El tablero de encima sigue usable, y varias vistas comparten el panel como pestañas. El monitor de un componente personalizado ocupa toda la pantalla, y su flecha de volver regresa al tablero. Consulta [Inspección y monitores](docs:inspection).
 
-La ventana de un teclado se abre en el mismo panel. Toca su campo de escritura, que dice «Toca aquí para escribir», para que aparezca el teclado virtual; el panel sube y se queda por encima de él. El texto que el teclado virtual introduce de una vez, como una palabra sugerida, se envía carácter a carácter, igual que al pegar. Cómo llegan las teclas al circuito se describe en [Teclado](docs:inputs#teclado).
+La ventana de un teclado se abre en el mismo panel. Toca su campo de escritura, que dice «Toca aquí para escribir», para que aparezca el teclado virtual; el panel sube y se queda por encima de él. El texto que el teclado virtual introduce de una vez, como una palabra sugerida, se envía carácter a carácter, igual que al pegar. Cómo llegan las teclas al circuito se describe en [Teclado](docs:inputs#keyboard).
 
-## Ver también
+## Ver también {#see-also}
 
 - [Tablero y herramientas](docs:board-and-tools): qué hace cada herramienta
 - [Simulación](docs:simulation): controles y velocidad

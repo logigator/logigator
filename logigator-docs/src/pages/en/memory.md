@@ -6,7 +6,7 @@ A flip-flop changes its bit only when its CLK input rises from 0 to 1, and Q car
 
 A ROM holds contents you set while editing, and the circuit can only read them. A RAM starts out empty and the circuit writes it. During a simulation, clicking a ROM or a RAM opens a viewer with its contents (see [Inspection and watches](docs:inspection)).
 
-## D Flip-Flop
+## D Flip-Flop {#d-flip-flop}
 
 ![A D flip-flop with switches on D and CLK and LEDs on Q and !Q. Q takes the value of D when CLK rises and keeps it when D changes while CLK is 0.](./images/component-d-flip-flop.webp)
 
@@ -26,7 +26,7 @@ It has no options besides Direction.
 | 0   | 0                       |
 | 1   | 1                       |
 
-## JK Flip-Flop
+## JK Flip-Flop {#jk-flip-flop}
 
 ![A JK flip-flop with switches on J, CLK and K and LEDs on Q and !Q. On successive rising edges of CLK it is set with J on, reset with K on, then toggled twice with J and K both on.](./images/component-jk-flip-flop.webp)
 
@@ -51,7 +51,7 @@ It has no options besides Direction.
 
 With J and K both at 1, Q changes on every rising edge, so it runs at half the frequency of the signal on CLK.
 
-## SR Flip-Flop
+## SR Flip-Flop {#sr-flip-flop}
 
 ![An SR flip-flop with switches on S, CLK and R and LEDs on Q and !Q. A rising edge with S on sets Q, and a rising edge with R on resets it.](./images/component-sr-flip-flop.webp)
 
@@ -76,7 +76,7 @@ It has no options besides Direction.
 
 S and R both at 1 is an input an SR flip-flop does not allow. The simulation sets Q to 1 and !Q to 0 and draws both output wires orange until a rising edge with only S or only R at 1. See [Conflicting signals](docs:simulation#conflicting-signals). Where both can be 1 at once, use a D or JK flip-flop instead.
 
-## ROM
+## ROM {#rom}
 
 ![A ROM with four switches on its address inputs set to address 3 and four LEDs on its outputs showing the stored word 0111.](./images/component-rom.webp)
 
@@ -95,7 +95,7 @@ The ROM outputs the word stored at the address on its A inputs. It has no clock:
 
 Word Size sets how many bits a word has, and so the number of outputs. Address Size sets the number of address inputs. A ROM holds 2ⁿ words for an Address Size of n: 16 words by default, 2,048 at most.
 
-### Editing the contents
+### Editing the contents {#editing-the-contents}
 
 Edit contents, in the settings card, shows how many words are set, such as 3 of 16 words set, or Empty. Clicking it opens Edit ROM contents, a table with one cell per word. Words you don't set are 0.
 
@@ -109,7 +109,7 @@ Edit contents, in the settings card, shows how many words are set, such as 3 of 
 
 The contents are saved with the circuit. During a simulation, the ROM's viewer highlights the word at the current address (see [ROM contents](docs:inspection#rom-contents)).
 
-## RAM
+## RAM {#ram}
 
 ![A RAM with Address Size 2, switches on A0, A1, D0 to D3, WE and CLK, and LEDs on its outputs. 0101 is stored at address 0 when CLK rises with WE on, stays on the outputs after the data switches are cleared, disappears when address 1 is selected and comes back with address 0.](./images/component-ram.webp)
 
@@ -144,7 +144,7 @@ With a negation bubble on CLK, the RAM stores, and reads with On clock, on the f
 
 Every word is 0 when the simulation starts, and Stop sets them all back to 0. The contents are not saved with the circuit; to start with fixed contents, use a ROM. During a simulation, the RAM's viewer shows what the circuit has stored (see [RAM contents](docs:inspection#ram-contents)).
 
-## See also
+## See also {#see-also}
 
 - [Components and options](docs:components-and-options): negating a port, such as CLK
 - [Timing](docs:clock-and-timing): clock signals for CLK

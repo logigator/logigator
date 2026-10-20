@@ -4,9 +4,9 @@ Durante una [simulación](docs:simulation), en marcha o en pausa, cuatro tipos d
 
 ![Una ventana de monitor junto al circuito en marcha al que pertenece.](./images/inspection-showcase.webp)
 
-En el escritorio, cada vista se abre en una ventana que puedes mover y cambiar de tamaño. Otro clic en el componente trae su ventana al frente. En la [vista táctil](docs:phones-and-tablets#simulación-e-inspección), las vistas de ROM, de RAM y de terminal comparten un panel en la parte inferior de la pantalla, y un monitor ocupa toda la pantalla. Al salir de la simulación se cierran todas.
+En el escritorio, cada vista se abre en una ventana que puedes mover y cambiar de tamaño. Otro clic en el componente trae su ventana al frente. En la [vista táctil](docs:phones-and-tablets#simulation-and-inspection), las vistas de ROM, de RAM y de terminal comparten un panel en la parte inferior de la pantalla, y un monitor ocupa toda la pantalla. Al salir de la simulación se cierran todas.
 
-## Contenido de una ROM
+## Contenido de una ROM {#rom-contents}
 
 ![La vista de la ROM siguiendo la dirección mientras cambia.](./images/rom-inspection.webp)
 
@@ -14,13 +14,13 @@ La vista es de solo lectura; el contenido se cambia al editar, en los [ajustes d
 
 Los botones sobre la tabla eligen Palabras o Bytes y la base: Hex, Decimal, Octal o Binario. Para ir a una dirección, escríbela en hexadecimal en el campo «Dirección…». «Copiar» pone toda la tabla en el portapapeles como texto, en la vista y la base elegidas.
 
-## Contenido de una RAM
+## Contenido de una RAM {#ram-contents}
 
 La vista de una RAM tiene la misma tabla, los mismos botones y el mismo «Seguir» que la de una ROM, con la palabra de la dirección presente en sus entradas resaltada. Muestra lo que el circuito ha guardado y cambia a medida que escribe, en marcha o paso a paso. También es de solo lectura: solo el circuito escribe en una RAM. Cada palabra vale 0 al empezar la simulación, y «Detener» las vuelve a poner todas a 0.
 
 Una RAM grande solo se lee alrededor de las filas en pantalla. Una fila que entra en pantalla muestra puntos hasta que se ha leído, lo que tarda un momento, y la línea de abajo indica «Sin cargar» para una celda mostrada así. «Copiar» pone la tabla en el portapapeles tal como la ves, puntos incluidos.
 
-## Salida de un terminal
+## Salida de un terminal {#terminal-output}
 
 La ventana de un terminal muestra el historial, la línea más antigua primero, y debajo la pantalla, sobre una franja tintada, con el cursor. El texto aparece a medida que el circuito lo envía, en marcha o paso a paso. Qué hace cada código se describe en [Terminal](docs:outputs#terminal).
 
@@ -36,7 +36,7 @@ La simulación guarda los últimos 65 536 caracteres enviados a cada terminal. S
 - una línea del historial indica cuántos caracteres se han perdido,
 - la pantalla sigue con los caracteres que llegaron después.
 
-## Monitores
+## Monitores {#watches}
 
 ![Un monitor que ha bajado de Outer a Inner, con la ruta en el título.](./images/inspection-window-multilayer.webp)
 
@@ -52,11 +52,11 @@ Un clic en un componente dentro de un monitor abre:
 
 Un terminal dentro de un monitor también muestra ahí su pantalla: al abrir su nivel, reproduce los caracteres que la simulación aún guarda de él, así que muestra lo que se escribió antes de que miraras.
 
-La ventana de un mando o de un teclado funciona como en el tablero (consulta [Mando](docs:inputs#mando) y [Teclado](docs:inputs#teclado)), y lo que pulsas ahí llega al componente dentro del monitor. Al subir por encima de su nivel o cerrar el monitor, también se cierra esa ventana.
+La ventana de un mando o de un teclado funciona como en el tablero (consulta [Mando](docs:inputs#gamepad) y [Teclado](docs:inputs#keyboard)), y lo que pulsas ahí llega al componente dentro del monitor. Al subir por encima de su nivel o cerrar el monitor, también se cierra esa ventana.
 
 Si el monitor avisa de que el circuito interno no coincide con la simulación compilada, el componente se cambió después de iniciar la simulación. Sal de la simulación y vuelve a iniciarla.
 
-## Ver también
+## Ver también {#see-also}
 
 - [Simulación](docs:simulation): hacer funcionar un circuito
 - [Componentes personalizados](docs:custom-components): construir los componentes que observas

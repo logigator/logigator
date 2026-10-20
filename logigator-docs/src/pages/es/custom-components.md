@@ -4,19 +4,19 @@ Un componente personalizado convierte un circuito en una sola pieza con su propi
 
 ![Un circuito de puertas y el componente personalizado hecho con él, funcionando uno junto al otro.](./images/custom-component-showcase.webp)
 
-## Crear un componente
+## Crear un componente {#creating-a-component}
 
 1. Elige Archivo → Nuevo componente (`Alt+N`), o el botón «Nuevo componente» de la barra de herramientas. Se abre un diálogo.
 2. Rellena el diálogo:
    - Nombre, hasta 20 caracteres, es como aparece en la paleta.
    - Símbolo, hasta 5 caracteres, se dibuja en el bloque.
    - Descripción es opcional.
-   - Almacenar decide dónde se guarda el componente. Local lo guarda en este navegador. Nube lo guarda en tu cuenta, requiere haber iniciado sesión y pregunta además quién puede abrirlo, con Todo el mundo preseleccionado (consulta [Nube y compartir](docs:cloud#compartir)).
+   - Almacenar decide dónde se guarda el componente. Local lo guarda en este navegador. Nube lo guarda en tu cuenta, requiere haber iniciado sesión y pregunta además quién puede abrirlo, con Todo el mundo preseleccionado (consulta [Nube y compartir](docs:cloud#sharing)).
 3. Haz clic en «Crear». El componente se abre en una pestaña nueva con el tablero vacío.
-4. Construye su circuito y dale [puertos](#puertos).
+4. Construye su circuito y dale [puertos](#ports).
 5. Guarda (`Ctrl+S`) en esa pestaña para guardar el componente.
 
-## Puertos
+## Puertos {#ports}
 
 Mientras la pestaña de un componente está activa, hay un panel Puertos encima de la paleta. Coloca desde él conectores Entrada y Salida y conéctalos al circuito. Cada conector se convierte en un puerto del componente terminado.
 
@@ -24,7 +24,7 @@ El panel lista los conectores. Escribe en una fila para dar nombre al puerto, co
 
 ![La pestaña de un componente con sus conectores Entrada y Salida.](./images/custom-component-tab.webp)
 
-## Colocar y actualizar
+## Colocar y actualizar {#placing-and-updating}
 
 Los componentes guardados aparecen en la paleta en Componentes del usuario, el último editado primero. Se colocan como cualquier otra pieza. Cada copia en el tablero es un bloque con el símbolo y un puerto por conector.
 
@@ -38,24 +38,24 @@ La tarjeta de ajustes de una copia colocada, o de la casilla de la paleta, tiene
 | Actualizar todas las instancias | Actualiza todas las copias desactualizadas del circuito abierto. El número va entre paréntesis.                                 |
 | Editar circuito                 | Abre el circuito del componente para cambiarlo.                                                                                 |
 | Editar detalles                 | Cambia el nombre, el símbolo y la descripción. Las copias colocadas conservan los detalles anteriores hasta que las actualices. |
-| Subir a la nube                 | Mueve un componente local a tu cuenta. Consulta [Nube y compartir](docs:cloud#subir-a-la-nube).                                 |
-| Compartir                       | Abre el diálogo de compartir de un componente de la nube. Consulta [Nube y compartir](docs:cloud#compartir).                    |
-| Eliminar                        | Quita el componente de tu biblioteca. Consulta [Eliminar](#eliminar).                                                           |
+| Subir a la nube                 | Mueve un componente local a tu cuenta. Consulta [Nube y compartir](docs:cloud#uploading-to-the-cloud).                          |
+| Compartir                       | Abre el diálogo de compartir de un componente de la nube. Consulta [Nube y compartir](docs:cloud#sharing).                      |
+| Eliminar                        | Quita el componente de tu biblioteca. Consulta [Eliminar](#deleting).                                                           |
 | Restaurar y editar              | Solo en una copia cuyo componente se eliminó. Lo devuelve a tu biblioteca local.                                                |
 
 Las dos actualizaciones se pueden deshacer.
 
-## Anidar
+## Anidar {#nesting}
 
 Los componentes pueden contener otros componentes. Un componente nunca puede contenerse a sí mismo, ni directamente ni a través de otro; por eso, mientras editas uno, la paleta oculta todos los componentes que crearían ese bucle.
 
 Cuando guardas, compartes o exportas un circuito, los componentes que usa van incluidos, así que se abre completo en cualquier sitio.
 
-## Eliminar
+## Eliminar {#deleting}
 
 «Eliminar» en la tarjeta de ajustes quita el componente de tu biblioteca. Las copias ya colocadas siguen en sus circuitos y muestran la etiqueta Incrustado. «Restaurar y editar» en una de esas copias la devuelve a tu biblioteca local. Al eliminar un componente de la nube, su enlace para compartir también deja de funcionar.
 
-## Ver también
+## Ver también {#see-also}
 
 - [Componentes y opciones](docs:components-and-options): las piezas integradas
 - [Inspección y monitores](docs:inspection): mirar dentro de una copia en marcha

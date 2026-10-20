@@ -13,7 +13,11 @@ import {
 } from '@angular/core';
 import { MarkdownComponent } from 'ngx-markdown';
 import { ImageZoomViewer } from '../image-zoom/image-zoom-viewer';
-import { resolveMarkdownUrls } from '../../internal/markdown-urls';
+import {
+  LgMarkdownAsset,
+  LgMarkdownImage,
+  resolveMarkdownUrls
+} from '../../internal/markdown-urls';
 import {
   LG_PROSE_STYLES,
   LG_USER_PROSE_STYLES
@@ -21,8 +25,8 @@ import {
 import { renderUserMarkdown } from '../../internal/user-markdown';
 
 /**
- * A heading's anchor slug, derived from its text: marked emits no heading ids,
- * so anchors resolve against the rendered text.
+ * A heading's anchor slug, derived from its text: what a `#fragment` resolves
+ * against for a heading that carries no explicit id.
  */
 export function headingSlug(text: string): string {
   return text
@@ -33,11 +37,24 @@ export function headingSlug(text: string): string {
 }
 
 /**
+ * `{#id}` closing a heading's text, the authored anchor of the section. Its own
+ * text node in practice: the marker comes last on the line, after any markup.
+ */
+const HEADING_ID = /\s*\{#([^\s{}]+)\}\s*$/;
+
+/** `Node.TEXT_NODE`, which the server's DOM has no global for. */
+const TEXT_NODE = 3;
+
+/**
  * Width-to-height ratio below which an image floats as a portrait aside on
  * wide viewports. The height cap every image carries leaves such an image
  * narrow, so the prose reads beside it instead of around whitespace.
  */
 const PORTRAIT_MAX_RATIO = 0.9;
+
+function isPortrait(width: number, height: number): boolean {
+  return width / height < PORTRAIT_MAX_RATIO;
+}
 
 /** Where a match sits in a string, in the UTF-16 units a text node counts in. */
 export interface LgTextRange {
@@ -84,8 +101,12 @@ export interface LgMarkdownLinkClick {
  * path the renderer fetches (needs `provideMarkdown` with an `HttpClient`
  * loader in the consuming app).
  *
+ * A heading ending in `{#id}` renders without it and carries the id; anything
+ * else is addressed by its {@link headingSlug}. Only authored markdown, never
+ * `userContent`, assigns ids.
+ *
  * Every link click emits `linkClick` first. Unless the handler claims it,
- * `#slug` scrolls to the matching heading, web and relative URLs open a new
+ * `#anchor` scrolls to the matching heading, web and relative URLs open a new
  * tab with `noopener`, `mailto:`/`tel:`/`sms:` navigate natively, and any
  * other scheme does nothing — so app-specific links are claim-or-inert and
  * `javascript:` payloads stay defused. Content images open full-size in a
@@ -138,6 +159,20 @@ export interface LgMarkdownLinkClick {
         cursor: zoom-in;
       }
 
+      /* A picture whose size is known takes the box its file would give it
+         before the file arrives: natural size, scaled into the column and
+         under the height cap with its ratio kept. */
+      lg-markdown img.lg-sized {
+        aspect-ratio: var(--lg-image-width) / var(--lg-image-height);
+        width: min(
+          var(--lg-image-width) * 1px,
+          100%,
+          var(--lg-image-max-height) * var(--lg-image-width) /
+            var(--lg-image-height)
+        );
+        height: auto;
+      }
+
       /* An image wrapped in a link acts as the link, not as a zoom trigger. */
       lg-markdown a img {
         cursor: pointer;
@@ -179,8 +214,12 @@ export class LgMarkdown {
    * Maps authored link/image destinations to their runtime URLs, e.g.
    * relative screenshot paths to build-hashed asset imports. Applies to
    * `data` only; content fetched via `src` renders as-is.
+   *
+   * A picture mapped with its size has its box from the first layout, so
+   * nothing below it moves when the file arrives — a heading scrolled to
+   * included.
    */
-  readonly assetUrls = input<Readonly<Record<string, string>>>();
+  readonly assetUrls = input<Readonly<Record<string, LgMarkdownAsset>>>();
   /**
    * A link click, emitted before the built-in handling. `preventDefault()`
    * claims it, e.g. for an app-specific scheme the consumer routes itself.
@@ -220,6 +259,16 @@ export class LgMarkdown {
   protected readonly resolvedData = computed(() =>
     resolveMarkdownUrls(this.data(), this.assetUrls())
   );
+  /** The sized pictures among the assets, by the URL they render with. */
+  private readonly imageSizes = computed(() => {
+    const sizes = new Map<string, LgMarkdownImage>();
+    for (const asset of Object.values(this.assetUrls() ?? {})) {
+      if (typeof asset !== 'string') {
+        sizes.set(asset.url, asset);
+      }
+    }
+    return sizes;
+  });
   /**
    * Parsed synchronously, which is what lets a server render carry a member's
    * own words in the first byte. The binding is `[innerHTML]`, so Angular's
@@ -264,7 +313,7 @@ export class LgMarkdown {
         if (image.naturalHeight > 0) {
           image.classList.toggle(
             'lg-portrait',
-            image.naturalWidth / image.naturalHeight < PORTRAIT_MAX_RATIO
+            isPortrait(image.naturalWidth, image.naturalHeight)
           );
         }
         // A linked image activates its (already focusable) link instead, and
@@ -326,18 +375,81 @@ export class LgMarkdown {
     }
   }
 
-  /** Scrolls the rendered heading whose {@link headingSlug} matches into view. */
-  scrollToHeading(slug: string): void {
-    const headings = this.host.nativeElement.querySelectorAll<HTMLElement>(
-      'h1, h2, h3, h4, h5, h6'
+  /**
+   * Scrolls the rendered heading `anchor` names into view: the one carrying it
+   * as its id, else one without an id whose {@link headingSlug} matches.
+   */
+  scrollToHeading(anchor: string): void {
+    const headings = this.headings();
+    (
+      headings.find((heading) => heading.id === anchor) ??
+      headings.find(
+        (heading) =>
+          !heading.id && headingSlug(heading.textContent ?? '') === anchor
+      )
+    )?.scrollIntoView({ block: 'start' });
+  }
+
+  private headings(): HTMLElement[] {
+    return Array.from(
+      this.host.nativeElement.querySelectorAll<HTMLElement>(
+        'h1, h2, h3, h4, h5, h6'
+      )
     );
-    Array.from(headings)
-      .find((heading) => headingSlug(heading.textContent ?? '') === slug)
-      ?.scrollIntoView({ block: 'start' });
+  }
+
+  /**
+   * Moves each heading's `{#id}` from its text onto the element. Here rather
+   * than in the parse because the renderer's sanitizer drops `id` attributes.
+   */
+  private applyHeadingIds(): void {
+    for (const heading of this.headings()) {
+      let last = heading.lastChild;
+      while (last && last.nodeType !== TEXT_NODE) {
+        last = last.lastChild;
+      }
+      const text = last?.nodeValue;
+      const match = text ? HEADING_ID.exec(text) : null;
+      if (last && text && match) {
+        last.nodeValue = text.slice(0, match.index);
+        heading.id = match[1];
+      }
+    }
+  }
+
+  /**
+   * Sizes each picture whose size the assets name, and floats it if portrait,
+   * before its file arrives. Run in the same task the renderer wrote the
+   * content in, so the first layout already has the final boxes.
+   */
+  private applyImageSizes(): void {
+    const sizes = this.imageSizes();
+    if (sizes.size === 0) {
+      return;
+    }
+    for (const image of Array.from(
+      this.host.nativeElement.querySelectorAll('img')
+    )) {
+      const size = sizes.get(image.getAttribute('src') ?? '');
+      if (!size || size.width <= 0 || size.height <= 0) {
+        continue;
+      }
+      image.style.setProperty('--lg-image-width', String(size.width));
+      image.style.setProperty('--lg-image-height', String(size.height));
+      image.classList.add('lg-sized');
+      image.classList.toggle(
+        'lg-portrait',
+        isPortrait(size.width, size.height)
+      );
+    }
   }
 
   /** The renderer has written its content; anything reading it can run now. */
   protected onRendered(): void {
+    if (!this.userContent()) {
+      this.applyHeadingIds();
+      this.applyImageSizes();
+    }
     this.markMatches(this.highlightMatches());
     this.ready.emit();
   }
@@ -368,9 +480,9 @@ export class LgMarkdown {
     }
     if (href.startsWith('#')) {
       event.preventDefault();
-      const slug = decodeFragment(href.slice(1));
-      if (slug) {
-        this.scrollToHeading(slug);
+      const anchor = decodeFragment(href.slice(1));
+      if (anchor) {
+        this.scrollToHeading(anchor);
       }
       return;
     }
@@ -408,15 +520,15 @@ export class LgMarkdown {
 }
 
 /**
- * A fragment as the heading slug it names. The renderer percent-encodes a
- * destination, so a heading whose slug carries a non-ASCII letter — every
- * language but English has them — arrives encoded and would match nothing.
+ * A fragment as the heading anchor it names. The renderer percent-encodes a
+ * destination, so a slug carrying a non-ASCII letter arrives encoded and would
+ * match nothing.
  */
 function decodeFragment(fragment: string): string {
   try {
     return decodeURIComponent(fragment);
   } catch {
-    // A stray `%` is not an escape; the slug is what was written.
+    // A stray `%` is not an escape; the anchor is what was written.
     return fragment;
   }
 }

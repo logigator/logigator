@@ -2,7 +2,7 @@
 
 Voici les raccourcis par défaut, dans l'ordre où Édition → Raccourcis clavier les liste. Sur Mac, `⌘` fonctionne partout où le tableau indique `Ctrl`, et `Ctrl` fonctionne aussi.
 
-## Raccourcis par défaut
+## Raccourcis par défaut {#default-bindings}
 
 | Action                                                     | Par défaut     |
 | ---------------------------------------------------------- | -------------- |
@@ -33,11 +33,11 @@ Voici les raccourcis par défaut, dans l'ordre où Édition → Raccourcis clavi
 
 Pendant la saisie dans un champ de texte, seul `Escape` réagit. Pendant une simulation, les raccourcis d'édition sont désactivés, et `Escape` quitte la simulation.
 
-## Touches maintenues
+## Touches maintenues {#held-keys}
 
-Les deux actions marquées « maintenir » agissent tant que la touche est enfoncée, au lieu de se déclencher une fois. Maintenez `Alt` en relâchant un cadre de sélection pour couper les fils à son bord (voir [Plan de travail et outils](docs:board-and-tools#couper-les-fils-au-bord-de-la-sélection)). Maintenez `Ctrl` en cliquant ou en traçant un cadre pour ajouter à la sélection ou en retirer. Cela fonctionne avec Sélectionner, Déplacement et l'outil fil.
+Les deux actions marquées « maintenir » agissent tant que la touche est enfoncée, au lieu de se déclencher une fois. Maintenez `Alt` en relâchant un cadre de sélection pour couper les fils à son bord (voir [Plan de travail et outils](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Maintenez `Ctrl` en cliquant ou en traçant un cadre pour ajouter à la sélection ou en retirer. Cela fonctionne avec Sélectionner, Déplacement et l'outil fil.
 
-## Modifier un raccourci
+## Modifier un raccourci {#changing-a-binding}
 
 ![Le gestionnaire de raccourcis clavier.](./images/shortcut-manager.webp)
 
@@ -47,9 +47,9 @@ Si la combinaison appartient déjà à une autre action, celle-ci la perd et un 
 
 Vos raccourcis sont enregistrés dans ce navigateur. Effacer les données du site les réinitialise.
 
-## Touches de la manette
+## Touches de la manette {#gamepad-keys}
 
-Une [manette](docs:inputs#manette) a ses propres touches, distinctes des raccourcis ci-dessus. Elles agissent tant que sa fenêtre a le clavier, et y passent avant les raccourcis : `Enter` appuie sur Start.
+Une [manette](docs:inputs#gamepad) a ses propres touches, distinctes des raccourcis ci-dessus. Elles agissent tant que sa fenêtre a le clavier, et y passent avant les raccourcis : `Enter` appuie sur Start.
 
 | Bouton                       | Touche par défaut |
 | ---------------------------- | ----------------- |
@@ -75,9 +75,9 @@ Pendant l'attribution, `Escape` annule, et `Backspace` ou `Delete` laisse le bou
 
 Les touches sont communes à toutes les manettes de tous les projets et enregistrées dans ce navigateur, comme les raccourcis. Une modification apparaît aussitôt dans chaque fenêtre de manette ouverte, y compris dans d'autres onglets.
 
-## Touches dans la fenêtre d'un clavier
+## Touches dans la fenêtre d'un clavier {#keys-in-a-keyboard-window}
 
-Tant que le champ de saisie de la [fenêtre d'un clavier](docs:inputs#clavier) a le focus, les touches vont au circuit et les raccourcis ci-dessus ne font rien. Ces touches y agissent autrement :
+Tant que le champ de saisie de la [fenêtre d'un clavier](docs:inputs#keyboard) a le focus, les touches vont au circuit et les raccourcis ci-dessus ne font rien. Ces touches y agissent autrement :
 
 | Touche      | Dans le champ de saisie                   |
 | ----------- | ----------------------------------------- |
@@ -89,7 +89,7 @@ Tant que le champ de saisie de la [fenêtre d'un clavier](docs:inputs#clavier) a
 
 Les combinaisons avec `Ctrl`, `Alt` ou `⌘` vont au navigateur, si bien que `Ctrl+V` colle du texte dans le clavier. `AltGr` n'en fait pas partie : un caractère tapé avec cette touche est envoyé. Une touche envoie le caractère que lui donne la disposition de votre clavier ; ces touches ne se réattribuent donc pas comme celles d'une manette.
 
-## Voir aussi
+## Voir aussi {#see-also}
 
 - [Plan de travail et outils](docs:board-and-tools) : les outils et actions derrière ces touches
 - [Simulation](docs:simulation) : ce que font Enter et Escape pendant la simulation

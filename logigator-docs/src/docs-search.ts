@@ -1,4 +1,5 @@
 import { DocPageId } from './docs-structure';
+import { splitHeadingId } from './heading-id';
 
 /** One page's markdown, as the app that owns the import map loaded it. */
 export interface DocsSearchEntry {
@@ -24,7 +25,7 @@ export interface DocsTextRange {
 /** One result: the section of a page a query matched, and where it is. */
 export interface DocsSearchHit {
   page: DocPageId;
-  /** Heading slug to jump to, or null for the page itself. */
+  /** Heading id to jump to, or null for the page itself. */
   anchor: string | null;
   /** The section's heading, plain — an accessible name, and the fallback. */
   heading: string;
@@ -140,8 +141,7 @@ export function searchTerms(query: string): string[] {
  *
  * It is deliberately not a parser. What it feeds is a substring match and a
  * snippet, so a construct it renders imperfectly costs a slightly odd excerpt,
- * never a wrong destination — the anchors come from the heading text, which is
- * the one thing it strips exactly.
+ * never a wrong destination — the anchors are the headings' own `{#id}`s.
  */
 export function markdownToText(markdown: string): string {
   return markdown
@@ -165,18 +165,8 @@ export function markdownToText(markdown: string): string {
     .trim();
 }
 
-/**
- * The searchable index of one language's documentation.
- *
- * `slug` is the renderer's own heading-slug rule, passed in rather than
- * reimplemented: a result jumps to `#<slug>`, and a second definition of that
- * rule would send half the hits to the top of the page instead. The member
- * stays dependency-free, and both viewers hand it `headingSlug`.
- */
-export function buildDocsIndex(
-  entries: readonly DocsSearchEntry[],
-  slug: (heading: string) => string
-): DocsIndex {
+/** The searchable index of one language's documentation. */
+export function buildDocsIndex(entries: readonly DocsSearchEntry[]): DocsIndex {
   const sections: IndexedSection[] = [];
 
   for (const entry of entries) {
@@ -214,13 +204,13 @@ export function buildDocsIndex(
         continue;
       }
       flush();
-      const text = markdownToText(heading[2]);
-      const top = heading[1].length === 1 && title === '';
-      if (top) {
+      const { text: source, id } = splitHeadingId(heading[2]);
+      const text = markdownToText(source);
+      if (heading[1].length === 1 && title === '') {
         title = text;
       }
       // The page's own title is the page, so its hit carries no anchor.
-      current = { heading: text, anchor: top ? null : slug(text), lines: [] };
+      current = { heading: text, anchor: id, lines: [] };
     }
     flush();
 

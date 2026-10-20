@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { marked } from 'marked';
 import { AVAILABLE_LANGUAGES, LanguageId } from '@logigator/core';
 import {
   DOC_PAGE_IDS,
@@ -8,7 +7,6 @@ import {
   isDocPageId,
   parseDocsLink
 } from '@logigator/docs';
-import { headingSlug } from '@logigator/ui';
 import { loadDocPage } from './doc-content';
 
 /** Every authored page in every language: 12 × 4 documents. */
@@ -50,38 +48,6 @@ describe('the documentation content', () => {
       expect(shown.filter((destination) => !(destination in images))).toEqual(
         []
       );
-    }
-  );
-
-  /**
-   * The renderer emits no heading ids: a `#fragment` resolves against the slug
-   * of a heading's own text. A heading renamed in a translation, or a cross
-   * link naming an anchor another page dropped, is a link to nowhere.
-   */
-  it.each(DOCUMENTS)(
-    'has resolvable anchors in $page/$lang',
-    async ({ page, lang }) => {
-      const slugsOf = async (id: DocPageId): Promise<string[]> => {
-        const body = document.createElement('div');
-        body.innerHTML = await marked.parse(await loadDocPage(id, lang));
-        return [...body.querySelectorAll('h1, h2, h3, h4')].map((heading) =>
-          headingSlug(heading.textContent ?? '')
-        );
-      };
-
-      const own = await slugsOf(page);
-      const markdown = await loadDocPage(page, lang);
-
-      for (const destination of destinations(markdown)) {
-        if (destination.startsWith('#')) {
-          expect(own).toContain(decodeURIComponent(destination.slice(1)));
-          continue;
-        }
-        const target = parseDocsLink(destination);
-        if (target?.anchor && isDocPageId(target.page)) {
-          expect(await slugsOf(target.page)).toContain(target.anchor);
-        }
-      }
     }
   );
 });

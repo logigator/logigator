@@ -2,7 +2,7 @@
 
 Eingaben sind die Komponenten, die du während einer Simulation bedienst: Schalter, Taster, ein Gamepad und eine Tastatur. Jede steuert ihre Ausgänge nach dem, was du klickst, drückst oder tippst, und der Rest der Schaltung reagiert.
 
-## Schalter
+## Schalter {#switch}
 
 ![Ein Schalter, verbunden mit einer LED, erst aus und dann an, und die LED leuchtet mit.](./images/component-switch.webp)
 
@@ -14,7 +14,7 @@ Ein Schalter wechselt während einer Simulation mit jedem Klick zwischen 0 und 1
 
 Außer Richtung hat er keine Optionen.
 
-## Taster
+## Taster {#button}
 
 ![Ein Taster, verbunden mit einer LED, erst losgelassen und dann gedrückt gehalten, und die LED leuchtet, solange er gehalten wird.](./images/component-button.webp)
 
@@ -28,7 +28,7 @@ Außer Richtung hat er keine Optionen.
 
 Ein Taster gibt weiter, was gerade gedrückt ist. Klickst du einer langsamen oder pausierten Simulation weit voraus, überspringt er ältere Klicks, dein letzter Klick kommt aber immer an.
 
-## Impulstaster
+## Impulstaster {#pulse-button}
 
 ![Ein Impulstaster, verbunden mit einer LED, ein Tick pro Bild: in Ruhe, der Impuls von einem Tick mit leuchtender LED, dann wieder in Ruhe.](./images/component-pulse-button.webp)
 
@@ -42,7 +42,7 @@ Außer Richtung hat er keine Optionen.
 
 Ein Impulstaster überspringt keinen Klick, egal wie weit du der Simulation voraus bist. Jeder Klick kommt als eigener Impuls an.
 
-## Gamepad
+## Gamepad {#gamepad}
 
 ![Ein Gamepad mit den Standardtasten und einer LED an jedem seiner acht Ausgänge, mit gedrücktem Rechts und A, sodass diese beiden LEDs leuchten.](./images/component-gamepad.webp)
 
@@ -80,7 +80,7 @@ Eine Taste, die du im Fenster gedrückt hältst, setzt ihren Ausgang auf 1, bis 
 
 Schließt du das Fenster oder verlässt die Simulation, werden alle Tasten losgelassen.
 
-### Tastatur, Maus und Touch
+### Tastatur, Maus und Touch {#keyboard-mouse-and-touch}
 
 Das Fenster bekommt beim Öffnen die Tastatur, und die Zeile unten zeigt „Tastatur aktiv“. Klickst du auf die Arbeitsfläche oder ein anderes Fenster, steht dort „Hier klicken, um die Tastatur zu nutzen“, und Tastendrücke erreichen das Gamepad nicht mehr. Unter jeder Gamepad-Taste steht die Tastaturtaste dafür.
 
@@ -90,11 +90,11 @@ Solange das Fenster die Tastatur hat:
 - schließt `Escape` weiterhin das Fenster,
 - funktionieren Tastaturbefehle mit `Ctrl` oder `Alt` weiter.
 
-Die Standardtasten und wie du sie änderst, stehen unter [Tastaturbefehle](docs:shortcuts#tasten-des-gamepads).
+Die Standardtasten und wie du sie änderst, stehen unter [Tastaturbefehle](docs:shortcuts#gamepad-keys).
 
 Mit der Maus oder dem Finger bleibt eine Taste gedrückt, solange du sie hältst. Auf einem Touchscreen hält jeder Finger seine eigene Taste. Das Steuerkreuz hat acht Richtungen: Drückst du zwischen zwei Arme, sind beide gedrückt, und wenn du den Daumen weiterschiebst, wechselst du von einer Richtung zur nächsten, ohne abzusetzen. In der Mitte des Steuerkreuzes ist keine Richtung gedrückt.
 
-### Gamecontroller
+### Gamecontroller {#game-controllers}
 
 Auch ein Gamecontroller, der mit deinem Computer verbunden ist, kann ein Gamepad spielen. Der Browser meldet einen Controller erst, nachdem du bei geöffnetem Editor eine seiner Tasten gedrückt hast. Tust du das bei offenem Gamepad-Fenster, wird der Controller mit diesem Fenster verbunden und erscheint unten im Controller-Menü.
 
@@ -116,19 +116,19 @@ Die Tasten werden nach ihrer Lage zugeordnet, egal wie sie beschriftet sind:
 
 Controller, die der Browser nicht mit der Standardbelegung meldet, stehen in der Liste, lassen sich aber nicht auswählen.
 
-### Tastennamen
+### Tastennamen {#button-names}
 
 Tastennamen in der Einstellungskarte öffnet ein Bild des Controllers mit einem Feld an jeder Taste. Ein Name mit bis zu 8 Zeichen ersetzt auf der Arbeitsfläche die Anschlussbeschriftung der Taste und steht im Controller-Fenster neben der Taste. Ein leeres Feld behält die Standardbeschriftung. Zeichen, die die Arbeitsfläche nicht darstellen kann, fehlen in der Anschlussbeschriftung, und der Dialog weist darauf hin.
 
 Namen von Tasten, die du abschaltest, bleiben erhalten und sind wieder da, wenn du die Tasten wieder einschaltest.
 
-### Gamepads in Beobachtungen und in der Touch-Ansicht
+### Gamepads in Beobachtungen und in der Touch-Ansicht {#gamepads-in-watches-and-the-touch-layout}
 
-Ein Gamepad in einer benutzerdefinierten Komponente spielst du aus einer [Beobachtung](docs:inspection#beobachtungen) heraus. Der Titel seines Fensters zeigt den Pfad, etwa Outer › Inner › Gamepad.
+Ein Gamepad in einer benutzerdefinierten Komponente spielst du aus einer [Beobachtung](docs:inspection#watches) heraus. Der Titel seines Fensters zeigt den Pfad, etwa Outer › Inner › Gamepad.
 
 In der Touch-Ansicht öffnet sich der Controller in der Leiste am unteren Bildschirmrand. Die Tastenbeschriftungen erscheinen dort, sobald du eine Taste auf einer Tastatur drückst, und das Controller-Menü, sobald ein Controller verbunden ist.
 
-## Tastatur
+## Tastatur {#keyboard}
 
 ![Eine Tastatur, verbunden mit einem Terminal, D0 bis D7 mit D0 bis D7 und STB mit CLK, nachdem Hello, world! getippt wurde. Das Terminal zeigt den Text und die Tastatur die letzte Taste, !.](./images/component-keyboard.webp)
 
@@ -142,7 +142,7 @@ Eine Tastatur legt den Code jeder Taste, die du drückst, an ihre Ausgänge. Wä
 
 Außer Richtung hat sie keine Optionen.
 
-### Das Fenster der Tastatur
+### Das Fenster der Tastatur {#the-keyboard-window}
 
 ![Das Fenster einer Tastatur mit getipptem hello und world und gedrücktem d, neben der Tastatur auf der Arbeitsfläche, die d zeigt.](./images/keyboard-window.webp)
 
@@ -152,9 +152,9 @@ Das Fenster hat oben ein Eingabefeld. Solange das Feld den Fokus hat, gehen die 
 - Darunter zeigt „An D“ den Code, den die Schaltung gerade bekommt: das Zeichen, sein Hex-Wert und seine 8 Bits.
 - Die Zeile darunter lautet „Eingaben gehen an die Schaltung · Umschalt+Tab zum Verlassen“, solange das Feld den Fokus hat. Klickst du woanders hin, steht dort „Hier klicken, um zu tippen“, und Tasten erreichen die Tastatur erst wieder, wenn du ins Fenster klickst.
 
-Welche Tasten an die Schaltung gehen statt an den Editor, steht unter [Tastaturbefehle](docs:shortcuts#tasten-im-fenster-einer-tastatur).
+Welche Tasten an die Schaltung gehen statt an den Editor, steht unter [Tastaturbefehle](docs:shortcuts#keys-in-a-keyboard-window).
 
-### Was ein Tastendruck bewirkt
+### Was ein Tastendruck bewirkt {#what-a-key-press-does}
 
 Eine Taste, die du drückst, legt ihren Code an D0 bis D7 an, gibt an STB einen Impuls von einem Tick aus und setzt KD auf 1. Eine Taste, die du drückst und loslässt, braucht wie jedes Zeichen eines eingefügten Texts vier Ticks:
 
@@ -176,7 +176,7 @@ Eine Taste, die du hältst, lässt KD nach Tick 3 auf 1, bis du loslässt. D beh
 
 Schließt du das Fenster, klickst daneben oder wechselst in einen anderen Tab, werden alle gehaltenen Tasten losgelassen. „Stopp“ leert die Zeichen im Feld.
 
-### Zeichencodes
+### Zeichencodes {#character-codes}
 
 Der Code ist Latin-1: ASCII und dazu die Buchstaben mit Akzent und die Symbole westeuropäischer Sprachen. Druckbare Zeichen, vom Leerzeichen bis `~` und von `0xA0` bis ÿ, werden unverändert gesendet, ä kommt also als `0xE4` an. Das geschützte Leerzeichen (`0xA0`) und der weiche Trennstrich (`0xAD`) erscheinen als NBS und SHY, weil man sie nicht sieht.
 
@@ -210,7 +210,7 @@ Manche Tasten und Zeichen senden nichts oder etwas anderes:
 | Mit `AltGr` getippte Zeichen, etwa das @ auf einer deutschen Tastatur | das Zeichen                                                           |
 | Tastenkombinationen mit `Ctrl`, `Alt` oder `⌘`                        | nichts, sie bleiben dem Browser überlassen                            |
 
-### Eingefügter Text
+### Eingefügter Text {#pasting-text}
 
 Eingefügter Text wird Zeichen für Zeichen gesendet. „Text eingeben…“ unten im Fenster öffnet einen Dialog, in dem du einen längeren Text schreiben oder einfügen kannst, etwa ein Programm. Er zeigt vor dem Senden, wie viele Zeichen übersprungen werden.
 
@@ -220,7 +220,7 @@ In einem eingefügten oder gesendeten Text:
 - fallen andere Steuerzeichen weg,
 - werden Zeichen außerhalb von Latin-1 übersprungen, wie beim Tippen.
 
-Jedes Zeichen kommt an wie eine Taste, die gedrückt und losgelassen wird, in den vier Ticks unter [Was ein Tastendruck bewirkt](#was-ein-tastendruck-bewirkt), und das nächste folgt im fünften. Nach jedem Zeichen ist KD einen Tick 0, sodass auch ein doppelter Buchstabe als zwei Impulse an KD ankommt.
+Jedes Zeichen kommt an wie eine Taste, die gedrückt und losgelassen wird, in den vier Ticks unter [Was ein Tastendruck bewirkt](#what-a-key-press-does), und das nächste folgt im fünften. Nach jedem Zeichen ist KD einen Tick 0, sodass auch ein doppelter Buchstabe als zwei Impulse an KD ankommt.
 
 Solange Zeichen warten, zeigt das Fenster „Sende“ mit der Zahl der übrigen und ein ✕, das den Rest verwirft. Ein Zeichen, dessen Impuls an STB schon begonnen hat, kommt trotzdem noch an, und KD geht auf 0. „Sende“ erscheint auch, wenn du schneller tippst, als die Simulation läuft, etwa bei einer niedrigen festen Geschwindigkeit.
 
@@ -230,9 +230,9 @@ Die Grenzen:
 - Höchstens 21.845 Zeichen können gleichzeitig warten.
 - Ein Einfügen oder „Senden“, das nicht mehr hinter die schon wartenden Zeichen passt, wird gar nicht gesendet, auch nicht teilweise. Das Fenster oder der Dialog bittet dich stattdessen, auf sie zu warten.
 
-### Einzelschritte bei pausierter Simulation
+### Einzelschritte bei pausierter Simulation {#stepping-while-paused}
 
-Ist die Simulation pausiert, warten Tasten auf „Einzelschritt“. Jeder Schritt ist ein Tick der Tabelle unter [Was ein Tastendruck bewirkt](#was-ein-tastendruck-bewirkt):
+Ist die Simulation pausiert, warten Tasten auf „Einzelschritt“. Jeder Schritt ist ein Tick der Tabelle unter [Was ein Tastendruck bewirkt](#what-a-key-press-does):
 
 | Nach Schritt | Was die Schaltung bekommt          |
 | ------------ | ---------------------------------- |
@@ -244,13 +244,13 @@ Ist die Simulation pausiert, warten Tasten auf „Einzelschritt“. Jeder Schrit
 
 Ein eingefügter Text braucht also vier Schritte pro Zeichen.
 
-### Tastaturen in Beobachtungen und in der Touch-Ansicht
+### Tastaturen in Beobachtungen und in der Touch-Ansicht {#keyboards-in-watches-and-the-touch-layout}
 
-In eine Tastatur in einer benutzerdefinierten Komponente tippst du aus einer [Beobachtung](docs:inspection#beobachtungen) heraus. Der Titel ihres Fensters zeigt den Pfad, wie bei einem Gamepad.
+In eine Tastatur in einer benutzerdefinierten Komponente tippst du aus einer [Beobachtung](docs:inspection#watches) heraus. Der Titel ihres Fensters zeigt den Pfad, wie bei einem Gamepad.
 
-Auf einem Smartphone oder Tablet öffnet sich das Fenster in der Leiste am unteren Bildschirmrand (siehe [Smartphones und Tablets](docs:phones-and-tablets#simulation-und-inspektion)).
+Auf einem Smartphone oder Tablet öffnet sich das Fenster in der Leiste am unteren Bildschirmrand (siehe [Smartphones und Tablets](docs:phones-and-tablets#simulation-and-inspection)).
 
-## Siehe auch
+## Siehe auch {#see-also}
 
 - [Simulation](docs:simulation): eine Schaltung laufen lassen, pausieren und schrittweise durchgehen
 - [Ausgaben](docs:outputs): LEDs, Anzeigen und das Terminal

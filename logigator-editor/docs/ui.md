@@ -165,7 +165,9 @@ only through `DocumentationService.open(pageId?, anchor?)`. Desktop puts an
 (`DialogConfig.fullscreen` bound to `LayoutService.isCompact`, live across
 flips) and drills down instead. `lg-markdown` handles heading anchors and web
 links itself; the dialog claims only `docs:<page-id>[#anchor]` hrefs
-(`parseDocsLink`, in `@logigator/docs`). The pages, their screenshots and the
+(`parseDocsLink`, in `@logigator/docs`). An anchor is a heading's `{#id}`, the
+same in every language, so `open('simulation', 'run-controls')` lands on the
+same section whatever the reader's language. The pages, their screenshots and the
 tree they hang in are that member's; `documentation/docs-pages.ts` is the
 editor's own half — the hashed markdown URL per page and language, and the
 title key each id is shown under.

@@ -1,4 +1,5 @@
 import { DocPageId, docImages, DOC_PAGE_IDS } from '@logigator/docs';
+import type { LgMarkdownAsset } from '@logigator/ui';
 
 /**
  * Every destination a documentation page authors, mapped to the URL it means
@@ -12,16 +13,17 @@ import { DocPageId, docImages, DOC_PAGE_IDS } from '@logigator/docs';
  *
  * `image` is how a picture's URL is written: the rendered page keeps the
  * build's own relative URL, which `<base href="/">` resolves; the raw markdown
- * twin has no base and roots it instead.
+ * twin has no base and roots it instead. A picture keeps its size, so the
+ * rendered page reserves its box before the file arrives.
  */
 export function docDestinations(
   lang: string,
   href: (page: DocPageId) => string,
   image: (url: string) => string = (url) => url
-): Record<string, string> {
-  const destinations: Record<string, string> = {};
-  for (const [authored, url] of Object.entries(docImages(lang))) {
-    destinations[authored] = image(url);
+): Record<string, LgMarkdownAsset> {
+  const destinations: Record<string, LgMarkdownAsset> = {};
+  for (const [authored, picture] of Object.entries(docImages(lang))) {
+    destinations[authored] = { ...picture, url: image(picture.url) };
   }
   for (const page of DOC_PAGE_IDS) {
     destinations[`docs:${page}`] = href(page);

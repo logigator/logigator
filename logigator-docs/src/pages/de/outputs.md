@@ -2,7 +2,7 @@
 
 Ausgaben zeigen, was eine Schaltung tut: eine LED ein einzelnes Signal, ein Segment Display eine Zahl, eine LED-Matrix ein Bild und ein Terminal Text. Sie haben nur Eingänge und ändern sich, während die Simulation läuft.
 
-## LED
+## LED {#led}
 
 ![Zwei Schalter, jeder mit einer LED verbunden. Der obere Schalter ist an und seine LED leuchtet; der untere ist aus und seine LED dunkel.](./images/component-led.webp)
 
@@ -14,7 +14,7 @@ Eine LED leuchtet, solange ihr Eingang 1 ist.
 
 Außer Richtung hat sie keine Optionen.
 
-## Segment Display
+## Segment Display {#segment-display}
 
 ![Ein Segment Display mit vier Schaltern an seinen Eingängen, das 00, 05, 10 und 15 zeigt, während sich die Schalter ändern.](./images/component-segment-display.webp)
 
@@ -36,7 +36,7 @@ Die Zahl wird mit Nullen auf so viele Stellen aufgefüllt, wie der größte Wert
 | 4        | 00 bis 15   | 0 bis f   | 00 bis 17   |
 | 8        | 000 bis 255 | 00 bis ff | 000 bis 377 |
 
-## LED-Matrix
+## LED-Matrix {#led-matrix}
 
 ![Eine 4 × 4 LED-Matrix mit Schaltern an A0, A1 und D0 bis D3 und einem Impulstaster an CLK, die ein X zeichnet, eine Zeile pro Impuls.](./images/component-led-matrix.webp)
 
@@ -62,9 +62,9 @@ Die Größe legt fest, wie viele Adress- und Dateneingänge es gibt:
 
 Bei 16 × 16 ist Adresse 0 die linke Hälfte von Zeile 0, Adresse 1 ihre rechte Hälfte, Adresse 2 die linke Hälfte von Zeile 1 und so weiter. D0 ist die LED ganz links in der Zeile oder halben Zeile. Zeile 0 liegt oben, und drehst du die Matrix, bleibt das Raster aufrecht, und nur die Anschlüsse wandern.
 
-Mit einem [Negationskreis](docs:components-and-options#einen-anschluss-negieren) an CLK schreibt die Matrix stattdessen bei der fallenden Flanke.
+Mit einem [Negationskreis](docs:components-and-options#negating-a-port) an CLK schreibt die Matrix stattdessen bei der fallenden Flanke.
 
-## Terminal
+## Terminal {#terminal}
 
 ![Ein Terminal in seiner Standardgröße, gespeist von einer Tastatur, mit drei ausgegebenen Textzeilen.](./images/component-terminal.webp)
 
@@ -83,19 +83,19 @@ Ein Terminal ist ein Textbildschirm. Es gibt jedes Mal ein Zeichen aus, wenn sei
 
 Spalten und Zeilen legen fest, wie viele Zeichen breit und wie viele Zeilen hoch der Bildschirm ist, und die Komponente wächst mit. Groß zeichnet jedes Zeichen anderthalbmal so groß wie Klein. Drehst du ein Terminal, bleibt sein Bildschirm aufrecht, und nur die Anschlüsse wandern.
 
-Das nächste Zeichen erscheint dort, wo der Block-Cursor steht, den der Bildschirm nur während einer Simulation zeigt. Mit einem [Negationskreis](docs:components-and-options#einen-anschluss-negieren) an CLK gibt das Terminal stattdessen bei der fallenden Flanke aus.
+Das nächste Zeichen erscheint dort, wo der Block-Cursor steht, den der Bildschirm nur während einer Simulation zeigt. Mit einem [Negationskreis](docs:components-and-options#negating-a-port) an CLK gibt das Terminal stattdessen bei der fallenden Flanke aus.
 
-Um zu sehen, was du tippst, verbinde D0 bis D7 einer [Tastatur](docs:inputs#tastatur) mit D0 bis D7 des Terminals und ihren Ausgang STB mit CLK. `Enter` beginnt dann eine neue Zeile, `Backspace` löscht das Zeichen vor dem Cursor, und die Pfeiltasten und `Home` bewegen den Cursor.
+Um zu sehen, was du tippst, verbinde D0 bis D7 einer [Tastatur](docs:inputs#keyboard) mit D0 bis D7 des Terminals und ihren Ausgang STB mit CLK. `Enter` beginnt dann eine neue Zeile, `Backspace` löscht das Zeichen vor dem Cursor, und die Pfeiltasten und `Home` bewegen den Cursor.
 
-Während einer Simulation öffnet ein Klick auf ein Terminal ein Fenster mit allem, was es ausgegeben hat. Das Fenster ist unter [Inspektion und Beobachtungen](docs:inspection#terminal-ausgabe) beschrieben.
+Während einer Simulation öffnet ein Klick auf ein Terminal ein Fenster mit allem, was es ausgegeben hat. Das Fenster ist unter [Inspektion und Beobachtungen](docs:inspection#terminal-output) beschrieben.
 
 ![Das Fenster eines Terminals mit hello und world im Verlauf über dem Bildschirm, neben einer Tastatur, die mit dem Terminal auf der Arbeitsfläche verbunden ist.](./images/terminal-window.webp)
 
-### Ausgegebene Zeichen
+### Ausgegebene Zeichen {#printed-characters}
 
 Die Codes sind Latin-1, wie bei der Tastatur. Codes vom Leerzeichen bis `~` und von `0xA0` bis ÿ erscheinen als ihr Zeichen, `0x41` gibt also A aus und `0xE4` ä. Das geschützte Leerzeichen erscheint als Leerzeichen und der weiche Trennstrich als Bindestrich.
 
-### Steuerzeichen
+### Steuerzeichen {#control-codes}
 
 Diese Codes bewegen den Cursor oder löschen:
 
@@ -115,16 +115,16 @@ Diese Codes bewegen den Cursor oder löschen:
 
 RT, LT, UP und DN halten an den Rändern des Bildschirms an, nur LF rollt. Jeder andere Code, darunter ESC und `0x80` bis `0x9F`, wird ignoriert.
 
-### Zeilenumbruch
+### Zeilenumbruch {#line-wrapping}
 
 - Ein Zeichen in der letzten Spalte lässt den Cursor dort stehen.
 - Das nächste Zeichen kommt an den Anfang der nächsten Zeile. Stand der Cursor in der untersten Zeile, rollt der Bildschirm dafür.
 - Eine volle Zeile mit einem LF danach hinterlässt deshalb keine leere Zeile.
 - Ein Code, der den Cursor bewegt, hebt diesen Umbruch auf, sodass ein BS direkt nach der letzten Spalte das Zeichen löscht, das dort steht.
 
-### Verlauf
+### Verlauf {#scrollback}
 
-Eine Zeile, die oben aus dem Bildschirm rollt, kommt so in den Verlauf, wie sie war, und die Cursor-Codes können sie nicht mehr ändern. Der Verlauf behält die letzten 10.000 Zeilen und erscheint im [Fenster](docs:inspection#terminal-ausgabe) des Terminals.
+Eine Zeile, die oben aus dem Bildschirm rollt, kommt so in den Verlauf, wie sie war, und die Cursor-Codes können sie nicht mehr ändern. Der Verlauf behält die letzten 10.000 Zeilen und erscheint im [Fenster](docs:inspection#terminal-output) des Terminals.
 
 | Aktion                   | Bildschirm | Verlauf |
 | ------------------------ | ---------- | ------- |
@@ -132,7 +132,7 @@ Eine Zeile, die oben aus dem Bildschirm rollt, kommt so in den Verlauf, wie sie 
 | Stopp                    | geleert    | geleert |
 | Verlassen der Simulation | geleert    | geleert |
 
-## Siehe auch
+## Siehe auch {#see-also}
 
 - [Eingaben](docs:inputs): Schalter, Taster und die Tastatur, die diese Ausgaben steuern
 - [Inspektion und Beobachtungen](docs:inspection): das Fenster des Terminals und Beobachtungen

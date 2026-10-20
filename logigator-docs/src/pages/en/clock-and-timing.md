@@ -2,7 +2,7 @@
 
 These components work with time, counted in simulation ticks. A Clock switches its output on and off by itself, a Delay passes a signal on one tick later, and a Random Number Generator puts new random bits on its outputs when it is clocked.
 
-## Clock
+## Clock {#clock}
 
 ![A clock with a switch on STP, off, and an LED on its output, shown one tick per frame. With Delay 1, the LED goes on and off every tick.](./images/component-clock.webp)
 
@@ -37,7 +37,7 @@ How fast the clock runs in seconds depends on the simulation speed: divide the t
 
 The speed panel lists these frequencies for every clock in the circuit under Clocks at this speed. See [Speed](docs:simulation#speed).
 
-## Delay
+## Delay {#delay}
 
 ![A switch driving one LED directly and a second LED through a delay, shown one tick per frame. The LED behind the delay lights and goes dark one tick after the other one.](./images/component-delay.webp)
 
@@ -50,7 +50,7 @@ A Delay passes its input through unchanged, one tick later. Like any other compo
 
 It has no options besides Direction.
 
-## Random Number Generator
+## Random Number Generator {#random-number-generator}
 
 ![A random number generator with Outputs set to 4, a pulse button on CLK and a segment display on its outputs, showing a new number after each pulse.](./images/component-random-number-generator.webp)
 
@@ -67,7 +67,7 @@ A Random Number Generator puts a new random value on its outputs on every rising
 
 With a [negation bubble](docs:components-and-options#negating-a-port) on CLK, it makes a new value on the falling edge instead.
 
-## See also
+## See also {#see-also}
 
 - [Simulation](docs:simulation): ticks, run controls and the simulation speed
 - [Inputs](docs:inputs): switches and buttons to drive STP or CLK by hand

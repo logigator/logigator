@@ -78,11 +78,9 @@ export class DocPage {
   private readonly rendered = signal(false);
 
   constructor() {
-    // The renderer emits no heading ids, so the router's own anchor scrolling
-    // finds nothing: a fragment resolves against the slug of a heading's own
-    // text, which is what `scrollToHeading` matches. It runs off `ready`, the
-    // renderer assigning its content asynchronously — before that there is no
-    // heading to find — and never on the server, which has nothing to scroll.
+    // The router's own anchor scrolling runs before the renderer has written
+    // the headings, so the fragment is resolved by `scrollToHeading` once
+    // `ready` fires — and never on the server, which has nothing to scroll.
     effect(() => {
       const fragment = this.fragment();
       if (!fragment || !this.rendered() || !this.isBrowser) {

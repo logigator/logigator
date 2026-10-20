@@ -2,7 +2,7 @@
 
 These are the default bindings, in the order Edit → Keyboard Shortcuts lists them. On a Mac, `⌘` works wherever the table says `Ctrl`, and `Ctrl` works as well.
 
-## Default bindings
+## Default bindings {#default-bindings}
 
 | Action                                  | Default        |
 | --------------------------------------- | -------------- |
@@ -33,11 +33,11 @@ These are the default bindings, in the order Edit → Keyboard Shortcuts lists t
 
 Shortcuts do nothing while you type in a text field, except `Escape`. During a simulation, the editing shortcuts are switched off and `Escape` leaves the simulation.
 
-## Held keys
+## Held keys {#held-keys}
 
 The two actions marked "hold" act while the key is down instead of firing once. Hold `Alt` while releasing a selection box to cut the wires at its edge (see [Board and tools](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Hold `Ctrl` while clicking or drawing a box to add to the selection or remove from it. That works with Select, Pan and the Wire tool.
 
-## Changing a binding
+## Changing a binding {#changing-a-binding}
 
 ![The keyboard shortcut manager.](./images/shortcut-manager.webp)
 
@@ -47,7 +47,7 @@ If the combination already belongs to another action, that action loses it and a
 
 Your bindings are stored in this browser. Clearing the site data resets them.
 
-## Gamepad keys
+## Gamepad keys {#gamepad-keys}
 
 A [gamepad](docs:inputs#gamepad) has its own keys, separate from the shortcuts above. They work while its controller window has the keyboard, and there they come before the shortcuts, so `Enter` presses Start.
 
@@ -75,7 +75,7 @@ While you assign, `Escape` cancels, and `Backspace` or `Delete` leaves the butto
 
 The keys are shared by every gamepad in every project and stored in this browser, like the shortcuts. A change shows at once in every open gamepad window, in other tabs as well.
 
-## Keys in a keyboard window
+## Keys in a keyboard window {#keys-in-a-keyboard-window}
 
 While the typing field of a [keyboard's window](docs:inputs#keyboard) has the focus, keys go to the circuit and the shortcuts above do nothing. These keys act differently there:
 
@@ -89,7 +89,7 @@ While the typing field of a [keyboard's window](docs:inputs#keyboard) has the fo
 
 Combinations with `Ctrl`, `Alt` or `⌘` go to the browser, so `Ctrl+V` pastes text into the keyboard. `AltGr` is not one of them: a character typed with it is sent. A key sends the character your keyboard layout gives it, so these keys can't be reassigned the way a gamepad's can.
 
-## See also
+## See also {#see-also}
 
 - [Board and tools](docs:board-and-tools): the tools and actions these keys trigger
 - [Simulation](docs:simulation): what Enter and Escape do there

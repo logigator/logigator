@@ -4,9 +4,9 @@ Pendant une [simulation](docs:simulation), en cours ou en pause, quatre sortes d
 
 ![Une fenêtre de surveillance à côté du circuit en cours auquel elle appartient.](./images/inspection-showcase.webp)
 
-Sur ordinateur, chaque vue s'ouvre dans une fenêtre que vous pouvez déplacer et redimensionner. Un nouveau clic sur le composant ramène sa fenêtre au premier plan. En [disposition tactile](docs:phones-and-tablets#simulation-et-inspection), les vues de ROM, de RAM et de terminal partagent un panneau en bas de l'écran, et une surveillance occupe tout l'écran. Quitter la simulation les ferme toutes.
+Sur ordinateur, chaque vue s'ouvre dans une fenêtre que vous pouvez déplacer et redimensionner. Un nouveau clic sur le composant ramène sa fenêtre au premier plan. En [disposition tactile](docs:phones-and-tablets#simulation-and-inspection), les vues de ROM, de RAM et de terminal partagent un panneau en bas de l'écran, et une surveillance occupe tout l'écran. Quitter la simulation les ferme toutes.
 
-## Contenu d'une ROM
+## Contenu d'une ROM {#rom-contents}
 
 ![La vue de la ROM qui suit l'adresse quand elle change.](./images/rom-inspection.webp)
 
@@ -14,13 +14,13 @@ La vue est en lecture seule ; le contenu se modifie pendant l'édition, dans les
 
 Les boutons au-dessus du tableau choisissent Mots ou Octets et la base : Hex, Décimal, Octal ou Binaire. Pour aller à une adresse, tapez-la en hexadécimal dans le champ « Adresse… ». « Copier » place tout le tableau dans le presse-papiers sous forme de texte, dans la vue et la base choisies.
 
-## Contenu d'une RAM
+## Contenu d'une RAM {#ram-contents}
 
 La vue d'une RAM a le même tableau, les mêmes boutons et le même « Suivre » que celle d'une ROM, avec le mot à l'adresse présente sur ses entrées en surbrillance. Elle montre ce que le circuit a stocké et change à mesure qu'il écrit, en marche ou pas à pas. Elle aussi est en lecture seule : seul le circuit écrit dans une RAM. Chaque mot vaut 0 au démarrage de la simulation, et « Arrêter » les remet tous à 0.
 
 Une grande RAM n'est lue qu'autour des lignes affichées. Une ligne qui défile à l'écran montre des points jusqu'à ce qu'elle soit lue, ce qui prend un instant, et la ligne du bas indique « Non chargée » pour une cellule affichée ainsi. « Copier » place le tableau dans le presse-papiers tel que vous le voyez, points compris.
 
-## Sortie d'un terminal
+## Sortie d'un terminal {#terminal-output}
 
 La fenêtre d'un terminal montre l'historique, la ligne la plus ancienne en premier, et en dessous l'écran, sur une bande teintée, avec le curseur. Le texte apparaît à mesure que le circuit l'affiche, en marche ou pas à pas. L'effet de chaque code est décrit sous [Terminal](docs:outputs#terminal).
 
@@ -36,7 +36,7 @@ La simulation conserve les 65 536 derniers caractères envoyés à chaque termin
 - une ligne de l'historique indique combien de caractères ont été perdus,
 - l'écran continue avec les caractères arrivés ensuite.
 
-## Surveillances
+## Surveillances {#watches}
 
 ![Une surveillance descendue de Outer dans Inner, avec le chemin dans son titre.](./images/inspection-window-multilayer.webp)
 
@@ -52,11 +52,11 @@ Un clic sur un composant à l'intérieur d'une surveillance ouvre :
 
 Un terminal à l'intérieur d'une surveillance y montre aussi son écran : quand vous ouvrez son niveau, il rejoue les caractères que la simulation conserve encore pour lui, et montre ainsi ce qui a été affiché avant que vous ne regardiez.
 
-La fenêtre d'une manette ou d'un clavier fonctionne comme sur le plan de travail (voir [Manette](docs:inputs#manette) et [Clavier](docs:inputs#clavier)), et ce que vous y faites atteint le composant dans la surveillance. Remonter au-dessus de son niveau ou fermer la surveillance ferme aussi cette fenêtre.
+La fenêtre d'une manette ou d'un clavier fonctionne comme sur le plan de travail (voir [Manette](docs:inputs#gamepad) et [Clavier](docs:inputs#keyboard)), et ce que vous y faites atteint le composant dans la surveillance. Remonter au-dessus de son niveau ou fermer la surveillance ferme aussi cette fenêtre.
 
 Si la surveillance signale que le circuit interne ne correspond pas à la simulation compilée, le composant a été modifié après le démarrage de la simulation. Quittez la simulation et relancez-la.
 
-## Voir aussi
+## Voir aussi {#see-also}
 
 - [Simulation](docs:simulation) : faire fonctionner un circuit
 - [Composants personnalisés](docs:custom-components) : construire les composants que vous surveillez

@@ -2,4 +2,5 @@ export * from './changelog';
 export * from './doc-link';
 export * from './docs-search';
 export * from './docs-structure';
+export * from './heading-id';
 export * from './images';

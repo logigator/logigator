@@ -4,11 +4,11 @@ All settings are in the account menu, opened from the account button at the righ
 
 ![The account menu with theme, language and editor settings.](./images/account-menu.webp)
 
-## Theme and language
+## Theme and language {#theme-and-language}
 
 Theme switches between Light and Dark. Dark is the default. Language offers English, Deutsch, Français and Español. Both apply immediately, and both are shared with the Logigator website: changing the language in the editor changes it on the site too, and the other way round.
 
-## Editor settings
+## Editor settings {#editor-settings}
 
 | Setting                    | Default | What it does                                                                                                                                                                       |
 | -------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -21,7 +21,7 @@ Theme switches between Light and Dark. Dark is the default. Language offers Engl
 
 These six settings, your keyboard shortcuts and the minimap's state are stored in this browser only. A different browser or device starts with the defaults, and clearing the site data resets them.
 
-## See also
+## See also {#see-also}
 
 - [Getting started](docs:getting-started): the tutorial and tips
 - [Simulation](docs:simulation): where Auto-start simulation and Highlight conflicts apply

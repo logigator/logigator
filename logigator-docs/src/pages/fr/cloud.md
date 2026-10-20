@@ -2,7 +2,7 @@
 
 Avec un compte Logigator, projets et composants personnalisés sont stockés dans le cloud et s'ouvrent sur tout appareil où vous êtes connecté. Les documents cloud peuvent être partagés par lien ou publiés dans la communauté sur le site Logigator. Tout le reste de l'éditeur fonctionne sans compte.
 
-## Se connecter et se déconnecter
+## Se connecter et se déconnecter {#signing-in-and-out}
 
 Le menu du compte, à l'extrémité droite de la barre de titre, affiche « Se connecter » et « S'inscrire » tant que vous n'êtes pas connecté. Les deux ouvrent le site Logigator dans un nouvel onglet, et l'éditeur remarque de lui-même que vous vous y êtes connecté. Une fois connecté, le menu affiche « Compte », qui ouvre votre page de compte sur le site, et « Se déconnecter ».
 
@@ -16,7 +16,7 @@ Si un projet ou un composant cloud a des modifications non enregistrées au mome
 
 Après la déconnexion, un projet cloud ouvert est remplacé par un brouillon vide, et les onglets des composants cloud se ferment. Les projets et composants locaux ne sont pas touchés.
 
-## Local et cloud
+## Local et cloud {#local-and-cloud}
 
 Les documents locaux vivent dans ce navigateur et disparaissent si ses données de site sont effacées. Les documents cloud vivent dans votre compte. L'étiquette à côté du nom du projet indique lequel des deux est ouvert, et Fichier → Ouvrir les liste dans des onglets séparés, Projets locaux et Projets cloud. Si vous êtes connecté, la fenêtre s'ouvre sur Projets cloud.
 
@@ -24,7 +24,7 @@ Les documents locaux vivent dans ce navigateur et disparaissent si ses données 
 
 Sur le site, Mes projets et Mes composants listent aussi vos documents cloud. Vous pouvez les y créer, renommer, partager, supprimer et les ouvrir dans l'éditeur.
 
-## Téléverser vers le cloud
+## Téléverser vers le cloud {#uploading-to-the-cloud}
 
 | À téléverser                    | Utilisez                                                                                                             |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
@@ -40,7 +40,7 @@ Le téléversement suit ces règles :
 
 ![La fenêtre « Téléverser vers le cloud » listant un composant qui sera téléversé aussi.](./images/upload-to-cloud.webp)
 
-## Partager
+## Partager {#sharing}
 
 Fichier → Partager ouvre la fenêtre de partage d'un projet cloud. Le bouton « Partager » sur une ligne de l'onglet Projets cloud fait de même, et un composant cloud a « Partager » dans sa carte de paramètres. Les documents locaux doivent d'abord être téléversés.
 
@@ -58,13 +58,13 @@ Le lien de partage mène à la page du document sur le site Logigator. Le bouton
 
 « Régénérer le lien » remplace le lien, et l'ancien cesse aussitôt de fonctionner pour tous ceux qui l'ont. Ce n'est proposé que pour « Toute personne avec le lien » : l'adresse d'un document publié est son lien, et un document privé n'affiche pas de lien. Passer un document de « Toute personne avec le lien » à « Toi uniquement » puis revenir garde le même lien.
 
-## Ouvrir le lien de quelqu'un d'autre
+## Ouvrir le lien de quelqu'un d'autre {#opening-someone-else-s-link}
 
 Un lien de partage ouvre la page du document sur le site, avec « Ouvrir dans l'éditeur » et « Enregistrer une copie ». « Enregistrer une copie » vous demande de vous connecter, copie le document dans votre bibliothèque cloud et ouvre la copie. Pour les documents réglés sur Tout le monde, la page permet aussi d'ajouter une étoile.
 
 Dans l'éditeur, un document partagé porte l'étiquette Partagé. Vous pouvez le modifier et l'essayer, mais ni l'enregistrer ni l'exporter. Fichier → Cloner vers mes projets, ou Cloner vers mes composants pour un composant, enregistre une copie dans votre bibliothèque cloud. La copie est faite à partir de la version enregistrée par son propriétaire, sans vos modifications, et commence en « Toute personne avec le lien ». Les modifications ultérieures d'un côté n'affectent pas l'autre.
 
-## Voir aussi
+## Voir aussi {#see-also}
 
 - [Enregistrement et fichiers](docs:saving-and-files) : enregistrement, fichiers et export d'image
 - [Composants personnalisés](docs:custom-components) : les composants qui voyagent avec un projet

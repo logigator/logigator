@@ -2,7 +2,7 @@
 
 El tablero es la cuadrícula en la que construyes. Los componentes y los cables se ajustan a ella, y la barra de estado de abajo muestra la posición de la cuadrícula bajo el cursor.
 
-## Moverse
+## Moverse {#moving-around}
 
 La rueda del ratón hace zoom en la posición del puntero, igual que deslizar dos dedos o pellizcar en el panel táctil. Los botones de zoom de la barra de herramientas y Vista → Acercar, Alejar y Zoom 100% hacen lo mismo en pasos fijos.
 
@@ -10,7 +10,7 @@ Para desplazar la vista, arrastra con el botón derecho o central del ratón. Fu
 
 El minimapa, en la esquina inferior derecha, muestra todo el circuito con un marco alrededor de la parte visible. Haz clic o arrastra en él para llevar la vista allí. «Ocultar minimapa» lo pliega, y el editor lo recuerda.
 
-## Herramientas
+## Herramientas {#tools}
 
 Solo hay una herramienta activa a la vez. Cada una tiene un botón en la barra de herramientas y un atajo de una tecla.
 
@@ -26,13 +26,13 @@ Un clic sin arrastrar selecciona el elemento bajo el puntero en Desplazar, Herra
 
 ![Los cinco botones de herramientas en la barra de herramientas.](./images/tool-buttons.webp)
 
-## Colocar componentes
+## Colocar componentes {#placing-components}
 
 Haz clic en un componente de la paleta y una vista previa sigue al cursor. Un clic en el tablero lo coloca. La vista previa sigue en el cursor después, así que puedes colocar varios seguidos. `R` y `Shift+R` giran la vista previa antes de colocarla, y el siguiente componente conserva esa dirección.
 
 No se coloca nada donde la vista previa se solapa con otro componente. `Escape` o elegir otra herramienta termina la colocación.
 
-## Seleccionar y mover
+## Seleccionar y mover {#selecting-and-moving}
 
 Con Seleccionar, traza un marco sobre los elementos que quieras. Se selecciona cada componente y cada cable que toque el marco. Mantén `Ctrl` (`⌘` en Mac) para cambiar la selección en lugar de sustituirla: un clic añade o quita un elemento, y un marco añade lo que cubre. También funciona en Desplazar y en la herramienta de cable.
 
@@ -44,7 +44,7 @@ Arrastra la selección para moverla. `R` la gira en sentido horario, `Shift+R` e
 2. Vacía la selección.
 3. Cambia a Desplazar.
 
-## Cortar cables en el borde de la selección
+## Cortar cables en el borde de la selección {#cutting-wires-at-the-selection-edge}
 
 Normalmente un marco de selección toma cables enteros. En el modo de corte, corta cada cable que cruza su borde y selecciona solo los trozos de dentro, con lo que puedes sacar un tramo del centro de un bus.
 
@@ -52,17 +52,17 @@ Mientras Seleccionar está activa, un botón «Cortar cables» flota en la parte
 
 ![El botón «Cortar cables» sobre un cable cortado en el borde de la selección.](./images/scissor-select.webp)
 
-## Copiar, pegar y eliminar
+## Copiar, pegar y eliminar {#copy-paste-and-delete}
 
 Copiar (`Ctrl+C`), Cortar (`Ctrl+X`), Pegar (`Ctrl+V`) y Eliminar (`Delete`) están en la barra de herramientas y en el menú Editar. Los elementos pegados aparecen como vista previa bajo el cursor, o en el centro de la vista si el puntero no está sobre el tablero. Arrastra la vista previa a un sitio libre y suelta para colocarla. `Escape` o un clic fuera de la vista previa cancela.
 
 Deshacer (`Ctrl+Z`) y Rehacer (`Ctrl+Shift+Z`) sirven para cualquier edición.
 
-## Borrar
+## Borrar {#erasing}
 
 Con el borrador, haz clic en un elemento para eliminarlo o arrastra sobre varios. Si pulsas `Escape` antes de soltar, vuelve todo lo que ese arrastre borró.
 
-## Ver también
+## Ver también {#see-also}
 
 - [Cables y conexiones](docs:wires-and-connections): trazar cables y conectar cruces
 - [Componentes y opciones](docs:components-and-options): las piezas que colocas
