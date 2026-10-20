@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { communityRow, EMPTY_PAGE } from '../../../testing/community-rows';
@@ -12,6 +12,7 @@ const PROJECT_LINK = '22222222-2222-4222-8222-222222222222';
 
 describe('HomePage', () => {
   let http: HttpTestingController;
+  let fixture: ComponentFixture<HomePage>;
 
   /** Answers the three reads the guard makes, then renders the page. */
   async function render(answers: {
@@ -46,7 +47,7 @@ describe('HomePage', () => {
     // words a reader sees.
     await TestBed.inject(TranslationService).setActiveLang('en');
 
-    const fixture = TestBed.createComponent(HomePage);
+    fixture = TestBed.createComponent(HomePage);
     fixture.detectChanges();
     return fixture.nativeElement;
   }
@@ -141,6 +142,37 @@ describe('HomePage', () => {
       dd.textContent?.trim()
     );
     expect(figures).toEqual(['1,284', '6']);
+  });
+
+  /**
+   * The links are signals off the active language, so a language switch in
+   * place re-prefixes them rather than leaving English paths on a German page.
+   */
+  it('links each feature to its documentation in the active language', async () => {
+    const el = await render({});
+    const docsLinks = () =>
+      [...el.querySelectorAll<HTMLAnchorElement>('a[href*="/docs/"]')].map(
+        (a) => a.getAttribute('href')
+      );
+
+    expect(docsLinks()).toEqual([
+      '/en/docs/simulation',
+      '/en/docs/inspection',
+      '/en/docs/custom-components',
+      '/en/docs/inputs',
+      '/en/docs/cloud#sharing',
+      '/en/docs/phones-and-tablets'
+    ]);
+
+    // Six links reading the same, told apart by the feature each belongs to.
+    const names = [...el.querySelectorAll('a[href*="/docs/"]')].map((a) =>
+      a.getAttribute('aria-label')
+    );
+    expect(new Set(names).size).toBe(6);
+
+    await TestBed.inject(TranslationService).setActiveLang('de');
+    await fixture.whenStable();
+    expect(docsLinks()[0]).toBe('/de/docs/simulation');
   });
 
   it('says a list is empty rather than broken when the API answers nothing', async () => {

@@ -237,6 +237,8 @@ const es: TranslationSchema = {
       },
       features: {
         title: 'Características',
+        learnMore: 'Más información',
+        learnMoreLabel: 'Más información: {{feature}}',
         stepping: {
           title: 'Sigue cada señal',
           body: 'Los cables con señal se iluminan. Pausa la simulación y avanza tick a tick.'

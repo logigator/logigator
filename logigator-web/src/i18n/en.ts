@@ -245,6 +245,8 @@ const en = {
       },
       features: {
         title: 'Features',
+        learnMore: 'Learn more',
+        learnMoreLabel: 'Learn more: {{feature}}',
         stepping: {
           title: 'Follow every signal',
           body: 'Powered wires light up as the circuit runs. Pause it and step through one tick at a time.'

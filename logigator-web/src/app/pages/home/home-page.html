@@ -78,6 +78,20 @@
           <p class="text-sm leading-relaxed text-muted">
             {{ t(feature.body) }}
           </p>
+          <!-- Pinned to the card's foot, so the two links of a row line up. -->
+          <a
+            class="mt-auto inline-flex items-center gap-1.5 self-start text-sm font-medium text-primary hover:underline"
+            [routerLink]="links.docsPage(feature.docs)"
+            [fragment]="feature.section"
+            [attr.aria-label]="
+              t('pages.home.features.learnMoreLabel', {
+                feature: t(feature.title)
+              })
+            "
+          >
+            <span>{{ t('pages.home.features.learnMore') }}</span>
+            <i class="ph ph-arrow-right text-sm" aria-hidden="true"></i>
+          </a>
         </div>
         }
       </div>

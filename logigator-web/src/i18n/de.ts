@@ -242,6 +242,8 @@ const de: TranslationSchema = {
       },
       features: {
         title: 'Features',
+        learnMore: 'Mehr erfahren',
+        learnMoreLabel: 'Mehr erfahren: {{feature}}',
         stepping: {
           title: 'Folge jedem Signal',
           body: 'Leitungen mit Signal leuchten auf. Halte die Simulation an und geh Tick für Tick weiter.'

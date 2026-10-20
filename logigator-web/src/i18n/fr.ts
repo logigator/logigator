@@ -235,6 +235,8 @@ const fr: TranslationSchema = {
       },
       features: {
         title: 'Fonctionnalités',
+        learnMore: 'En savoir plus',
+        learnMoreLabel: 'En savoir plus : {{feature}}',
         stepping: {
           title: 'Suivez chaque signal',
           body: 'Les fils sous tension s’allument. Mettez la simulation en pause et avancez tick par tick.'

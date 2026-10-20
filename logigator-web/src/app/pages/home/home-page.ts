@@ -39,36 +39,52 @@ import { VideoEmbed } from './video-embed';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomePage {
+  /**
+   * Each feature with the documentation page that covers it; `section` is a
+   * heading slug on that page, for a card the page as a whole is too broad for.
+   */
   protected readonly FEATURES = [
     {
       key: 'stepping',
       title: 'pages.home.features.stepping.title',
-      body: 'pages.home.features.stepping.body'
+      body: 'pages.home.features.stepping.body',
+      docs: 'simulation',
+      section: undefined
     },
     {
       key: 'inspection',
       title: 'pages.home.features.inspection.title',
-      body: 'pages.home.features.inspection.body'
+      body: 'pages.home.features.inspection.body',
+      docs: 'inspection',
+      section: undefined
     },
     {
       key: 'components',
       title: 'pages.home.features.components.title',
-      body: 'pages.home.features.components.body'
+      body: 'pages.home.features.components.body',
+      docs: 'custom-components',
+      section: undefined
     },
     {
       key: 'io',
       title: 'pages.home.features.io.title',
-      body: 'pages.home.features.io.body'
+      body: 'pages.home.features.io.body',
+      docs: 'inputs',
+      section: undefined
     },
     {
       key: 'share',
       title: 'pages.home.features.share.title',
-      body: 'pages.home.features.share.body'
+      body: 'pages.home.features.share.body',
+      docs: 'cloud',
+      section: 'sharing'
     },
     {
       key: 'browser',
       title: 'pages.home.features.browser.title',
-      body: 'pages.home.features.browser.body'
+      body: 'pages.home.features.browser.body',
+      docs: 'phones-and-tablets',
+      section: undefined
     }
   ] as const;
 
