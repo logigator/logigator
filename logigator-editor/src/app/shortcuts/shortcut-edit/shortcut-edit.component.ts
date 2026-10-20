@@ -1,6 +1,7 @@
 import {
   Component,
   DestroyRef,
+  ElementRef,
   inject,
   input,
   model,
@@ -23,6 +24,8 @@ import { TranslateDirective } from '../../translation/translate.directive';
 })
 export class ShortcutEditComponent {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly host =
+    inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly shortcutService = inject(ShortcutService);
 
   public readonly binding = model.required<ShortcutBinding | null>();
@@ -61,6 +64,7 @@ export class ShortcutEditComponent {
   }
 
   private _handleRecordKey(e: KeyboardEvent): void {
+    if (this._inOtherDialog(e.target)) return;
     e.preventDefault();
     e.stopPropagation();
     if (ShortcutEditComponent.MODIFIER_KEYS.has(e.key)) {
@@ -90,5 +94,15 @@ export class ShortcutEditComponent {
       alt: e.altKey
     });
     this.stopRecording();
+  }
+
+  /**
+   * Whether a key landed in a dialog stacked over this one, such as the
+   * documentation its header's help opened: typing there is no binding.
+   */
+  private _inOtherDialog(target: EventTarget | null): boolean {
+    if (!(target instanceof Element)) return false;
+    const dialog = target.closest('[role="dialog"]');
+    return dialog !== null && !dialog.contains(this.host);
   }
 }
