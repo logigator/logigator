@@ -1,5 +1,4 @@
 import { NgStyle, NgTemplateOutlet } from '@angular/common';
-import { ConfigurableFocusTrapFactory } from '@angular/cdk/a11y';
 import { Overlay } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
@@ -8,6 +7,7 @@ import {
   contentChild,
   effect,
   inject,
+  Injector,
   input,
   OnDestroy,
   output,
@@ -92,7 +92,7 @@ export class LgDialog implements OnDestroy {
   private readonly viewContainerRef = inject(ViewContainerRef);
   private readonly modalOverlay = new ModalOverlay(
     inject(Overlay),
-    inject(ConfigurableFocusTrapFactory)
+    inject(Injector)
   );
 
   constructor() {

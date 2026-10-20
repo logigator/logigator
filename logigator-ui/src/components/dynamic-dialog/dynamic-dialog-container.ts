@@ -11,6 +11,7 @@ import {
   viewChild
 } from '@angular/core';
 import { LgScaleIn } from '../../internal/fade-in';
+import { LgTooltip } from '../tooltip/tooltip';
 import { lgLabel } from '../../tokens/labels';
 import { DialogConfig } from './dialog-config';
 import { DialogRef } from './dialog-ref';
@@ -32,7 +33,7 @@ let nextId = 0;
  */
 @Component({
   selector: 'lg-dynamic-dialog-container',
-  imports: [NgStyle, LgScaleIn],
+  imports: [NgStyle, LgScaleIn, LgTooltip],
   template: `
     <div
       role="dialog"
@@ -43,21 +44,38 @@ let nextId = 0;
       class="flex flex-col bg-content text-text"
       [class]="panelClass()"
     >
-      @if (config.header || config.closable !== false) {
+      @if (config.header || config.closable !== false || config.help) {
         <div class="flex shrink-0 items-center justify-between gap-4 p-5">
           <h2 [id]="headerId" class="text-xl font-semibold text-text">
             {{ config.header }}
           </h2>
-          @if (config.closable !== false) {
-            <button
-              type="button"
-              [attr.aria-label]="closeLabel"
-              class="inline-flex size-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-content-hover hover:text-text"
-              (click)="ref.close()"
-            >
-              <i class="ph ph-x" aria-hidden="true"></i>
-            </button>
-          }
+          <div class="flex shrink-0 items-center gap-1">
+            @if (config.help; as help) {
+              <!-- Initial focus passes over help to the close button, else
+                   the content, so opening never shows its tooltip. -->
+              <button
+                type="button"
+                data-lg-skip-initial-focus
+                [attr.aria-label]="help.label"
+                [lgTooltip]="help.label"
+                tooltipPosition="bottom"
+                class="inline-flex size-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-content-hover hover:text-text"
+                (click)="help.command()"
+              >
+                <i class="ph ph-question" aria-hidden="true"></i>
+              </button>
+            }
+            @if (config.closable !== false) {
+              <button
+                type="button"
+                [attr.aria-label]="closeLabel"
+                class="inline-flex size-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-content-hover hover:text-text"
+                (click)="ref.close()"
+              >
+                <i class="ph ph-x" aria-hidden="true"></i>
+              </button>
+            }
+          </div>
         </div>
       }
       <div [class]="bodyClass()">
@@ -101,7 +119,7 @@ export class LgDynamicDialogContainer implements AfterViewInit {
 
   protected readonly bodyClass = computed(() => {
     const defaultBody =
-      this.config.header || this.config.closable !== false
+      this.config.header || this.config.closable !== false || this.config.help
         ? 'overflow-auto px-5 pb-5'
         : 'overflow-auto p-5';
     return `min-h-0 grow ${this.config.bodyClass ?? defaultBody}`;

@@ -1,6 +1,6 @@
-import { ConfigurableFocusTrapFactory } from '@angular/cdk/a11y';
 import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { Portal } from '@angular/cdk/portal';
+import { Injector } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { playEnterTransition } from './fade-in';
 import {
@@ -49,9 +49,9 @@ export class ModalOverlay {
 
   constructor(
     private readonly overlay: Overlay,
-    focusTrapFactory: ConfigurableFocusTrapFactory
+    injector: Injector
   ) {
-    this.focusTrap = new LgFocusTrap(focusTrapFactory);
+    this.focusTrap = new LgFocusTrap(injector);
   }
 
   get isOpen(): boolean {

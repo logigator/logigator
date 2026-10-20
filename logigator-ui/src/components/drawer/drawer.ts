@@ -1,4 +1,3 @@
-import { ConfigurableFocusTrapFactory } from '@angular/cdk/a11y';
 import { Overlay, OverlayContainer } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import { DOCUMENT } from '@angular/common';
@@ -8,6 +7,7 @@ import {
   computed,
   effect,
   inject,
+  Injector,
   input,
   OnDestroy,
   output,
@@ -22,7 +22,9 @@ import {
   followVisualViewport,
   VisualViewportRoom
 } from '../../internal/visual-viewport';
+import { LgHelpAction } from '../../tokens/help-action';
 import { lgLabel } from '../../tokens/labels';
+import { LgTooltip } from '../tooltip/tooltip';
 
 let nextId = 0;
 
@@ -73,6 +75,7 @@ const POSITION_BORDER: Record<DrawerPosition, string> = {
  */
 @Component({
   selector: 'lg-drawer',
+  imports: [LgTooltip],
   template: `
     <ng-template #panelTpl>
       <div
@@ -83,23 +86,39 @@ const POSITION_BORDER: Record<DrawerPosition, string> = {
         [style.margin-bottom.px]="room()?.bottomInset ?? null"
         [style.max-height]="roomMaxHeight()"
       >
-        @if (header() || closable()) {
+        @if (header() || closable() || help()) {
           <div
             class="flex shrink-0 items-center justify-between gap-4 border-b border-border px-4 py-3"
           >
             <h2 [id]="headerId" class="text-base font-semibold text-text">
               {{ header() }}
             </h2>
-            @if (closable()) {
-              <button
-                type="button"
-                [attr.aria-label]="closeLabel()"
-                class="inline-flex size-8 items-center justify-center rounded text-muted transition-colors hover:bg-content-hover hover:text-text"
-                (click)="requestClose()"
-              >
-                <i class="ph ph-x" aria-hidden="true"></i>
-              </button>
-            }
+            <div class="flex shrink-0 items-center gap-1">
+              @if (help(); as action) {
+                <!-- Initial focus passes over help, as in the dynamic dialog. -->
+                <button
+                  type="button"
+                  data-lg-skip-initial-focus
+                  [attr.aria-label]="action.label"
+                  [lgTooltip]="action.label"
+                  [tooltipPosition]="position() === 'bottom' ? 'top' : 'bottom'"
+                  class="inline-flex size-8 items-center justify-center rounded text-muted transition-colors hover:bg-content-hover hover:text-text"
+                  (click)="action.command()"
+                >
+                  <i class="ph ph-question" aria-hidden="true"></i>
+                </button>
+              }
+              @if (closable()) {
+                <button
+                  type="button"
+                  [attr.aria-label]="closeLabel()"
+                  class="inline-flex size-8 items-center justify-center rounded text-muted transition-colors hover:bg-content-hover hover:text-text"
+                  (click)="requestClose()"
+                >
+                  <i class="ph ph-x" aria-hidden="true"></i>
+                </button>
+              }
+            </div>
           </div>
         }
         <div class="min-h-0 grow overflow-auto p-4">
@@ -116,6 +135,8 @@ export class LgDrawer implements OnDestroy {
   readonly closable = input(true, { transform: booleanAttribute });
   /** ARIA label for the close button; localize it. */
   readonly closeLabel = input(lgLabel('close'));
+  /** A help button in the header, beside the close button. */
+  readonly help = input<LgHelpAction | null>(null);
   readonly modal = input(true, { transform: booleanAttribute });
   readonly styleClass = input<string>('');
   readonly visibleChange = output<boolean>();
@@ -127,7 +148,7 @@ export class LgDrawer implements OnDestroy {
   private readonly viewContainerRef = inject(ViewContainerRef);
   private readonly modalOverlay = new ModalOverlay(
     inject(Overlay),
-    inject(ConfigurableFocusTrapFactory)
+    inject(Injector)
   );
   private readonly overlayContainer = inject(OverlayContainer);
   private readonly view = inject(DOCUMENT).defaultView;

@@ -1,4 +1,3 @@
-import { ConfigurableFocusTrapFactory } from '@angular/cdk/a11y';
 import { Overlay } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { inject, Injectable, Injector, Type } from '@angular/core';
@@ -22,7 +21,6 @@ import {
 @Injectable({ providedIn: 'root' })
 export class DialogService {
   private readonly overlay = inject(Overlay);
-  private readonly focusTrapFactory = inject(ConfigurableFocusTrapFactory);
   private readonly parentInjector = inject(Injector);
   private readonly telemetry = inject(LG_DIALOG_TELEMETRY, { optional: true });
 
@@ -35,7 +33,7 @@ export class DialogService {
       placement: 'center',
       hasBackdrop: modal
     });
-    const focusTrap = new LgFocusTrap(this.focusTrapFactory);
+    const focusTrap = new LgFocusTrap(this.parentInjector);
     const subscription = new Subscription();
 
     const dialogRef = new DialogRef<R, C>(() => {

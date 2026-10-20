@@ -1,4 +1,5 @@
 import { Signal } from '@angular/core';
+import { LgHelpAction } from '../../tokens/help-action';
 
 export interface WindowSize {
   width: number;
@@ -33,6 +34,11 @@ export interface WindowConfig {
    * `input.required` signals resolve.
    */
   inputValues?: Record<string, unknown>;
+  /**
+   * A help button in the title bar, in both outlet modes. A signal keeps its
+   * label live while the window is open; `null` from it hides the button.
+   */
+  help?: LgHelpAction | Signal<LgHelpAction | null>;
   /** Show a close button and close on Escape. Defaults to true. */
   closable?: boolean;
   /** Content-box size on open. Defaults to 440×360. */

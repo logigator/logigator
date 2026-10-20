@@ -7,6 +7,7 @@ export type { IconSlot } from './internal/icon';
 export type { LgSeverity } from './tokens/severity';
 export type { LgSize } from './tokens/size';
 export type { LgImageSource } from './tokens/image-source';
+export type { LgHelpAction } from './tokens/help-action';
 // An image ladder grouped for `<picture>`. Exported because a consumer that
 // draws a preview of its own — the site's circuit rows — must group it the way
 // the tile and the avatar do, and a second copy of the rule would drift.
@@ -62,11 +63,11 @@ export type {
   LgTextMatcher,
   LgTextRange
 } from './components/markdown/markdown';
-// The slug a `#fragment` inside rendered markdown resolves against. Exported
 export type {
   LgMarkdownAsset,
   LgMarkdownImage
 } from './internal/markdown-urls';
+// The slug a `#fragment` inside rendered markdown resolves against. Exported
 // because content that links to its own headings — the site's legal pages —
 // has to author those links by the same rule the renderer resolves them by.
 export { headingSlug } from './components/markdown/markdown';

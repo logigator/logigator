@@ -15,6 +15,7 @@ import { WindowRect, WindowSize } from './window-config';
 import { WindowRef } from './window-ref';
 import { OpenWindow } from './window.service';
 import { LgButton } from '../button/button';
+import { LgTooltip } from '../tooltip/tooltip';
 import { lgLabel } from '../../tokens/labels';
 
 interface Rect {
@@ -92,7 +93,7 @@ const CASCADE_WRAP = 8;
     '(pointercancel)': 'endDrag($event)',
     '(keydown.escape)': 'onEscape($event)'
   },
-  imports: [LgButton],
+  imports: [LgButton, LgTooltip],
   template: `
     <div
       class="flex shrink-0 touch-none items-center gap-2 border-b border-border px-3 py-1.5 select-none"
@@ -138,6 +139,18 @@ const CASCADE_WRAP = 8;
         <h2 class="grow truncate text-sm font-semibold text-text">
           {{ title() }}
         </h2>
+      }
+      @if (help(); as action) {
+        <button
+          lgButton
+          [ariaLabel]="action.label"
+          [lgTooltip]="action.label"
+          tooltipPosition="bottom"
+          icon="ph ph-question"
+          severity="none"
+          size="sm"
+          (click)="action.command()"
+        ></button>
       }
       @if (closable() && !fullscreen()) {
         <button
@@ -217,6 +230,11 @@ export class LgWindow implements AfterViewInit {
   protected readonly titleParts = computed(() => {
     const parts = this.entry().config.titleParts?.();
     return parts && parts.length > 0 ? parts : null;
+  });
+
+  protected readonly help = computed(() => {
+    const help = this.entry().config.help;
+    return (isSignal(help) ? help() : help) ?? null;
   });
 
   protected readonly closable = computed(

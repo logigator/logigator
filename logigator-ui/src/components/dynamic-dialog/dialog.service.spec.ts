@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { InteractivityChecker } from '@angular/cdk/a11y';
 import {
   ApplicationRef,
   Component,
@@ -189,6 +190,63 @@ describe('DialogService', () => {
     ).click();
     expect(results).toEqual([undefined]);
     expect(panel()).toBeNull();
+  });
+
+  it('runs the help command from the header and stays open', () => {
+    let helped = 0;
+    const ref = open({
+      closable: false,
+      help: { label: 'Help', command: () => helped++ },
+      inputValues: { wordSize: 1 }
+    });
+    let closed = false;
+    ref.onClose.subscribe(() => (closed = true));
+    (
+      container()?.querySelector('[aria-label=Help]') as HTMLButtonElement
+    ).click();
+    expect(helped).toBe(1);
+    expect(closed).toBe(false);
+    expect(panel()).not.toBeNull();
+  });
+
+  describe('initial focus', () => {
+    // jsdom lays nothing out, and the checker counts an element without
+    // geometry as hidden, so nothing would be focusable.
+    class LaidOutChecker extends InteractivityChecker {
+      override isVisible(): boolean {
+        return true;
+      }
+    }
+
+    const help = { label: 'Help', command: () => undefined };
+
+    beforeEach(() => {
+      TestBed.configureTestingModule({
+        providers: [{ provide: InteractivityChecker, useClass: LaidOutChecker }]
+      });
+    });
+
+    it('passes over the help button to the close button', () => {
+      open({ header: 'ROM', help, inputValues: { wordSize: 1 } });
+      expect(document.activeElement?.getAttribute('aria-label')).toBe('Close');
+    });
+
+    it('passes over the help button into the content when not closable', () => {
+      TestBed.inject(DialogService).open(ConfigReadingChild, {
+        closable: false,
+        help
+      });
+      TestBed.inject(ApplicationRef).tick();
+      expect(document.activeElement).toBe(
+        container()?.querySelector('.self-close')
+      );
+    });
+
+    it('opens no tooltip when the help button is all there is to focus', () => {
+      open({ closable: false, help, inputValues: { wordSize: 1 } });
+      expect(document.activeElement?.getAttribute('aria-label')).toBe('Help');
+      expect(document.querySelector('.lg-tooltip')).toBeNull();
+    });
   });
 
   it('ignores width sizing while fullscreen', () => {

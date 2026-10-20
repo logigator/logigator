@@ -1,4 +1,5 @@
 import { InputSignalWithTransform, Signal } from '@angular/core';
+import { LgHelpAction } from '../../tokens/help-action';
 
 /**
  * The value an `input()` signal field `F` accepts, or `never` when `F` is not
@@ -36,6 +37,8 @@ export class DialogConfig<D = unknown, C = unknown> {
   closable?: boolean;
   /** ARIA label for the close button; defaults to `'Close'`. Localize it. */
   closeLabel?: string;
+  /** A help button in the header, beside the close button. */
+  help?: LgHelpAction;
   data?: D;
   inputValues?: DialogInputs<C>;
   dismissableMask?: boolean;

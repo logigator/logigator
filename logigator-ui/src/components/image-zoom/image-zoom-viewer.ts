@@ -1,4 +1,3 @@
-import { ConfigurableFocusTrapFactory } from '@angular/cdk/a11y';
 import { Overlay } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { inject, Injectable, Injector, OnDestroy } from '@angular/core';
@@ -32,10 +31,7 @@ export interface ImageZoomOptions {
 @Injectable()
 export class ImageZoomViewer implements OnDestroy {
   private readonly injector = inject(Injector);
-  private readonly overlay = new ModalOverlay(
-    inject(Overlay),
-    inject(ConfigurableFocusTrapFactory)
-  );
+  private readonly overlay = new ModalOverlay(inject(Overlay), this.injector);
 
   /**
    * Resolved here rather than per call site: LgMarkdown opens the viewer
