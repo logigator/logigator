@@ -39,7 +39,7 @@ const CHANGELOG_URLS: Readonly<Record<string, string>> = {
  * per new version.
  *
  * The comparison uses the build's `environment.version`, so a release must bump
- * the app version in package.json to trigger the dialog. That lets
+ * the version in the root package.json to trigger the dialog. That lets
  * {@link maybeAutoOpen} decide from `localStorage` alone; the markdown is
  * fetched only when the dialog opens.
  */

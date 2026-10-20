@@ -31,11 +31,12 @@ function shape(notes: ChangelogNotes | null): string[] {
 describe('the changelog documents', () => {
   /**
    * The version is what opens What's New and what a release tag must name, so
-   * the newest release heading and the editor's version move together.
+   * the newest release heading and the root package.json's version move
+   * together.
    */
-  it('name the editor’s version as the newest release', () => {
+  it('name the product version as the newest release', () => {
     const { version } = JSON.parse(
-      readFileSync(join(ROOT, 'logigator-editor', 'package.json'), 'utf8')
+      readFileSync(join(ROOT, 'package.json'), 'utf8')
     ) as { version: string };
 
     expect(ENGLISH.releases[0].version).toBe(version);

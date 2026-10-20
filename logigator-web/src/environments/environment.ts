@@ -1,5 +1,5 @@
 import { Environment } from './environment.model';
-import { version } from '../../package.json';
+import { version } from '../../../package.json';
 
 export const environment: Environment = {
   version,

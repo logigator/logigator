@@ -1,6 +1,6 @@
 /** Deployment configuration for the website. */
 export interface Environment {
-  /** App version from package.json. */
+  /** Logigator's version, from the root package.json. */
   version: string;
   /** Git short SHA the bundle was built from; empty when not stamped (dev). */
   buildCommit: string;

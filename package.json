@@ -1,6 +1,6 @@
 {
   "name": "logigator-workspace",
-  "version": "0.0.0",
+  "version": "2.2.0",
   "description": "Logigator monorepo workspace (editor + api + shared packages)",
   "license": "AGPL-3.0-only",
   "repository": {
