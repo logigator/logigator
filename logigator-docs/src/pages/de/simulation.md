@@ -57,7 +57,7 @@ Ziehen an jeder anderen Stelle der Arbeitsfläche verschiebt die Ansicht.
 
 ## Widersprüchliche Signale {#conflicting-signals}
 
-Eine orange gezeichnete Leitung hat einen Konflikt. Das Orange ist ein Hinweis auf deine Schaltung und ändert nichts daran, wie die Simulation läuft.
+Eine orange gezeichnete Leitung hat einen Konflikt. Das Orange ist ein Hinweis auf deine Schaltung und ändert nichts daran, wie die Simulation läuft: Eine Leitung mit Konflikt zählt weiter als 1, solange mindestens ein Ausgang an ihr 1 ist.
 
 ### Ursachen {#causes}
 

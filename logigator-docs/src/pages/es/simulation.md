@@ -57,7 +57,7 @@ Arrastrar en cualquier otro punto del tablero desplaza la vista.
 
 ## Señales en conflicto {#conflicting-signals}
 
-Un cable dibujado en naranja tiene un conflicto. El naranja es un aviso sobre tu circuito y no cambia cómo funciona la simulación.
+Un cable dibujado en naranja tiene un conflicto. El naranja es un aviso sobre tu circuito y no cambia cómo funciona la simulación: un cable con conflicto sigue contando como 1 mientras al menos una salida le dé 1.
 
 ### Causas {#causes}
 

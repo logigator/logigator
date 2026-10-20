@@ -57,7 +57,7 @@ Dragging from anywhere else on the board pans it.
 
 ## Conflicting signals {#conflicting-signals}
 
-A wire drawn in orange carries a conflict. The orange is a hint about your circuit and doesn't change how the simulation runs.
+A wire drawn in orange carries a conflict. The orange is a hint about your circuit and doesn't change how the simulation runs: a wire with a conflict still counts as 1 as long as at least one output on it is 1.
 
 ### Causes {#causes}
 

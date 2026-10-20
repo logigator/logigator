@@ -1171,7 +1171,7 @@ const en = {
       panZoomCompact:
         'Drag with two fingers to pan, pinch to zoom. One finger pans only in pan mode.',
       wireConflict:
-        "An <strong>orange wire</strong> has a conflict: two outputs drive it with different values, or an SR flip-flop was clocked with S and R both at 1. Connect only one output to each wire, and don't set S and R to 1 together. The simulation keeps running. <strong>Highlight conflicts</strong> in the settings turns this off."
+        "An <strong>orange wire</strong> has a conflict: two outputs drive it with different values, or an SR flip-flop was clocked with S and R both at 1. Connect only one output to each wire, and don't set S and R to 1 together. The simulation keeps running, and the wire still counts as 1 as long as at least one output on it is 1. <strong>Highlight conflicts</strong> in the settings turns this off."
     },
     tutorials: {
       gettingStarted: {

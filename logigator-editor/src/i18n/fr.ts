@@ -1189,7 +1189,7 @@ const fr: TranslationSchema = {
       panZoomCompact:
         "Faites glisser avec deux doigts pour vous déplacer, pincez pour zoomer. Un seul doigt ne déplace la vue qu'en mode déplacement.",
       wireConflict:
-        'Un <strong>fil orange</strong> signale un conflit : deux sorties y envoient des valeurs différentes, ou une bascule SR a reçu un front d’horloge avec S et R à 1. Ne reliez qu’une sortie par fil et ne mettez pas S et R à 1 en même temps. La simulation continue. Le paramètre <strong>Mettre en évidence les conflits</strong> désactive ce marquage.'
+        'Un <strong>fil orange</strong> signale un conflit : deux sorties y envoient des valeurs différentes, ou une bascule SR a reçu un front d’horloge avec S et R à 1. Ne reliez qu’une sortie par fil et ne mettez pas S et R à 1 en même temps. La simulation continue, et le fil compte toujours comme 1 tant qu’au moins une sortie y envoie 1. Le paramètre <strong>Mettre en évidence les conflits</strong> désactive ce marquage.'
     },
     tutorials: {
       gettingStarted: {

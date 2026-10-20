@@ -1196,7 +1196,7 @@ const de: TranslationSchema = {
       panZoomCompact:
         'Ziehe mit zwei Fingern zum Schwenken, spreize sie zum Zoomen. Mit einem Finger wird nur im Schwenkmodus geschwenkt.',
       wireConflict:
-        'Eine <strong>orangefarbene Leitung</strong> hat einen Konflikt: Zwei Ausgänge an ihr geben verschiedene Werte aus, oder ein SR-Flip-Flop wurde mit S und R gleichzeitig auf 1 getaktet. Schließe nur einen Ausgang an eine Leitung an und setze S und R nicht zusammen auf 1. Die Simulation läuft weiter. <strong>Konflikte hervorheben</strong> in den Einstellungen schaltet das ab.'
+        'Eine <strong>orangefarbene Leitung</strong> hat einen Konflikt: Zwei Ausgänge an ihr geben verschiedene Werte aus, oder ein SR-Flip-Flop wurde mit S und R gleichzeitig auf 1 getaktet. Schließe nur einen Ausgang an eine Leitung an und setze S und R nicht zusammen auf 1. Die Simulation läuft weiter, und die Leitung zählt weiter als 1, solange mindestens ein Ausgang an ihr 1 ist. <strong>Konflikte hervorheben</strong> in den Einstellungen schaltet das ab.'
     },
     tutorials: {
       gettingStarted: {

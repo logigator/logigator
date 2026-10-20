@@ -1182,7 +1182,7 @@ const es: TranslationSchema = {
       panZoomCompact:
         'Arrastra con dos dedos para desplazar, pellizca para hacer zoom. Con un solo dedo solo se desplaza en el modo de desplazamiento.',
       wireConflict:
-        'Un <strong>cable naranja</strong> tiene un conflicto: dos salidas le dan valores distintos, o un biestable SR recibió un flanco de reloj con S y R a 1. Conecta una sola salida a cada cable y no pongas S y R a 1 a la vez. La simulación sigue en marcha. El ajuste <strong>Resaltar conflictos</strong> lo desactiva.'
+        'Un <strong>cable naranja</strong> tiene un conflicto: dos salidas le dan valores distintos, o un biestable SR recibió un flanco de reloj con S y R a 1. Conecta una sola salida a cada cable y no pongas S y R a 1 a la vez. La simulación sigue en marcha, y el cable sigue contando como 1 mientras al menos una salida le dé 1. El ajuste <strong>Resaltar conflictos</strong> lo desactiva.'
     },
     tutorials: {
       gettingStarted: {

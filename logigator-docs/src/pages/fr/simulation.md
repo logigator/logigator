@@ -57,7 +57,7 @@ Un glisser n'importe où ailleurs sur le plan de travail déplace la vue.
 
 ## Signaux en conflit {#conflicting-signals}
 
-Un fil dessiné en orange signale un conflit. L'orange est une indication sur votre circuit et ne change pas le fonctionnement de la simulation.
+Un fil dessiné en orange signale un conflit. L'orange est une indication sur votre circuit et ne change pas le fonctionnement de la simulation : un fil en conflit compte toujours comme 1 tant qu'au moins une sortie y envoie 1.
 
 ### Causes {#causes}
 
