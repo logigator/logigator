@@ -1,7 +1,10 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ComponentListComponent } from './component-list.component';
+import {
+  ComponentListComponent,
+  PALETTE_COLLAPSED_STORAGE_KEY
+} from './component-list.component';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { CustomComponentRegistry } from '../../../components/custom/custom-component-registry.service';
 import { BuiltInComponentType, ComponentCategory } from '@logigator/core';
@@ -17,6 +20,14 @@ describe('ComponentListComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
+
+  afterEach(() => {
+    localStorage.removeItem(PALETTE_COLLAPSED_STORAGE_KEY);
+  });
+
+  function remount(): ComponentListComponent {
+    return TestBed.createComponent(ComponentListComponent).componentInstance;
+  }
 
   it('shows non-empty categories with all panels open by default', () => {
     const cats = component.categories();
@@ -42,6 +53,14 @@ describe('ComponentListComponent', () => {
         types: [T.NOT, T.AND, T.OR, T.XOR, T.TUNNEL]
       },
       {
+        key: ComponentCategory.INPUTS,
+        types: [T.SWITCH, T.BUTTON, T.PULSE_BUTTON, T.GAMEPAD, T.KEYBOARD]
+      },
+      {
+        key: ComponentCategory.OUTPUTS,
+        types: [T.LED, T.SEGMENT_DISPLAY, T.LED_MATRIX, T.TERMINAL]
+      },
+      {
         key: ComponentCategory.ADDERS_SELECTORS,
         types: [
           T.HALF_ADDER,
@@ -56,15 +75,7 @@ describe('ComponentListComponent', () => {
         key: ComponentCategory.MEMORY,
         types: [T.D_FF, T.JK_FF, T.SR_FF, T.ROM, T.RAM]
       },
-      { key: ComponentCategory.TIMING, types: [T.CLOCK, T.DELAY, T.RNG] },
-      {
-        key: ComponentCategory.INPUTS,
-        types: [T.SWITCH, T.BUTTON, T.PULSE_BUTTON, T.GAMEPAD, T.KEYBOARD]
-      },
-      {
-        key: ComponentCategory.OUTPUTS,
-        types: [T.LED, T.SEGMENT_DISPLAY, T.LED_MATRIX, T.TERMINAL]
-      }
+      { key: ComponentCategory.TIMING, types: [T.CLOCK, T.DELAY, T.RNG] }
     ]);
   });
 
@@ -85,6 +96,30 @@ describe('ComponentListComponent', () => {
   it('honors manual expand/collapse while not searching', () => {
     component.onPanelChange([ComponentCategory.MEMORY]);
     expect(component.openPanels()).toEqual([ComponentCategory.MEMORY]);
+  });
+
+  it('keeps folded categories folded in the next session', () => {
+    component.onPanelChange([ComponentCategory.LOGIC_GATES]);
+    expect(remount().openPanels()).toEqual([ComponentCategory.LOGIC_GATES]);
+  });
+
+  it('opens a category that was never folded', () => {
+    // Stored before User Components existed in the palette.
+    localStorage.setItem(
+      PALETTE_COLLAPSED_STORAGE_KEY,
+      JSON.stringify([ComponentCategory.MEMORY])
+    );
+    const open = remount().openPanels();
+    expect(open).not.toContain(ComponentCategory.MEMORY);
+    expect(open).toContain(ComponentCategory.USER);
+  });
+
+  it('opens everything when the stored value is corrupt', () => {
+    localStorage.setItem(PALETTE_COLLAPSED_STORAGE_KEY, '{not json');
+    const fresh = remount();
+    expect(fresh.openPanels()).toEqual(
+      expect.arrayContaining(fresh.categories().map((cat) => cat.key))
+    );
   });
 
   it('ignores manual toggles while a search drives the open state', () => {

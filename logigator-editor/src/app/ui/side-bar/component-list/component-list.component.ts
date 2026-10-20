@@ -26,12 +26,23 @@ import { TranslationKey } from '../../../translation/translation-key.model';
 /** The built-in categories, in palette order; User Components follow them. */
 const BUILT_IN_PALETTE_CATEGORIES = [
   ComponentCategory.LOGIC_GATES,
+  ComponentCategory.INPUTS,
+  ComponentCategory.OUTPUTS,
   ComponentCategory.ADDERS_SELECTORS,
   ComponentCategory.MEMORY,
-  ComponentCategory.TIMING,
-  ComponentCategory.INPUTS,
-  ComponentCategory.OUTPUTS
+  ComponentCategory.TIMING
 ] as const;
+
+/**
+ * The folded category keys. Folded rather than open, so a category the user
+ * has never seen (a new built-in, or User Components on first creation) opens.
+ */
+export const PALETTE_COLLAPSED_STORAGE_KEY = 'logigator.palette.collapsed';
+
+const ALL_PALETTE_KEYS: readonly string[] = [
+  ...BUILT_IN_PALETTE_CATEGORIES,
+  ComponentCategory.USER
+];
 
 /** A palette category rendered as one accordion panel. */
 interface PaletteCategory {
@@ -103,10 +114,7 @@ export class ComponentListComponent {
   });
 
   /** Panel keys, honored when not searching. */
-  private readonly manualOpen = signal<string[]>([
-    ...BUILT_IN_PALETTE_CATEGORIES,
-    ComponentCategory.USER
-  ]);
+  private readonly manualOpen = signal<string[]>(loadOpenKeys());
 
   /** Every matching category while searching, otherwise the manual state. */
   public readonly openPanels = computed(() =>
@@ -124,6 +132,7 @@ export class ComponentListComponent {
       Array.isArray(value) ? value : value != null ? [value] : []
     ).map(String);
     this.manualOpen.set(open);
+    saveCollapsed(ALL_PALETTE_KEYS.filter((key) => !open.includes(key)));
   }
 
   /**
@@ -175,5 +184,27 @@ export class ComponentListComponent {
       if (tb !== ta) return tb - ta;
       return this.name(a).localeCompare(this.name(b));
     });
+  }
+}
+
+function loadOpenKeys(): string[] {
+  let collapsed: unknown = [];
+  try {
+    collapsed = JSON.parse(
+      localStorage.getItem(PALETTE_COLLAPSED_STORAGE_KEY) ?? '[]'
+    );
+  } catch {
+    // Unreadable storage or a corrupt value: everything opens.
+  }
+  return Array.isArray(collapsed)
+    ? ALL_PALETTE_KEYS.filter((key) => !collapsed.includes(key))
+    : [...ALL_PALETTE_KEYS];
+}
+
+function saveCollapsed(keys: string[]): void {
+  try {
+    localStorage.setItem(PALETTE_COLLAPSED_STORAGE_KEY, JSON.stringify(keys));
+  } catch {
+    // Private-mode / disabled storage: the fold state lasts the session only.
   }
 }
