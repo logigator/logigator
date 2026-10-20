@@ -6,7 +6,7 @@ Les composants sont les pièces dont un circuit est fait : portes, mémoires, en
 
 ## La palette {#the-palette}
 
-Le champ de recherche en haut filtre la palette par nom. Les catégories sont Portes logiques, Additionneurs et sélecteurs, Mémoire, Temporisation, Entrées et Sorties, plus Composants utilisateur dès que vous avez construit un [composant personnalisé](docs:custom-components). Un clic sur l'en-tête d'une catégorie la replie. Le placement est décrit dans [Plan de travail et outils](docs:board-and-tools#placing-components).
+Le champ de recherche en haut filtre la palette par nom. Les catégories sont Portes logiques, Entrées, Sorties, Additionneurs et sélecteurs, Mémoire et Temporisation, plus Composants utilisateur dès que vous avez construit un [composant personnalisé](docs:custom-components). Un clic sur l'en-tête d'une catégorie la replie ; la palette retient celles que vous avez repliées. Le placement est décrit dans [Plan de travail et outils](docs:board-and-tools#placing-components).
 
 Chaque composant met un tick à transmettre un changement à sa sortie. Les tableaux ci-dessous suivent l'ordre de la palette.
 

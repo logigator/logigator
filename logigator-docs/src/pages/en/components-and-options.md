@@ -6,7 +6,7 @@ Components are the parts a circuit is made of: gates, memories, inputs and displ
 
 ## The palette {#the-palette}
 
-The search field at the top filters the palette by name. The categories are Logic gates, Adders and selectors, Memory, Timing, Inputs and Outputs, plus User Components once you have built a [custom component](docs:custom-components). Click a category header to fold it. How placing works is described in [Board and tools](docs:board-and-tools#placing-components).
+The search field at the top filters the palette by name. The categories are Logic gates, Inputs, Outputs, Adders and selectors, Memory and Timing, plus User Components once you have built a [custom component](docs:custom-components). Click a category header to fold it; the palette remembers which ones you fold. How placing works is described in [Board and tools](docs:board-and-tools#placing-components).
 
 Every component takes one tick to pass a change on to its output. The tables below follow the order of the palette.
 

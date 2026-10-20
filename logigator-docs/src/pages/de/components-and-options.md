@@ -6,7 +6,7 @@ Komponenten sind die Bauteile, aus denen eine Schaltung besteht: Gatter, Speiche
 
 ## Die Palette {#the-palette}
 
-Das Suchfeld oben filtert die Palette nach Namen. Die Kategorien sind Logikgatter, Addierer und Selektoren, Speicher, Zeitsteuerung, Eingaben und Ausgaben, dazu Benutzerdefiniert, sobald du eine [benutzerdefinierte Komponente](docs:custom-components) gebaut hast. Ein Klick auf eine Kategorie klappt sie zu. Wie das Platzieren funktioniert, steht unter [Arbeitsfläche und Werkzeuge](docs:board-and-tools#placing-components).
+Das Suchfeld oben filtert die Palette nach Namen. Die Kategorien sind Logikgatter, Eingaben, Ausgaben, Addierer und Selektoren, Speicher und Zeitsteuerung, dazu Benutzerdefiniert, sobald du eine [benutzerdefinierte Komponente](docs:custom-components) gebaut hast. Ein Klick auf eine Kategorie klappt sie zu; die Palette merkt sich, welche du zugeklappt hast. Wie das Platzieren funktioniert, steht unter [Arbeitsfläche und Werkzeuge](docs:board-and-tools#placing-components).
 
 Jede Komponente braucht einen Tick, um eine Änderung an ihren Ausgang weiterzugeben. Die Tabellen unten folgen der Reihenfolge der Palette.
 

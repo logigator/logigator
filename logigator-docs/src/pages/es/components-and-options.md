@@ -6,7 +6,7 @@ Los componentes son las piezas de las que se compone un circuito: puertas, memor
 
 ## La paleta {#the-palette}
 
-El campo de búsqueda de arriba filtra la paleta por nombre. Las categorías son Puertas lógicas, Sumadores y selectores, Memoria, Temporización, Entradas y Salidas, además de Componentes del usuario en cuanto hayas construido un [componente personalizado](docs:custom-components). Un clic en el encabezado de una categoría la pliega. La colocación se describe en [Tablero y herramientas](docs:board-and-tools#placing-components).
+El campo de búsqueda de arriba filtra la paleta por nombre. Las categorías son Puertas lógicas, Entradas, Salidas, Sumadores y selectores, Memoria y Temporización, además de Componentes del usuario en cuanto hayas construido un [componente personalizado](docs:custom-components). Un clic en el encabezado de una categoría la pliega; la paleta recuerda cuáles has plegado. La colocación se describe en [Tablero y herramientas](docs:board-and-tools#placing-components).
 
 Cada componente tarda un tick en pasar un cambio a su salida. Las tablas siguen el orden de la paleta.
 
