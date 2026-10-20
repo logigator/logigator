@@ -30,7 +30,7 @@ const OUTPUT_LABELS = [...busLabels('D', KEYBOARD_DATA_BITS), 'STB', 'KD'];
  */
 export const keyboardMeta = {
   type: BuiltInComponentType.KEYBOARD,
-  category: ComponentCategory.IO,
+  category: ComponentCategory.INPUTS,
   symbol: 'KBD',
   name: 'components.def.KEYBOARD.name',
   description: 'components.def.KEYBOARD.description',

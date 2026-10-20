@@ -118,9 +118,12 @@ const en = {
   components: {
     category: {
       hidden: 'Hidden',
-      basic: 'Basic',
-      advanced: 'Advanced',
-      io: 'Inputs / Outputs',
+      logicGates: 'Logic gates',
+      addersAndSelectors: 'Adders and selectors',
+      memory: 'Memory',
+      timing: 'Timing',
+      inputs: 'Inputs',
+      outputs: 'Outputs',
       port: 'Ports',
       user: 'User Components'
     } satisfies Record<ComponentCategory, string>,

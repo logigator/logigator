@@ -35,11 +35,12 @@ import { keyboardComponentConfig } from './component-types/keyboard/keyboard.con
 import { terminalComponentConfig } from './component-types/terminal/terminal.config';
 
 /**
- * Every built-in's config. A function rather than a module-level array: a
- * config's own imports (its inspection's renderer and the services that one
- * injects) can lead back here, and a list built while such a config module is
- * still loading would hold `undefined` for it. Read at construction, every
- * module has finished loading.
+ * Every built-in's config, in palette order: categories group the list, and
+ * this order is the order inside each category. A function rather than a
+ * module-level array: a config's own imports (its inspection's renderer and
+ * the services that one injects) can lead back here, and a list built while
+ * such a config module is still loading would hold `undefined` for it. Read at
+ * construction, every module has finished loading.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const builtInComponents = (): ComponentConfig<any>[] => [
@@ -47,33 +48,33 @@ const builtInComponents = (): ComponentConfig<any>[] => [
   andComponentConfig,
   orComponentConfig,
   xorComponentConfig,
-  delayComponentConfig,
-  clockComponentConfig,
   tunnelComponentConfig,
   halfAdderComponentConfig,
   fullAdderComponentConfig,
-  romComponentConfig,
+  muxComponentConfig,
+  demuxComponentConfig,
+  decoderComponentConfig,
+  encoderComponentConfig,
   dFfComponentConfig,
   jkFfComponentConfig,
   srFfComponentConfig,
-  rngComponentConfig,
+  romComponentConfig,
   ramComponentConfig,
-  decoderComponentConfig,
-  encoderComponentConfig,
-  muxComponentConfig,
-  demuxComponentConfig,
-  textComponentConfig,
-  inputComponentConfig,
-  outputComponentConfig,
+  clockComponentConfig,
+  delayComponentConfig,
+  rngComponentConfig,
   switchComponentConfig,
   buttonComponentConfig,
   pulseButtonComponentConfig,
+  gamepadComponentConfig,
+  keyboardComponentConfig,
   ledComponentConfig,
   segmentDisplayComponentConfig,
   ledMatrixComponentConfig,
-  gamepadComponentConfig,
-  keyboardComponentConfig,
-  terminalComponentConfig
+  terminalComponentConfig,
+  textComponentConfig,
+  inputComponentConfig,
+  outputComponentConfig
 ];
 
 @Injectable({
@@ -89,13 +90,18 @@ export class ComponentProviderService {
 
   private readonly logging = inject(LoggingService);
 
-  public readonly basicComponents = this._categorySignal(
-    ComponentCategory.BASIC
-  );
-  public readonly advancedComponents = this._categorySignal(
-    ComponentCategory.ADVANCED
-  );
-  public readonly ioComponents = this._categorySignal(ComponentCategory.IO);
+  /** Every registered type by category, each in registration order. */
+  public readonly componentsByCategory = computed<
+    ReadonlyMap<ComponentCategory, ComponentConfig[]>
+  >(() => {
+    const byCategory = new Map<ComponentCategory, ComponentConfig[]>();
+    for (const config of this._configs().values()) {
+      const list = byCategory.get(config.category);
+      if (list) list.push(config);
+      else byCategory.set(config.category, [config]);
+    }
+    return byCategory;
+  });
   public readonly portComponents = this._categorySignal(ComponentCategory.PORT);
   public readonly userComponents = this._categorySignal(ComponentCategory.USER);
 
@@ -132,10 +138,6 @@ export class ComponentProviderService {
   private _categorySignal(
     category: ComponentCategory
   ): Signal<ComponentConfig[]> {
-    return computed(() =>
-      [...this._configs().values()].filter(
-        (config) => config.category === category
-      )
-    );
+    return computed(() => this.componentsByCategory().get(category) ?? []);
   }
 }

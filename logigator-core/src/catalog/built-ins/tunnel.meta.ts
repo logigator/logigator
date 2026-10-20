@@ -11,7 +11,7 @@ const ports = { inputs: 1, outputs: 0 };
 /** Wire teleport: every tunnel carrying the same label shares one net. */
 export const tunnelMeta = {
   type: BuiltInComponentType.TUNNEL,
-  category: ComponentCategory.BASIC,
+  category: ComponentCategory.LOGIC_GATES,
   symbol: '~',
   name: 'components.def.TUNNEL.name',
   description: 'components.def.TUNNEL.description',

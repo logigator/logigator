@@ -1,8 +1,11 @@
 export enum ComponentCategory {
   HIDDEN = 'hidden',
-  BASIC = 'basic',
-  ADVANCED = 'advanced',
-  IO = 'io',
+  LOGIC_GATES = 'logicGates',
+  ADDERS_SELECTORS = 'addersAndSelectors',
+  MEMORY = 'memory',
+  TIMING = 'timing',
+  INPUTS = 'inputs',
+  OUTPUTS = 'outputs',
   PORT = 'port',
   // User-defined custom components.
   USER = 'user'

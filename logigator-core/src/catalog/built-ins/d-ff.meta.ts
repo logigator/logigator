@@ -6,7 +6,7 @@ const ports = { inputs: 2, outputs: 2 };
 
 export const dFfMeta = {
   type: BuiltInComponentType.D_FF,
-  category: ComponentCategory.ADVANCED,
+  category: ComponentCategory.MEMORY,
   symbol: 'D',
   name: 'components.def.D_FF.name',
   description: 'components.def.D_FF.description',

@@ -4,7 +4,7 @@ import { ComponentMeta, NO_LABELS } from '../component-meta';
 
 export const buttonMeta = {
   type: BuiltInComponentType.BUTTON,
-  category: ComponentCategory.IO,
+  category: ComponentCategory.INPUTS,
   symbol: 'BTN',
   name: 'components.def.BUTTON.name',
   description: 'components.def.BUTTON.description',

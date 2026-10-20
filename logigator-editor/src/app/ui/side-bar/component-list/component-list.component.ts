@@ -9,6 +9,7 @@ import {
   LgInputIcon,
   LgInputText
 } from '@logigator/ui';
+import { ComponentCategory } from '@logigator/core';
 import { TranslationService } from '../../../translation/translation.service';
 import { ComponentProviderService } from '../../../components/component-provider.service';
 import { ComponentListCategoryComponent } from '../component-list-category/component-list-category.component';
@@ -21,6 +22,16 @@ import {
 } from '../../../components/component-config.model';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationKey } from '../../../translation/translation-key.model';
+
+/** The built-in categories, in palette order; User Components follow them. */
+const BUILT_IN_PALETTE_CATEGORIES = [
+  ComponentCategory.LOGIC_GATES,
+  ComponentCategory.ADDERS_SELECTORS,
+  ComponentCategory.MEMORY,
+  ComponentCategory.TIMING,
+  ComponentCategory.INPUTS,
+  ComponentCategory.OUTPUTS
+] as const;
 
 /** A palette category rendered as one accordion panel. */
 interface PaletteCategory {
@@ -56,12 +67,6 @@ export class ComponentListComponent {
 
   public readonly searchText = signal('');
 
-  private readonly basicComponents =
-    this.componentProviderService.basicComponents;
-  private readonly advancedComponents =
-    this.componentProviderService.advancedComponents;
-  private readonly ioComponents = this.componentProviderService.ioComponents;
-
   public readonly searchActive = computed(
     () => this.searchText().trim().length > 0
   );
@@ -73,25 +78,16 @@ export class ComponentListComponent {
   public readonly categories = computed<PaletteCategory[]>(() => {
     const search = this.searchText().trim().toLowerCase();
 
-    const raw: PaletteCategory[] = [
-      {
-        key: 'basic',
-        labelKey: 'components.category.basic',
-        components: this.basicComponents()
-      },
-      {
-        key: 'advanced',
-        labelKey: 'components.category.advanced',
-        components: this.advancedComponents()
-      },
-      {
-        key: 'io',
-        labelKey: 'components.category.io',
-        components: this.ioComponents()
-      }
-    ];
+    const byCategory = this.componentProviderService.componentsByCategory();
+    const raw: PaletteCategory[] = BUILT_IN_PALETTE_CATEGORIES.map(
+      (category) => ({
+        key: category,
+        labelKey: `components.category.${category}` as const,
+        components: byCategory.get(category) ?? []
+      })
+    );
     raw.push({
-      key: 'user',
+      key: ComponentCategory.USER,
       labelKey: 'components.category.user',
       components: this.userComponents()
     });
@@ -108,11 +104,8 @@ export class ComponentListComponent {
 
   /** Panel keys, honored when not searching. */
   private readonly manualOpen = signal<string[]>([
-    'basic',
-    'advanced',
-    'io',
-    'port',
-    'user'
+    ...BUILT_IN_PALETTE_CATEGORIES,
+    ComponentCategory.USER
   ]);
 
   /** Every matching category while searching, otherwise the manual state. */

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { BitmapText, Container, Graphics } from 'pixi.js';
+import { ComponentCategory } from '@logigator/core';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { ComponentProviderService } from './component-provider.service';
 import { ComponentConfig } from './component-config.model';
@@ -45,12 +46,9 @@ describe('in-place theme restyle', () => {
   });
 
   function builtInConfigs(): ComponentConfig[] {
-    return [
-      ...provider.basicComponents(),
-      ...provider.advancedComponents(),
-      ...provider.ioComponents(),
-      ...provider.portComponents()
-    ];
+    return provider
+      .allComponents()
+      .filter((config) => config.category !== ComponentCategory.HIDDEN);
   }
 
   // In-place restyling fails when a draw() bakes a theme color outside any

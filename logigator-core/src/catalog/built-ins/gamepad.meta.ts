@@ -197,7 +197,7 @@ function setValues(
  */
 export const gamepadMeta = {
   type: BuiltInComponentType.GAMEPAD,
-  category: ComponentCategory.IO,
+  category: ComponentCategory.INPUTS,
   symbol: 'PAD',
   name: 'components.def.GAMEPAD.name',
   description: 'components.def.GAMEPAD.description',

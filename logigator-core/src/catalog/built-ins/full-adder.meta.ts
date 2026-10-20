@@ -6,7 +6,7 @@ const ports = { inputs: 3, outputs: 2 };
 
 export const fullAdderMeta = {
   type: BuiltInComponentType.FULL_ADDER,
-  category: ComponentCategory.ADVANCED,
+  category: ComponentCategory.ADDERS_SELECTORS,
   symbol: 'FA',
   name: 'components.def.FULL_ADDER.name',
   description: 'components.def.FULL_ADDER.description',

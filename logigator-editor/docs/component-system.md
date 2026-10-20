@@ -285,10 +285,13 @@ Root-provided singleton holding a signal-backed `Map<number, ComponentConfig>`
 seeded from `BUILT_IN_COMPONENTS`. It is keyed by numeric type id, **not** by the
 closed `ComponentType` enum, so runtime-allocated custom configs
 (`register` / `unregister`, ids ≥ `CUSTOM_TYPE_ID_BASE` = 1000) sit alongside
-built-ins. The per-category lists (`basicComponents`, `advancedComponents`,
-`ioComponents`, `userComponents`) are `computed` over the map, so the palette
-tracks registrations. `HIDDEN` types (`TextComponent`) appear in none of them;
-`PORT` (the INPUT/OUTPUT plugs) is shown only while editing a custom component.
+built-ins. `componentsByCategory` (and its `portComponents` and
+`userComponents` shortcuts) is `computed` over the map, so the palette tracks
+registrations. The built-in list is written in palette order, which is the order
+inside each category; the order of the categories themselves is the palette's
+`BUILT_IN_PALETTE_CATEGORIES`. `HIDDEN` types (`TextComponent`) are never
+listed; `PORT` (the INPUT/OUTPUT plugs) is shown only while editing a custom
+component.
 Built-in ids mirror the old editor's `ElementTypeId`; the list is core's
 `component-type.enum.ts`.
 

@@ -121,7 +121,7 @@ export function terminalScreen(
  */
 export const terminalMeta = {
   type: BuiltInComponentType.TERMINAL,
-  category: ComponentCategory.IO,
+  category: ComponentCategory.OUTPUTS,
   symbol: 'TTY',
   name: 'components.def.TERMINAL.name',
   description: 'components.def.TERMINAL.description',

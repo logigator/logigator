@@ -19,7 +19,7 @@ const ports = (o: MuxValues) => ({
 
 export const muxMeta = {
   type: BuiltInComponentType.MUX,
-  category: ComponentCategory.ADVANCED,
+  category: ComponentCategory.ADDERS_SELECTORS,
   symbol: 'MUX',
   name: 'components.def.MUX.name',
   description: 'components.def.MUX.description',

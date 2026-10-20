@@ -6,7 +6,7 @@ const ports = { inputs: 3, outputs: 2 };
 
 export const srFfMeta = {
   type: BuiltInComponentType.SR_FF,
-  category: ComponentCategory.ADVANCED,
+  category: ComponentCategory.MEMORY,
   symbol: 'SR',
   name: 'components.def.SR_FF.name',
   description: 'components.def.SR_FF.description',

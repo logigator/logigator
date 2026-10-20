@@ -37,7 +37,7 @@ interface LedMatrixValues {
 
 export const ledMatrixMeta = {
   type: BuiltInComponentType.LED_MATRIX,
-  category: ComponentCategory.IO,
+  category: ComponentCategory.OUTPUTS,
   symbol: 'LED_M',
   name: 'components.def.LED_MATRIX.name',
   description: 'components.def.LED_MATRIX.description',

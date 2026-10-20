@@ -16,7 +16,7 @@ const ports = (o: RamValues) => ({
 
 export const ramMeta = {
   type: BuiltInComponentType.RAM,
-  category: ComponentCategory.ADVANCED,
+  category: ComponentCategory.MEMORY,
   symbol: 'RAM',
   name: 'components.def.RAM.name',
   description: 'components.def.RAM.description',

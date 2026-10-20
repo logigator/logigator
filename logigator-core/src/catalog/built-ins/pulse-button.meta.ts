@@ -4,7 +4,7 @@ import { ComponentMeta, NO_LABELS } from '../component-meta';
 
 export const pulseButtonMeta = {
   type: BuiltInComponentType.PULSE_BUTTON,
-  category: ComponentCategory.IO,
+  category: ComponentCategory.INPUTS,
   symbol: 'PLS',
   name: 'components.def.PULSE_BUTTON.name',
   description: 'components.def.PULSE_BUTTON.description',

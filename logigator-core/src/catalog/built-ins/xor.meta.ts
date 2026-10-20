@@ -10,7 +10,7 @@ const ports = (o: XorValues) => ({ inputs: o.numInputs, outputs: 1 });
 
 export const xorMeta = {
   type: BuiltInComponentType.XOR,
-  category: ComponentCategory.BASIC,
+  category: ComponentCategory.LOGIC_GATES,
   symbol: '=1',
   name: 'components.def.XOR.name',
   description: 'components.def.XOR.description',

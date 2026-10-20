@@ -10,7 +10,7 @@ const ports = (o: RngValues) => ({ inputs: 1, outputs: o.numOutputs });
 
 export const rngMeta = {
   type: BuiltInComponentType.RNG,
-  category: ComponentCategory.ADVANCED,
+  category: ComponentCategory.TIMING,
   symbol: 'RNG',
   name: 'components.def.RNG.name',
   description: 'components.def.RNG.description',

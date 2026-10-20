@@ -40,7 +40,7 @@ const ports = (o: SegmentDisplayValues) => ({
  */
 export const segmentDisplayMeta = {
   type: BuiltInComponentType.SEGMENT_DISPLAY,
-  category: ComponentCategory.IO,
+  category: ComponentCategory.OUTPUTS,
   symbol: 'SEG',
   name: 'components.def.SEGMENT_DISPLAY.name',
   description: 'components.def.SEGMENT_DISPLAY.description',

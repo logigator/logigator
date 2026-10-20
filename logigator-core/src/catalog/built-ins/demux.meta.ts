@@ -20,7 +20,7 @@ const ports = (o: DemuxValues) => ({
 
 export const demuxMeta = {
   type: BuiltInComponentType.DEMUX,
-  category: ComponentCategory.ADVANCED,
+  category: ComponentCategory.ADDERS_SELECTORS,
   symbol: 'DEMUX',
   name: 'components.def.DEMUX.name',
   description: 'components.def.DEMUX.description',

@@ -19,7 +19,7 @@ const pins = (prefix: string, count: number) =>
 
 export const romMeta = {
   type: BuiltInComponentType.ROM,
-  category: ComponentCategory.ADVANCED,
+  category: ComponentCategory.MEMORY,
   symbol: 'ROM',
   name: 'components.def.ROM.name',
   description: 'components.def.ROM.description',

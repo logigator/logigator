@@ -4,7 +4,7 @@ import { ComponentMeta, NO_LABELS } from '../component-meta';
 
 export const ledMeta = {
   type: BuiltInComponentType.LED,
-  category: ComponentCategory.IO,
+  category: ComponentCategory.OUTPUTS,
   symbol: 'LED',
   name: 'components.def.LED.name',
   description: 'components.def.LED.description',

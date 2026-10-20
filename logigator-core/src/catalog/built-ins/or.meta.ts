@@ -10,7 +10,7 @@ const ports = (o: OrValues) => ({ inputs: o.numInputs, outputs: 1 });
 
 export const orMeta = {
   type: BuiltInComponentType.OR,
-  category: ComponentCategory.BASIC,
+  category: ComponentCategory.LOGIC_GATES,
   symbol: '≥1',
   name: 'components.def.OR.name',
   description: 'components.def.OR.description',

@@ -21,7 +21,7 @@ const ports = (o: EncoderValues) => ({
 
 export const encoderMeta = {
   type: BuiltInComponentType.ENCODER,
-  category: ComponentCategory.ADVANCED,
+  category: ComponentCategory.ADDERS_SELECTORS,
   symbol: 'ENC',
   name: 'components.def.ENCODER.name',
   description: 'components.def.ENCODER.description',

@@ -18,7 +18,7 @@ const ports = (o: DecoderValues) => ({
 
 export const decoderMeta = {
   type: BuiltInComponentType.DECODER,
-  category: ComponentCategory.ADVANCED,
+  category: ComponentCategory.ADDERS_SELECTORS,
   symbol: 'DEC',
   name: 'components.def.DECODER.name',
   description: 'components.def.DECODER.description',

@@ -4,7 +4,7 @@ import { ComponentMeta, NO_LABELS } from '../component-meta';
 
 export const switchMeta = {
   type: BuiltInComponentType.SWITCH,
-  category: ComponentCategory.IO,
+  category: ComponentCategory.INPUTS,
   symbol: 'SW',
   name: 'components.def.SWITCH.name',
   description: 'components.def.SWITCH.description',

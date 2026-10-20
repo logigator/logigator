@@ -6,7 +6,7 @@ const ports = { inputs: 3, outputs: 2 };
 
 export const jkFfMeta = {
   type: BuiltInComponentType.JK_FF,
-  category: ComponentCategory.ADVANCED,
+  category: ComponentCategory.MEMORY,
   symbol: 'JK',
   name: 'components.def.JK_FF.name',
   description: 'components.def.JK_FF.description',

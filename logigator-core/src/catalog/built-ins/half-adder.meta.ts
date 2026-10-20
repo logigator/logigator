@@ -6,7 +6,7 @@ const ports = { inputs: 2, outputs: 2 };
 
 export const halfAdderMeta = {
   type: BuiltInComponentType.HALF_ADDER,
-  category: ComponentCategory.ADVANCED,
+  category: ComponentCategory.ADDERS_SELECTORS,
   symbol: 'HA',
   name: 'components.def.HALF_ADDER.name',
   description: 'components.def.HALF_ADDER.description',

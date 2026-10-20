@@ -4,7 +4,7 @@ import { ComponentMeta, NO_LABELS } from '../component-meta';
 
 export const delayMeta = {
   type: BuiltInComponentType.DELAY,
-  category: ComponentCategory.BASIC,
+  category: ComponentCategory.TIMING,
   symbol: '1',
   name: 'components.def.DELAY.name',
   description: 'components.def.DELAY.description',

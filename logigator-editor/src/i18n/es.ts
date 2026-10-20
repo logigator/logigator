@@ -119,9 +119,12 @@ const es: TranslationSchema = {
   components: {
     category: {
       hidden: 'Ocultos',
-      basic: 'Básicos',
-      advanced: 'Avanzados',
-      io: 'Entradas / Salidas',
+      logicGates: 'Puertas lógicas',
+      addersAndSelectors: 'Sumadores y selectores',
+      memory: 'Memoria',
+      timing: 'Temporización',
+      inputs: 'Entradas',
+      outputs: 'Salidas',
       port: 'Puertos',
       user: 'Componentes del usuario'
     } satisfies Record<ComponentCategory, string>,

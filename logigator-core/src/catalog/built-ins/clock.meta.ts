@@ -10,7 +10,7 @@ const MAX_DELAY_TICKS = 4294967295;
 
 export const clockMeta = {
   type: BuiltInComponentType.CLOCK,
-  category: ComponentCategory.BASIC,
+  category: ComponentCategory.TIMING,
   symbol: 'clk',
   name: 'components.def.CLOCK.name',
   description: 'components.def.CLOCK.description',

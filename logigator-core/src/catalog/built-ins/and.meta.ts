@@ -10,7 +10,7 @@ const ports = (o: AndValues) => ({ inputs: o.numInputs, outputs: 1 });
 
 export const andMeta = {
   type: BuiltInComponentType.AND,
-  category: ComponentCategory.BASIC,
+  category: ComponentCategory.LOGIC_GATES,
   symbol: '&',
   name: 'components.def.AND.name',
   description: 'components.def.AND.description',

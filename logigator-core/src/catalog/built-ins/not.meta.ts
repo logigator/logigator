@@ -4,7 +4,7 @@ import { ComponentMeta, NO_LABELS } from '../component-meta';
 
 export const notMeta = {
   type: BuiltInComponentType.NOT,
-  category: ComponentCategory.BASIC,
+  category: ComponentCategory.LOGIC_GATES,
   symbol: '!',
   name: 'components.def.NOT.name',
   description: 'components.def.NOT.description',
