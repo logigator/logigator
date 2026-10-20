@@ -113,7 +113,7 @@ export class DocPage {
    * Claims a link the rewrite turned into one of this app's own paths, so
    * following it is a navigation rather than the renderer's own "open in a new
    * tab" handling for a link with no scheme. A `docs:` href that survived the
-   * rewrite carries an anchor; it is routed the same way.
+   * rewrite names no page; it is claimed and goes nowhere.
    */
   protected onLinkClick(link: LgMarkdownLinkClick): void {
     const target = parseDocsLink(link.href);

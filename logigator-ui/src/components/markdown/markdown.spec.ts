@@ -41,6 +41,12 @@ describe('resolveMarkdownUrls', () => {
     ).toBe('![alt](media/intro-banner-H4SH.png "The editor")');
   });
 
+  it('maps a destination with a fragment by its part before the hash', () => {
+    expect(
+      resolveMarkdownUrls('[manual](files/manual.pdf#page-2) [top](#top)', urls)
+    ).toBe('[manual](media/manual-H4SH.pdf#page-2) [top](#top)');
+  });
+
   it('matches destinations verbatim, not inherited object properties', () => {
     expect(resolveMarkdownUrls('[a](constructor)', urls)).toBe(
       '[a](constructor)'

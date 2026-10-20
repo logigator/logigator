@@ -1,7 +1,8 @@
 /**
  * Rewrites markdown link/image destinations to their mapped URLs. Only the
- * destination matches, verbatim; an optional title is carried over and
- * unmapped destinations stay untouched.
+ * destination matches, verbatim up to an optional `#fragment`, which is kept
+ * on the mapped URL; an optional title is carried over and unmapped
+ * destinations stay untouched.
  *
  * Its own file, away from the renderer, because a consumer serving the raw
  * markdown beside the rendered page applies the same rule outside Angular —
@@ -16,9 +17,12 @@ export function resolveMarkdownUrls(
   }
   return data.replace(
     /\]\(([^)\s]+)([^)]*)\)/g,
-    (match, destination: string, title: string) =>
-      Object.hasOwn(urls, destination)
-        ? `](${urls[destination]}${title})`
-        : match
+    (match, destination: string, title: string) => {
+      const hash = destination.indexOf('#');
+      const base = hash < 0 ? destination : destination.slice(0, hash);
+      return base && Object.hasOwn(urls, base)
+        ? `](${urls[base]}${destination.slice(base.length)}${title})`
+        : match;
+    }
   );
 }
