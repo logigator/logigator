@@ -270,6 +270,15 @@ liveness probe; `GET /api/health/ready` checks Postgres and Redis. `src/` layers
 Express + routing-controllers + TypeDI + TypeORM (MySQL) + Passport + Handlebars. Answers everything
 outside `/api` until the Phase 6 cutover. Docs in `logigator-backend/docs/`. Frozen: don't change it.
 
+## Releasing
+
+The product version is the root `package.json`'s (every member stays `0.0.0`); the editor and the
+site read it into `environment.version`. A release commit bumps it and turns
+`## [Unreleased]` into `## [<version>] - <date>` in all four changelog files (plus the compare
+links in `CHANGELOG.md`). Pushing the `v<version>` tag runs `release.yaml`:
+`.github/scripts/release-notes.mjs` refuses a tag that disagrees with the version or the
+changelogs, the image is pushed, then the GitHub Release is created with the English notes.
+
 ## Testing
 
 The editor, site and `@logigator/ui` run Vitest through Angular's `@angular/build:unit-test`
