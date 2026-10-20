@@ -1,10 +1,11 @@
 import { initSync, Simulation } from '@logigator/sim/wasm';
-import type { InputWrite } from '@logigator/sim/wasm';
+import type { InputWrite, Records } from '@logigator/sim/wasm';
 import {
   BoardDescriptor,
   ENGINE_USER_INPUT_TYPE
 } from '../app/simulation/compiler/compiled-board.model';
 import { ProgressEngine } from '../app/simulation/worker/input-progress';
+import { RecordEngine } from '../app/simulation/worker/record-reads';
 import { StateEngine } from '../app/simulation/worker/state-reads';
 
 let memory: WebAssembly.Memory | null = null;
@@ -47,7 +48,7 @@ interface Submission {
  * exactly as the worker's engine applies it. Requests go through
  * {@link submit}, which records them so {@link held} can look ahead.
  */
-export class SimEngine implements ProgressEngine, StateEngine {
+export class SimEngine implements ProgressEngine, StateEngine, RecordEngine {
   private sim: Simulation;
   /** The requests submitted since the engine was last built, for replay. */
   private sinceBuild: Submission[] = [];
@@ -129,6 +130,10 @@ export class SimEngine implements ProgressEngine, StateEngine {
 
   public readState(compId: number, offset: number, length: number): Uint8Array {
     return this.sim.readState(compId, offset, length);
+  }
+
+  public readRecords(compId: number, since: number): Records {
+    return this.sim.readRecords(compId, since);
   }
 
   /** The whole of `unit`'s state, as `readState` reads it. */

@@ -10,15 +10,18 @@ import {
   makeAnd,
   makeButton,
   makeGamepad,
+  makeInput,
   makeKeyboard,
   makePulseButton,
-  makeSwitch
+  makeSwitch,
+  makeTerminal
 } from '../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
 } from '../../testing/fake-simulation-worker';
 import { FakeUserInput } from '../../testing/fake-user-input';
+import { byteFrames, byteTicks } from '../../testing/recorder-writes';
 import { setStaticDIInjector } from '../utils/get-di';
 import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
@@ -36,6 +39,8 @@ import {
   KEYBOARD_TEXT_LIMIT
 } from '../components/component-types/keyboard/ascii';
 import { INPUT_QUEUE_LIMIT } from '../components/component-inspection';
+import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
+import { TerminalComponent } from '../components/component-types/terminal/terminal.component';
 import {
   FRAME_SCHEDULER,
   SIMULATION_WORKER_FACTORY
@@ -407,7 +412,7 @@ describe('AutomationApiService simulation', () => {
 
   describe('a keyboard', () => {
     let keyboard: KeyboardComponent;
-    /** The keyboard's unit, its outputs `D0`…`D6`, `STB`, `KD` in port order. */
+    /** The keyboard's unit, its outputs `D0`…`D7`, `STB`, `KD` in port order. */
     let base: number;
 
     beforeEach(async () => {
@@ -446,11 +451,29 @@ describe('AutomationApiService simulation', () => {
     });
 
     it('refuses a text with a character it has no key for, naming its position and queueing nothing', async () => {
-      await expect(api.simType(keyboard.id, 'ab\r\nä!')).rejects.toThrow(
-        /"ä" \(U\+00E4\) at position 4/
+      await expect(api.simType(keyboard.id, 'ab\r\nä€!')).rejects.toThrow(
+        /"€" \(U\+20AC\) at position 5/
       );
 
       expect(fakeWorker.postedOfKind('submitInput')).toEqual([]);
+    });
+
+    it('types Latin-1 as itself, typographic punctuation as its ASCII and the cursor codes as themselves', async () => {
+      await api.simType(keyboard.id, '“ä”…\u001c\u000b');
+
+      expect(pressed()).toEqual([
+        0x22, 0xe4, 0x22, 0x2e, 0x2e, 0x2e, 0x1c, 0x0b
+      ]);
+    });
+
+    it('holds a key for a character that sends one code, refusing one that sends several', async () => {
+      await expect(api.simSetKey(keyboard.id, '…')).rejects.toThrow(
+        /"…" \(U\+2026\) is not a key of the keyboard/
+      );
+      await api.simSetKey(keyboard.id, '\u001e');
+      await api.simSetKey(keyboard.id, '’');
+
+      expect(pressed()).toEqual([0x1e, 0x27]);
     });
 
     it('refuses a text or a key that does not fit behind the characters still queued, queueing nothing', async () => {
@@ -577,6 +600,124 @@ describe('AutomationApiService simulation', () => {
         /is a keyboard — use sim\.type or sim\.setKey$/
       );
       expect(fakeWorker.postedOfKind('submitInput')).toEqual([]);
+    });
+  });
+
+  describe('a terminal', () => {
+    /** A user input whose output `i` touches input `i` of `target`. */
+    function drivingInput(target: Component): FakeUserInput {
+      const input = new FakeUserInput(target.numInputs);
+      const at = input.connectionPoints[0];
+      const to = target.connectionPoints[0];
+      input.position.set(
+        input.position.x + to.x - at.x,
+        input.position.y + to.y - at.y
+      );
+      return input;
+    }
+
+    /** Sends `text` through `input`, as many steps as it takes to print. */
+    async function print(input: Component, text: string): Promise<void> {
+      const codes = [...text].map((char) => char.charCodeAt(0));
+      simulation.sendFrames(input.id, byteFrames(codes));
+      await api.simStep(byteTicks(codes.length));
+    }
+
+    it('reads the screen, the cursor and the scrollback the circuit printed', async () => {
+      const terminal = makeTerminal({ columns: 8, rows: 2 }, undefined, 10, 0);
+      const input = drivingInput(terminal);
+      project.addComponent(terminal);
+      project.addComponent(input);
+      await api.simEnter();
+
+      await print(input, 'first\nabcdefghij');
+
+      expect(await api.simReadTerminal(terminal.id)).toEqual({
+        componentId: terminal.id,
+        columns: 8,
+        rows: 2,
+        screen: ['abcdefgh', 'ij'],
+        wrapped: [true, false],
+        lost: [0, 0],
+        cursor: { row: 1, column: 2, pendingWrap: false },
+        scrollback: [{ kind: 'line', text: 'first', wrapped: false }]
+      });
+
+      simulation.stop();
+      await vi.waitFor(() => expect(simulation.resets()).toBe(1));
+      const cleared = await api.simReadTerminal(terminal.id);
+      expect(cleared.screen).toEqual(['', '']);
+      expect(cleared.scrollback).toEqual([]);
+    });
+
+    it('refuses anything but a terminal of the running simulation', async () => {
+      const terminal = makeTerminal();
+      const lever = makeSwitch(0, 20);
+      project.addComponent(terminal);
+      project.addComponent(lever);
+
+      await expect(api.simReadTerminal(terminal.id)).rejects.toThrow(
+        /is not a terminal of the running simulation$/
+      );
+      await api.simEnter();
+      await expect(api.simReadTerminal(lever.id)).rejects.toThrow(
+        /is not a terminal of the running simulation$/
+      );
+    });
+
+    it('reads an inner terminal of the visible watch level from the records the engine still holds', async () => {
+      const registry = TestBed.inject(CustomComponentRegistry);
+      const inner = makeTerminal({ columns: 8, rows: 2 }, undefined, 10, 0);
+      const plugs = Array.from({ length: inner.numInputs }, (_, pin) => {
+        const plug = makeInput(pin);
+        const at = plug.connectionPoints[0];
+        const to = inner.connectionPoints[pin];
+        plug.position.set(plug.x + to.x - at.x, plug.y + to.y - at.y);
+        return plug;
+      });
+      const typeId = registry.registerSnapshot({
+        kind: 'snapshot',
+        source: 'browser',
+        name: 'TerminalBox',
+        symbol: 'TB',
+        description: '',
+        numInputs: plugs.length,
+        numOutputs: 0,
+        labels: plugs.map((_, pin) => `I${pin}`),
+        circuit: {
+          components: [inner, ...plugs].map((component) => {
+            const { type, pos, options } = Component.serialize(component);
+            return { type, pos, options };
+          }),
+          wires: []
+        }
+      });
+      for (const component of [inner, ...plugs]) {
+        component.destroy({ children: true });
+      }
+      const instance = Component.deserialize(
+        { pos: [10, 0], options: {} },
+        TestBed.inject(ComponentProviderService).getComponent(typeId)!
+      );
+      const input = drivingInput(instance);
+      project.addComponent(instance);
+      project.addComponent(input);
+      await api.simEnter();
+      await print(input, 'hello');
+
+      const id = api.inspectOpen(instance.id).id;
+      const watch = TestBed.inject(InspectionService).open()[0]
+        .inspection as SubCircuitWatch;
+      const copy = watch.activeLevel().session.components[0];
+      expect(copy).toBeInstanceOf(TerminalComponent);
+      const plug = watch.activeLevel().session.components[1];
+
+      const read = await api.inspectReadTerminal(id, copy.id);
+      expect(read.componentId).toBe(copy.id);
+      expect(read.screen).toEqual(['hello', '']);
+      await expect(api.inspectReadTerminal(id, plug.id)).rejects.toThrow(
+        /is not a terminal of the visible level of inspection/
+      );
     });
   });
 

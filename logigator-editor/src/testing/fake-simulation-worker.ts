@@ -3,10 +3,12 @@ import { InputProgressReader } from '../app/simulation/worker/input-progress';
 import {
   MainToWorkerMessage,
   packSnapshot,
+  RecordRead,
   SnapshotMessage,
   StateRead,
   WorkerToMainMessage
 } from '../app/simulation/worker/protocol';
+import { RecordReader } from '../app/simulation/worker/record-reads';
 import { StateReader } from '../app/simulation/worker/state-reads';
 import { SimEngine } from './sim-engine';
 
@@ -23,9 +25,8 @@ export interface SentFrame extends InputFrame {
  * With `autoRespond` it behaves like a healthy worker: `ready` after
  * construction, `ok` for every correlated request, an empty-delta snapshot
  * carrying the engine's invalid links and input progress as the worker
- * reports them per `requestSnapshot` — those and the watched state ranges read
- * beside it through
- * the worker's own readers, at the point the request was posted, as the
+ * reports them per `requestSnapshot` — those, the watched state ranges and
+ * the watched records read beside it through the worker's own readers, at the point the request was posted, as the
  * worker reads them between messages — and a `status` with `statusTick` per
  * `requestStatus` — all on microtasks, like real worker messages. Every
  * snapshot it sends is kept in `snapshots`. Turn it off to script the
@@ -52,6 +53,7 @@ export class FakeSimulationWorker {
   private _engine: SimEngine | null = null;
   private progress: InputProgressReader | null = null;
   private readonly stateReader = new StateReader();
+  private readonly recordReader = new RecordReader();
 
   /** The engine the posted board runs on; there is none before `init`. */
   public get engine(): SimEngine {
@@ -89,6 +91,10 @@ export class FakeSimulationWorker {
       msg.kind === 'requestSnapshot' && this._engine
         ? this.stateReader.read(this._engine)
         : undefined;
+    const records =
+      msg.kind === 'requestSnapshot' && this._engine
+        ? this.recordReader.read(this._engine)
+        : undefined;
     const inputProgress =
       msg.kind === 'requestSnapshot' && this._engine
         ? this.progress?.read(this._engine)
@@ -115,7 +121,8 @@ export class FakeSimulationWorker {
               invalid
             ),
             ...(inputProgress ? { inputProgress } : {}),
-            ...(state ? { state } : {})
+            ...(state ? { state } : {}),
+            ...(records ? { records } : {})
           };
           this.snapshots.push(snapshot);
           this.emit(snapshot);
@@ -133,6 +140,8 @@ export class FakeSimulationWorker {
         case 'returnBuffer':
         case 'watchState':
         case 'unwatchState':
+        case 'watchRecords':
+        case 'unwatchRecords':
           break;
         default:
           this.emit(
@@ -176,6 +185,11 @@ export class FakeSimulationWorker {
     return this.snapshots.flatMap((snapshot) => snapshot.state ?? []);
   }
 
+  /** Every record read the snapshots carried, in sending order. */
+  public recordReads(): RecordRead[] {
+    return this.snapshots.flatMap((snapshot) => snapshot.records ?? []);
+  }
+
   private runEngine(msg: MainToWorkerMessage): void {
     // The worker keeps its watches with or without an engine.
     if (msg.kind === 'watchState') {
@@ -184,6 +198,14 @@ export class FakeSimulationWorker {
     }
     if (msg.kind === 'unwatchState') {
       this.stateReader.unwatch(msg.id);
+      return;
+    }
+    if (msg.kind === 'watchRecords') {
+      this.recordReader.watch(msg.watch);
+      return;
+    }
+    if (msg.kind === 'unwatchRecords') {
+      this.recordReader.unwatch(msg.id);
       return;
     }
     if (msg.kind === 'init') {
@@ -200,6 +222,7 @@ export class FakeSimulationWorker {
         engine.reset();
         this.progress?.reset();
         this.stateReader.reset();
+        this.recordReader.reset();
         break;
       case 'step':
         engine.step();

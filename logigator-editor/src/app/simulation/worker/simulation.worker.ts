@@ -1,6 +1,7 @@
 import init, { Simulation } from '@logigator/sim/wasm';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
 import { InputProgressReader } from './input-progress';
+import { RecordReader } from './record-reads';
 import { StateReader } from './state-reads';
 import {
   nextPaceDelayMs,
@@ -46,8 +47,9 @@ const bufferPool: ArrayBuffer[] = [];
 
 /** Built with the descriptor; reset with every engine rebuilt from it. */
 let progress: InputProgressReader | null = null;
-/** The main thread's state watches; they outlive a rebuild. */
+// The main thread's state and record watches; they outlive a rebuild.
 const stateReader = new StateReader();
+const recordReader = new RecordReader();
 
 // The emitted artifact path is relative to the build output root, where the
 // worker chunk also lives, so resolving against the script URL covers any
@@ -123,6 +125,7 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       sim = new Simulation(descriptor!);
       progress?.reset();
       stateReader.reset();
+      recordReader.reset();
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     }
@@ -146,6 +149,12 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       break;
     case 'unwatchState':
       stateReader.unwatch(msg.id);
+      break;
+    case 'watchRecords':
+      recordReader.watch(msg.watch);
+      break;
+    case 'unwatchRecords':
+      recordReader.unwatch(msg.id);
       break;
     case 'requestSnapshot':
       if (!sim) break;
@@ -236,15 +245,20 @@ function sendSnapshot(reqId: number, full: boolean): void {
         ? mem.subarray(view.invalidPtr, view.invalidPtr + view.invalidLen)
         : undefined;
     const packed = packSnapshot(bufferPool.pop(), ids, values, invalid);
-    // Read after the copy: `inputProgress` and the state reads may allocate
-    // in linear memory, which would detach the views copied from. No tick
-    // runs in between, so the state read is the snapshot's tick.
+    // Read after the copy: `inputProgress`, the state and the record reads
+    // may allocate in linear memory, which would detach the views copied
+    // from. No tick runs in between, so what they read is the snapshot's tick.
     const inputProgress = progress?.read(requireSim());
     const state = stateReader.read(requireSim());
+    const records = recordReader.read(requireSim());
     const transfer: Transferable[] = [packed.buffer];
+    // `readState` and `readRecords` hand out copies of their own, never views
+    // into memory.
     for (const read of state ?? []) {
-      // `readState` hands out a copy of its own, never a view into memory.
       transfer.push(read.bytes.buffer as ArrayBuffer);
+    }
+    for (const read of records ?? []) {
+      transfer.push(read.values.buffer as ArrayBuffer);
     }
     postMessage(
       {
@@ -254,7 +268,8 @@ function sendSnapshot(reqId: number, full: boolean): void {
         isDelta: view.isDelta,
         ...packed,
         ...(inputProgress ? { inputProgress } : {}),
-        ...(state ? { state } : {})
+        ...(state ? { state } : {}),
+        ...(records ? { records } : {})
       },
       transfer
     );

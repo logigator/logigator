@@ -16,6 +16,7 @@ import {
   KeyboardComponent,
   KeyboardRoute
 } from '../components/component-types/keyboard/keyboard.component';
+import { TerminalComponent } from '../components/component-types/terminal/terminal.component';
 import { isCanvasOperatedInput } from '../rendering/interaction/body-hit';
 import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
@@ -78,6 +79,7 @@ import {
   SelectionState,
   SelectOptions,
   SelectRegion,
+  TerminalReadout,
   SettingDescriptor,
   SettingsState,
   SimStatus,
@@ -226,7 +228,9 @@ export class AutomationApiService {
         cancelKeys: (componentId: number): Promise<void> =>
           this.simCancelKeys(componentId),
         readPorts: (componentIds?: number[]): Promise<PortReadout[]> =>
-          this.simReadPorts(componentIds)
+          this.simReadPorts(componentIds),
+        readTerminal: (componentId: number): Promise<TerminalReadout> =>
+          this.simReadTerminal(componentId)
       }),
       camera: Object.freeze({
         getViewport: (): ViewportInfo => this.getViewport(),
@@ -287,6 +291,11 @@ export class AutomationApiService {
           inspectionId: number,
           componentId: number
         ): Promise<void> => this.inspectCancelKeys(inspectionId, componentId),
+        readTerminal: (
+          inspectionId: number,
+          componentId: number
+        ): Promise<TerminalReadout> =>
+          this.inspectReadTerminal(inspectionId, componentId),
         navigateTo: (inspectionId: number, level: number): InspectionInfo =>
           this.inspectNavigateTo(inspectionId, level),
         camera: Object.freeze({
@@ -742,6 +751,26 @@ export class AutomationApiService {
   }
 
   /**
+   * A terminal's screen, cursor and scrollback once every record written so
+   * far reached it ({@link settledFrame}).
+   */
+  public async simReadTerminal(componentId: number): Promise<TerminalReadout> {
+    const component = this.projectService
+      .mainProject()
+      ?.getComponentById(componentId);
+    if (
+      !(component instanceof TerminalComponent) ||
+      !this.simulation.board?.recordUnits.has(componentId)
+    ) {
+      throw new Error(
+        `logigator: component ${componentId} is not a terminal of the running simulation`
+      );
+    }
+    await this.settledFrame();
+    return terminalReadout(component);
+  }
+
+  /**
    * Per-port powered state against a freshly pulled snapshot. Without
    * `componentIds`, every component carrying at least one mapped port.
    */
@@ -781,6 +810,17 @@ export class AutomationApiService {
       });
     }
     return readouts;
+  }
+
+  /**
+   * {@link nextFrame}, then the one after it. A snapshot already in flight
+   * resolves the first, and it was read before anything posted since — a
+   * record watch a watch level just started among them; the second was
+   * requested once it landed.
+   */
+  private async settledFrame(): Promise<void> {
+    await this.nextFrame();
+    await this.nextFrame();
   }
 
   /**
@@ -1288,6 +1328,31 @@ export class AutomationApiService {
     await this.nextFrame();
   }
 
+  /** {@link simReadTerminal} for a terminal of the visible watch level. */
+  public async inspectReadTerminal(
+    inspectionId: number,
+    componentId: number
+  ): Promise<TerminalReadout> {
+    const watch = this.requireWatch(inspectionId);
+    const level = watch.activeLevel();
+    const terminal = this.requireWatchComponent(
+      watch,
+      inspectionId,
+      componentId
+    );
+    const bodyIndex = level.session.components.indexOf(terminal);
+    if (
+      !(terminal instanceof TerminalComponent) ||
+      level.session.info.recordUnitFor(bodyIndex) === undefined
+    ) {
+      throw new Error(
+        `logigator: component ${componentId} is not a terminal of the visible level of inspection ${inspectionId}`
+      );
+    }
+    await this.settledFrame();
+    return terminalReadout(terminal);
+  }
+
   /** A keyboard copy of the visible watch level, with the route to its unit. */
   private requireWatchKeyboard(
     inspectionId: number,
@@ -1715,12 +1780,32 @@ export function toGridRect(rect: Rectangle): GridRect {
   };
 }
 
+/** What `terminal` shows, as plain data. */
+function terminalReadout(terminal: TerminalComponent): TerminalReadout {
+  const screen = terminal.screen;
+  const rows = Array.from({ length: screen.rows }, (_, row) => row);
+  return {
+    componentId: terminal.id,
+    columns: screen.columns,
+    rows: screen.rows,
+    screen: rows.map((row) => screen.rowText(row)),
+    wrapped: rows.map((row) => screen.rowWrapped(row)),
+    lost: rows.map((row) => screen.rowLost(row)),
+    cursor: {
+      row: screen.cursorRow,
+      column: screen.cursorColumn,
+      pendingWrap: screen.pendingWrap
+    },
+    scrollback: screen.scrollbackEntries().map((entry) => ({ ...entry }))
+  };
+}
+
 /** A keyboard's route for `type`, `setKey` and `cancelKeys`. */
 type AutomationKeyRoute = KeyboardRoute & Pick<InputRoute, 'cancel'>;
 
 /** What the keyboard sends, for an error refusing what it does not. */
 const KEYBOARD_CHARACTERS =
-  'it sends printable ASCII (U+0020–U+007E), "\\n" (a CR or CRLF counting as one), "\\t", "\\b", "\\u001b" and "\\u007f"';
+  'it sends printable Latin-1 (U+0020–U+007E, U+00A0–U+00FF), typographic quotes, dashes and "…" as their ASCII, "\\n" (a CR or CRLF counting as one), "\\t", "\\b", "\\u001b", "\\u007f", and "\\u001c"–"\\u001f" and "\\u000b" for the arrow keys and Home';
 
 /** A character as an error names it: quoted, with its code point. */
 function describeCharacter(char: string): string {
@@ -1755,7 +1840,7 @@ function keyboardTextCodes(text: unknown): readonly number[] {
 
 /**
  * The code a `setKey` key holds down, `null` for none: one character the
- * keyboard has a key for, or `null`.
+ * keyboard sends as one code, or `null`.
  */
 function keyboardKeyCode(key: unknown): number | null {
   if (key === null) {
@@ -1763,7 +1848,7 @@ function keyboardKeyCode(key: unknown): number | null {
   }
   if (typeof key === 'string' && [...key].length === 1) {
     const read = textToCodesStrict(key);
-    if (read.kind === 'codes') {
+    if (read.kind === 'codes' && read.codes.length === 1) {
       return read.codes[0];
     }
   }
@@ -1772,7 +1857,7 @@ function keyboardKeyCode(key: unknown): number | null {
       ? describeCharacter(key)
       : (JSON.stringify(key) ?? String(key));
   throw new Error(
-    `logigator: ${named} is not a key of the keyboard — setKey takes one character or null, and ${KEYBOARD_CHARACTERS}`
+    `logigator: ${named} is not a key of the keyboard — setKey takes one character that sends one code, or null, and ${KEYBOARD_CHARACTERS}`
   );
 }
 

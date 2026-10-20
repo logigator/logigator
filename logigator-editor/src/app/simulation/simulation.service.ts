@@ -48,6 +48,7 @@ import {
 } from './state/link-state-applier';
 import { MIN_TARGET_HZ } from './worker/pacing';
 import {
+  RecordWatch,
   SimulationRunMode,
   SimulationWorkerService
 } from './worker/simulation-worker.service';
@@ -768,6 +769,33 @@ export class SimulationService {
     onRead: (offset: number, bytes: Uint8Array) => void
   ): StateWatch {
     return this.workerService.watchState(unit, onRead);
+  }
+
+  /**
+   * Watches a top-level component's recorder from its first record (see
+   * `SimulationWorkerService.watchRecords`), from the moment the board is
+   * compiled: a watch started before the engine is up reads once it is.
+   * `null` for a component with no recorder, the compiled board's
+   * `recordUnits`.
+   */
+  public watchRecords(
+    componentId: number,
+    onRead: (first: number, values: Uint32Array) => void
+  ): RecordWatch | null {
+    const unit = this._board?.recordUnits.get(componentId);
+    return unit === undefined ? null : this.watchUnitRecords(unit, onRead);
+  }
+
+  /**
+   * {@link watchRecords} for a component whose unit is resolved — a copy in
+   * a watch, `unit` coming from the watch index's `recordUnitFor`. It reads
+   * from the first record the engine still holds.
+   */
+  public watchUnitRecords(
+    unit: number,
+    onRead: (first: number, values: Uint32Array) => void
+  ): RecordWatch {
+    return this.workerService.watchRecords(unit, onRead);
   }
 
   private _setTopLevel(

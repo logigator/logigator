@@ -204,6 +204,7 @@ so read the returned `state`.
 | `setKey(id, key)`             | hold a keyboard key down, or `null` to let go     |
 | `cancelKeys(id)`              | drop what a keyboard still has to send            |
 | `readPorts(ids?)`             | per-port powered booleans, `inputs` and `outputs` |
+| `readTerminal(id)`            | a terminal's screen, cursor and scrollback        |
 
 - `setInput` is **absolute**, and what that means follows from the input's
   `drive` alone, whatever its gesture: a `level` slot (lever, button) is set to
@@ -260,17 +261,20 @@ so read the returned `state`.
     character is on `D` with `KD` high after the next three steps, `STB`
     high after the second of them, and `KD` low after the fourth, `D`
     keeping the character, so a character takes four steps while paused and
-    `KD` pulses once for each. It is **strict**, unlike a paste: printable ASCII,
-    `\n`, `\t`, `\b`, `\x1b` and `\x7f` only, CRLF and CR reading as one
-    `\n`, at most `KEYBOARD_TEXT_LIMIT` (10 000) characters. Any other
-    character is an error naming it, its code point and its UTF-16 index in
-    the text, and nothing is queued (`textToCodesStrict`, beside the paste's
+    `KD` pulses once for each. It is **strict**, unlike a paste: printable
+    Latin-1 (typographic quotes, dashes and `…` folded to ASCII, as a paste
+    folds them), `\n`, `\t`, `\b`, `\x1b`, `\x7f`, and the codes the arrow
+    keys and Home send (`\x1c`…`\x1f`, `\x0b`), which a paste drops, only;
+    CRLF and CR read as one `\n`, at most `KEYBOARD_TEXT_LIMIT` (10 000)
+    codes. Any other character is an error naming it, its code point and its
+    UTF-16 index in the text, and nothing is queued (`textToCodesStrict`, beside the paste's
     `textToCodes` in `ascii.ts`). So is a text that does not fit behind the
     characters the keyboard is still sending — its input holds 21 845 at
     once ([simulation.md](simulation.md#input-frames)) — with an error
     naming both counts; a text is never cut. It resolves once queued, not
     once typed.
-  - `setKey(id, key)` presses the key for one such character, `KD` high —
+  - `setKey(id, key)` presses the key for one such character that sends one
+    code (`'…'` is refused), `KD` high —
     a no-op when that code is on `D` already while a key is down, which
     `setKey` then holds too (`KeyboardComponent.holdKey`) — and `null` lets
     go of every key down, `KD` low — a no-op when none is. A key `setKey`
@@ -287,6 +291,18 @@ so read the returned `state`.
     code on `D` for that step, as an uncut press does — and `KD` after the
     one after, `D` keeping its code. It always fits and counts as no
     character still being sent.
+- `readTerminal(id)` answers a `TerminalReadout`: `columns`, `rows`, the
+  `screen` rows top first with trailing empty cells trimmed (as drawn: a
+  no-break space reads as a space, a soft hyphen as `-`), `wrapped` per row,
+  `lost` per row (characters lost after it, whose marker follows the row into
+  the scrollback), the `cursor` (`row`, `column`, `pendingWrap` while a
+  printable in the last column waits to wrap) and the `scrollback`, oldest
+  first, each entry a `{ kind: 'line', text, wrapped }` or a
+  `{ kind: 'lost', count }` for characters the engine overwrote before they
+  were read. It waits for two snapshots rather than one, the first possibly
+  read before a record watch a watch level just started, so every record
+  written so far is in it. Anything but a terminal of the running session is
+  an error.
 - `step(count)` posts the ticks back to back and pulls **one** snapshot, so
   settling a circuit costs one round trip rather than one per tick.
 - `readPorts` builds a component → link-id reverse index once per compiled board
@@ -356,7 +372,7 @@ a cut: the inside pieces are **new** wires with fresh ids.
 ### Inspection
 
 The live views a tap opens while the simulation runs — the ROM's and the
-RAM's memory views, the custom-component **watch** and the input windows. Opening is refused outside simulation and
+RAM's memory views, the custom-component **watch**, the input windows and the terminal's text. Opening is refused outside simulation and
 for a component whose config declares no inspection.
 
 `inspect.open(componentId)` opens or focuses one and returns an
@@ -369,7 +385,7 @@ floats over and returning the box actually taken.
 
 A **watch** is a second board: each breadcrumb level is a fresh copy of the
 inner circuit, so its elements carry the copy's ids, not the placed instance's.
-Its seven calls below all refuse a data inspection.
+Its eight calls below all refuse a data inspection.
 
 - `getElements(id, query?)` — the visible level's circuit.
 - `activate(id, componentId)` — the watch's tap: drives an inner lever or
@@ -388,6 +404,9 @@ Its seven calls below all refuse a data inspection.
   `sim.cancelKeys` for an inner keyboard of the visible level, its frames
   reaching the copy's own unit. Every key held here is let go of when its
   level closes, whoever pressed it.
+- `readTerminal(id, componentId)` — `sim.readTerminal` for an inner terminal
+  of the visible level, which has read its recorder since the level opened,
+  from the oldest record the engine still held.
 - `navigateTo(id, level)` — pops every level deeper than `level`.
 - `camera.*` — `getViewport` / `pan` / `setCenter` / `setZoom` / `focus` against
   the visible level. A level fits its circuit once, when it first shows; a write

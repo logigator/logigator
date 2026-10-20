@@ -11,8 +11,9 @@ Project ──compile()──► CompiledBoard ─descriptor─► worker → WA
                           │                                    │ snapshot (pulled per frame)
                           ├─ mapping (link id → wires + ports) ─┴─► SimulationWorkerService
                           ├─ userInputs (input → its unit)             │ applyDelta / applyFull
-                          └─ stateUnits (RAM → its unit)               │ + applyConflicts
-                                                                       │ + watched state ranges
+                          ├─ stateUnits (RAM → its unit)               │ + applyConflicts
+                          └─ recordUnits (terminal → its unit)         │ + watched state ranges
+                                                                       │ + watched records
                                                                        ▼
                                                                 LinkStateApplier
 ```
@@ -55,6 +56,12 @@ numbering and its output layout.
   coder/decoder, mux/demux, `ROM`) — one `EmittedUnit`, pins as union-find node
   ids. A `STATE_TYPES` unit (`RAM`), whose engine state the editor reads, is
   also recorded in `stateUnits`, by component, as an input is in `userInputs`.
+- **`TERMINAL`** — a `UNIT_TYPES` entry the engine knows as its recorder,
+  `ENGINE_RECORDER_TYPE` (201; the editor's own 201 is `SWITCH`, so
+  `ENGINE_TYPES` maps it): inputs `D0`…`D7` then `CLK`, the trigger, in port
+  order, no outputs. Bubbles pass through as `negInputs`, so a bubble on `CLK`
+  records on the falling edge. A `RECORD_TYPES` unit, recorded in
+  `recordUnits` as a RAM is in `stateUnits`.
 - **User inputs** — any component implementing `UserInput`
   (`components/user-input.ts`; `BUTTON`, `PULSE_BUTTON`, `SWITCH`, `GAMEPAD`),
   recognised by the `isUserInput` guard rather than by type id — **one**
@@ -66,7 +73,7 @@ numbering and its output layout.
   input is one queue, and one frame sets every slot of it on one tick: the
   gamepad's twelve controls are twelve outputs of one unit.
 - **`KEYBOARD`** — takes the same branch without being a user input: one unit
-  of nine outputs, `D0`…`D6`, `STB`, then `KD`, recorded in `userInputs`, so the
+  of ten outputs, `D0`…`D7`, `STB`, then `KD`, recorded in `userInputs`, so the
   watch tables and `unitIndexFor` address it like any input. The slot paths
   refuse it, since `isUserInput` is false; its frames arrive through
   `sendFrames` / `sendUnitFrames` instead.
@@ -91,11 +98,12 @@ numbering and its output layout.
   staying removable through either.
 - Anything else — a blocking `unsupported` diagnostic.
 
-Four types carry named engine parameters (`_paramsFor`): `ROM` (`data`, its
+Five types carry named engine parameters (`_paramsFor`): `ROM` (`data`, its
 contents bit-packed by `rom-data.codec.ts` to the byte table the engine reads,
 LSB-first, bit `address × wordSize + k`), `CLOCK` (`period` in ticks and its
-`mode`), `RAM` (its `read` mode) and `LED_MATRIX` (`dataBus`, the data-bus
-width). Parameters and the negation index arrays survive node remapping and
+`mode`), `RAM` (its `read` mode), `LED_MATRIX` (`dataBus`, the data-bus
+width) and `TERMINAL` (`capacity`, the `TERMINAL_RECORD_CAPACITY` of 65 536
+records the engine keeps before overwriting the oldest). Parameters and the negation index arrays survive node remapping and
 flattening unchanged: remapping changes pin _values_, never pin _order_.
 
 Pins are emitted in `connectionPoints` order with one exception,
@@ -134,9 +142,10 @@ tables only** — render targets need live objects, and a watch builds its own a
 open time from a fresh `instantiateBody` run.
 
 Per-template tables (`wireNets`, `portNets`, `userInputs`, `stateUnits`,
-`children`) are keyed by **element position in the body arrays**, `userInputs`
-and `stateUnits` holding each input's and each RAM's unit as the top-level maps
-do (`unitIndexFor` / `stateUnitFor` add the level's unit base), deterministic
+`recordUnits`, `children`) are keyed by **element position in the body
+arrays**, `userInputs`, `stateUnits` and `recordUnits` holding each input's,
+each RAM's and each terminal's unit as the top-level maps do (`unitIndexFor` /
+`stateUnitFor` / `recordUnitFor` add the level's unit base), deterministic
 across
 `instantiateBody` runs where live ids are session-assigned. Template compression
 gives **every** net class a local id so every wire is addressable: unit pins and
@@ -353,9 +362,34 @@ resolves a top-level component through `CompiledBoard.stateUnits` and
 `watchUnitState` takes a watch copy's unit from `stateUnitFor`; an inspection
 reaches both through its `StateRoute` (see `inspection.md`).
 
-`FakeSimulationWorker` runs the same `StateReader` over the real engine,
-reading at the point a snapshot is requested, as the worker does between
-ticks, and keeps every snapshot it sent in `snapshots`.
+**Records** are the other kind of state: a terminal's recorder writes one
+`u32` record per trigger edge, keeps the last `capacity` of them, and its
+state version is its record count. `SimulationWorkerService.watchRecords(unit,
+onRead, since = 0)` posts `watchRecords` with its own id, the unit and the
+record to start from (`unwatchRecords` on `close`). `RecordReader`
+(`worker/record-reads.ts`) polls every watched recorder with one
+`stateVersions` call of its own beside the state reader's, and calls
+`readRecords(unit, since)` only for a recorder whose count moved, or a watch
+just started, whose `since` it first clamps to the count — the engine throws
+past it. Each read advances `since` to `first + values.length`, so a record is
+sent once, and rides on the snapshot as `records: [{ id, first, values }]`,
+never empty, buffers transferred. A `first` past where the last read ended
+counts the records overwritten in between, more than `capacity` written
+between two reads. `onRead` gets `(first, values)` before `onFrame`, as state
+reads do, and a watch started while paused pulls a snapshot, so what the
+recorder holds arrives without a step. A stop rebuilds the recorders empty:
+`RecordReader.reset` takes every watch back to record 0, and the first read
+after it, which never precedes the stop's `clearSimState` and `resets` bump,
+begins at 0. Watches started before the session's worker exists are posted
+once its engine is up, so `SimulationService.watchRecords` (through
+`CompiledBoard.recordUnits`) reads a top-level terminal from its first record
+from the moment the board is compiled; `watchUnitRecords` takes a watch
+copy's unit from `recordUnitFor` and reads from the oldest record the engine
+still holds.
+
+`FakeSimulationWorker` runs the same `StateReader` and `RecordReader` over
+the real engine, reading at the point a snapshot is requested, as the worker
+does between ticks, and keeps every snapshot it sent in `snapshots`.
 
 ### Request correlation
 
@@ -404,9 +438,10 @@ the run.
 
 An **empty delta** means nothing changed and is skipped; falling through to
 `applyFull` would read an empty buffer and clear every link. The conflict set is
-applied regardless, since it is whole in every snapshot. Input progress and
-the watched [state](#component-state) are read after the copy, since either
-call may allocate in linear memory and detach the views it was made from. The engine has no
+applied regardless, since it is whole in every snapshot. Input progress, the
+watched [state](#component-state) and the watched records are read after the
+copy, since any of those calls may allocate in linear memory and detach the
+views it was made from. The engine has no
 reset, so `stop` is destroy + rebuild from the descriptor kept at `init`.
 
 ---
@@ -616,7 +651,7 @@ automation API send its press, release and tap frames through these calls
 
 The keyboard's frames (`ascii.ts`) give the timing the user docs state:
 
-| Frame                      | `D0`…`D6` | `STB` | `KD` | Kind  | Hold |
+| Frame                      | `D0`…`D7` | `STB` | `KD` | Kind  | Hold |
 | -------------------------- | --------- | ----- | ---- | ----- | ---- |
 | press, 1 (`pressFrames`)   | code      | 0     | 1    | event | 1    |
 | press, 2                   | code      | 1     | 1    | event | 1    |
@@ -699,7 +734,8 @@ queue. Nothing merges into a press, which ends in an event.
 
 1. Implement the type in `@logigator/sim` and bump the dependency.
 2. Add its `BuiltInComponentType` id to `UNIT_TYPES`; it then emits as a plain
-   unit with pins in `connectionPoints` order.
+   unit with pins in `connectionPoints` order. An engine type id that is not
+   the editor's goes in `ENGINE_TYPES`.
 3. Pass any per-type engine parameters in `_paramsFor` (`ROM` is the worked
    example), and reorder pins in `_enginePinOrder` if the engine's order is not
    the ports'.

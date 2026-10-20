@@ -3,6 +3,7 @@ import { Component } from '../../components/component';
 import { ConnectionPoint } from '../../connection-points/connection-point';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { KeyboardComponent } from '../../components/component-types/keyboard/keyboard.component';
+import { TerminalComponent } from '../../components/component-types/terminal/terminal.component';
 import { isUserInput } from '../../components/user-input';
 import { LoggingService } from '../../logging/logging.service';
 import { LinkRenderTargets } from '../../simulation/compiler/compiled-board.model';
@@ -42,6 +43,9 @@ export class WatchSession {
   private readonly applier: LinkStateApplier;
   private readonly unregister: () => void;
   private needsSwitchSync = false;
+  private readonly terminals: TerminalComponent[] = [];
+  private readonly terminalVersions: number[] = [];
+  private seenResets: number;
 
   constructor(
     body: SerializedCircuitBody,
@@ -74,6 +78,20 @@ export class WatchSession {
     // A watch only ever exists inside a live session, so its copies read a
     // negated input the way the board's own components do.
     for (const component of components) component.setSimulating(true);
+    // A terminal copy reads its recorder from the oldest record the engine
+    // still holds, so its screen replays what was printed before the level
+    // opened.
+    components.forEach((component, index) => {
+      const unit = info.recordUnitFor(index);
+      if (component instanceof TerminalComponent && unit !== undefined) {
+        component.readRecords((onRead) =>
+          simulation.watchUnitRecords(unit, onRead)
+        );
+        this.terminals.push(component);
+        this.terminalVersions.push(component.screen.version);
+      }
+    });
+    this.seenResets = simulation.resets();
     this.project = buildProject(components, wires);
 
     // Sparse render targets over the full link-id space: only this circuit's
@@ -139,7 +157,22 @@ export class WatchSession {
    * held state is the one operating it.
    */
   public onFrame(): boolean {
-    const changed = this.applier.consumeChanged();
+    // A stop clears the board's own components; the copies are cleared here,
+    // before the rebuilt recorders' reads from record 0 arrive.
+    const resets = getStaticDI(SimulationService).resets();
+    if (resets !== this.seenResets) {
+      this.seenResets = resets;
+      for (const terminal of this.terminals) terminal.clearSimState();
+    }
+    // A screen can change with no link the frame moved.
+    let changed = this.applier.consumeChanged();
+    this.terminals.forEach((terminal, index) => {
+      const version = terminal.screen.version;
+      if (version !== this.terminalVersions[index]) {
+        this.terminalVersions[index] = version;
+        changed = true;
+      }
+    });
     if (this.needsSwitchSync) {
       this.needsSwitchSync = false;
       this._syncToggles();
@@ -150,6 +183,7 @@ export class WatchSession {
 
   public destroy(): void {
     this.unregister();
+    for (const terminal of this.terminals) terminal.stopReadingRecords();
     // Every high `level` slot of a copy, and the keys a keyboard copy holds
     // down, are set low first: once the copy is gone, nothing is left to
     // reset its engine input.

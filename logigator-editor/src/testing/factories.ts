@@ -5,6 +5,7 @@ import {
   Direction,
   NameMap,
   SegmentBase,
+  TerminalValues,
   WireDirection
 } from '@logigator/core';
 import { AndComponent } from '../app/components/component-types/and/and.component';
@@ -27,6 +28,8 @@ import { segmentDisplayComponentConfig } from '../app/components/component-types
 import { GamepadComponent } from '../app/components/component-types/gamepad/gamepad.component';
 import { gamepadComponentConfig } from '../app/components/component-types/gamepad/gamepad.config';
 import { KeyboardComponent } from '../app/components/component-types/keyboard/keyboard.component';
+import { TerminalComponent } from '../app/components/component-types/terminal/terminal.component';
+import { terminalComponentConfig } from '../app/components/component-types/terminal/terminal.config';
 
 /** AndComponent with the given port count, rotation, and grid position. */
 export function makeAnd(
@@ -193,6 +196,27 @@ export function makeKeyboard(px = 0, py = 0): KeyboardComponent {
   const keyboard = new KeyboardComponent({});
   keyboard.position.set(px, py);
   return keyboard;
+}
+
+/**
+ * TerminalComponent with the given options (the defaults where omitted:
+ * 40 × 12, small text) and direction, at a grid position.
+ */
+export function makeTerminal(
+  options: Partial<TerminalValues> = {},
+  direction: Direction = Direction.E,
+  px = 0,
+  py = 0
+): TerminalComponent {
+  const defaults = terminalComponentConfig.options;
+  const terminal = new TerminalComponent({
+    columns: defaults.columns.clone(options.columns),
+    rows: defaults.rows.clone(options.rows),
+    textSize: defaults.textSize.clone(options.textSize)
+  });
+  terminal.direction = direction;
+  terminal.position.set(px, py);
+  return terminal;
 }
 
 /**

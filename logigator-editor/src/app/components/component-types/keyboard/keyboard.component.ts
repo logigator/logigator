@@ -60,7 +60,7 @@ export type KeyboardKeys = 'all' | 'physical';
 export type KeyboardRoute = Pick<InputRoute, 'send' | 'pending'>;
 
 /**
- * A keyboard: `D0`…`D6` carry the ASCII code of the last key pressed and
+ * A keyboard: `D0`…`D7` carry the Latin-1 code of the last key pressed and
  * keep it, `STB` pulses on every press, and `KD` is high while any key is
  * down. It is not a user input: no slot path and no pointer on the canvas
  * drives it. Its keys are pressed and released through the methods here,

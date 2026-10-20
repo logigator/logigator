@@ -17,6 +17,7 @@ import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationService } from '../../../translation/translation.service';
 import {
   characterOfKey,
+  KEYBOARD_MNEMONICS,
   KEYBOARD_TEXT_LIMIT,
   KeyboardText,
   readoutText,
@@ -37,6 +38,16 @@ const NOTICE_MS = 4000;
 /** Keys whose character arrives later, through an input or composition event. */
 const DEFERRED_KEYS = new Set(['Process', 'Unidentified', 'Dead']);
 
+/** Keys that pass through to the browser while Shift is held. */
+const SHIFT_PASSED_KEYS = new Set([
+  'Tab',
+  'ArrowRight',
+  'ArrowLeft',
+  'ArrowUp',
+  'ArrowDown',
+  'Home'
+]);
+
 /** How the history strip draws a code without a glyph of its own. */
 const HISTORY_CHIPS: ReadonlyMap<number, string> = new Map([
   [0x0a, '⏎'],
@@ -44,7 +55,14 @@ const HISTORY_CHIPS: ReadonlyMap<number, string> = new Map([
   [0x09, 'TAB'],
   [0x1b, 'ESC'],
   [0x7f, 'DEL'],
-  [0x20, '␣']
+  [0x20, '␣'],
+  [0x1c, '→'],
+  [0x1d, '←'],
+  [0x1e, '↑'],
+  [0x1f, '↓'],
+  [0x0b, 'HOM'],
+  [0xa0, 'NBS'],
+  [0xad, 'SHY']
 ]);
 
 const BACKSPACE = 0x08;
@@ -75,9 +93,11 @@ function isShortcut(e: KeyboardEvent): boolean {
  * The keyboard's window. A hidden `<textarea>` over the history strip is the
  * capture field, and every key and every text it receives is handled on it:
  *
- * - `keydown` sends a press for an ASCII key, which is down from then on,
- *   over any key still down. Auto-repeat is consumed and sends nothing. Ctrl, Meta and Alt
- *   combinations, Shift+Tab, arrows and F-keys pass through to the browser.
+ * - `keydown` sends a press for a key with a code, which is down from then
+ *   on, over any key still down; a key folding to several codes (`…`) sends
+ *   them as taps. Auto-repeat is consumed and sends nothing. Ctrl, Meta and
+ *   Alt combinations, Shift with Tab, an arrow or Home, and F-keys pass
+ *   through to the browser.
  *   A key whose character is still being composed (an IME, a dead key, a
  *   soft keyboard's `Unidentified`) passes through too: its text arrives as
  *   an input event. Escape is consumed where it lands, so it reaches neither
@@ -275,16 +295,16 @@ export class KeyboardInspectionComponent {
     });
   });
 
-  /** The code on `D` as character, hex and 7-bit binary; `null` at zero. */
+  /** The code on `D` as character, hex and 8-bit binary; `null` at zero. */
   protected readonly onD = computed(() => {
     const code = this.inspection().code();
     if (code === 0) return null;
     const text = readoutText(code);
-    const binary = code.toString(2).padStart(7, '0');
+    const binary = code.toString(2).padStart(8, '0');
     return {
-      char: code > 0x20 && code < 0x7f ? `'${text}'` : text,
+      char: KEYBOARD_MNEMONICS.has(code) ? text : `'${text}'`,
       hex: '0x' + code.toString(16).toUpperCase().padStart(2, '0'),
-      binary: `${binary.slice(0, 3)} ${binary.slice(3)}`
+      binary: `${binary.slice(0, 4)} ${binary.slice(4)}`
     };
   });
 
@@ -344,19 +364,22 @@ export class KeyboardInspectionComponent {
       return;
     }
     if (isShortcut(e)) return;
-    if (e.key === 'Tab' && e.shiftKey) return;
+    if (e.shiftKey && SHIFT_PASSED_KEYS.has(e.key)) return;
     const character = characterOfKey(e.key);
     if (!character) return;
 
     e.preventDefault();
     if (e.key === 'Escape') e.stopPropagation();
-    if (character.kind === 'ascii') {
-      if (!this.inspection().press(e.code, character.code)) {
-        this.showRefused();
-      }
-    } else {
+    if (character.kind === 'skipped') {
       this.showSkipped([character.char], false);
+      return;
     }
+    const { codes } = character;
+    const sent =
+      codes.length === 1
+        ? this.inspection().press(e.code, codes[0])
+        : this.inspection().type(codes);
+    if (!sent) this.showRefused();
   }
 
   protected onKeyUp(e: KeyboardEvent): void {

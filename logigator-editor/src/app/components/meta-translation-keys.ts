@@ -26,6 +26,7 @@ import {
   segmentDisplayMeta,
   srFfMeta,
   switchMeta,
+  terminalMeta,
   textMeta,
   tunnelMeta,
   xorMeta
@@ -98,6 +99,7 @@ export type BuiltInTranslationKeys =
   | MetaKeys<typeof segmentDisplayMeta>
   | MetaKeys<typeof srFfMeta>
   | MetaKeys<typeof switchMeta>
+  | MetaKeys<typeof terminalMeta>
   | MetaKeys<typeof textMeta>
   | MetaKeys<typeof tunnelMeta>
   | MetaKeys<typeof xorMeta>;

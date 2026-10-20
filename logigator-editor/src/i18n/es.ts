@@ -339,15 +339,15 @@ const es: TranslationSchema = {
       KEYBOARD: {
         name: 'Teclado',
         description:
-          'Un teclado.\n\n- `D0`–`D6` llevan el código ASCII de la última tecla pulsada\n- `STB` emite un pulso cada vez que se pulsa una tecla\n- `KD` está encendido mientras se mantiene pulsada una tecla\n\nMientras la simulación está en marcha, al hacer clic se abre una ventana que recibe lo que escribes.',
+          'Un teclado.\n\n- `D0`–`D7` llevan el código Latin-1 de la última tecla pulsada\n- `STB` emite un pulso cada vez que se pulsa una tecla\n- `KD` está encendido mientras se mantiene pulsada una tecla\n\nMientras la simulación está en marcha, al hacer clic se abre una ventana que recibe lo que escribes.',
         window: {
           field: 'Escribir en el circuito',
           onD: 'En D',
           typing: 'Escribiendo en el circuito · Mayús+Tab para salir',
           clickToType: 'Haz clic aquí para escribir',
           tapToType: 'Toca aquí para escribir',
-          skippedOne: '{{char}} no es ASCII y se ha omitido',
-          skippedMany: '{{count}} caracteres no eran ASCII y se han omitido',
+          skippedOne: '{{char}} no es Latin-1 y se ha omitido',
+          skippedMany: '{{count}} caracteres no eran Latin-1 y se han omitido',
           truncated: 'Solo se han enviado los primeros {{limit}} caracteres',
           refused:
             'No se ha enviado nada: espera a que se envíen los caracteres pendientes',
@@ -358,12 +358,33 @@ const es: TranslationSchema = {
         typeText: {
           header: 'Escribir texto',
           label: 'Texto que enviará el teclado',
-          skippedOne: '{{char}} no es ASCII y se omitirá',
-          skippedMany: '{{count}} caracteres no son ASCII y se omitirán',
+          skippedOne: '{{char}} no es Latin-1 y se omitirá',
+          skippedMany: '{{count}} caracteres no son Latin-1 y se omitirán',
           doesNotFit:
             'Espera a que se envíen los caracteres pendientes: este texto aún no cabe detrás de ellos',
           send: 'Enviar',
           cancel: 'Cancelar'
+        }
+      },
+      TERMINAL: {
+        name: 'Terminal',
+        description:
+          'Una pantalla de texto. En el flanco ascendente de `CLK`, muestra el carácter cuyo código está en `D0`–`D7`. Códigos como el salto de línea y el retroceso mueven el cursor en su lugar.\n\nMientras la simulación está en marcha, al hacer clic en él se abre una ventana con todo lo que ha mostrado.',
+        options: {
+          columns: 'Columnas',
+          rows: 'Filas',
+          textSize: 'Tamaño de texto'
+        },
+        textSizes: {
+          small: 'Pequeño',
+          large: 'Grande'
+        },
+        window: {
+          copyAll: 'Copiar todo',
+          copied: 'Texto del terminal copiado al portapapeles.',
+          copyFailed: 'No se pudo copiar el texto del terminal.',
+          lostOne: '1 carácter perdido',
+          lostMany: '{{count}} caracteres perdidos'
         }
       },
       PULSE_BUTTON: {

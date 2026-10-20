@@ -341,7 +341,7 @@ const de: TranslationSchema = {
       KEYBOARD: {
         name: 'Tastatur',
         description:
-          'Eine Tastatur.\n\n- An `D0`–`D6` liegt der ASCII-Code der zuletzt gedrückten Taste an\n- `STB` gibt bei jedem Tastendruck einen Puls aus\n- `KD` ist an, solange eine Taste gedrückt ist\n\nWährend die Simulation läuft, öffnet ein Klick ein Fenster, das deine Eingaben entgegennimmt.',
+          'Eine Tastatur.\n\n- An `D0`–`D7` liegt der Latin-1-Code der zuletzt gedrückten Taste an\n- `STB` gibt bei jedem Tastendruck einen Puls aus\n- `KD` ist an, solange eine Taste gedrückt ist\n\nWährend die Simulation läuft, öffnet ein Klick ein Fenster, das deine Eingaben entgegennimmt.',
         window: {
           field: 'In die Schaltung tippen',
           onD: 'An D',
@@ -349,9 +349,10 @@ const de: TranslationSchema = {
             'Eingaben gehen an die Schaltung · Umschalt+Tab zum Verlassen',
           clickToType: 'Hier klicken, um zu tippen',
           tapToType: 'Hier tippen, um zu schreiben',
-          skippedOne: '{{char}} ist kein ASCII-Zeichen und wurde übersprungen',
+          skippedOne:
+            '{{char}} ist kein Latin-1-Zeichen und wurde übersprungen',
           skippedMany:
-            '{{count}} Zeichen waren keine ASCII-Zeichen und wurden übersprungen',
+            '{{count}} Zeichen waren keine Latin-1-Zeichen und wurden übersprungen',
           truncated: 'Nur die ersten {{limit}} Zeichen wurden gesendet',
           refused:
             'Nichts gesendet: Warte, bis die noch ausstehenden Zeichen gesendet sind',
@@ -362,13 +363,34 @@ const de: TranslationSchema = {
         typeText: {
           header: 'Text eingeben',
           label: 'Text, den die Tastatur senden soll',
-          skippedOne: '{{char}} ist kein ASCII-Zeichen und wird übersprungen',
+          skippedOne: '{{char}} ist kein Latin-1-Zeichen und wird übersprungen',
           skippedMany:
-            '{{count}} Zeichen sind keine ASCII-Zeichen und werden übersprungen',
+            '{{count}} Zeichen sind keine Latin-1-Zeichen und werden übersprungen',
           doesNotFit:
             'Warte, bis die noch ausstehenden Zeichen gesendet sind: Dieser Text passt noch nicht dahinter',
           send: 'Senden',
           cancel: 'Abbrechen'
+        }
+      },
+      TERMINAL: {
+        name: 'Terminal',
+        description:
+          'Ein Textbildschirm. Bei der steigenden Flanke von `CLK` gibt er das Zeichen aus, dessen Code an `D0`–`D7` anliegt. Codes wie Zeilenvorschub und Rückschritt bewegen stattdessen den Cursor.\n\nWährend die Simulation läuft, öffnet ein Klick darauf ein Fenster mit allem, was er ausgegeben hat.',
+        options: {
+          columns: 'Spalten',
+          rows: 'Zeilen',
+          textSize: 'Textgröße'
+        },
+        textSizes: {
+          small: 'Klein',
+          large: 'Groß'
+        },
+        window: {
+          copyAll: 'Alles kopieren',
+          copied: 'Terminaltext in die Zwischenablage kopiert.',
+          copyFailed: 'Der Terminaltext konnte nicht kopiert werden.',
+          lostOne: '1 Zeichen verloren',
+          lostMany: '{{count}} Zeichen verloren'
         }
       },
       PULSE_BUTTON: {

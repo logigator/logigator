@@ -2,11 +2,11 @@
 
 Tapping an inspectable component in `SIMULATION` mode opens a live view of it:
 a floating window over the board on desktop; on compact, the shared non-modal
-bottom sheet, or a fullscreen takeover for canvas-hosting views. Five content
+bottom sheet, or a fullscreen takeover for canvas-hosting views. Six content
 kinds exist — the ROM's and the RAM's [memory views](#the-memory-inspections),
 the custom component's [watch](#the-custom-component-watch), the
-[gamepad](#the-gamepad)'s controller and the [keyboard](#the-keyboard)'s
-typing window.
+[gamepad](#the-gamepad)'s controller, the [keyboard](#the-keyboard)'s
+typing window and the [terminal](#the-terminal)'s text.
 
 ## The Model: `ComponentInspection`
 
@@ -181,7 +181,12 @@ slot)` is the absolute path automation drives.
   down (`KeyboardComponent.releaseKeys`, queued behind what it still has to
   send),
   which would otherwise leave their engine inputs high with no copy left to
-  reset them. The session registers with the
+  reset them. A terminal copy reads its own recorder
+  (`watchUnitRecords` with the unit from `recordUnitFor`) from the level's
+  opening, replaying what the engine still holds, until the level closes;
+  a stop, seen as `resets` moving in `onFrame`, clears it before
+  the rebuilt recorder's reads arrive, and a changed screen re-renders the
+  level as a link change does. The session registers with the
   snapshot fan-out and requests a full seed snapshot, which also poses the
   copies' `toggle` slots from their output-link power — a powered one adopted
   through `SimulationService.adoptHighLevel`, so a stop resets it too.
@@ -533,17 +538,20 @@ over the history strip is the capture field, and every event is handled on it:
   and sends nothing, which is what ignores OS auto-repeat: a held key strobes
   once, and with another key pressed over it, the newer key's repeats do not
   strobe either. Ctrl, Meta, or Alt without AltGraph passes
-  through, so the browser's own shortcuts work, and so does Shift+Tab, so the
-  focus can leave the field. A key `characterOfKey` (`ascii.ts`) knows is
-  consumed: an ASCII one is pressed, any other reported as skipped. Escape also
-  stops propagation, so it closes neither the window nor the sheet. Arrows and
-  F-keys pass through.
+  through, so the browser's own shortcuts work, and so does Shift with Tab,
+  an arrow or Home, so the focus can leave the field. A key `characterOfKey`
+  (`ascii.ts`) knows is consumed: one with a code is pressed, the arrows and
+  Home included (`1C`…`1F`, `0B`); one folding to several codes (`…`) goes out
+  as taps through `type`; any other is reported as skipped. Escape also stops
+  propagation, so it closes neither the window nor the sheet. F-keys, End and
+  the page keys pass through.
 - `keyup` hands its code to `release`.
 - `paste`, `beforeinput` (`insertText`, `insertFromPaste`, `insertLineBreak`,
   and `deleteContentBackward` / `deleteContentForward` as BS / DEL) and
   `compositionend` carry text without a keydown of its own. `textToCodes`
-  normalizes it — CRLF and CR to LF, non-ASCII skipped and counted, at most
-  `KEYBOARD_TEXT_LIMIT` (10 000) characters — and it goes out through `type`.
+  normalizes it — CRLF and CR to LF, typographic quotes, dashes and `…` folded
+  to ASCII, anything else outside Latin-1 skipped and counted, at most
+  `KEYBOARD_TEXT_LIMIT` (10 000) codes — and it goes out through `type`.
 - `focusout`, a `window` blur and `visibilitychange` to hidden let go of
   every key down.
 
@@ -584,3 +592,48 @@ place (_Outer › Inner › Keyboard_). Its frames reach the copy's own units
 through `sendUnitFrames`, the copy's readout follows its links like the rest
 of the level, and the level's teardown lets go of every key the copy holds
 down (see The Custom-Component Watch).
+
+## The Terminal
+
+A terminal declares an inspection, so a tap opens its text: `TerminalInspection`
+(`components/component-types/terminal/terminal-inspection.ts`) rendered by
+`TerminalInspectionComponent`, a 440 × 360 window (280 × 200 at least) on
+desktop and a sheet tab on compact. It takes no route: the records reach the
+component for the whole session, window open or not (see
+[component-system.md](component-system.md)), and the window only reads
+`component.screen` off `component.version`.
+
+**`TerminalInspection`** — `lines` is the scrollback's entries, lost markers in
+place, then one `{ kind: 'row', text, cursor }` per screen row, each followed
+by the `lost` marker still waiting on it (`rowLost`); a row or marker object
+is kept while unchanged. It is one array that `update()` brings up to the
+screen in place: scrollback entries are appended and dropped at the front by
+their stable indices, only the screen's part is rebuilt, and the answer is how
+many lines left the front. `start` is the scrollback index of the first line.
+`following` is whether the view keeps the bottom in view: `scrolled(top, max)`
+sets it at the bottom (within 1 px), clears it when `top` moved up, and leaves
+it alone otherwise, so content growing under a view not yet scrolled down does
+not end it. A stop (`resets` moving) sets it again. `transcript()` is _Copy
+all_'s text: wrapped lines joined into one, a lost marker as its translated
+line (_N characters lost_, the count in the reader's number format), trailing
+empty lines left out. The title is the type's name.
+
+**`TerminalInspectionComponent`** is an `LgScroller` and the _Copy all_ button
+(`copyText`, a toast either way). An effect on `component.version` calls
+`update()` and re-emits `lines` through an `ArrayDataSource`, so the CDK
+neither copies the array nor diffs more than the rendered range. Lines are cut
+at the terminal's own columns and never reflowed; the screen rows are a
+`bg-content-hover` band with the cursor cell inverted. The font is sized from
+the viewport's width so every column fits (0.6 em per column, between 10 and
+20 px), and below the minimum the rows scroll sideways. One `ResizeObserver`
+on the viewport and the CDK's spacer re-reads the width and, while following,
+scrolls to the bottom whenever the content's or the view's height changes.
+While not following, the lines leaving the front move `scrollTop` up by as
+many rows, so the lines in view stay put; the effect does that before the
+emission and calls `checkViewportSize()`, so the viewport renders the rows for
+the new offset in the same pass rather than after the next scroll event.
+
+**In a watch.** A tap on a terminal copy opens the window through
+`SubCircuitWatch.activate` with the breadcrumb as its place
+(_Outer › Inner › Terminal_); the copy reads its own recorder (see The
+Custom-Component Watch).

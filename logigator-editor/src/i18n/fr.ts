@@ -341,16 +341,16 @@ const fr: TranslationSchema = {
       KEYBOARD: {
         name: 'Clavier',
         description:
-          "Un clavier.\n\n- `D0`–`D6` portent le code ASCII de la dernière touche appuyée\n- `STB` émet une impulsion à chaque appui\n- `KD` est activé tant qu'une touche est maintenue enfoncée\n\nPendant que la simulation tourne, cliquer dessus ouvre une fenêtre qui reçoit votre saisie.",
+          "Un clavier.\n\n- `D0`–`D7` portent le code Latin-1 de la dernière touche appuyée\n- `STB` émet une impulsion à chaque appui\n- `KD` est activé tant qu'une touche est maintenue enfoncée\n\nPendant que la simulation tourne, cliquer dessus ouvre une fenêtre qui reçoit votre saisie.",
         window: {
           field: 'Taper dans le circuit',
           onD: 'Sur D',
           typing: 'Vous tapez dans le circuit · Maj+Tab pour sortir',
           clickToType: 'Cliquez ici pour taper',
           tapToType: 'Touchez ici pour taper',
-          skippedOne: "{{char}} n'est pas un caractère ASCII et a été ignoré",
+          skippedOne: "{{char}} n'est pas un caractère Latin-1 et a été ignoré",
           skippedMany:
-            "{{count}} caractères n'étaient pas ASCII et ont été ignorés",
+            "{{count}} caractères n'étaient pas Latin-1 et ont été ignorés",
           truncated: 'Seuls les {{limit}} premiers caractères ont été envoyés',
           refused:
             "Rien n'a été envoyé : attendez que les caractères en cours d'envoi soient partis",
@@ -361,13 +361,34 @@ const fr: TranslationSchema = {
         typeText: {
           header: 'Saisir du texte',
           label: 'Texte à envoyer au clavier',
-          skippedOne: "{{char}} n'est pas un caractère ASCII et sera ignoré",
+          skippedOne: "{{char}} n'est pas un caractère Latin-1 et sera ignoré",
           skippedMany:
-            '{{count}} caractères ne sont pas ASCII et seront ignorés',
+            '{{count}} caractères ne sont pas Latin-1 et seront ignorés',
           doesNotFit:
             "Attendez que les caractères en cours d'envoi soient partis : ce texte ne tient pas encore derrière eux",
           send: 'Envoyer',
           cancel: 'Annuler'
+        }
+      },
+      TERMINAL: {
+        name: 'Terminal',
+        description:
+          'Un écran de texte. Sur le front montant de `CLK`, il affiche le caractère dont le code est sur `D0`–`D7`. Des codes comme le saut de ligne et le retour arrière déplacent le curseur à la place.\n\nPendant que la simulation tourne, cliquer dessus ouvre une fenêtre avec tout ce qu’il a affiché.',
+        options: {
+          columns: 'Colonnes',
+          rows: 'Lignes',
+          textSize: 'Taille du texte'
+        },
+        textSizes: {
+          small: 'Petite',
+          large: 'Grande'
+        },
+        window: {
+          copyAll: 'Tout copier',
+          copied: 'Texte du terminal copié dans le presse-papiers.',
+          copyFailed: 'Impossible de copier le texte du terminal.',
+          lostOne: '1 caractère perdu',
+          lostMany: '{{count}} caractères perdus'
         }
       },
       PULSE_BUTTON: {

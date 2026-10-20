@@ -338,15 +338,16 @@ const en = {
       KEYBOARD: {
         name: 'Keyboard',
         description:
-          'A keyboard.\n\n- `D0`–`D6` carry the ASCII code of the last key pressed\n- `STB` pulses once each time a key is pressed\n- `KD` is on while a key is held down\n\nWhile the simulation is running, clicking it opens a window that receives your typing.',
+          'A keyboard.\n\n- `D0`–`D7` carry the Latin-1 code of the last key pressed\n- `STB` pulses once each time a key is pressed\n- `KD` is on while a key is held down\n\nWhile the simulation is running, clicking it opens a window that receives your typing.',
         window: {
           field: 'Type into the circuit',
           onD: 'On D',
           typing: 'Typing into the circuit · Shift+Tab to leave',
           clickToType: 'Click here to type',
           tapToType: 'Tap to type',
-          skippedOne: "{{char}} isn't ASCII and was skipped",
-          skippedMany: "{{count}} characters weren't ASCII and were skipped",
+          skippedOne: "{{char}} isn't in Latin-1 and was skipped",
+          skippedMany:
+            "{{count}} characters weren't in Latin-1 and were skipped",
           truncated: 'Only the first {{limit}} characters were sent',
           refused: 'Nothing was sent: wait for the characters still being sent',
           sending: 'Sending {{count}}…',
@@ -356,12 +357,34 @@ const en = {
         typeText: {
           header: 'Type text',
           label: 'Text to send to the keyboard',
-          skippedOne: "{{char}} isn't ASCII and will be skipped",
-          skippedMany: "{{count}} characters aren't ASCII and will be skipped",
+          skippedOne: "{{char}} isn't in Latin-1 and will be skipped",
+          skippedMany:
+            "{{count}} characters aren't in Latin-1 and will be skipped",
           doesNotFit:
             "Wait for the characters still being sent: this text doesn't fit behind them yet",
           send: 'Send',
           cancel: 'Cancel'
+        }
+      },
+      TERMINAL: {
+        name: 'Terminal',
+        description:
+          'A text screen. On the rising edge of `CLK`, it prints the character whose code is on `D0`–`D7`. Codes such as line feed and backspace move the cursor instead.\n\nWhile the simulation is running, clicking it opens a window with everything it printed.',
+        options: {
+          columns: 'Columns',
+          rows: 'Rows',
+          textSize: 'Text size'
+        },
+        textSizes: {
+          small: 'Small',
+          large: 'Large'
+        },
+        window: {
+          copyAll: 'Copy all',
+          copied: 'Terminal text copied to clipboard.',
+          copyFailed: "Couldn't copy the terminal text.",
+          lostOne: '1 character lost',
+          lostMany: '{{count}} characters lost'
         }
       },
       PULSE_BUTTON: {

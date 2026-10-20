@@ -34,7 +34,7 @@ describe('a keyboard against the engine’s input limit', () => {
   let fakeWorker: FakeSimulationWorker;
   let keyboard: KeyboardComponent;
   let window: KeyboardInspection;
-  /** The keyboard's unit, `D0`…`D6`, `STB`, then `KD`. */
+  /** The keyboard's unit, `D0`…`D7`, `STB`, then `KD`. */
   let base: number;
 
   beforeEach(async () => {

@@ -31,6 +31,13 @@ export type MainToWorkerMessage =
   | { kind: 'watchState'; reqId: number; watch: StateWatchRequest }
   /** Stops a watch; an id the worker does not hold is ignored. */
   | { kind: 'unwatchState'; reqId: number; id: number }
+  /**
+   * Starts reading a recorder unit's records with every snapshot, from
+   * `since` on, or restarts the watch already under the same id there.
+   */
+  | { kind: 'watchRecords'; reqId: number; watch: RecordWatchRequest }
+  /** Stops a record watch; an id the worker does not hold is ignored. */
+  | { kind: 'unwatchRecords'; reqId: number; id: number }
   /** `full` forces a full snapshot, seeding a fresh watch applier. */
   | { kind: 'requestSnapshot'; reqId: number; full?: boolean }
   | { kind: 'requestStatus'; reqId: number }
@@ -58,6 +65,28 @@ export interface StateRead {
   id: number;
   offset: number;
   bytes: Uint8Array;
+}
+
+/** A recorder unit the main thread reads, under an id of its own. */
+export interface RecordWatchRequest {
+  id: number;
+  /** The unit's board submission index, the engine's component id. */
+  unit: number;
+  /** The index of the first record to read, normally 0. */
+  since: number;
+}
+
+/**
+ * Records of a watched recorder read beside a snapshot, so they belong to the
+ * tick the snapshot shows: records `first … first + values.length`, never
+ * empty. A `first` past where the last read ended (or past the watch's
+ * `since`) means the engine overwrote the records in between. `values` is
+ * the engine's own copy, its buffer transferred.
+ */
+export interface RecordRead {
+  id: number;
+  first: number;
+  values: Uint32Array;
 }
 
 export interface SnapshotMessage {
@@ -93,6 +122,11 @@ export interface SnapshotMessage {
    * sent, or that were started or moved since; absent when there are none.
    */
   state?: StateRead[];
+  /**
+   * The records watched recorders hold that no read carried yet, one read per
+   * recorder that has some; absent when none has.
+   */
+  records?: RecordRead[];
 }
 
 export type WorkerToMainMessage =

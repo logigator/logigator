@@ -118,8 +118,8 @@ operates no slot. The names option's key resolver is attached in the
 constructor, as `RomComponent` attaches its memory dimensions.
 
 The **keyboard** (`component-types/keyboard/`) drives outputs without being a
-`UserInput`: seven data bits, a strobe and key down (`KD`), nine outputs of
-one engine input, and no pointer gesture, so no slot path, canvas session or
+`UserInput`: eight data bits (a Latin-1 code), a strobe and key down (`KD`),
+ten outputs of one engine input, and no pointer gesture, so no slot path, canvas session or
 `setInput` reaches it. `D` is latched — it keeps the last code until the next
 press — and `KD` is high while any key is down. Its keys go through the
 component itself — `pressKey`, `holdKey`, `releaseKey`, `releaseKeys`,
@@ -134,12 +134,33 @@ window and the automation API both call these, so they agree on the keys
 down: a window key that automation let go of sends nothing on its keyup. The
 body has the gamepad's layout, a 3-cell glyph column beside a 1-cell label
 column (its `portLabelRoom`): a static keycap glyph above a readout box,
-centred on the nine rows. The readout shows the code on `D0`…`D6` read through
+centred on the ten rows. The readout shows the code on `D0`…`D7` read through
 `isOutputHigh`, each output ahead of its bubble, so it is the code the
 keyboard sends, and the box's fill lights while `KD` reads high; both follow
 the link state tick by tick (`setPortPowered`). A new code assigns the
 `BitmapText`'s text and scale and the box outline's alpha, `KD` the fill's,
 never a context; only the readout is a rotation-counter container.
+
+The **terminal** (`component-types/terminal/`) is the output side: `D0`…`D7`
+and `CLK`, one engine recorder, no outputs. What it shows is not link state
+but the records the recorder kept, one byte per `CLK` edge, folded into a
+`TerminalScreenBuffer` (`terminal-screen.ts`, pure: the screen, the cursor,
+the control codes, deferred wrap and a scrollback of at most 10 000 lines,
+addressed by stable indices) through `applyRecords(first, values)`, which
+marks a gap in `first` as characters lost. The marker waits on the cursor's
+row (`rowLost`), or the row above when the cursor starts an empty one, and
+follows it into the scrollback, so it lands after what was printed before the
+loss; a form feed pushes it at once, a reset drops it. `setSimulating(true)`
+starts the session's watch over the board terminal's recorder from its first
+record, window open or not (`SimulationService.watchRecords` by id, which
+finds nothing for a watch copy), and `setSimulating(false)` closes it; a watch
+level hands a copy its own recorder through `readRecords(source)` instead.
+`clearSimState` empties screen and scrollback, so a stop does. The body is a
+1-cell label column beside a framed screen that stays upright (a
+rotation-counter container): one `BitmapText` per row, its text assigned only
+when `rowVersion` says the row changed, and a block cursor moved by position
+and shown by alpha while a session runs. `version` is a signal of the
+screen's version for a view reading `screen`.
 
 Also worth knowing: `ignoresWireCollision` (only `TextComponent`; wires may pass
 through), the per-side negation sets (out-of-range entries ignored on read and

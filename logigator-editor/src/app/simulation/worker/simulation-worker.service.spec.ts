@@ -17,6 +17,12 @@ import {
   SimulationWorkerService
 } from './simulation-worker.service';
 import { userInputBoard } from '../../../testing/sim-engine';
+import {
+  byteFrames,
+  byteTicks,
+  RECORDER_UNIT,
+  recorderBoard
+} from '../../../testing/recorder-writes';
 
 const DESCRIPTOR = userInputBoard(8);
 
@@ -612,5 +618,120 @@ describe('SimulationWorkerService', () => {
 
     await expect(session).rejects.toThrow('session ended');
     expect(fakeWorker.terminated).toBe(true);
+  });
+
+  describe('record watches', () => {
+    const BOARD = recorderBoard(64);
+    /** Lets every worker round trip in flight land. */
+    const settle = () => new Promise((resolve) => setTimeout(resolve));
+
+    /** Records `codes` through the board's input, stepping until done. */
+    async function write(codes: readonly number[]): Promise<void> {
+      service.submitInput([{ comp: 0, frames: byteFrames(codes) }]);
+      for (let tick = 0; tick < byteTicks(codes.length); tick++) {
+        await service.step();
+      }
+      await settle();
+    }
+
+    /** Every record a watch was handed, in order, with where each read began. */
+    function collect(): {
+      onRead: (first: number, values: Uint32Array) => void;
+      firsts: number[];
+      records: number[];
+    } {
+      const firsts: number[] = [];
+      const records: number[] = [];
+      return {
+        firsts,
+        records,
+        onRead: (first, values) => {
+          firsts.push(first);
+          records.push(...values);
+        }
+      };
+    }
+
+    it('hands every record over once, in order, ahead of its own frame', async () => {
+      let frames = 0;
+      await service.startSession(BOARD, { ...hooks, onFrame: () => frames++ });
+      const readAt: number[] = [];
+      const records: number[] = [];
+      let next = 0;
+      service.watchRecords(RECORDER_UNIT, (first, values) => {
+        expect(first).toBe(next);
+        next = first + values.length;
+        readAt.push(frames);
+        records.push(...values);
+      });
+      const codes = [0x48, 0x69, 0x0a, 0xe9, 0x20, 0x7e];
+
+      await write(codes.slice(0, 2));
+      await write(codes.slice(2));
+
+      expect(records).toEqual(codes);
+      // Each read lands before the `onFrame` of the snapshot carrying it.
+      const carrying = fakeWorker.snapshots.flatMap((snapshot, index) =>
+        snapshot.records ? [index] : []
+      );
+      expect(readAt).toEqual(carrying);
+    });
+
+    it('delivers what a recorder already holds to a watch started while paused, with no step', async () => {
+      await service.startSession(BOARD, hooks);
+      await write([1, 2, 3]);
+      const steps = fakeWorker.postedOfKind('step').length;
+      const watch = collect();
+
+      service.watchRecords(RECORDER_UNIT, watch.onRead);
+      await settle();
+
+      expect(watch.records).toEqual([1, 2, 3]);
+      expect(fakeWorker.postedOfKind('step')).toHaveLength(steps);
+    });
+
+    it('reads for watches started before the engine was up once it is', async () => {
+      const early = collect();
+      service.watchRecords(RECORDER_UNIT, early.onRead);
+      const session = service.startSession(BOARD, hooks);
+      const starting = collect();
+      service.watchRecords(RECORDER_UNIT, starting.onRead);
+      await session;
+
+      await write([7, 8]);
+
+      expect(early.records).toEqual([7, 8]);
+      expect(starting.records).toEqual([7, 8]);
+    });
+
+    it('reads a stopped engine from its first record again, and nothing once closed', async () => {
+      await service.startSession(BOARD, hooks);
+      const watch = collect();
+      const handle = service.watchRecords(RECORDER_UNIT, watch.onRead);
+      await write([1, 2]);
+
+      await service.reset();
+      await write([3]);
+      expect(watch.firsts.at(-1)).toBe(0);
+      expect(watch.records).toEqual([1, 2, 3]);
+
+      handle.close();
+      await write([4]);
+      expect(watch.records).toEqual([1, 2, 3]);
+      expect(fakeWorker.postedOfKind('unwatchRecords')).toHaveLength(1);
+    });
+
+    it('keeps no watch past the session', async () => {
+      await service.startSession(BOARD, hooks);
+      const watch = collect();
+      service.watchRecords(RECORDER_UNIT, watch.onRead);
+      service.endSession();
+
+      await service.startSession(BOARD, hooks);
+      await write([5]);
+
+      expect(watch.records).toEqual([]);
+      expect(fakeWorker.postedOfKind('watchRecords')).toHaveLength(0);
+    });
   });
 });

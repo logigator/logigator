@@ -62,11 +62,26 @@ export interface SimulationSessionHooks {
 
 const STATUS_POLL_MS = 1000;
 
+/**
+ * A watch over a recorder unit's records, from {@link
+ * SimulationWorkerService.watchRecords}.
+ */
+export interface RecordWatch {
+  close(): void;
+}
+
 /** One state watch the bridge keeps, and posts again to a new engine. */
 interface StateWatchEntry {
   readonly unit: number;
   range: ByteRange | null;
   readonly onRead: (offset: number, bytes: Uint8Array) => void;
+}
+
+/** One record watch the bridge keeps, and posts again to a new engine. */
+interface RecordWatchEntry {
+  readonly unit: number;
+  readonly since: number;
+  readonly onRead: (first: number, values: Uint32Array) => void;
 }
 
 interface PendingRequest {
@@ -151,6 +166,8 @@ export class SimulationWorkerService {
   private nextWatchId = 1;
   /** State watches by the id the worker knows them under. */
   private readonly stateWatches = new Map<number, StateWatchEntry>();
+  /** Record watches by the id the worker knows them under. */
+  private readonly recordWatches = new Map<number, RecordWatchEntry>();
 
   private readonly _measuredHz = signal(0);
   /** Measured simulation speed in ticks/s, computed from status-poll deltas. */
@@ -170,12 +187,15 @@ export class SimulationWorkerService {
   }
 
   /** Spawns the worker, waits for the engine, and builds the simulation.
-   * Resolves once the session can run. */
+   * Resolves once the session can run. Watches started while no session
+   * was running are this one's. */
   public async startSession(
     descriptor: BoardDescriptor,
     hooks: SimulationSessionHooks
   ): Promise<void> {
-    this.endSession();
+    if (this.worker) {
+      this.endSession();
+    }
     this.hooks = hooks;
     this.fullSnapshots = 0;
     this.deltaSnapshots = 0;
@@ -205,13 +225,16 @@ export class SimulationWorkerService {
     await this._request({ kind: 'init', descriptor });
     this.ready = true;
     // `_post` drops what was sent before the engine is up: a snapshot
-    // request, and the state watches of inspections opened meanwhile. Send
-    // them now, so neither is left dark.
+    // request, and the state and record watches started meanwhile. Send them
+    // now, so none is left dark.
     let watching = false;
     for (const [id, entry] of this.stateWatches) {
       if (entry.range) {
         watching = this._postStateWatch(id, entry) || watching;
       }
+    }
+    for (const [id, entry] of this.recordWatches) {
+      watching = this._postRecordWatch(id, entry) || watching;
     }
     if (this.wantFullSnapshot || watching) {
       this._requestSnapshot();
@@ -234,6 +257,7 @@ export class SimulationWorkerService {
     this.inputProgress.clear();
     this.submissions.clear();
     this.stateWatches.clear();
+    this.recordWatches.clear();
     this._measuredHz.set(0);
     this._tick.set(0);
     const error = new Error('Simulation session ended');
@@ -416,6 +440,39 @@ export class SimulationWorkerService {
     };
   }
 
+  /**
+   * Starts a watch over a recorder unit's records from record `since` on.
+   * The worker reads the unit beside each snapshot whose tick moved its
+   * record count, so every record reaches `onRead` once, in order, ahead of
+   * the session's `onFrame`, as records `first … first + values.length`; a
+   * `first` past where the last read ended, or past `since`, counts records
+   * the engine overwrote before they were read. A stop starts the recorder
+   * over, and its reads with it, from record 0. While paused, starting a
+   * watch pulls a snapshot, so the records already written come without a
+   * step. A watch does not survive the session.
+   */
+  public watchRecords(
+    unit: number,
+    onRead: (first: number, values: Uint32Array) => void,
+    since = 0
+  ): RecordWatch {
+    const id = this.nextWatchId++;
+    const entry: RecordWatchEntry = { unit, since, onRead };
+    this.recordWatches.set(id, entry);
+    if (this._postRecordWatch(id, entry) && this.runMode === 'idle') {
+      this._requestSnapshotSoon();
+    }
+    return {
+      close: () => {
+        if (this.recordWatches.get(id) !== entry) {
+          return;
+        }
+        this.recordWatches.delete(id);
+        this._post({ kind: 'unwatchRecords', id });
+      }
+    };
+  }
+
   private _startFrameLoop(): void {
     if (this.frameHandle === null) {
       this.frameHandle = this.frameScheduler.request(this._frame);
@@ -486,6 +543,13 @@ export class SimulationWorkerService {
         })
       : this._post({ kind: 'unwatchState', id });
     return reqId !== null;
+  }
+
+  private _postRecordWatch(id: number, entry: RecordWatchEntry): boolean {
+    const { unit, since } = entry;
+    return (
+      this._post({ kind: 'watchRecords', watch: { id, unit, since } }) !== null
+    );
   }
 
   private _startStatusPolling(): void {
@@ -633,6 +697,9 @@ export class SimulationWorkerService {
         for (const read of msg.state ?? []) {
           this.stateWatches.get(read.id)?.onRead(read.offset, read.bytes);
         }
+        for (const read of msg.records ?? []) {
+          this.recordWatches.get(read.id)?.onRead(read.first, read.values);
+        }
         const applier = this.hooks?.applier;
         if (applier) {
           const { ids, invalid, values } = unpackSnapshot(msg);
@@ -654,7 +721,7 @@ export class SimulationWorkerService {
           this.hooks?.repaint();
         }
         // A full-snapshot request that arrived while this one was in flight,
-        // or a state watch moved while paused. A run pulls the next frame's
+        // or a watch started or moved while paused. A run pulls the next frame's
         // snapshot anyway.
         const wanted = this.wantSnapshot && this.runMode === 'idle';
         this.wantSnapshot = false;

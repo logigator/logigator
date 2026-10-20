@@ -21,8 +21,10 @@ import {
   ClockMode,
   CompiledBoard,
   RamRead,
+  ENGINE_RECORDER_TYPE,
   ENGINE_USER_INPUT_TYPE,
   LinkRenderTargets,
+  TERMINAL_RECORD_CAPACITY,
   TOP_LEVEL_PATH
 } from './compiled-board.model';
 import { CompileDiagnostic } from './compile-error';
@@ -52,7 +54,8 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.ENCODER,
   BuiltInComponentType.MUX,
   BuiltInComponentType.DEMUX,
-  BuiltInComponentType.ROM
+  BuiltInComponentType.ROM,
+  BuiltInComponentType.TERMINAL
 ]);
 
 /**
@@ -60,6 +63,23 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
  * memory — so their units are recorded by component.
  */
 const STATE_TYPES: ReadonlySet<number> = new Set([BuiltInComponentType.RAM]);
+
+/**
+ * Unit types whose records the editor reads beside snapshots — a terminal's
+ * characters — so their units are recorded by component.
+ */
+const RECORD_TYPES: ReadonlySet<number> = new Set([
+  BuiltInComponentType.TERMINAL
+]);
+
+/**
+ * Editor types whose engine type id is not their own. A terminal is the
+ * engine's recorder: `D0`…`D7` its data bus and `CLK` its trigger, the
+ * recorder's last input, so its ports are already in engine order.
+ */
+const ENGINE_TYPES: ReadonlyMap<number, number> = new Map([
+  [BuiltInComponentType.TERMINAL, ENGINE_RECORDER_TYPE]
+]);
 
 /** One emitted unit, pins as union-find node ids (link ids come later). */
 interface EmittedUnit {
@@ -131,6 +151,8 @@ interface EmitContext {
    * unit's index in this pass.
    */
   stateUnits: Map<number, number>;
+  /** Directly emitted recorder: component id → its unit's index in this pass. */
+  recordUnits: Map<number, number>;
   /** Directly placed custom instances, keyed by component id. */
   instances: Map<number, EmittedInstance>;
   /**
@@ -195,7 +217,8 @@ export class BoardCompilerService {
   /**
    * Per-type engine parameters: ROM contents bit-packed to a byte table sized
    * `addressSize` × `wordSize` (`rom-data.codec.ts`), the clock's delay (the
-   * ticks it stays low per cycle) and waveform, and the RAM's read mode.
+   * ticks it stays low per cycle) and waveform, the RAM's read mode, and the
+   * records a terminal's recorder keeps.
    */
   private _paramsFor(component: Component): BoardComponentParams | undefined {
     switch (component.config.type) {
@@ -216,6 +239,8 @@ export class BoardCompilerService {
         };
       case BuiltInComponentType.RAM:
         return { read: component.options['read'].value as RamRead };
+      case BuiltInComponentType.TERMINAL:
+        return { capacity: TERMINAL_RECORD_CAPACITY };
       default:
         return undefined;
     }
@@ -256,6 +281,7 @@ export class BoardCompilerService {
       diagnostics: [],
       userInputs: new Map<number, number>(),
       stateUnits: new Map<number, number>(),
+      recordUnits: new Map<number, number>(),
       instances: new Map<number, EmittedInstance>(),
       displays: []
     };
@@ -364,6 +390,7 @@ export class BoardCompilerService {
       mapping: new Map([[TOP_LEVEL_PATH, targets]]),
       userInputs: ctx.userInputs,
       stateUnits: ctx.stateUnits,
+      recordUnits: ctx.recordUnits,
       diagnostics: ctx.diagnostics,
       watch: new WatchIndex(instances, templateTables)
     };
@@ -456,10 +483,13 @@ export class BoardCompilerService {
       if (STATE_TYPES.has(type)) {
         ctx.stateUnits.set(component.id, ctx.units.length);
       }
+      if (RECORD_TYPES.has(type)) {
+        ctx.recordUnits.set(component.id, ctx.units.length);
+      }
       const { negInputs, negOutputs } = this._negationFor(component);
       const params = this._paramsFor(component);
       ctx.units.push({
-        type,
+        type: ENGINE_TYPES.get(type) ?? type,
         ...this._enginePinOrder(
           component,
           pinNodes.slice(0, component.numInputs),
@@ -639,6 +669,7 @@ export class BoardCompilerService {
         diagnostics: [],
         userInputs: new Map<number, number>(),
         stateUnits: new Map<number, number>(),
+        recordUnits: new Map<number, number>(),
         instances: new Map<number, EmittedInstance>(),
         displays: []
       };
@@ -748,6 +779,10 @@ export class BoardCompilerService {
       for (const [id, unitIndex] of ctx.stateUnits) {
         stateUnits.set(indexOfId.get(id)!, unitIndex);
       }
+      const recordUnits = new Map<number, number>();
+      for (const [id, unitIndex] of ctx.recordUnits) {
+        recordUnits.set(indexOfId.get(id)!, unitIndex);
+      }
       const children = new Map<number, WatchChildBridge>();
       for (const [id, instance] of ctx.instances) {
         children.set(indexOfId.get(id)!, {
@@ -769,6 +804,7 @@ export class BoardCompilerService {
           portNets: watchPortNets,
           userInputs,
           stateUnits,
+          recordUnits,
           children
         }
       };

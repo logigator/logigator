@@ -32,6 +32,7 @@ import { segmentDisplayComponentConfig } from './component-types/segment-display
 import { ledMatrixComponentConfig } from './component-types/led-matrix/led-matrix.config';
 import { gamepadComponentConfig } from './component-types/gamepad/gamepad.config';
 import { keyboardComponentConfig } from './component-types/keyboard/keyboard.config';
+import { terminalComponentConfig } from './component-types/terminal/terminal.config';
 
 /**
  * Every built-in's config. A function rather than a module-level array: a
@@ -71,7 +72,8 @@ const builtInComponents = (): ComponentConfig<any>[] => [
   segmentDisplayComponentConfig,
   ledMatrixComponentConfig,
   gamepadComponentConfig,
-  keyboardComponentConfig
+  keyboardComponentConfig,
+  terminalComponentConfig
 ];
 
 @Injectable({

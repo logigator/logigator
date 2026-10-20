@@ -316,6 +316,47 @@ export interface PortReadout {
   outputs: boolean[];
 }
 
+/** One scrollback entry of a terminal, oldest first. */
+export type TerminalScrollbackReadout =
+  | {
+      kind: 'line';
+      /** The row as it scrolled off the top, trailing empty cells trimmed. */
+      text: string;
+      /** Whether the text continues on the next line by a wrap. */
+      wrapped: boolean;
+    }
+  | {
+      /** Characters the engine overwrote before they were read. */
+      kind: 'lost';
+      count: number;
+    };
+
+/** What a terminal shows: its screen, its cursor and its scrollback. */
+export interface TerminalReadout {
+  componentId: number;
+  columns: number;
+  rows: number;
+  /**
+   * The screen, top row first, trailing empty cells trimmed; a no-break
+   * space reads as a space and a soft hyphen as `-`, as drawn.
+   */
+  screen: string[];
+  /** Whether each screen row continues on the next by a wrap. */
+  wrapped: boolean[];
+  /**
+   * Characters lost after each screen row, 0 for none: the `lost` entry
+   * that follows the row into the scrollback when it leaves the screen.
+   */
+  lost: number[];
+  /**
+   * `pendingWrap`: the last column was printed to, and the next printable
+   * goes to the start of the next line first.
+   */
+  cursor: { row: number; column: number; pendingWrap: boolean };
+  /** At most 10 000 lines that left the screen at the top, oldest first. */
+  scrollback: TerminalScrollbackReadout[];
+}
+
 // -- Camera ----------------------------------------------------------------
 
 export interface ViewportInfo {
@@ -521,10 +562,11 @@ export interface LogigatorAutomationApi {
      * each character on `D` with `KD` high for three ticks, `STB` high for
      * the middle one, then `KD` low for one with `D` kept — four steps per
      * character while paused. `D` keeps the last character. Strict:
-     * printable ASCII, `\n`, `\t`, `\b`, `\x1b` and `\x7f` only (CRLF and CR
-     * read as `\n`), at most 10 000 characters; any other character is an
-     * error naming it and its position, and nothing is queued. Resolves once
-     * queued.
+     * printable Latin-1 (typographic quotes, dashes and `…` as their ASCII),
+     * `\n`, `\t`, `\b`, `\x1b`, `\x7f`, and `\x1c`–`\x1f` and `\x0b` for the
+     * arrow keys and Home only (CRLF and CR read as `\n`), at most 10 000
+     * codes; any other character is an error naming it and its position, and
+     * nothing is queued. Resolves once queued.
      */
     type(componentId: number, text: string): Promise<void>;
     /**
@@ -544,6 +586,11 @@ export interface LogigatorAutomationApi {
      */
     cancelKeys(componentId: number): Promise<void>;
     readPorts(componentIds?: number[]): Promise<PortReadout[]>;
+    /**
+     * Terminal: its screen, cursor and scrollback against a freshly pulled
+     * snapshot, every record written so far folded in. A stop clears both.
+     */
+    readTerminal(componentId: number): Promise<TerminalReadout>;
   };
 
   // camera — grid units in, grid units out; never a history entry
@@ -578,7 +625,7 @@ export interface LogigatorAutomationApi {
   ): WorkModeState;
 
   /**
-   * Live inspections. `getElements`/`activate`/`setInput`/`type`/`setKey`/`cancelKeys`/`navigateTo`/`camera` address a
+   * Live inspections. `getElements`/`activate`/`setInput`/`type`/`setKey`/`cancelKeys`/`readTerminal`/`navigateTo`/`camera` address a
    * **watch**, whose levels are fresh copies of the inner circuit — their
    * element ids are the copy's, not the placed instance's.
    */
@@ -629,6 +676,11 @@ export interface LogigatorAutomationApi {
     ): Promise<void>;
     /** `sim.cancelKeys` for a keyboard inside the visible watch level. */
     cancelKeys(inspectionId: number, componentId: number): Promise<void>;
+    /** `sim.readTerminal` for a terminal inside the visible watch level. */
+    readTerminal(
+      inspectionId: number,
+      componentId: number
+    ): Promise<TerminalReadout>;
     /** Breadcrumb navigation: pops every level deeper than `level`. */
     navigateTo(inspectionId: number, level: number): InspectionInfo;
     /**

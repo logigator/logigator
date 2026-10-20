@@ -11,6 +11,16 @@ import { WatchIndex } from './watch-index';
  */
 export const ENGINE_USER_INPUT_TYPE = 200;
 
+/**
+ * The engine's recorder type: on a rising trigger, its last input, it records
+ * the data bus before it as a number the host reads. The editor's own 201 is
+ * `SWITCH`, so a recorder's type is always mapped to this.
+ */
+export const ENGINE_RECORDER_TYPE = 201;
+
+/** Records a terminal's recorder keeps for the host to read. */
+export const TERMINAL_RECORD_CAPACITY = 65_536;
+
 /** A clock's waveform: high for `period` ticks, or for one. */
 export type ClockMode = 'square' | 'pulse';
 
@@ -39,12 +49,14 @@ export interface BoardComponentDescriptor {
   data?: Uint8Array;
   /** LED matrix (the engine's addressable register): its data-bus width. */
   dataBus?: number;
+  /** Recorder: the records it keeps, the oldest overwritten past them. */
+  capacity?: number;
 }
 
 /** The per-type parameters of a {@link BoardComponentDescriptor}. */
 export type BoardComponentParams = Pick<
   BoardComponentDescriptor,
-  'period' | 'mode' | 'read' | 'data' | 'dataBus'
+  'period' | 'mode' | 'read' | 'data' | 'dataBus' | 'capacity'
 >;
 
 /**
@@ -104,6 +116,11 @@ export interface CompiledBoard {
    * component whose engine state the editor reads (a RAM's memory).
    */
   stateUnits: ReadonlyMap<number, number>;
+  /**
+   * Top-level `Component.id` → its recorder unit's board submission index,
+   * for every component whose records the editor reads (a terminal).
+   */
+  recordUnits: ReadonlyMap<number, number>;
   diagnostics: CompileDiagnostic[];
   /** Path-addressable watch data for live inner-circuit views. */
   watch: WatchIndex;

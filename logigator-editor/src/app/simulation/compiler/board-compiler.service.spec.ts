@@ -688,7 +688,7 @@ describe('BoardCompilerService', () => {
     expect(board.descriptor.components).toHaveLength(1);
   });
 
-  it('compiles a keyboard to one unit of nine outputs, D0 to D6, STB then KD, a bubble negating only its own', () => {
+  it('compiles a keyboard to one unit of ten outputs, D0 to D7, STB then KD, a bubble negating only its own', () => {
     place(makeAnd(2, undefined, 8, 0));
     const keyboard = place(makeKeyboard(0, 0));
     keyboard.setPortNegated('out', 3, true);
@@ -696,7 +696,7 @@ describe('BoardCompilerService', () => {
     const board = compiler.compile(project);
 
     expect(board.diagnostics).toEqual([]);
-    expect(keyboard.numOutputs).toBe(9);
+    expect(keyboard.numOutputs).toBe(10);
     expect(expectOneInputUnit(board, keyboard, [3])).toBe(1);
     expect(board.descriptor.components).toHaveLength(2);
   });

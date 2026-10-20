@@ -188,11 +188,69 @@ describe('KeyboardInspectionComponent capture', () => {
     expect(route.sent).toEqual(['press TAB', 'release']);
   });
 
-  it('passes keys without a character through and consumes one outside ASCII', () => {
-    expect(key('keydown', 'ArrowUp', 'ArrowUp').defaultPrevented).toBe(false);
+  it('passes keys without a code through and consumes one outside Latin-1', () => {
     expect(key('keydown', 'F5', 'F5').defaultPrevented).toBe(false);
-    expect(key('keydown', 'Quote', 'ä').defaultPrevented).toBe(true);
+    expect(key('keydown', 'End', 'End').defaultPrevented).toBe(false);
+    expect(key('keydown', 'KeyE', '€').defaultPrevented).toBe(true);
     expect(route.sent).toEqual([]);
+  });
+
+  it('presses and releases a Latin-1 key as any other', () => {
+    key('keydown', 'Quote', 'ä');
+    key('keyup', 'Quote', 'ä');
+
+    expect(route.sent).toEqual(['press ä', 'release']);
+  });
+
+  it('presses the arrows and Home as keys, consuming their repeats', () => {
+    const keys = [
+      ['ArrowRight', 'RT'],
+      ['ArrowLeft', 'LT'],
+      ['ArrowUp', 'UP'],
+      ['ArrowDown', 'DN'],
+      ['Home', 'HOM']
+    ];
+    for (const [name] of keys) {
+      expect(key('keydown', name, name).defaultPrevented, name).toBe(true);
+      expect(
+        key('keydown', name, name, { repeat: true }).defaultPrevented
+      ).toBe(true);
+      key('keyup', name, name);
+    }
+
+    expect(route.sent).toEqual(
+      keys.flatMap(([, shown]) => [`press ${shown}`, 'release'])
+    );
+  });
+
+  it('passes an arrow or Home with Shift, Ctrl, Meta or Alt through', () => {
+    const events = ['ArrowLeft', 'ArrowDown', 'Home'].flatMap((name) =>
+      (['shiftKey', 'ctrlKey', 'metaKey', 'altKey'] as const).map((modifier) =>
+        key('keydown', name, name, { [modifier]: true })
+      )
+    );
+
+    expect(events.filter((e) => e.defaultPrevented)).toEqual([]);
+    expect(route.sent).toEqual([]);
+  });
+
+  it('types a key folding to several codes as taps, refused whole where they do not fit', () => {
+    key('keydown', 'Period', '…');
+    key('keyup', 'Period', '…');
+    expect(route.sent).toEqual([
+      'press .',
+      'release',
+      'press .',
+      'release',
+      'press .',
+      'release'
+    ]);
+    expect(keyboard.heldKey()).toBeNull();
+
+    leaveRoom(2);
+    key('keydown', 'Period', '…');
+    key('keydown', 'Quote', '’');
+    expect(route.sent.slice(6)).toEqual(["press '"]);
   });
 
   it('leaves a key being composed to the text it produces', () => {
@@ -280,6 +338,26 @@ describe('KeyboardInspectionComponent capture', () => {
     expect(route.sent).toEqual(['press l', 'release', 'press l', 'release']);
   });
 
+  it('pastes Latin-1 as itself and a typographic quote as ASCII, skipping the rest', () => {
+    paste('“é€”');
+
+    expect(route.sent).toEqual([
+      'press "',
+      'release',
+      'press é',
+      'release',
+      'press "',
+      'release'
+    ]);
+    TestBed.inject(ApplicationRef).tick();
+    expect(statusLine()).toBe(
+      TestBed.inject(TranslationService).translate(
+        'components.def.KEYBOARD.window.skippedOne',
+        { char: '€' }
+      )
+    );
+  });
+
   it('lets a tap end with every key up, so the held key going up sends nothing', () => {
     key('keydown', 'KeyA', 'a');
     paste('x');
@@ -336,7 +414,7 @@ describe('KeyboardInspectionComponent capture', () => {
   }
 
   it('sends the Type text dialog’s text as taps, read as a paste is', () => {
-    const form = typeTextDialog('h\r\nä!');
+    const form = typeTextDialog('h\r\nä€!');
     submitButton(form).click();
     TestBed.inject(ApplicationRef).tick();
 
@@ -345,6 +423,8 @@ describe('KeyboardInspectionComponent capture', () => {
       'release',
       'press LF',
       'release',
+      'press ä',
+      'release',
       'press !',
       'release'
     ]);
@@ -352,8 +432,8 @@ describe('KeyboardInspectionComponent capture', () => {
     expect(document.activeElement).toBe(field);
   });
 
-  it('offers nothing to send for a text without an ASCII character', () => {
-    const form = typeTextDialog('äöü');
+  it('offers nothing to send for a text without a Latin-1 character', () => {
+    const form = typeTextDialog('€😀');
 
     expect(submitButton(form).disabled).toBe(true);
     form.dispatchEvent(new Event('submit', { cancelable: true }));
