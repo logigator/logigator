@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "name": "Pulse button",
+  "components": [
+    {
+      "type": 200,
+      "x": [0],
+      "y": [0]
+    },
+    {
+      "type": 202,
+      "x": [6],
+      "y": [0]
+    }
+  ],
+  "wires": "5,0:w4",
+  "definitions": []
+}

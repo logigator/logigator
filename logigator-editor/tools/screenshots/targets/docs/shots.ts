@@ -43,6 +43,61 @@ async function switchedFrames(
   return { frames };
 }
 
+/** A circuit's components of one type, top to bottom. */
+async function column(ed: Editor, symbol: string): Promise<ApiComponent[]> {
+  return (await ed.componentsOfType(symbol)).sort(
+    (a, b) => a.pos[1] - b.pos[1]
+  );
+}
+
+/**
+ * One frame per row of `states`, each a settled circuit with lever `i` set to
+ * the row's element `i` (1 on, 0 off).
+ */
+async function leverFrames(
+  ed: Editor,
+  target: SnapTarget,
+  levers: readonly ApiComponent[],
+  states: readonly (readonly (0 | 1)[])[]
+): Promise<ShotResult> {
+  const frames: Buffer[] = [];
+  for (const state of states) {
+    for (const [i, lever] of levers.entries()) {
+      await ed.setInput(lever.id, state[i] === 1);
+    }
+    await ed.runUntilSettled();
+    await ed.parkPointer();
+    frames.push(await ed.snap(target));
+  }
+  return { frames };
+}
+
+/**
+ * Presses a pulse button and waits out its body's flash, which the editor
+ * times on the wall clock (`PULSE_BUTTON_FLASH_MS`, 150 ms), so whether a
+ * frame caught it would depend on how fast the run is.
+ */
+async function pulse(ed: Editor, button: ApiComponent): Promise<void> {
+  await ed.setInput(button.id, true);
+  await ed.page.waitForTimeout(250);
+}
+
+/**
+ * A component reference scene stepped through `states`, its switches taken
+ * top to bottom — the order of the ports they feed. A single state is a still.
+ */
+async function switchStates(
+  ed: Editor,
+  circuit: string,
+  states: readonly (readonly (0 | 1)[])[]
+): Promise<ShotResult> {
+  await ed.load(circuit);
+  const levers = await column(ed, 'SW');
+  await ed.enterSimulation();
+  const clip = await ed.contentClip({ pad: 1.5 });
+  return leverFrames(ed, { clip }, levers, states);
+}
+
 /**
  * One entry per image the documentation embeds. `run(editor)` stages the state
  * the picture is of and returns what to capture: a `clip` (CSS px,
@@ -215,12 +270,357 @@ export const SHOTS: Shot[] = [
     }
   },
 
+  // -- Component reference --------------------------------------------------
+  //
+  // One running scene per built-in, its switches top to bottom in the order
+  // of the ports they feed.
+  {
+    name: 'component-not-gate',
+    run: (ed) => switchStates(ed, 'component-not-gate', [[0], [1]])
+  },
+  {
+    name: 'component-and-gate',
+    run: (ed) =>
+      switchStates(ed, 'component-and-gate', [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ])
+  },
+  {
+    name: 'component-or-gate',
+    run: (ed) =>
+      switchStates(ed, 'component-or-gate', [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ])
+  },
+  {
+    name: 'component-xor-gate',
+    run: (ed) =>
+      switchStates(ed, 'component-xor-gate', [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ])
+  },
+  {
+    // D, CLK: Q takes D on the rising edge, and holds it while D changes
+    // with the clock low. The last frame leads back into the first.
+    name: 'component-d-flip-flop',
+    run: (ed) =>
+      switchStates(ed, 'component-d-flip-flop', [
+        [1, 0],
+        [1, 1],
+        [0, 0],
+        [0, 1]
+      ])
+  },
+  {
+    // J, CLK, K: set, reset, then toggle twice, each on a rising edge.
+    name: 'component-jk-flip-flop',
+    run: (ed) =>
+      switchStates(ed, 'component-jk-flip-flop', [
+        [1, 0, 0],
+        [1, 1, 0],
+        [0, 0, 1],
+        [0, 1, 1],
+        [1, 0, 1],
+        [1, 1, 1],
+        [1, 0, 1],
+        [1, 1, 1]
+      ])
+  },
+  {
+    // S, CLK, R: set, then reset, each on a rising edge.
+    name: 'component-sr-flip-flop',
+    run: (ed) =>
+      switchStates(ed, 'component-sr-flip-flop', [
+        [1, 0, 0],
+        [1, 1, 0],
+        [0, 0, 1],
+        [0, 1, 1]
+      ])
+  },
+  {
+    name: 'component-half-adder',
+    run: (ed) =>
+      switchStates(ed, 'component-half-adder', [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ])
+  },
+  {
+    // A, B, Cin: one, two and three ones added.
+    name: 'component-full-adder',
+    run: (ed) =>
+      switchStates(ed, 'component-full-adder', [
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 1, 0],
+        [1, 1, 1]
+      ])
+  },
+  {
+    // S0, 0, 1: input 0 on and input 1 off, so the output follows S0.
+    name: 'component-multiplexer',
+    run: (ed) =>
+      switchStates(ed, 'component-multiplexer', [
+        [0, 1, 0],
+        [1, 1, 0]
+      ])
+  },
+  {
+    // S0, I: I on, so the lit output follows S0.
+    name: 'component-demultiplexer',
+    run: (ed) =>
+      switchStates(ed, 'component-demultiplexer', [
+        [0, 1],
+        [1, 1]
+      ])
+  },
+  {
+    name: 'component-decoder',
+    run: (ed) =>
+      switchStates(ed, 'component-decoder', [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ])
+  },
+  {
+    // Two outputs, so four inputs: none, input 0 (only V tells it from
+    // none), then 2 and 3 joining, the highest one encoded.
+    name: 'component-encoder',
+    run: (ed) =>
+      switchStates(ed, 'component-encoder', [
+        [0, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 0, 1, 0],
+        [1, 0, 1, 1]
+      ])
+  },
+  {
+    // Address 3. Words 0–4 of the scene's contents fill up one bit at a time,
+    // so word 3 reads 0111.
+    name: 'component-rom',
+    run: (ed) => switchStates(ed, 'component-rom', [[1, 1, 0, 0]])
+  },
+  {
+    // A0, A1, D0–D3, WE, CLK: 0101 written to address 0 on the clock edge,
+    // the data inputs cleared, then address 1 read (empty) and address 0
+    // again.
+    name: 'component-ram',
+    run: (ed) =>
+      switchStates(ed, 'component-ram', [
+        [0, 0, 1, 0, 1, 0, 1, 0],
+        [0, 0, 1, 0, 1, 0, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0]
+      ])
+  },
+  {
+    // One tick per frame, the clock's default delay of one tick: low, high.
+    name: 'component-clock',
+    async run(ed) {
+      await ed.load('clock');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      const frames: Buffer[] = [];
+      for (let tick = 0; tick < 4; tick++) {
+        await ed.stepSimulation();
+        await ed.parkPointer();
+        frames.push(await ed.snap({ clip }));
+      }
+      return { frames };
+    }
+  },
+  {
+    // One tick per frame: the lower LED, on the switch's own wire, lights and
+    // goes dark a tick before the one behind the delay.
+    name: 'component-delay',
+    async run(ed) {
+      await ed.load('component-delay');
+      const [lever] = await ed.componentsOfType('SW');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      const frames = [await ed.snap({ clip })];
+      for (const on of [true, false]) {
+        await ed.setInput(lever.id, on);
+        for (let tick = 0; tick < 2; tick++) {
+          await ed.stepSimulation();
+          await ed.parkPointer();
+          frames.push(await ed.snap({ clip }));
+        }
+      }
+      // The last frame is the first again.
+      return { frames: frames.slice(0, -1) };
+    }
+  },
+  {
+    // Four outputs into a segment display, one frame per pulse on CLK. The
+    // engine's random sequence is reproducible for the same board.
+    name: 'component-random-number-generator',
+    async run(ed) {
+      await ed.load('component-random-number-generator');
+      const [button] = await ed.componentsOfType('PLS');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      const frames: Buffer[] = [];
+      for (let i = 0; i < 4; i++) {
+        await pulse(ed, button);
+        await ed.runUntilSettled();
+        await ed.parkPointer();
+        frames.push(await ed.snap({ clip }));
+      }
+      return { frames };
+    }
+  },
+  {
+    name: 'component-switch',
+    run: (ed) => switchStates(ed, 'component-switch', [[0], [1]])
+  },
+  {
+    // Released, then held.
+    name: 'component-button',
+    async run(ed) {
+      await ed.load('component-button');
+      const [button] = await ed.componentsOfType('BTN');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      return switchedFrames(ed, { clip }, [button]);
+    }
+  },
+  {
+    // One tick per frame around a press: idle, the one-tick pulse, idle.
+    name: 'component-pulse-button',
+    async run(ed) {
+      await ed.load('component-pulse-button');
+      const [button] = await ed.componentsOfType('PLS');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      await ed.runUntilSettled();
+      const frames = [await ed.snap({ clip })];
+      await pulse(ed, button);
+      for (let tick = 0; tick < 2; tick++) {
+        await ed.stepSimulation();
+        await ed.parkPointer();
+        frames.push(await ed.snap({ clip }));
+      }
+      return { frames };
+    }
+  },
+  {
+    // One LED powered, one not.
+    name: 'component-led',
+    run: (ed) => switchStates(ed, 'component-led', [[1, 0]])
+  },
+  {
+    // The default pad, A and Right held.
+    name: 'component-gamepad',
+    async run(ed) {
+      await ed.load('component-gamepad');
+      const [pad] = await ed.componentsOfType('PAD');
+      await ed.enterSimulation();
+      await ed.api(async (id) => {
+        await __logigator.sim.setInput(id, true, 'a');
+        await __logigator.sim.setInput(id, true, 'right');
+      }, pad.id);
+      await ed.runUntilSettled();
+      return { clip: await ed.contentClip({ pad: 1.5 }) };
+    }
+  },
+  {
+    // A text typed into the keyboard, printed by a terminal on its strobe.
+    name: 'component-keyboard',
+    async run(ed) {
+      await ed.load('component-keyboard');
+      const [keyboard] = await ed.componentsOfType('KBD');
+      await ed.enterSimulation();
+      const text = 'Hello, world!';
+      await ed.api((a) => __logigator.sim.type(a.id, a.text), {
+        id: keyboard.id,
+        text
+      });
+      // Four steps per character while paused, then the last one settles.
+      await ed.stepSimulation(text.length * 4 + 4);
+      return { clip: await ed.contentClip({ pad: 1.5 }) };
+    }
+  },
+  {
+    // The keyboard echo with three lines printed.
+    name: 'component-terminal',
+    async run(ed) {
+      await ed.load('keyboard-terminal');
+      const [keyboard] = await ed.componentsOfType('KBD');
+      await ed.enterSimulation();
+      const text =
+        'Hello, world!\nEach character arrives on D0-D7\nand prints on the rising edge of CLK.';
+      await ed.api((a) => __logigator.sim.type(a.id, a.text), {
+        id: keyboard.id,
+        text
+      });
+      await ed.stepSimulation(text.length * 4 + 4);
+      return { clip: await ed.contentClip({ pad: 1.5 }) };
+    }
+  },
+  {
+    // Four switches, 0101 → 5, 1010 → 10, then 15.
+    name: 'component-segment-display',
+    run: (ed) =>
+      switchStates(ed, 'component-segment-display', [
+        [0, 0, 0, 0],
+        [1, 0, 1, 0],
+        [0, 1, 0, 1],
+        [1, 1, 1, 1]
+      ])
+  },
+  {
+    // A0, A1, D0–D3 on switches and a pulse button on CLK: a cross drawn
+    // one row per frame.
+    name: 'component-led-matrix',
+    async run(ed) {
+      await ed.load('component-led-matrix');
+      const levers = await column(ed, 'SW');
+      const [button] = await ed.componentsOfType('PLS');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      const rows: (0 | 1)[][] = [
+        [0, 0, 1, 0, 0, 1],
+        [1, 0, 0, 1, 1, 0],
+        [0, 1, 0, 1, 1, 0],
+        [1, 1, 1, 0, 0, 1]
+      ];
+      const frames: Buffer[] = [];
+      for (const row of rows) {
+        for (const [i, lever] of levers.entries()) {
+          await ed.setInput(lever.id, row[i] === 1);
+        }
+        await ed.runUntilSettled();
+        await pulse(ed, button);
+        await ed.runUntilSettled();
+        await ed.parkPointer();
+        frames.push(await ed.snap({ clip }));
+      }
+      return { frames };
+    }
+  },
+
   // -- Custom components ----------------------------------------------------
   {
     name: 'component-palette',
     // Tall enough for the whole palette: it is one scrolling column, and a
-    // clip only captures what is laid out on screen.
-    context: { viewport: { width: 1280, height: 1500 } },
+    // clip only captures what is laid out on screen. French and Spanish run
+    // longest, at about 1750 px below the bars.
+    context: { viewport: { width: 1280, height: 2000 } },
     async run(ed) {
       // A loaded file carries its customs as embedded copies; restoring one
       // fills "User Components".

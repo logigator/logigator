@@ -3,17 +3,19 @@ import type { LanguageId } from '../../../../logigator-core/src/origin/languages
 import './runtime.ts';
 
 /**
- * The origin-wide contracts core holds — the `preferences` cookie codec and the
- * language set — loaded from its TypeScript source rather than restated here.
- * A capture that renders in a language or scheme the run did not ask for fails
- * silently and plausibly, so the encoding a target writes must be the one the
- * apps read.
+ * The origin-wide contracts core holds — the `preferences` and `consent`
+ * cookie codecs and the language set — loaded from its TypeScript source
+ * rather than restated here. A capture that renders in a language or scheme
+ * the run did not ask for fails silently and plausibly, so the encoding a
+ * target writes must be the one the apps read.
  */
 
 const { encodePreferences } =
   await import('../../../../logigator-core/src/origin/preferences-cookie.ts');
 const { AVAILABLE_LANGUAGES, isAvailableLanguage } =
   await import('../../../../logigator-core/src/origin/languages.ts');
+const { CONSENT_COOKIE, encodeConsent } =
+  await import('../../../../logigator-core/src/origin/consent-cookie.ts');
 
 export type { LanguageId };
 
@@ -70,4 +72,16 @@ export function preferencesCookie(
     value: encodePreferences({ lang, theme }),
     url: origin
   };
+}
+
+/**
+ * The `consent` cookie, answered with nothing optional allowed. While the
+ * question is open both apps pin a banner over the bottom of the window, which
+ * every shot framing that far would catch; an answer under core's own revision
+ * is what keeps it closed after the next bump too.
+ */
+export function consentCookie(
+  origin: string
+): Pick<Cookie, 'name' | 'value'> & { url: string } {
+  return { name: CONSENT_COOKIE, value: encodeConsent([]), url: origin };
 }

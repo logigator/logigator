@@ -41,7 +41,12 @@ import {
   type TranslationSchema
 } from './i18n.ts';
 import { installApiMocks } from './cloud-api.ts';
-import { preferencesCookie, type LanguageId, type Theme } from './origin.ts';
+import {
+  consentCookie,
+  preferencesCookie,
+  type LanguageId,
+  type Theme
+} from './origin.ts';
 
 declare global {
   /**
@@ -147,6 +152,8 @@ export class Editor {
    * both apps read them from, and setting it here rather than per target is
    * what keeps a new target from pinning a key the app stopped reading — which
    * fails silently, as a capture in the wrong language that nothing flags.
+   * The consent question goes in answered beside it, so its banner is in no
+   * shot.
    *
    * `cloud` installs the mocked backend and the signed-in session.
    */
@@ -167,12 +174,10 @@ export class Editor {
       // `--base` may be an HTTPS instance with a self-signed certificate.
       ignoreHTTPSErrors: true
     });
+    const origin = new URL(this.baseUrl).origin;
     await this.context.addCookies([
-      preferencesCookie(
-        this.lang,
-        this.colorScheme,
-        new URL(this.baseUrl).origin
-      ),
+      preferencesCookie(this.lang, this.colorScheme, origin),
+      consentCookie(origin),
       ...(cookies ?? [])
     ]);
     await this.context.addInitScript(

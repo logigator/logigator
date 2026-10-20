@@ -1,7 +1,34 @@
 import accountMenuEn from './pages/en/images/account-menu.webp';
 import boardOverviewEn from './pages/en/images/board-overview.webp';
+import componentAndGateEn from './pages/en/images/component-and-gate.webp';
+import componentButtonEn from './pages/en/images/component-button.webp';
+import componentClockEn from './pages/en/images/component-clock.webp';
+import componentDFlipFlopEn from './pages/en/images/component-d-flip-flop.webp';
+import componentDecoderEn from './pages/en/images/component-decoder.webp';
+import componentDelayEn from './pages/en/images/component-delay.webp';
+import componentDemultiplexerEn from './pages/en/images/component-demultiplexer.webp';
+import componentEncoderEn from './pages/en/images/component-encoder.webp';
+import componentFullAdderEn from './pages/en/images/component-full-adder.webp';
+import componentGamepadEn from './pages/en/images/component-gamepad.webp';
+import componentHalfAdderEn from './pages/en/images/component-half-adder.webp';
+import componentJkFlipFlopEn from './pages/en/images/component-jk-flip-flop.webp';
+import componentKeyboardEn from './pages/en/images/component-keyboard.webp';
+import componentLedMatrixEn from './pages/en/images/component-led-matrix.webp';
+import componentLedEn from './pages/en/images/component-led.webp';
+import componentMultiplexerEn from './pages/en/images/component-multiplexer.webp';
+import componentNotGateEn from './pages/en/images/component-not-gate.webp';
+import componentOrGateEn from './pages/en/images/component-or-gate.webp';
 import componentPaletteEn from './pages/en/images/component-palette.webp';
+import componentPulseButtonEn from './pages/en/images/component-pulse-button.webp';
+import componentRamEn from './pages/en/images/component-ram.webp';
+import componentRandomNumberGeneratorEn from './pages/en/images/component-random-number-generator.webp';
+import componentRomEn from './pages/en/images/component-rom.webp';
+import componentSegmentDisplayEn from './pages/en/images/component-segment-display.webp';
 import componentSettingsEn from './pages/en/images/component-settings.webp';
+import componentSrFlipFlopEn from './pages/en/images/component-sr-flip-flop.webp';
+import componentSwitchEn from './pages/en/images/component-switch.webp';
+import componentTerminalEn from './pages/en/images/component-terminal.webp';
+import componentXorGateEn from './pages/en/images/component-xor-gate.webp';
 import customComponentShowcaseEn from './pages/en/images/custom-component-showcase.webp';
 import customComponentTabEn from './pages/en/images/custom-component-tab.webp';
 import exportImageEn from './pages/en/images/export-image.webp';
@@ -94,8 +121,36 @@ import uploadToCloudEs from './pages/es/images/upload-to-cloud.webp';
 const en: Readonly<Record<string, string>> = {
   './images/account-menu.webp': accountMenuEn,
   './images/board-overview.webp': boardOverviewEn,
+  './images/component-and-gate.webp': componentAndGateEn,
+  './images/component-button.webp': componentButtonEn,
+  './images/component-clock.webp': componentClockEn,
+  './images/component-d-flip-flop.webp': componentDFlipFlopEn,
+  './images/component-decoder.webp': componentDecoderEn,
+  './images/component-delay.webp': componentDelayEn,
+  './images/component-demultiplexer.webp': componentDemultiplexerEn,
+  './images/component-encoder.webp': componentEncoderEn,
+  './images/component-full-adder.webp': componentFullAdderEn,
+  './images/component-gamepad.webp': componentGamepadEn,
+  './images/component-half-adder.webp': componentHalfAdderEn,
+  './images/component-jk-flip-flop.webp': componentJkFlipFlopEn,
+  './images/component-keyboard.webp': componentKeyboardEn,
+  './images/component-led-matrix.webp': componentLedMatrixEn,
+  './images/component-led.webp': componentLedEn,
+  './images/component-multiplexer.webp': componentMultiplexerEn,
+  './images/component-not-gate.webp': componentNotGateEn,
+  './images/component-or-gate.webp': componentOrGateEn,
   './images/component-palette.webp': componentPaletteEn,
+  './images/component-pulse-button.webp': componentPulseButtonEn,
+  './images/component-ram.webp': componentRamEn,
+  './images/component-random-number-generator.webp':
+    componentRandomNumberGeneratorEn,
+  './images/component-rom.webp': componentRomEn,
+  './images/component-segment-display.webp': componentSegmentDisplayEn,
   './images/component-settings.webp': componentSettingsEn,
+  './images/component-sr-flip-flop.webp': componentSrFlipFlopEn,
+  './images/component-switch.webp': componentSwitchEn,
+  './images/component-terminal.webp': componentTerminalEn,
+  './images/component-xor-gate.webp': componentXorGateEn,
   './images/custom-component-showcase.webp': customComponentShowcaseEn,
   './images/custom-component-tab.webp': customComponentTabEn,
   './images/export-image.webp': exportImageEn,
