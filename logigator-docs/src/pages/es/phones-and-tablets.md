@@ -31,7 +31,7 @@ Después de copiar, la barra sigue visible con Pegar aunque no haya nada selecci
 
 El botón de reproducción de arriba inicia la simulación. Los controles aparecen entonces en una barra en el borde inferior, y arriba el botón para salir sustituye a Deshacer, Rehacer y Guardar.
 
-Tocar una ROM o una RAM abre su vista en un panel en la parte inferior de la pantalla. El tablero de encima sigue usable, y varias vistas comparten el panel como pestañas. El monitor de un componente personalizado ocupa toda la pantalla, y su flecha de volver regresa al tablero. Consulta [Inspección y monitores](docs:inspection).
+Tocar una ROM, una RAM o un terminal abre su vista en un panel en la parte inferior de la pantalla. El tablero de encima sigue usable, y varias vistas comparten el panel como pestañas. El monitor de un componente personalizado ocupa toda la pantalla, y su flecha de volver regresa al tablero. Consulta [Inspección y monitores](docs:inspection).
 
 La ventana de un teclado se abre en el mismo panel. Toca su campo de escritura, que dice «Toca aquí para escribir», para que aparezca el teclado virtual; el panel sube y se queda por encima de él. El texto que el teclado virtual introduce de una vez, como una palabra sugerida, se envía carácter a carácter, igual que al pegar. Cómo llegan las teclas al circuito está en [Simulación](docs:simulation#escribir-en-un-teclado).
 

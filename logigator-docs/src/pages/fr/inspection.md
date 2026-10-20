@@ -1,10 +1,10 @@
 # Inspection et surveillances
 
-Pendant une [simulation](docs:simulation), en cours ou en pause, trois sortes de composants peuvent être ouverts pour voir à l'intérieur. Un clic sur une ROM affiche son contenu, avec le mot en cours de lecture en surbrillance, et un clic sur une RAM montre ce qu'elle contient à mesure que le circuit y écrit. Un clic sur un composant personnalisé ouvre une surveillance, une vue en direct de son circuit interne.
+Pendant une [simulation](docs:simulation), en cours ou en pause, quatre sortes de composants peuvent être ouverts pour voir à l'intérieur. Un clic sur une ROM affiche son contenu, avec le mot en cours de lecture en surbrillance, un clic sur une RAM montre ce qu'elle contient à mesure que le circuit y écrit, et un clic sur un terminal montre tout ce qu'il a affiché. Un clic sur un composant personnalisé ouvre une surveillance, une vue en direct de son circuit interne.
 
 ![Une fenêtre de surveillance à côté du circuit en cours auquel elle appartient.](./images/inspection-showcase.webp)
 
-Sur ordinateur, chaque vue s'ouvre dans une fenêtre que vous pouvez déplacer et redimensionner. Un nouveau clic sur le composant ramène sa fenêtre au premier plan. En [disposition tactile](docs:phones-and-tablets), les vues de ROM et de RAM partagent un panneau en bas de l'écran, et une surveillance occupe tout l'écran. Quitter la simulation les ferme toutes.
+Sur ordinateur, chaque vue s'ouvre dans une fenêtre que vous pouvez déplacer et redimensionner. Un nouveau clic sur le composant ramène sa fenêtre au premier plan. En [disposition tactile](docs:phones-and-tablets), les vues de ROM, de RAM et de terminal partagent un panneau en bas de l'écran, et une surveillance occupe tout l'écran. Quitter la simulation les ferme toutes.
 
 ## Contenu d'une ROM
 
@@ -20,13 +20,23 @@ La vue d'une RAM a le même tableau, les mêmes boutons et le même « Suivre »
 
 Une grande RAM n'est lue qu'autour des lignes affichées. Une ligne qui défile à l'écran montre des points jusqu'à ce qu'elle soit lue, ce qui prend un instant, et la ligne du bas indique « Non chargée » pour une cellule affichée ainsi. « Copier » place le tableau dans le presse-papiers tel que vous le voyez, points compris.
 
+## Sortie d'un terminal
+
+La fenêtre d'un terminal montre l'historique, la ligne la plus ancienne en premier, et en dessous l'écran, sur une bande teintée, avec le curseur. Le texte apparaît à mesure que le circuit l'affiche, en marche ou pas à pas. L'effet de chaque code est décrit dans [Afficher sur un terminal](docs:simulation#afficher-sur-un-terminal).
+
+![La fenêtre d'un terminal avec hello et world dans l'historique au-dessus de l'écran, à côté d'un clavier relié au terminal sur le plan de travail.](./images/terminal-window.webp)
+
+Les lignes sont coupées aux colonnes du terminal, comme sur son écran : une fenêtre plus étroite ou plus large ne les coupe pas autrement. Le texte rapetisse quand la fenêtre se rétrécit, jusqu'à une taille minimale, puis la fenêtre défile horizontalement. « Tout copier » place l'historique et l'écran dans le presse-papiers sous forme de texte.
+
+Un terminal placé sur le plan de travail est lu dès le début de la simulation : sa fenêtre montre donc tout le texte, même si vous l'ouvrez tard. La simulation conserve les 65 536 derniers caractères envoyés à chaque terminal. Quand un circuit en envoie davantage entre deux rafraîchissements de l'écran, en mode Aussi vite que possible par exemple, les plus anciens n'atteignent jamais le terminal. Une ligne de l'historique indique combien de caractères ont été perdus, et l'écran continue avec les caractères arrivés ensuite. « Arrêter » vide la fenêtre en même temps que l'écran du terminal.
+
 ## Surveillances
 
 ![Une surveillance descendue de Outer dans Inner, avec le chemin dans son titre.](./images/inspection-window-multilayer.webp)
 
 Une surveillance dessine le circuit interne du composant avec les mêmes fils allumés que le plan de travail. Vous pouvez y déplacer la vue, zoomer et utiliser les interrupteurs et boutons qu'il contient. Ils pilotent la vraie simulation, donc le reste du circuit réagit.
 
-Un clic sur un composant personnalisé à l'intérieur d'une surveillance ouvre son circuit dans la même fenêtre, et le titre montre le chemin, par exemple Outer › Inner. Cliquez sur un nom précédent pour remonter. Une ROM ou une RAM à l'intérieur d'une surveillance ouvre sa propre vue.
+Un clic sur un composant personnalisé à l'intérieur d'une surveillance ouvre son circuit dans la même fenêtre, et le titre montre le chemin, par exemple Outer › Inner. Cliquez sur un nom précédent pour remonter. Une ROM, une RAM ou un terminal à l'intérieur d'une surveillance ouvre sa propre vue. Un terminal à l'intérieur d'une surveillance y montre aussi son écran : quand vous ouvrez son niveau, il rejoue les caractères que la simulation conserve encore pour lui, et montre ainsi ce qui a été affiché avant que vous ne regardiez.
 
 Un clic sur une manette ou un clavier à l'intérieur d'une surveillance ouvre sa fenêtre, dont le titre montre le chemin, par exemple Outer › Inner › Manette. Elle fonctionne comme sur le plan de travail (voir [Jouer avec une manette](docs:simulation#jouer-avec-une-manette) et [Taper sur un clavier](docs:simulation#taper-sur-un-clavier)), et ce que vous y faites atteint le composant dans la surveillance. Remonter au-dessus de son niveau ou fermer la surveillance ferme aussi cette fenêtre.
 
@@ -36,4 +46,4 @@ Si la surveillance signale que le circuit interne ne correspond pas à la simula
 
 - [Simulation](docs:simulation) : faire fonctionner un circuit
 - [Composants personnalisés](docs:custom-components) : construire les composants que vous surveillez
-- [Composants et options](docs:components-and-options) : options des ROM et des RAM, contenu d'une ROM
+- [Composants et options](docs:components-and-options) : options des ROM, des RAM et des terminaux, contenu d'une ROM

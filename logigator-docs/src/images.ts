@@ -21,6 +21,7 @@ import shortcutManagerEn from './pages/en/images/shortcut-manager.webp';
 import simulationControlsEn from './pages/en/images/simulation-controls.webp';
 import simulationShowcaseEn from './pages/en/images/simulation-showcase.webp';
 import simulationSpeedEn from './pages/en/images/simulation-speed.webp';
+import terminalWindowEn from './pages/en/images/terminal-window.webp';
 import toolButtonsEn from './pages/en/images/tool-buttons.webp';
 import tunnelEn from './pages/en/images/tunnel.webp';
 import uploadToCloudEn from './pages/en/images/upload-to-cloud.webp';
@@ -44,6 +45,7 @@ import shortcutManagerDe from './pages/de/images/shortcut-manager.webp';
 import simulationControlsDe from './pages/de/images/simulation-controls.webp';
 import simulationShowcaseDe from './pages/de/images/simulation-showcase.webp';
 import simulationSpeedDe from './pages/de/images/simulation-speed.webp';
+import terminalWindowDe from './pages/de/images/terminal-window.webp';
 import uploadToCloudDe from './pages/de/images/upload-to-cloud.webp';
 import accountMenuFr from './pages/fr/images/account-menu.webp';
 import boardOverviewFr from './pages/fr/images/board-overview.webp';
@@ -64,6 +66,7 @@ import shortcutManagerFr from './pages/fr/images/shortcut-manager.webp';
 import simulationControlsFr from './pages/fr/images/simulation-controls.webp';
 import simulationShowcaseFr from './pages/fr/images/simulation-showcase.webp';
 import simulationSpeedFr from './pages/fr/images/simulation-speed.webp';
+import terminalWindowFr from './pages/fr/images/terminal-window.webp';
 import uploadToCloudFr from './pages/fr/images/upload-to-cloud.webp';
 import accountMenuEs from './pages/es/images/account-menu.webp';
 import boardOverviewEs from './pages/es/images/board-overview.webp';
@@ -84,6 +87,7 @@ import shortcutManagerEs from './pages/es/images/shortcut-manager.webp';
 import simulationControlsEs from './pages/es/images/simulation-controls.webp';
 import simulationShowcaseEs from './pages/es/images/simulation-showcase.webp';
 import simulationSpeedEs from './pages/es/images/simulation-speed.webp';
+import terminalWindowEs from './pages/es/images/terminal-window.webp';
 import uploadToCloudEs from './pages/es/images/upload-to-cloud.webp';
 
 /** One language's screenshots, keyed by the destination the markdown uses. */
@@ -111,6 +115,7 @@ const en: Readonly<Record<string, string>> = {
   './images/simulation-controls.webp': simulationControlsEn,
   './images/simulation-showcase.webp': simulationShowcaseEn,
   './images/simulation-speed.webp': simulationSpeedEn,
+  './images/terminal-window.webp': terminalWindowEn,
   './images/tool-buttons.webp': toolButtonsEn,
   './images/tunnel.webp': tunnelEn,
   './images/upload-to-cloud.webp': uploadToCloudEn,
@@ -137,6 +142,7 @@ const de: Readonly<Record<string, string>> = {
   './images/simulation-controls.webp': simulationControlsDe,
   './images/simulation-showcase.webp': simulationShowcaseDe,
   './images/simulation-speed.webp': simulationSpeedDe,
+  './images/terminal-window.webp': terminalWindowDe,
   './images/upload-to-cloud.webp': uploadToCloudDe
 };
 
@@ -160,6 +166,7 @@ const fr: Readonly<Record<string, string>> = {
   './images/simulation-controls.webp': simulationControlsFr,
   './images/simulation-showcase.webp': simulationShowcaseFr,
   './images/simulation-speed.webp': simulationSpeedFr,
+  './images/terminal-window.webp': terminalWindowFr,
   './images/upload-to-cloud.webp': uploadToCloudFr
 };
 
@@ -183,6 +190,7 @@ const es: Readonly<Record<string, string>> = {
   './images/simulation-controls.webp': simulationControlsEs,
   './images/simulation-showcase.webp': simulationShowcaseEs,
   './images/simulation-speed.webp': simulationSpeedEs,
+  './images/terminal-window.webp': terminalWindowEs,
   './images/upload-to-cloud.webp': uploadToCloudEs
 };
 

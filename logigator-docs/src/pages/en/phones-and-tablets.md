@@ -31,7 +31,7 @@ After a copy, the bar stays up with Paste even when nothing is selected. Its ✕
 
 The play button at the top starts the simulation. The run controls then appear in a bar along the bottom edge, and the exit button replaces undo, redo and save at the top.
 
-Tapping a ROM or a RAM opens its viewer in a sheet at the bottom of the screen. The board above stays usable, and several viewers share the sheet as tabs. A custom component's watch fills the whole screen, and its back arrow returns to the board. See [Inspection and watches](docs:inspection).
+Tapping a ROM, a RAM or a Terminal opens its viewer in a sheet at the bottom of the screen. The board above stays usable, and several viewers share the sheet as tabs. A custom component's watch fills the whole screen, and its back arrow returns to the board. See [Inspection and watches](docs:inspection).
 
 A Keyboard's window opens in the same sheet. Tap its typing field, which reads Tap to type, to bring up the on-screen keyboard; the sheet moves up so it stays above it. Text the on-screen keyboard enters in one go, such as a suggested word, is sent one character at a time, as a paste is. How typing reaches the circuit is described in [Simulation](docs:simulation#typing-on-a-keyboard).
 

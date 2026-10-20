@@ -8,7 +8,7 @@
 
 La simulación siempre ejecuta el proyecto principal. Si la pestaña de un componente personalizado está abierta, el editor vuelve antes al proyecto principal.
 
-Mientras se ejecuta, el tablero está bloqueado. Puedes desplazar la vista y hacer zoom, usar las entradas e [inspeccionar](docs:inspection) ROMs, RAMs y componentes personalizados, pero no colocar, mover, cablear ni eliminar nada. «Salir de la simulación», `Enter` o `Escape` vuelve a la edición con la herramienta Desplazar.
+Mientras se ejecuta, el tablero está bloqueado. Puedes desplazar la vista y hacer zoom, usar las entradas e [inspeccionar](docs:inspection) ROMs, RAMs, terminales y componentes personalizados, pero no colocar, mover, cablear ni eliminar nada. «Salir de la simulación», `Enter` o `Escape` vuelve a la edición con la herramienta Desplazar.
 
 Con «Iniciar la simulación automáticamente» activado (lo predeterminado), el circuito arranca en cuanto entras. Desactivado, la simulación espera en pausa en el tick 0 para que avances paso a paso desde el principio.
 
@@ -65,15 +65,15 @@ Al cerrar la ventana o salir de la simulación se sueltan todos los botones. Un 
 
 ## Escribir en un teclado
 
-Un clic en un teclado abre una ventana con un campo de escritura arriba. Mientras el campo tiene el foco, las teclas que pulsas van al circuito. Al pulsar una tecla, su código ASCII pasa a D0 a D6, STB envía un pulso de un tick y KD se enciende. KD sigue encendido mientras sostienes la tecla y se apaga cuando la sueltas, y D conserva el carácter hasta que la siguiente tecla lo sustituye. En el tablero, el recuadro del teclado muestra el carácter que hay en D y se ilumina mientras KD está encendido.
+Un clic en un teclado abre una ventana con un campo de escritura arriba. Mientras el campo tiene el foco, las teclas que pulsas van al circuito. Al pulsar una tecla, su código pasa a D0 a D7, STB envía un pulso de un tick y KD se enciende. KD sigue encendido mientras sostienes la tecla y se apaga cuando la sueltas, y D conserva el carácter hasta que la siguiente tecla lo sustituye. En el tablero, el recuadro del teclado muestra el carácter que hay en D y se ilumina mientras KD está encendido.
 
 ![La ventana de un teclado con hello y world escritos y la d pulsada, junto al teclado del tablero, que muestra la d.](./images/keyboard-window.webp)
 
-El campo muestra los últimos 64 caracteres enviados, el más reciente a la derecha, y resalta el que hay en D mientras hay una tecla pulsada. Debajo, «En D» indica el código que recibe el circuito en ese momento: el carácter, su valor hexadecimal y sus 7 bits. La línea siguiente dice «Escribiendo en el circuito · Mayús+Tab para salir» mientras el campo tiene el foco. Después de un clic en otro sitio dice «Haz clic aquí para escribir», y las teclas no llegan al teclado hasta que vuelves a hacer clic en la ventana.
+El campo muestra los últimos 64 caracteres enviados, el más reciente a la derecha, y resalta el que hay en D mientras hay una tecla pulsada. Debajo, «En D» indica el código que recibe el circuito en ese momento: el carácter, su valor hexadecimal y sus 8 bits. La línea siguiente dice «Escribiendo en el circuito · Mayús+Tab para salir» mientras el campo tiene el foco. Después de un clic en otro sitio dice «Haz clic aquí para escribir», y las teclas no llegan al teclado hasta que vuelves a hacer clic en la ventana.
 
 Una tecla sostenida no se repite, así que STB envía un pulso por pulsación. KD le dice al circuito si hay una tecla pulsada: uno que deba repetir una tecla sostenida puede hacer funcionar un reloj mientras KD esté encendido, y uno que cuente pulsaciones puede contar los pulsos de KD. Si pulsas una segunda tecla antes de soltar la primera, el código de la segunda pasa a D, con un nuevo pulso en STB, y KD sigue encendido hasta que sueltas las dos.
 
-Los caracteres ASCII imprimibles, del espacio a `~`, se envían tal cual. Estas teclas envían códigos de control, que el tablero y «En D» muestran por su nombre:
+El código es Latin-1: ASCII más las letras con acento y los símbolos de las lenguas de Europa occidental. Los caracteres imprimibles, del espacio a `~` y de `0xA0` a ÿ, se envían tal cual, así que ñ llega como `0xF1`. El espacio de no separación (`0xA0`) y el guion blando (`0xAD`) se muestran como NBS y SHY, porque no se ven. Estas teclas envían códigos de control, que el tablero y «En D» muestran por su nombre:
 
 | Tecla       | Código | Se muestra como |
 | ----------- | ------ | --------------- |
@@ -82,14 +82,49 @@ Los caracteres ASCII imprimibles, del espacio a `~`, se envían tal cual. Estas 
 | `Tab`       | `0x09` | TAB             |
 | `Escape`    | `0x1B` | ESC             |
 | `Delete`    | `0x7F` | DEL             |
+| `→`         | `0x1C` | RT              |
+| `←`         | `0x1D` | LT              |
+| `↑`         | `0x1E` | UP              |
+| `↓`         | `0x1F` | DN              |
+| `Home`      | `0x0B` | HOM             |
 
-Las flechas, las teclas de función, `Home`, `End`, `Page Up`, `Page Down` e `Insert` no envían nada. Un carácter fuera de ASCII, como ñ o €, se omite, y la línea de abajo lo indica durante unos segundos. Los caracteres que escribes con `AltGr`, como @ en un teclado español, se envían. Las combinaciones con `Ctrl`, `Alt` o `⌘` quedan para el navegador. Qué teclas van al circuito en lugar de al editor está en [Atajos de teclado](docs:shortcuts#teclas-en-la-ventana-de-un-teclado).
+Un [terminal](#mostrar-texto-en-un-terminal) entiende todos estos códigos salvo ESC, así que, conectado a un teclado, muestra lo que escribes.
 
-Pegar envía el texto pegado carácter a carácter. «Escribir texto…», en la parte inferior de la ventana, abre un diálogo donde puedes escribir o pegar un texto más largo, un programa por ejemplo. Antes de enviarlo, el diálogo indica cuántos caracteres se omitirán. Los saltos de línea se envían como LF, y cada pegado o cada envío desde el diálogo admite hasta 10 000 caracteres. Cada carácter llega como una tecla pulsada y soltada: KD está encendido tres ticks, y STB sube un tick después de que llegue el código y baja un tick antes de que KD se apague, así que un circuito que guarda D cuando sube STB lee cada carácter, aunque haya una puerta más en el camino de D que en el de STB, o al revés. Después de cada carácter KD está apagado un tick, así que una letra doble llega como dos pulsos en KD. Mientras hay caracteres esperando, la ventana muestra «Enviando» con el número que queda y una ✕ que descarta el resto. Un carácter cuyo pulso en STB ya ha empezado llega igualmente, y KD se apaga. También pasa cuando escribes más rápido de lo que avanza la simulación, por ejemplo a una velocidad fija baja. Como mucho pueden esperar 21 845 caracteres a la vez, y un pegado o un envío que no quepa detrás de ellos no se envía en absoluto, ni siquiera en parte: la ventana o el diálogo te pide que esperes a que salgan.
+Las teclas de función, `End`, `Page Up`, `Page Down` e `Insert` no envían nada, y tampoco las flechas y `Home` mientras mantienes `Shift`. Las comillas tipográficas y las rayas se envían como `'`, `"` y `-`, y … como tres puntos. Cualquier otro carácter fuera de Latin-1, como € o un emoji, se omite, y la línea de abajo lo indica durante unos segundos. Los caracteres que escribes con `AltGr`, como @ en un teclado español, se envían. Las combinaciones con `Ctrl`, `Alt` o `⌘` quedan para el navegador. Qué teclas van al circuito en lugar de al editor está en [Atajos de teclado](docs:shortcuts#teclas-en-la-ventana-de-un-teclado).
+
+Pegar envía el texto pegado carácter a carácter. «Escribir texto…», en la parte inferior de la ventana, abre un diálogo donde puedes escribir o pegar un texto más largo, un programa por ejemplo. Antes de enviarlo, el diálogo indica cuántos caracteres se omitirán. Los saltos de línea se envían como LF y los tabuladores como TAB, los demás caracteres de control se descartan, y cada pegado o cada envío desde el diálogo admite hasta 10 000 caracteres. Cada carácter llega como una tecla pulsada y soltada: KD está encendido tres ticks, y STB sube un tick después de que llegue el código y baja un tick antes de que KD se apague, así que un circuito que guarda D cuando sube STB lee cada carácter, aunque haya una puerta más en el camino de D que en el de STB, o al revés. Después de cada carácter KD está apagado un tick, así que una letra doble llega como dos pulsos en KD. Mientras hay caracteres esperando, la ventana muestra «Enviando» con el número que queda y una ✕ que descarta el resto. Un carácter cuyo pulso en STB ya ha empezado llega igualmente, y KD se apaga. También pasa cuando escribes más rápido de lo que avanza la simulación, por ejemplo a una velocidad fija baja. Como mucho pueden esperar 21 845 caracteres a la vez, y un pegado o un envío que no quepa detrás de ellos no se envía en absoluto, ni siquiera en parte: la ventana o el diálogo te pide que esperes a que salgan.
 
 Con la simulación en pausa, las teclas esperan a «Paso». Una tecla que pulsas y sueltas está en D, con KD encendido, después del siguiente paso; STB está a 1 después del segundo y vuelve a 0 después del tercero, y KD se apaga después del cuarto, mientras el carácter sigue en D. El siguiente carácter llega después del quinto, así que un texto pegado necesita cuatro pasos por carácter.
 
 Al cerrar la ventana, hacer clic fuera de ella o cambiar a otra pestaña se sueltan todas las teclas pulsadas. «Detener» borra los caracteres del campo. En un teclado dentro de un componente personalizado se escribe desde un [monitor](docs:inspection#monitores). En un móvil o una tableta, la ventana se abre en el panel de la parte inferior de la pantalla (consulta [Móviles y tabletas](docs:phones-and-tablets#simulación-e-inspección)).
+
+## Mostrar texto en un terminal
+
+Un terminal muestra un carácter cada vez que sube su entrada CLK: el que tiene su código en D0 a D7 en ese tick. Con una burbuja de negación en CLK, lo muestra en el flanco de bajada. El siguiente carácter va donde está el cursor de bloque, que la pantalla solo muestra durante una simulación.
+
+Para ver lo que escribes, conecta D0 a D7 de un teclado a D0 a D7 del terminal, y su salida STB a CLK. `Enter` empieza entonces una línea nueva, `Backspace` borra el carácter anterior al cursor, y las flechas y `Home` mueven el cursor.
+
+Los códigos son Latin-1, como en el teclado. Los códigos del espacio a `~` y de `0xA0` a ÿ se muestran como su carácter, así que `0x41` muestra A y `0xF1` muestra ñ. El espacio de no separación se muestra como un espacio y el guion blando como un guion. Estos códigos de control mueven el cursor o borran:
+
+| Código | Nombre | Qué hace                                                                                           |
+| ------ | ------ | -------------------------------------------------------------------------------------------------- |
+| `0x08` | BS     | Retrocede una columna y borra el carácter que hay ahí. En la primera columna no hace nada.         |
+| `0x09` | TAB    | Avanza hasta la siguiente tabulación, una cada 8 columnas, o hasta la última columna.              |
+| `0x0A` | LF     | Pasa al principio de la fila siguiente. En la última fila, la pantalla sube una fila en su lugar.  |
+| `0x0B` | HOM    | Va a la esquina superior izquierda.                                                                |
+| `0x0C` | FF     | Borra la pantalla y va a la esquina superior izquierda. Las líneas borradas no pasan al historial. |
+| `0x0D` | CR     | Vuelve al principio de la fila.                                                                    |
+| `0x1C` | RT     | Avanza una columna a la derecha.                                                                   |
+| `0x1D` | LT     | Retrocede una columna a la izquierda.                                                              |
+| `0x1E` | UP     | Sube una fila.                                                                                     |
+| `0x1F` | DN     | Baja una fila.                                                                                     |
+| `0x7F` | DEL    | Borra el carácter bajo el cursor. El cursor no se mueve.                                           |
+
+RT, LT, UP y DN se detienen en los bordes de la pantalla; solo LF la desplaza. Cualquier otro código, ESC y de `0x80` a `0x9F` incluidos, se ignora.
+
+Un carácter mostrado en la última columna deja ahí el cursor, y el siguiente carácter va al principio de la fila siguiente, desplazando la pantalla si el cursor estaba en la última fila. Por eso una línea llena seguida de LF no deja una línea vacía. Un código que mueve el cursor anula ese salto, así que un BS justo después de la última columna borra el carácter que hay en ella.
+
+Una línea que sale de la pantalla por arriba pasa al historial tal como estaba, y los códigos del cursor ya no pueden cambiarla. El historial guarda las últimas 10 000 líneas y se muestra en la [ventana](docs:inspection#salida-de-un-terminal) del terminal. «Pausar» conserva el texto en la pantalla y en el historial. «Detener» borra ambos, igual que salir de la simulación.
 
 ## Señales en conflicto
 
@@ -118,7 +153,7 @@ Corrige el componente indicado y vuelve a empezar. Si el mensaje dice que el mot
 
 ## Ver también
 
-- [Inspección y monitores](docs:inspection): contenido de ROMs y RAMs, y monitores
+- [Inspección y monitores](docs:inspection): contenido de ROMs y RAMs, salida de terminales, y monitores
 - [Componentes y opciones](docs:components-and-options): qué hace cada entrada y pantalla
 - [Ajustes](docs:settings): el inicio automático de la simulación y el resaltado de conflictos
 - [Móviles y tabletas](docs:phones-and-tablets): los controles en la vista táctil

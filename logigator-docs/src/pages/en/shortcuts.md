@@ -71,7 +71,7 @@ The keys are shared by every gamepad in every project and stored in this browser
 
 ## Keys in a keyboard window
 
-While the typing field of a [keyboard's window](docs:simulation#typing-on-a-keyboard) has the focus, keys go to the circuit and the shortcuts above do nothing. Four keys act differently there:
+While the typing field of a [keyboard's window](docs:simulation#typing-on-a-keyboard) has the focus, keys go to the circuit and the shortcuts above do nothing. These keys act differently there:
 
 | Key         | In the typing field                      |
 | ----------- | ---------------------------------------- |
@@ -79,6 +79,7 @@ While the typing field of a [keyboard's window](docs:simulation#typing-on-a-keyb
 | `Escape`    | Sends ESC. The window stays open.        |
 | `Tab`       | Sends TAB. The focus stays in the field. |
 | `Shift+Tab` | Moves the focus out of the field.        |
+| arrow keys  | Send RT, LT, UP and DN.                  |
 
 Combinations with `Ctrl`, `Alt` or `⌘` go to the browser, so `Ctrl+V` pastes text into the keyboard. `AltGr` is not one of them: a character typed with it is sent. A key sends the character your keyboard layout gives it, so these keys can't be reassigned the way a gamepad's can.
 

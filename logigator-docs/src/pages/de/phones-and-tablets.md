@@ -31,7 +31,7 @@ Nach dem Kopieren bleibt die Leiste mit Einfügen stehen, auch wenn nichts ausge
 
 Die Play-Schaltfläche oben startet die Simulation. Die Steuerung erscheint dann in einer Leiste am unteren Rand, und oben ersetzt die Schaltfläche zum Verlassen Rückgängig, Wiederholen und Speichern.
 
-Ein Tippen auf ein ROM oder ein RAM öffnet seine Ansicht in einer Leiste am unteren Bildschirmrand. Die Arbeitsfläche darüber bleibt bedienbar, und mehrere Ansichten teilen sich die Leiste als Tabs. Die Beobachtung einer benutzerdefinierten Komponente füllt den ganzen Bildschirm, und ihr Zurück-Pfeil führt zur Arbeitsfläche. Siehe [Inspektion und Beobachtungen](docs:inspection).
+Ein Tippen auf ein ROM, ein RAM oder ein Terminal öffnet seine Ansicht in einer Leiste am unteren Bildschirmrand. Die Arbeitsfläche darüber bleibt bedienbar, und mehrere Ansichten teilen sich die Leiste als Tabs. Die Beobachtung einer benutzerdefinierten Komponente füllt den ganzen Bildschirm, und ihr Zurück-Pfeil führt zur Arbeitsfläche. Siehe [Inspektion und Beobachtungen](docs:inspection).
 
 Das Fenster einer Tastatur öffnet sich in derselben Leiste. Tippe auf das Eingabefeld, in dem „Hier tippen, um zu schreiben“ steht, damit die Bildschirmtastatur erscheint; die Leiste rückt nach oben und bleibt über ihr. Text, den die Bildschirmtastatur auf einmal einträgt, etwa ein vorgeschlagenes Wort, wird wie eingefügter Text Zeichen für Zeichen gesendet. Wie Tasten die Schaltung erreichen, steht unter [Simulation](docs:simulation#in-eine-tastatur-tippen).
 

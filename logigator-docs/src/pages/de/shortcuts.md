@@ -71,7 +71,7 @@ Die Tasten gelten für jedes Gamepad in jedem Projekt und werden wie die Tastatu
 
 ## Tasten im Fenster einer Tastatur
 
-Solange das Eingabefeld im [Fenster einer Tastatur](docs:simulation#in-eine-tastatur-tippen) den Fokus hat, gehen Tasten an die Schaltung, und die Tastaturbefehle oben tun nichts. Vier Tasten verhalten sich dort anders:
+Solange das Eingabefeld im [Fenster einer Tastatur](docs:simulation#in-eine-tastatur-tippen) den Fokus hat, gehen Tasten an die Schaltung, und die Tastaturbefehle oben tun nichts. Diese Tasten verhalten sich dort anders:
 
 | Taste       | Im Eingabefeld                          |
 | ----------- | --------------------------------------- |
@@ -79,6 +79,7 @@ Solange das Eingabefeld im [Fenster einer Tastatur](docs:simulation#in-eine-tast
 | `Escape`    | Sendet ESC. Das Fenster bleibt offen.   |
 | `Tab`       | Sendet TAB. Der Fokus bleibt im Feld.   |
 | `Shift+Tab` | Bewegt den Fokus aus dem Feld.          |
+| Pfeiltasten | Senden RT, LT, UP und DN.               |
 
 Tastenkombinationen mit `Ctrl`, `Alt` oder `⌘` gehen an den Browser, sodass `Ctrl+V` Text in die Tastatur einfügt. `AltGr` gehört nicht dazu: Ein Zeichen, das du damit tippst, wird gesendet. Eine Taste sendet das Zeichen, das deine Tastaturbelegung ihr gibt, deshalb lassen sich diese Tasten nicht neu zuweisen wie die eines Gamepads.
 

@@ -71,7 +71,7 @@ Las teclas son las mismas para todos los mandos de todos los proyectos y se guar
 
 ## Teclas en la ventana de un teclado
 
-Mientras el campo de escritura de la [ventana de un teclado](docs:simulation#escribir-en-un-teclado) tiene el foco, las teclas van al circuito y los atajos de arriba no hacen nada. Cuatro teclas se comportan ahí de otra manera:
+Mientras el campo de escritura de la [ventana de un teclado](docs:simulation#escribir-en-un-teclado) tiene el foco, las teclas van al circuito y los atajos de arriba no hacen nada. Estas teclas se comportan ahí de otra manera:
 
 | Tecla       | En el campo de escritura                 |
 | ----------- | ---------------------------------------- |
@@ -79,6 +79,7 @@ Mientras el campo de escritura de la [ventana de un teclado](docs:simulation#esc
 | `Escape`    | Envía ESC. La ventana sigue abierta.     |
 | `Tab`       | Envía TAB. El foco se queda en el campo. |
 | `Shift+Tab` | Saca el foco del campo.                  |
+| flechas     | Envían RT, LT, UP y DN.                  |
 
 Las combinaciones con `Ctrl`, `Alt` o `⌘` van al navegador, así que `Ctrl+V` pega texto en el teclado. `AltGr` no es una de ellas: un carácter escrito con ella se envía. Una tecla envía el carácter que le da la distribución de tu teclado, por eso estas teclas no se reasignan como las de un mando.
 
