@@ -22,7 +22,14 @@ Para conectar un cruce, tócalo con la herramienta de cable. Aparece un punto y 
 
 ## Túneles
 
-Un túnel está conectado con todos los demás túneles del mismo tablero que llevan la misma etiqueta, como si un cable los uniera. Úsalos para llevar un reloj o un bus a través de un circuito grande. Cada túnel nuevo empieza con la etiqueta 0, así que dos túneles nuevos están conectados hasta que cambies uno de ellos. Las etiquetas distinguen mayúsculas de minúsculas y tienen como máximo 10 caracteres.
+Un túnel está conectado con todos los demás túneles del mismo tablero que llevan la misma etiqueta, como si un cable los uniera. Úsalos para llevar un reloj o un bus a través de un circuito grande. El túnel está en la categoría Puertas lógicas de la paleta.
+
+| Opción    | Qué fija                                                                                                                                                                                                  |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Etiqueta  | Qué túneles se conectan. Hasta 10 caracteres, distingue mayúsculas de minúsculas. Cada túnel nuevo empieza con la etiqueta 0, así que dos túneles nuevos están conectados hasta que cambies uno de ellos. |
+| Dirección | Hacia dónde mira el túnel, como en todos los componentes.                                                                                                                                                 |
+
+Un túnel tiene un solo puerto, con su etiqueta al lado en el tablero. El puerto no se puede [negar](docs:components-and-options#negar-un-puerto).
 
 Los túneles solo se conectan dentro de un mismo circuito. Un túnel dentro de un componente personalizado nunca se conecta con uno de fuera.
 

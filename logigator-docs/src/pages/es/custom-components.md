@@ -6,14 +6,15 @@ Un componente personalizado convierte un circuito en una sola pieza con su propi
 
 ## Crear un componente
 
-Archivo → Nuevo componente (`Alt+N`), o el botón «Nuevo componente» de la barra de herramientas, abre un diálogo:
-
-- Nombre, hasta 20 caracteres, es como aparece en la paleta.
-- Símbolo, hasta 5 caracteres, se dibuja en el bloque.
-- Descripción es opcional.
-- Almacenar decide dónde se guarda el componente. Local lo guarda en este navegador. Nube lo guarda en tu cuenta, requiere haber iniciado sesión y pregunta además quién puede abrirlo, con Todo el mundo preseleccionado (consulta [Nube y compartir](docs:cloud)).
-
-«Crear» abre el componente en una pestaña nueva con el tablero vacío. Guardar (`Ctrl+S`) en esa pestaña guarda el componente.
+1. Elige Archivo → Nuevo componente (`Alt+N`), o el botón «Nuevo componente» de la barra de herramientas. Se abre un diálogo.
+2. Rellena el diálogo:
+   - Nombre, hasta 20 caracteres, es como aparece en la paleta.
+   - Símbolo, hasta 5 caracteres, se dibuja en el bloque.
+   - Descripción es opcional.
+   - Almacenar decide dónde se guarda el componente. Local lo guarda en este navegador. Nube lo guarda en tu cuenta, requiere haber iniciado sesión y pregunta además quién puede abrirlo, con Todo el mundo preseleccionado (consulta [Nube y compartir](docs:cloud)).
+3. Haz clic en «Crear». El componente se abre en una pestaña nueva con el tablero vacío.
+4. Construye su circuito y dale [puertos](#puertos).
+5. Guarda (`Ctrl+S`) en esa pestaña para guardar el componente.
 
 ## Puertos
 
@@ -27,9 +28,22 @@ El panel lista los conectores. Escribe en una fila para dar nombre al puerto, co
 
 Los componentes guardados aparecen en la paleta en Componentes del usuario, el último editado primero. Se colocan como cualquier otra pieza. Cada copia en el tablero es un bloque con el símbolo y un puerto por conector.
 
-Una copia colocada conserva el circuito que tenía el componente cuando la colocaste. Editar el componente después no cambia ninguna copia hasta que la actualices. La tarjeta de ajustes de una copia desactualizada ofrece «Actualizar a la última versión» para esa copia y «Actualizar todas las instancias» para todas las copias desactualizadas del circuito abierto, con el número entre paréntesis. Ambas se pueden deshacer. La casilla de la paleta lleva una flecha mientras haya copias desactualizadas.
+Una copia colocada conserva el circuito que tenía el componente cuando la colocaste. Editar el componente después no cambia ninguna copia hasta que la actualices. La casilla de la paleta lleva una flecha mientras haya copias desactualizadas.
 
-Para cambiar el circuito, elige «Editar circuito» en la tarjeta de ajustes de una copia colocada o de la casilla de la paleta. «Editar detalles» cambia el nombre, el símbolo y la descripción.
+La tarjeta de ajustes de una copia colocada, o de la casilla de la paleta, tiene estas acciones:
+
+| Acción                          | Qué hace                                                                                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Actualizar a la última versión  | Actualiza esta copia. Solo en una copia desactualizada.                                                                         |
+| Actualizar todas las instancias | Actualiza todas las copias desactualizadas del circuito abierto. El número va entre paréntesis.                                 |
+| Editar circuito                 | Abre el circuito del componente para cambiarlo.                                                                                 |
+| Editar detalles                 | Cambia el nombre, el símbolo y la descripción. Las copias colocadas conservan los detalles anteriores hasta que las actualices. |
+| Subir a la nube                 | Mueve un componente local a tu cuenta. Consulta [Nube y compartir](docs:cloud#subir-a-la-nube).                                 |
+| Compartir                       | Abre el diálogo de compartir de un componente de la nube. Consulta [Nube y compartir](docs:cloud#compartir).                    |
+| Eliminar                        | Quita el componente de tu biblioteca. Consulta [Eliminar](#eliminar).                                                           |
+| Restaurar y editar              | Solo en una copia cuyo componente se eliminó. Lo devuelve a tu biblioteca local.                                                |
+
+Las dos actualizaciones se pueden deshacer.
 
 ## Anidar
 

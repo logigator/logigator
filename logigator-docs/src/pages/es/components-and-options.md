@@ -1,77 +1,86 @@
 # Componentes y opciones
 
-Los componentes son las piezas de las que se compone un circuito: puertas, memorias, entradas y pantallas. Los eliges en la paleta de la izquierda y ajustas sus opciones en la tarjeta de ajustes.
+Los componentes son las piezas de las que se compone un circuito: puertas, memorias, entradas y pantallas. Los eliges en la paleta de la izquierda y ajustas sus opciones en la tarjeta de ajustes. Esta página lista todos los componentes integrados y enlaza a su descripción.
 
 ![La paleta de componentes.](./images/component-palette.webp)
 
 ## La paleta
 
-El campo de búsqueda de arriba filtra la paleta por nombre. Las categorías son Básicos, Avanzados y Entradas / Salidas, además de Componentes del usuario en cuanto hayas construido un [componente personalizado](docs:custom-components). Un clic en el encabezado de una categoría la pliega. La colocación se describe en [Tablero y herramientas](docs:board-and-tools).
+El campo de búsqueda de arriba filtra la paleta por nombre. Las categorías son Puertas lógicas, Sumadores y selectores, Memoria, Temporización, Entradas y Salidas, además de Componentes del usuario en cuanto hayas construido un [componente personalizado](docs:custom-components). Un clic en el encabezado de una categoría la pliega. La colocación se describe en [Tablero y herramientas](docs:board-and-tools#colocar-componentes).
 
-Cada componente tarda un tick en pasar un cambio a su salida. Las tablas indican las opciones de cada componente además de Dirección, que tienen todos.
+Cada componente tarda un tick en pasar un cambio a su salida. Las tablas siguen el orden de la paleta.
 
-### Básicos
+### Puertas lógicas
 
-| Componente | Qué hace                                                                                                                                                                                                                                  | Opciones                       |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| Puerta NO  | Invierte su entrada.                                                                                                                                                                                                                      |                                |
-| Puerta Y   | Da 1 cuando todas las entradas son 1.                                                                                                                                                                                                     | Entradas, de 2 a 64            |
-| Puerta O   | Da 1 cuando al menos una entrada es 1.                                                                                                                                                                                                    | Entradas, de 2 a 64            |
-| Puerta XOR | Da 1 cuando un número impar de entradas es 1.                                                                                                                                                                                             | Entradas, de 2 a 64            |
-| Retardo    | Deja pasar su entrada sin cambios, un tick después.                                                                                                                                                                                       |                                |
-| Reloj      | Se queda en 0 durante Retardo ticks, luego en 1 durante otros tantos como onda cuadrada o durante un tick como pulso, y vuelve a empezar. Mientras su entrada STP es 1, se queda en 0, y empieza un ciclo nuevo en cuanto STP vuelve a 0. | Forma de onda, Retardo desde 1 |
-| Túnel      | Se conecta sin cable con todos los demás túneles de la misma etiqueta. Consulta [Cables y conexiones](docs:wires-and-connections).                                                                                                        | Etiqueta, hasta 10 caracteres  |
+| Componente                                  | Qué hace                                                               |
+| ------------------------------------------- | ---------------------------------------------------------------------- |
+| [Puerta NO](docs:logic-gates#puerta-no)     | Invierte su entrada.                                                   |
+| [Puerta Y](docs:logic-gates#puerta-y)       | Da 1 cuando todas las entradas son 1.                                  |
+| [Puerta O](docs:logic-gates#puerta-o)       | Da 1 cuando al menos una entrada es 1.                                 |
+| [Puerta XOR](docs:logic-gates#puerta-xor)   | Da 1 cuando un número impar de entradas es 1.                          |
+| [Túnel](docs:wires-and-connections#túneles) | Se conecta sin cable con todos los demás túneles de la misma etiqueta. |
 
-### Avanzados
+### Sumadores y selectores
 
-| Componente                      | Qué hace                                                                                                                                                                                                                                   | Opciones                                                               |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
-| Semisumador                     | Suma A y B. S es el bit de suma y C el acarreo.                                                                                                                                                                                            |                                                                        |
-| Sumador completo                | Suma A, B y el acarreo de entrada Cin. S es el bit de suma y C el acarreo.                                                                                                                                                                 |                                                                        |
-| ROM                             | Da la palabra guardada en la dirección presente en sus entradas. No tiene reloj.                                                                                                                                                           | Tamaño de palabra 1 a 64, Tamaño de dirección 1 a 11, Editar contenido |
-| Biestable D                     | Guarda D en el flanco de subida de CLK. Q es el bit guardado y !Q su inverso.                                                                                                                                                              |                                                                        |
-| Biestable JK                    | En el flanco de subida de CLK, J pone el bit a 1, K lo pone a 0 y ambos juntos lo invierten.                                                                                                                                               |                                                                        |
-| Biestable SR                    | En el flanco de subida de CLK, S pone el bit a 1 y R lo pone a 0.                                                                                                                                                                          |                                                                        |
-| Generador de números aleatorios | Pone un valor aleatorio nuevo en sus salidas en cada flanco de subida de CLK.                                                                                                                                                              | Salidas, de 1 a 64                                                     |
-| RAM                             | Da en sus salidas la palabra guardada en la dirección de sus entradas. En el flanco de subida de CLK guarda allí las entradas de datos mientras WE es 1. Con Lectura en Por reloj, las salidas solo cambian en el flanco de subida de CLK. | Tamaño de palabra 1 a 64, Tamaño de dirección 1 a 16, Lectura          |
-| Decodificador                   | Activa la única salida cuyo número coincide con el valor binario de las entradas.                                                                                                                                                          | Entradas, de 1 a 6                                                     |
-| Codificador                     | Da el número de la entrada más alta que es 1. V vale 1 mientras alguna entrada lo valga, de modo que la entrada 0 se distingue de ninguna entrada. Un codificador de un circuito más antiguo no tiene V.                                   | Salidas, de 1 a 6                                                      |
-| Multiplexor                     | Pasa a su salida la entrada de datos que eligen las líneas de selección. Con n líneas de selección hay 2ⁿ entradas de datos.                                                                                                               | Líneas de selección, de 1 a 6                                          |
-| Demultiplexor                   | Pasa la entrada I a la salida que eligen las líneas de selección, que van primero, como en el multiplexor. Un demultiplexor de un circuito más antiguo mantiene I primero; las etiquetas del componente muestran el orden.                 | Líneas de selección, de 1 a 6                                          |
+| Componente                                                     | Qué hace                                                                 |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| [Semisumador](docs:adders-and-selectors#semisumador)           | Suma dos bits.                                                           |
+| [Sumador completo](docs:adders-and-selectors#sumador-completo) | Suma dos bits y un acarreo de entrada.                                   |
+| [Multiplexor](docs:adders-and-selectors#multiplexor)           | Pasa a su salida la entrada de datos que eligen las líneas de selección. |
+| [Demultiplexor](docs:adders-and-selectors#demultiplexor)       | Pasa su entrada a la salida que eligen las líneas de selección.          |
+| [Decodificador](docs:adders-and-selectors#decodificador)       | Activa la única salida cuyo número está en las entradas.                 |
+| [Codificador](docs:adders-and-selectors#codificador)           | Da el número de la entrada más alta que es 1.                            |
 
-### Entradas / Salidas
+### Memoria
 
-| Componente           | Qué hace                                                                                                                                                                                                                                                                          | Opciones                                                                  |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Interruptor          | Cambia entre 0 y 1 con cada clic durante una simulación.                                                                                                                                                                                                                          |                                                                           |
-| Botón                | Da 1 mientras lo mantienes pulsado.                                                                                                                                                                                                                                               |                                                                           |
-| Botón de pulso       | Da un pulso de un tick por clic.                                                                                                                                                                                                                                                  |                                                                           |
-| LED                  | Se enciende mientras su entrada es 1.                                                                                                                                                                                                                                             |                                                                           |
-| Display de segmentos | Muestra el número binario de sus entradas; la entrada 0 es el bit menos significativo.                                                                                                                                                                                            | Entradas 1 a 16, Base decimal, hexadecimal u octal                        |
-| Matriz de LEDs       | Una cuadrícula cuadrada de LEDs. En el flanco de subida de CLK, las entradas de datos se escriben en la fila que eligen las entradas de dirección. En 16 × 16, cada dirección abarca media fila.                                                                                  | Ancho/Alto 4, 8 o 16                                                      |
-| Mando                | Una salida por botón, a 1 mientras el botón está pulsado. La cruceta siempre está. Durante una simulación, un clic abre un mando en pantalla para jugar.                                                                                                                          | Botones de acción, Botones laterales, Botones de menú, Nombres de botones |
-| Teclado              | D0 a D7 llevan el código Latin-1 de 8 bits de la última tecla pulsada. STB envía un pulso de un tick en cada pulsación, y KD está a 1 mientras hay una tecla pulsada. Durante una simulación, un clic abre una ventana para escribir.                                             |                                                                           |
-| Terminal             | Una pantalla de texto. En el flanco de subida de CLK, muestra el carácter cuyo código está en D0 a D7. El salto de línea, el retroceso y los demás códigos de control mueven el cursor en su lugar. Durante una simulación, un clic abre una ventana con todo lo que ha mostrado. | Columnas 8 a 80, Filas 1 a 24, Tamaño de texto Pequeño o Grande           |
+| Componente                               | Qué hace                                                              |
+| ---------------------------------------- | --------------------------------------------------------------------- |
+| [Biestable D](docs:memory#biestable-d)   | Guarda D en el flanco de subida de CLK.                               |
+| [Biestable JK](docs:memory#biestable-jk) | Pone a 1, pone a 0 o invierte un bit en el flanco de subida de CLK.   |
+| [Biestable SR](docs:memory#biestable-sr) | Pone a 1 o a 0 un bit en el flanco de subida de CLK.                  |
+| [ROM](docs:memory#rom)                   | Da la palabra guardada en la dirección presente en sus entradas.      |
+| [RAM](docs:memory#ram)                   | Guarda las palabras que escribe el circuito y da la de una dirección. |
+
+### Temporización
+
+| Componente                                                                               | Qué hace                                                                      |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [Reloj](docs:clock-and-timing#reloj)                                                     | Cambia por sí solo entre 0 y 1, como onda cuadrada o como pulso.              |
+| [Retardo](docs:clock-and-timing#retardo)                                                 | Deja pasar su entrada sin cambios, un tick después.                           |
+| [Generador de números aleatorios](docs:clock-and-timing#generador-de-números-aleatorios) | Pone un valor aleatorio nuevo en sus salidas en cada flanco de subida de CLK. |
+
+### Entradas
+
+| Componente                                   | Qué hace                                                                   |
+| -------------------------------------------- | -------------------------------------------------------------------------- |
+| [Interruptor](docs:inputs#interruptor)       | Cambia entre 0 y 1 con cada clic durante una simulación.                   |
+| [Botón](docs:inputs#botón)                   | Da 1 mientras lo mantienes pulsado.                                        |
+| [Botón de pulso](docs:inputs#botón-de-pulso) | Da un pulso de un tick por clic.                                           |
+| [Mando](docs:inputs#mando)                   | Una salida por botón de un mando con el que juegas durante una simulación. |
+| [Teclado](docs:inputs#teclado)               | Pone en sus salidas el código de cada tecla que escribes.                  |
+
+### Salidas
+
+| Componente                                                | Qué hace                                                                       |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [LED](docs:outputs#led)                                   | Se enciende mientras su entrada es 1.                                          |
+| [Display de segmentos](docs:outputs#display-de-segmentos) | Muestra el número binario de sus entradas en decimal, hexadecimal u octal.     |
+| [Matriz de LEDs](docs:outputs#matriz-de-leds)             | Una cuadrícula cuadrada de LEDs que se escribe fila a fila.                    |
+| [Terminal](docs:outputs#terminal)                         | Una pantalla de texto que muestra un carácter en cada flanco de subida de CLK. |
 
 ## La tarjeta de ajustes
 
-Al seleccionar un solo componente, o al elegir uno para colocar, aparece su tarjeta de ajustes junto al tablero: el nombre, una descripción y las opciones. Dirección tiene cuatro botones con flechas que giran el componente. La dirección elegida al colocar se mantiene para el siguiente componente del mismo tipo. Durante una simulación, la tarjeta está oculta.
+Al seleccionar un solo componente, o al elegir uno para colocar, aparece su tarjeta de ajustes junto al tablero: el nombre, una descripción y las opciones. Durante una simulación, la tarjeta está oculta.
 
 ![La tarjeta de ajustes de una puerta Y seleccionada.](./images/component-settings.webp)
 
-Cambiar Entradas, Salidas o una opción de tamaño cambia al instante el número de puertos.
-
-En una ROM, «Editar contenido» abre un editor hexadecimal para las palabras guardadas. Tamaño de palabra fija cuántos bits tiene una palabra y Tamaño de dirección cuántas entradas de dirección hay, así que una ROM con tamaño de dirección 4 guarda 16 palabras. El contenido se guarda con el circuito.
-
-Un mando tiene siempre las cuatro direcciones de la cruceta. Botones de acción puede ser 0, A, A B o A B X Y; Botones laterales, 0 o L R, y Botones de menú, 0, ST o SL ST, donde SL es Select y ST es Start. Los valores predeterminados, A B y SL ST sin botones laterales, dan ocho salidas; con todos los grupos activados hay doce. Los puertos se llaman UP, DN, LT, RT, A, B, X, Y, L, R, SL y ST, en ese orden.
-
-Nombres de botones abre una imagen del mando con un campo en cada botón. Un nombre de hasta 8 caracteres sustituye la etiqueta del puerto de ese botón en el tablero y aparece junto al botón en la ventana del mando; un campo vacío mantiene la etiqueta predeterminada. Los nombres de los botones que desactivas se conservan y vuelven cuando los activas de nuevo.
-
-Columnas y Filas fijan el tamaño de la pantalla de un terminal en caracteres, 40 × 12 de forma predeterminada, y el componente crece para que quepa. Grande dibuja cada carácter una vez y media más grande que Pequeño. Al girar un terminal, su pantalla sigue derecha y solo se mueven los puertos. Qué hace con cada código está en [Simulación](docs:simulation#mostrar-texto-en-un-terminal).
+- Dirección, que tienen todos los componentes, tiene cuatro botones con flechas que giran el componente. La dirección elegida al colocar se mantiene para el siguiente componente del mismo tipo.
+- Cambiar Entradas, Salidas o una opción de tamaño cambia al instante el número de puertos.
+- Las demás opciones se describen con cada componente, como el contenido de una [ROM](docs:memory#rom), los nombres de botones de un [mando](docs:inputs#mando) y el tamaño de pantalla de un [terminal](docs:outputs#terminal).
 
 ## Negar un puerto
 
-Con la herramienta de cable, toca un puerto de entrada o salida para añadirle una burbuja de negación. La señal que pasa por ese puerto queda invertida, sin retardo adicional. Toca la burbuja otra vez para quitarla. Al pasar el puntero sobre un puerto, la herramienta de cable muestra lo que haría un toque. Una burbuja en la entrada CLK de un biestable hace que reaccione al flanco de bajada.
+Con la herramienta de cable, toca un puerto de entrada o salida para añadirle una burbuja de negación. La señal que pasa por ese puerto queda invertida, sin retardo adicional. Toca la burbuja otra vez para quitarla. Al pasar el puntero sobre un puerto, la herramienta de cable muestra lo que haría un toque. Una burbuja en la entrada CLK de un [biestable](docs:memory) hace que reaccione al flanco de bajada.
 
 Los túneles, los conectores Entrada y Salida y los puertos de un componente personalizado colocado no se pueden negar.
 
@@ -83,7 +92,8 @@ El texto no está en la paleta. Con la herramienta Texto (`T`), haz clic en el t
 
 ## Ver también
 
+- [Puertas lógicas](docs:logic-gates): la primera de las páginas de componentes
+- [Entradas](docs:inputs): interruptores, botones, el mando y el teclado
 - [Cables y conexiones](docs:wires-and-connections): conectar puertos
 - [Componentes personalizados](docs:custom-components): construir tus propias piezas
-- [Simulación](docs:simulation): usar interruptores y botones
 - [Tablero y herramientas](docs:board-and-tools): colocar, mover y girar

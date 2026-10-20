@@ -27,10 +27,18 @@ export const DOC_SECTIONS = [
   },
   {
     id: 'building',
+    pages: ['wires-and-connections', 'custom-components']
+  },
+  {
+    id: 'components',
     pages: [
       'components-and-options',
-      'wires-and-connections',
-      'custom-components'
+      'logic-gates',
+      'adders-and-selectors',
+      'memory',
+      'clock-and-timing',
+      'inputs',
+      'outputs'
     ]
   },
   {

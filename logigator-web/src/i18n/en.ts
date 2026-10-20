@@ -562,7 +562,7 @@ const en = {
     },
     docs: {
       title: 'Documentation',
-      lede: 'Every part of the Logigator editor, explained: the board and its tools, building circuits, running a simulation, and keeping your work.',
+      lede: 'Every part of the Logigator editor, explained: the board and its tools, building circuits, every component, running a simulation, and keeping your work.',
       search: {
         label: 'Search the documentation',
         placeholder: 'Search..',
@@ -573,6 +573,7 @@ const en = {
       sections: {
         basics: 'Basics',
         building: 'Building circuits',
+        components: 'Components',
         simulation: 'Simulation',
         projects: 'Projects and cloud'
       },
@@ -582,9 +583,15 @@ const en = {
         phonesAndTablets: 'Phones and tablets',
         shortcuts: 'Keyboard shortcuts',
         settings: 'Settings',
-        componentsAndOptions: 'Components and options',
         wiresAndConnections: 'Wires and connections',
         customComponents: 'Custom components',
+        componentsAndOptions: 'Components and options',
+        logicGates: 'Logic gates',
+        addersAndSelectors: 'Adders and selectors',
+        memory: 'Memory',
+        clockAndTiming: 'Timing',
+        inputs: 'Inputs',
+        outputs: 'Outputs',
         simulation: 'Simulation',
         inspection: 'Inspection and watches',
         savingAndFiles: 'Saving and files',

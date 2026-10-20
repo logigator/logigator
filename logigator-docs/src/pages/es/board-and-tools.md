@@ -38,7 +38,11 @@ Con Seleccionar, traza un marco sobre los elementos que quieras. Se selecciona c
 
 Arrastra la selección para moverla. `R` la gira en sentido horario, `Shift+R` en sentido antihorario, y las flechas la mueven un paso de la cuadrícula. Si la selección cae encima de otra cosa, queda levantada y sigue tus movimientos siguientes hasta llegar a un sitio libre.
 
-`Escape` actúa por pasos: cancela un arrastre en curso; si no lo hay, vacía la selección; y si tampoco, cambia a Desplazar.
+`Escape` actúa por pasos. Cada pulsación hace la primera de estas acciones que corresponda:
+
+1. Cancela un arrastre en curso.
+2. Vacía la selección.
+3. Cambia a Desplazar.
 
 ## Cortar cables en el borde de la selección
 

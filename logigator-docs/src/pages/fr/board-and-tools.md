@@ -38,7 +38,11 @@ Avec Sélectionner, tracez un cadre sur les éléments voulus. Chaque composant 
 
 Faites glisser la sélection pour la déplacer. `R` la tourne dans le sens horaire, `Shift+R` dans le sens antihoraire, et les flèches la déplacent d'un pas de grille. Si la sélection atterrit sur autre chose, elle reste soulevée et suit vos mouvements suivants jusqu'à trouver une place libre.
 
-`Escape` agit par étapes : il annule un glisser en cours, sinon vide la sélection, sinon passe à Déplacement.
+`Escape` agit par étapes. Chaque appui fait la première de ces actions qui s'applique :
+
+1. Annule un glisser en cours.
+2. Vide la sélection.
+3. Passe à Déplacement.
 
 ## Couper les fils au bord de la sélection
 

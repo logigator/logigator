@@ -6,14 +6,15 @@ Un composant personnalisé transforme un circuit en une seule pièce avec son pr
 
 ## Créer un composant
 
-Fichier → Nouveau composant (`Alt+N`), ou le bouton « Nouveau composant » de la barre d'outils, ouvre une fenêtre :
-
-- Nom, 20 caractères au plus, est le nom affiché dans la palette.
-- Symbole, 5 caractères au plus, est dessiné sur le bloc.
-- Description est facultative.
-- Stockage détermine où le composant est conservé. Local le garde dans ce navigateur. Cloud le garde dans votre compte, nécessite d'être connecté et demande aussi qui peut l'ouvrir, Tout le monde étant présélectionné (voir [Cloud et partage](docs:cloud)).
-
-« Créer » ouvre le composant dans un nouvel onglet avec un plan de travail vide. Enregistrer (`Ctrl+S`) dans cet onglet enregistre le composant.
+1. Choisissez Fichier → Nouveau composant (`Alt+N`), ou le bouton « Nouveau composant » de la barre d'outils. Une fenêtre s'ouvre.
+2. Remplissez la fenêtre :
+   - Nom, 20 caractères au plus, est le nom affiché dans la palette.
+   - Symbole, 5 caractères au plus, est dessiné sur le bloc.
+   - Description est facultative.
+   - Stockage détermine où le composant est conservé. Local le garde dans ce navigateur. Cloud le garde dans votre compte, nécessite d'être connecté et demande aussi qui peut l'ouvrir, Tout le monde étant présélectionné (voir [Cloud et partage](docs:cloud)).
+3. Cliquez sur « Créer ». Le composant s'ouvre dans un nouvel onglet avec un plan de travail vide.
+4. Construisez son circuit et donnez-lui des [ports](#ports).
+5. Enregistrez (`Ctrl+S`) dans cet onglet pour enregistrer le composant.
 
 ## Ports
 
@@ -27,9 +28,22 @@ Le panneau liste les fiches. Tapez dans une ligne pour nommer le port, en 5 cara
 
 Les composants enregistrés apparaissent dans la palette sous Composants utilisateur, le dernier modifié en premier. Placez-les comme n'importe quelle autre pièce. Chaque copie sur le plan de travail est un bloc avec le symbole et un port par fiche.
 
-Une copie placée garde le circuit que le composant avait au moment du placement. Modifier le composant ensuite ne change aucune copie tant que vous ne la mettez pas à jour. La carte de paramètres d'une copie périmée propose « Mettre à jour vers la dernière version » pour cette copie et « Mettre à jour toutes les instances » pour toutes les copies périmées du circuit ouvert, avec leur nombre entre parenthèses. Les deux peuvent être annulés. La tuile de la palette porte une flèche tant que des copies sont périmées.
+Une copie placée garde le circuit que le composant avait au moment du placement. Modifier le composant ensuite ne change aucune copie tant que vous ne la mettez pas à jour. La tuile de la palette porte une flèche tant que des copies sont périmées.
 
-Pour changer le circuit, choisissez « Modifier le circuit » dans la carte de paramètres d'une copie placée ou de la tuile de la palette. « Modifier les détails » change le nom, le symbole et la description.
+La carte de paramètres d'une copie placée, ou de la tuile de la palette, propose ces actions :
+
+| Action                                 | Effet                                                                                                                               |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Mettre à jour vers la dernière version | Met à jour cette copie. Seulement sur une copie périmée.                                                                            |
+| Mettre à jour toutes les instances     | Met à jour toutes les copies périmées du circuit ouvert. Leur nombre est entre parenthèses.                                         |
+| Modifier le circuit                    | Ouvre le circuit du composant pour le changer.                                                                                      |
+| Modifier les détails                   | Change le nom, le symbole et la description. Les copies placées gardent les anciens détails tant que vous ne les mettez pas à jour. |
+| Téléverser vers le cloud               | Déplace un composant local vers votre compte. Voir [Cloud et partage](docs:cloud#téléverser-vers-le-cloud).                         |
+| Partager                               | Ouvre la fenêtre de partage d'un composant cloud. Voir [Cloud et partage](docs:cloud#partager).                                     |
+| Supprimer                              | Retire le composant de votre bibliothèque. Voir [Supprimer](#supprimer).                                                            |
+| Restaurer et modifier                  | Seulement sur une copie dont le composant a été supprimé. La ramène dans votre bibliothèque locale.                                 |
+
+Les deux mises à jour peuvent être annulées.
 
 ## Imbrication
 

@@ -49,7 +49,7 @@ Your bindings are stored in this browser. Clearing the site data resets them.
 
 ## Gamepad keys
 
-A [gamepad](docs:simulation#playing-a-gamepad) has its own keys, separate from the shortcuts above. They work while its controller window has the keyboard, and there they come before the shortcuts, so `Enter` presses Start.
+A [gamepad](docs:inputs#gamepad) has its own keys, separate from the shortcuts above. They work while its controller window has the keyboard, and there they come before the shortcuts, so `Enter` presses Start.
 
 | Button                   | Default key   |
 | ------------------------ | ------------- |
@@ -65,13 +65,19 @@ A [gamepad](docs:simulation#playing-a-gamepad) has its own keys, separate from t
 
 A key counts by its position on the keyboard, and the table names it as on a US keyboard. On a German keyboard, for example, B is the key labelled Y. In Chrome and Edge, the window shows each key as your keyboard labels it.
 
-To change the keys, click Assign keys at the bottom of a gamepad window. Click a button, then press the key it should have. If another button had that key, the two swap keys and the other button lights up briefly. `Escape` cancels, and `Backspace` or `Delete` leaves the button without a key; `Escape` and `Tab` can't be assigned. Reset to defaults restores the table above, and Done goes back to playing.
+To change the keys:
+
+1. Click Assign keys at the bottom of a gamepad window.
+2. Click a button, then press the key it should have. If another button had that key, the two swap keys and the other button lights up briefly.
+3. Click Done to go back to playing.
+
+While you assign, `Escape` cancels, and `Backspace` or `Delete` leaves the button without a key. `Escape` and `Tab` can't be assigned. Reset to defaults restores the table above.
 
 The keys are shared by every gamepad in every project and stored in this browser, like the shortcuts. A change shows at once in every open gamepad window, in other tabs as well.
 
 ## Keys in a keyboard window
 
-While the typing field of a [keyboard's window](docs:simulation#typing-on-a-keyboard) has the focus, keys go to the circuit and the shortcuts above do nothing. These keys act differently there:
+While the typing field of a [keyboard's window](docs:inputs#keyboard) has the focus, keys go to the circuit and the shortcuts above do nothing. These keys act differently there:
 
 | Key         | In the typing field                      |
 | ----------- | ---------------------------------------- |

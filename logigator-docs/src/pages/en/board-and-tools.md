@@ -38,7 +38,11 @@ With Select, drag a box over the elements you want. Every component and wire the
 
 Drag the selection to move it. `R` rotates it clockwise, `Shift+R` counter-clockwise, and the arrow keys move it one grid step. When the selection ends up on top of something, it stays lifted and follows your next moves until it reaches a free spot.
 
-`Escape` works in stages: it cancels a drag in progress, otherwise clears the selection, otherwise switches to Pan.
+`Escape` works in stages. Each press does the first of these that applies:
+
+1. Cancels a drag in progress.
+2. Clears the selection.
+3. Switches to Pan.
 
 ## Cutting wires at the selection edge
 

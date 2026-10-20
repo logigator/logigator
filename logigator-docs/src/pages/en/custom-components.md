@@ -6,14 +6,15 @@ A custom component turns a circuit into a single part with its own symbol and na
 
 ## Creating a component
 
-File → New Component (`Alt+N`), or the New Component button in the toolbar, opens a dialog:
-
-- Name, up to 20 characters, is how the component appears in the palette.
-- Symbol, up to 5 characters, is drawn on its box.
-- Description is optional.
-- Store decides where the component is kept. Local keeps it in this browser. Cloud keeps it in your account and needs you to be signed in; it also asks who can open it, with Everyone preselected (see [Cloud and sharing](docs:cloud)).
-
-Create opens the component in a new tab with an empty board. Save (`Ctrl+S`) in that tab saves the component.
+1. Choose File → New Component (`Alt+N`), or the New Component button in the toolbar. A dialog opens.
+2. Fill in the dialog:
+   - Name, up to 20 characters, is how the component appears in the palette.
+   - Symbol, up to 5 characters, is drawn on its box.
+   - Description is optional.
+   - Store decides where the component is kept. Local keeps it in this browser. Cloud keeps it in your account and needs you to be signed in; it also asks who can open it, with Everyone preselected (see [Cloud and sharing](docs:cloud)).
+3. Click Create. The component opens in a new tab with an empty board.
+4. Build its circuit and give it [ports](#ports).
+5. Save (`Ctrl+S`) in that tab to save the component.
 
 ## Ports
 
@@ -27,9 +28,22 @@ The panel lists the plugs. Type into a row to name the port, with up to 5 charac
 
 Saved components appear in the palette under User Components, the most recently edited first. Place them like any other part. Each copy on the board is a box with the symbol and one port per plug.
 
-A placed copy keeps the circuit the component had when you placed it. Editing the component later changes none of the copies until you update them. The settings card of an outdated copy offers Update to latest for that copy and Update all instances for every outdated copy in the open circuit, with the count in brackets. Both can be undone. The palette tile carries an arrow while copies are outdated.
+A placed copy keeps the circuit the component had when you placed it. Editing the component later changes none of the copies until you update them. The palette tile carries an arrow while copies are outdated.
 
-To change the circuit, choose Edit circuit in the settings card of a placed copy or of the palette tile. Edit details changes the name, symbol and description.
+The settings card of a placed copy, or of the palette tile, has these actions:
+
+| Action               | What it does                                                                                         |
+| -------------------- | ---------------------------------------------------------------------------------------------------- |
+| Update to latest     | Updates this copy. Only on an outdated copy.                                                         |
+| Update all instances | Updates every outdated copy in the open circuit. The count is in brackets.                           |
+| Edit circuit         | Opens the component's circuit to change it.                                                          |
+| Edit details         | Changes the name, symbol and description. Placed copies keep the old details until you update them.  |
+| Upload to cloud      | Moves a local component to your account. See [Cloud and sharing](docs:cloud#uploading-to-the-cloud). |
+| Share                | Opens the share dialog of a cloud component. See [Cloud and sharing](docs:cloud#sharing).            |
+| Delete               | Removes the component from your library. See [Deleting](#deleting).                                  |
+| Restore & edit       | Only on a copy whose component was deleted. Brings it back into your local library.                  |
+
+Both updates can be undone.
 
 ## Nesting
 

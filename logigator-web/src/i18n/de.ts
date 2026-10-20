@@ -554,7 +554,7 @@ const de: TranslationSchema = {
     },
     docs: {
       title: 'Dokumentation',
-      lede: 'Jeder Teil des Logigator-Editors, erklärt: die Arbeitsfläche und ihre Werkzeuge, das Bauen von Schaltungen, das Simulieren und das Aufbewahren deiner Arbeit.',
+      lede: 'Jeder Teil des Logigator-Editors, erklärt: die Arbeitsfläche und ihre Werkzeuge, das Bauen von Schaltungen, alle Komponenten, das Simulieren und das Aufbewahren deiner Arbeit.',
       search: {
         label: 'Dokumentation durchsuchen',
         placeholder: 'Suchen..',
@@ -565,6 +565,7 @@ const de: TranslationSchema = {
       sections: {
         basics: 'Grundlagen',
         building: 'Schaltungen bauen',
+        components: 'Komponenten',
         simulation: 'Simulation',
         projects: 'Projekte und Cloud'
       },
@@ -574,9 +575,15 @@ const de: TranslationSchema = {
         phonesAndTablets: 'Smartphones und Tablets',
         shortcuts: 'Tastaturbefehle',
         settings: 'Einstellungen',
-        componentsAndOptions: 'Komponenten und Optionen',
         wiresAndConnections: 'Leitungen und Verbindungen',
         customComponents: 'Benutzerdefinierte Komponenten',
+        componentsAndOptions: 'Komponenten und Optionen',
+        logicGates: 'Logikgatter',
+        addersAndSelectors: 'Addierer und Selektoren',
+        memory: 'Speicher',
+        clockAndTiming: 'Zeitsteuerung',
+        inputs: 'Eingaben',
+        outputs: 'Ausgaben',
         simulation: 'Simulation',
         inspection: 'Inspektion und Beobachtungen',
         savingAndFiles: 'Speichern und Dateien',

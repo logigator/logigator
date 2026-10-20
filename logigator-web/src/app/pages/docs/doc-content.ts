@@ -6,7 +6,7 @@ import { DocPageId } from '@logigator/docs';
  *
  * The text is not in the locale table, for the reason the legal documents are
  * not: that table is loaded for every page and travels in each document's
- * first byte, where twelve pages in four languages would dwarf the interface's
+ * first byte, where eighteen pages in four languages would dwarf the interface's
  * own strings. `.md` is a `text` loader here, so each import compiles into a
  * chunk of its own — the server render reads the one it draws off disk and the
  * browser downloads exactly that language's page, hashed and cached past the
@@ -51,12 +51,6 @@ const CONTENT: Record<
     fr: () => import('@logigator/docs/pages/fr/settings.md'),
     es: () => import('@logigator/docs/pages/es/settings.md')
   },
-  'components-and-options': {
-    en: () => import('@logigator/docs/pages/en/components-and-options.md'),
-    de: () => import('@logigator/docs/pages/de/components-and-options.md'),
-    fr: () => import('@logigator/docs/pages/fr/components-and-options.md'),
-    es: () => import('@logigator/docs/pages/es/components-and-options.md')
-  },
   'wires-and-connections': {
     en: () => import('@logigator/docs/pages/en/wires-and-connections.md'),
     de: () => import('@logigator/docs/pages/de/wires-and-connections.md'),
@@ -68,6 +62,48 @@ const CONTENT: Record<
     de: () => import('@logigator/docs/pages/de/custom-components.md'),
     fr: () => import('@logigator/docs/pages/fr/custom-components.md'),
     es: () => import('@logigator/docs/pages/es/custom-components.md')
+  },
+  'components-and-options': {
+    en: () => import('@logigator/docs/pages/en/components-and-options.md'),
+    de: () => import('@logigator/docs/pages/de/components-and-options.md'),
+    fr: () => import('@logigator/docs/pages/fr/components-and-options.md'),
+    es: () => import('@logigator/docs/pages/es/components-and-options.md')
+  },
+  'logic-gates': {
+    en: () => import('@logigator/docs/pages/en/logic-gates.md'),
+    de: () => import('@logigator/docs/pages/de/logic-gates.md'),
+    fr: () => import('@logigator/docs/pages/fr/logic-gates.md'),
+    es: () => import('@logigator/docs/pages/es/logic-gates.md')
+  },
+  'adders-and-selectors': {
+    en: () => import('@logigator/docs/pages/en/adders-and-selectors.md'),
+    de: () => import('@logigator/docs/pages/de/adders-and-selectors.md'),
+    fr: () => import('@logigator/docs/pages/fr/adders-and-selectors.md'),
+    es: () => import('@logigator/docs/pages/es/adders-and-selectors.md')
+  },
+  memory: {
+    en: () => import('@logigator/docs/pages/en/memory.md'),
+    de: () => import('@logigator/docs/pages/de/memory.md'),
+    fr: () => import('@logigator/docs/pages/fr/memory.md'),
+    es: () => import('@logigator/docs/pages/es/memory.md')
+  },
+  'clock-and-timing': {
+    en: () => import('@logigator/docs/pages/en/clock-and-timing.md'),
+    de: () => import('@logigator/docs/pages/de/clock-and-timing.md'),
+    fr: () => import('@logigator/docs/pages/fr/clock-and-timing.md'),
+    es: () => import('@logigator/docs/pages/es/clock-and-timing.md')
+  },
+  inputs: {
+    en: () => import('@logigator/docs/pages/en/inputs.md'),
+    de: () => import('@logigator/docs/pages/de/inputs.md'),
+    fr: () => import('@logigator/docs/pages/fr/inputs.md'),
+    es: () => import('@logigator/docs/pages/es/inputs.md')
+  },
+  outputs: {
+    en: () => import('@logigator/docs/pages/en/outputs.md'),
+    de: () => import('@logigator/docs/pages/de/outputs.md'),
+    fr: () => import('@logigator/docs/pages/fr/outputs.md'),
+    es: () => import('@logigator/docs/pages/es/outputs.md')
   },
   simulation: {
     en: () => import('@logigator/docs/pages/en/simulation.md'),

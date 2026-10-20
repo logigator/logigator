@@ -49,7 +49,7 @@ Vos raccourcis sont enregistrés dans ce navigateur. Effacer les données du sit
 
 ## Touches de la manette
 
-Une [manette](docs:simulation#jouer-avec-une-manette) a ses propres touches, distinctes des raccourcis ci-dessus. Elles agissent tant que sa fenêtre a le clavier, et y passent avant les raccourcis : `Enter` appuie sur Start.
+Une [manette](docs:inputs#manette) a ses propres touches, distinctes des raccourcis ci-dessus. Elles agissent tant que sa fenêtre a le clavier, et y passent avant les raccourcis : `Enter` appuie sur Start.
 
 | Bouton                       | Touche par défaut |
 | ---------------------------- | ----------------- |
@@ -65,13 +65,19 @@ Une [manette](docs:simulation#jouer-avec-une-manette) a ses propres touches, dis
 
 Une touche compte par sa position sur le clavier. Le tableau la nomme telle qu'elle est inscrite sur un clavier AZERTY ; sur un clavier QWERTY, B est par exemple la touche Z. Chrome et Edge affichent dans la fenêtre les touches telles que votre clavier les inscrit, les autres navigateurs celles d'un clavier QWERTY américain.
 
-Pour modifier les touches, cliquez sur « Attribuer les touches » en bas d'une fenêtre de manette. Cliquez sur un bouton, puis appuyez sur la touche qu'il doit recevoir. Si un autre bouton avait déjà cette touche, les deux échangent leurs touches et l'autre bouton s'allume brièvement. `Escape` annule, et `Backspace` ou `Delete` laisse le bouton sans touche ; `Escape` et `Tab` ne peuvent pas être attribuées. « Rétablir les valeurs par défaut » remet le tableau ci-dessus, et « Terminé » revient au jeu.
+Pour modifier les touches :
+
+1. Cliquez sur « Attribuer les touches » en bas d'une fenêtre de manette.
+2. Cliquez sur un bouton, puis appuyez sur la touche qu'il doit recevoir. Si un autre bouton avait déjà cette touche, les deux échangent leurs touches et l'autre bouton s'allume brièvement.
+3. Cliquez sur « Terminé » pour revenir au jeu.
+
+Pendant l'attribution, `Escape` annule, et `Backspace` ou `Delete` laisse le bouton sans touche. `Escape` et `Tab` ne peuvent pas être attribuées. « Rétablir les valeurs par défaut » remet le tableau ci-dessus.
 
 Les touches sont communes à toutes les manettes de tous les projets et enregistrées dans ce navigateur, comme les raccourcis. Une modification apparaît aussitôt dans chaque fenêtre de manette ouverte, y compris dans d'autres onglets.
 
 ## Touches dans la fenêtre d'un clavier
 
-Tant que le champ de saisie de la [fenêtre d'un clavier](docs:simulation#taper-sur-un-clavier) a le focus, les touches vont au circuit et les raccourcis ci-dessus ne font rien. Ces touches y agissent autrement :
+Tant que le champ de saisie de la [fenêtre d'un clavier](docs:inputs#clavier) a le focus, les touches vont au circuit et les raccourcis ci-dessus ne font rien. Ces touches y agissent autrement :
 
 | Touche      | Dans le champ de saisie                   |
 | ----------- | ----------------------------------------- |

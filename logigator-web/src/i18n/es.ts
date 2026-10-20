@@ -548,7 +548,7 @@ const es: TranslationSchema = {
     },
     docs: {
       title: 'Documentación',
-      lede: 'Cada parte del editor de Logigator, explicada: el tablero y sus herramientas, la construcción de circuitos, la simulación y cómo guardar tu trabajo.',
+      lede: 'Cada parte del editor de Logigator, explicada: el tablero y sus herramientas, la construcción de circuitos, cada componente, la simulación y cómo guardar tu trabajo.',
       search: {
         label: 'Buscar en la documentación',
         placeholder: 'Buscar..',
@@ -559,6 +559,7 @@ const es: TranslationSchema = {
       sections: {
         basics: 'Conceptos básicos',
         building: 'Construir circuitos',
+        components: 'Componentes',
         simulation: 'Simulación',
         projects: 'Proyectos y nube'
       },
@@ -568,9 +569,15 @@ const es: TranslationSchema = {
         phonesAndTablets: 'Móviles y tabletas',
         shortcuts: 'Atajos de teclado',
         settings: 'Ajustes',
-        componentsAndOptions: 'Componentes y opciones',
         wiresAndConnections: 'Cables y conexiones',
         customComponents: 'Componentes personalizados',
+        componentsAndOptions: 'Componentes y opciones',
+        logicGates: 'Puertas lógicas',
+        addersAndSelectors: 'Sumadores y selectores',
+        memory: 'Memoria',
+        clockAndTiming: 'Temporización',
+        inputs: 'Entradas',
+        outputs: 'Salidas',
         simulation: 'Simulación',
         inspection: 'Inspección y monitores',
         savingAndFiles: 'Guardar y archivos',

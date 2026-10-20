@@ -6,7 +6,15 @@ With a Logigator account, projects and custom components are stored in the cloud
 
 The account menu at the right end of the title bar shows Log In and Sign Up while you are signed out. Both open the Logigator website in a new tab, and the editor notices by itself once you have signed in there. Signed in, the menu shows Account, which opens your account page on the website, and Log Out.
 
-If a cloud project or component has unsaved changes when you log out, the editor asks whether to save first: Save & Log Out, Log Out without Saving, or Cancel. After logging out, an open cloud project is replaced by an empty Draft and cloud components' tabs close. Local projects and components are not affected.
+If a cloud project or component has unsaved changes when you log out, the editor asks whether to save first:
+
+| Choice                 | What happens                          |
+| ---------------------- | ------------------------------------- |
+| Save & Log Out         | Saves the changes, then logs you out. |
+| Log Out without Saving | Logs you out. The changes are lost.   |
+| Cancel                 | Keeps you signed in.                  |
+
+After logging out, an open cloud project is replaced by an empty Draft and cloud components' tabs close. Local projects and components are not affected.
 
 ## Local and cloud
 
@@ -18,9 +26,17 @@ On the website, My projects and My components list your cloud documents as well.
 
 ## Uploading to the cloud
 
-To move a saved local project to your account, choose File → Upload to cloud, or the upload button on its row in the Open dialog. To save a Draft to the cloud directly, pick Cloud in the Save dialog. For a local custom component, use Upload to cloud in its settings card.
+| To upload                | Use                                                                         |
+| ------------------------ | --------------------------------------------------------------------------- |
+| A saved local project    | File → Upload to cloud, or the upload button on its row in the Open dialog. |
+| A Draft                  | Cloud in the Save dialog.                                                   |
+| A local custom component | Upload to cloud in its settings card.                                       |
 
-A cloud project can only use cloud components. If yours uses local ones, the upload dialog lists them and uploads them along with it. The dialog also asks who can open the upload, with Everyone preselected, and the same choice applies to the uploaded components. Uploading moves the documents: the local copies are deleted.
+The upload follows these rules:
+
+- A cloud project can only use cloud components. If yours uses local ones, the upload dialog lists them and uploads them along with it.
+- The dialog asks who can open the upload, with Everyone preselected. The same choice applies to the uploaded components.
+- Uploading moves the documents: the local copies are deleted.
 
 ![The Upload to cloud dialog listing a component that will be uploaded too.](./images/upload-to-cloud.webp)
 

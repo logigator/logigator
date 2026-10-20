@@ -22,7 +22,14 @@ To connect a crossing, tap it with the Wire tool. A dot appears and the four leg
 
 ## Tunnels
 
-A Tunnel connects to every other tunnel on the same board that has the same label, as if a wire ran between them. Use them to carry a clock or a bus across a large board. Every new tunnel starts with the label 0, so two new tunnels are connected until you change one of them. Labels are case-sensitive and up to 10 characters long.
+A Tunnel connects to every other tunnel on the same board that has the same label, as if a wire ran between them. Use them to carry a clock or a bus across a large board. Tunnel is in the Logic gates category of the palette.
+
+| Option    | What it sets                                                                                                                                                         |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Label     | Which tunnels connect. Up to 10 characters, case-sensitive. Every new tunnel starts with the label 0, so two new tunnels are connected until you change one of them. |
+| Direction | Which way the tunnel faces, as on every component.                                                                                                                   |
+
+A tunnel has a single port, with its label next to it on the board. The port can't be [negated](docs:components-and-options#negating-a-port).
 
 Tunnels only connect within one circuit. A tunnel inside a custom component never connects to one outside it.
 

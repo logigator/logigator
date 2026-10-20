@@ -23,7 +23,10 @@ Dans une fenêtre de 1024 px de large ou moins, l'éditeur passe à une disposit
 
 Lors de votre première visite, une carte au-dessus du plan de travail propose un tutoriel qui construit une porte ET avec deux interrupteurs et une LED. Il prend environ une minute. « Démarrer le tutoriel » le lance, le ✕ ferme la carte, et « Ignorer le tutoriel » l'arrête à n'importe quelle étape.
 
-La première fois que vous utilisez certains outils, comme l'outil fil ou la découpe au bord de la sélection, un court conseil les explique. Un autre conseil explique le fil orange la première fois qu'un [conflit](docs:simulation) apparaît pendant la simulation. Chaque conseil n'apparaît qu'une fois. « Désactiver tous les conseils » dans un conseil, ou le paramètre « Afficher les conseils d'intégration », les coupe. Aide → Afficher à nouveau les conseils les réactive, réaffiche ceux déjà vus et fait revenir la carte du tutoriel.
+La première fois que vous utilisez certains outils, comme l'outil fil ou la découpe au bord de la sélection, un court conseil les explique. Un autre conseil explique le fil orange la première fois qu'un [conflit](docs:simulation#signaux-en-conflit) apparaît pendant la simulation. Chaque conseil n'apparaît qu'une fois.
+
+- « Désactiver tous les conseils », dans n'importe quel conseil, les coupe tous. Désactiver le paramètre « Afficher les conseils d'intégration » fait de même.
+- Aide → Afficher à nouveau les conseils les réactive, réaffiche ceux déjà vus et fait revenir la carte du tutoriel.
 
 ## Le menu Aide
 

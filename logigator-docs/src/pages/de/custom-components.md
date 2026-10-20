@@ -6,14 +6,15 @@ Eine benutzerdefinierte Komponente macht aus einer Schaltung ein einzelnes Baute
 
 ## Eine Komponente erstellen
 
-Datei → Neue Komponente (`Alt+N`) oder die Schaltfläche „Neue Komponente“ in der Werkzeugleiste öffnet einen Dialog:
-
-- Name, bis 20 Zeichen, ist der Name in der Palette.
-- Symbol, bis 5 Zeichen, steht auf dem Kasten.
-- Beschreibung ist optional.
-- Speicherort legt fest, wo die Komponente liegt. Lokal hält sie in diesem Browser. Cloud hält sie in deinem Account, setzt eine Anmeldung voraus und fragt zusätzlich, wer sie öffnen kann, mit Alle als Vorauswahl (siehe [Cloud und Teilen](docs:cloud)).
-
-„Erstellen“ öffnet die Komponente in einem neuen Tab mit leerer Arbeitsfläche. Speichern (`Ctrl+S`) in diesem Tab speichert die Komponente.
+1. Wähle Datei → Neue Komponente (`Alt+N`) oder die Schaltfläche „Neue Komponente“ in der Werkzeugleiste. Ein Dialog öffnet sich.
+2. Fülle den Dialog aus:
+   - Name, bis 20 Zeichen, ist der Name in der Palette.
+   - Symbol, bis 5 Zeichen, steht auf dem Kasten.
+   - Beschreibung ist optional.
+   - Speicherort legt fest, wo die Komponente liegt. Lokal hält sie in diesem Browser. Cloud hält sie in deinem Account, setzt eine Anmeldung voraus und fragt zusätzlich, wer sie öffnen kann, mit Alle als Vorauswahl (siehe [Cloud und Teilen](docs:cloud)).
+3. Klicke auf „Erstellen“. Die Komponente öffnet sich in einem neuen Tab mit leerer Arbeitsfläche.
+4. Baue ihre Schaltung und gib ihr [Anschlüsse](#anschlüsse).
+5. Speichere (`Ctrl+S`) in diesem Tab, um die Komponente zu speichern.
 
 ## Anschlüsse
 
@@ -27,9 +28,22 @@ Der Bereich listet die Stecker. Tippe in eine Zeile, um den Anschluss zu benenne
 
 Gespeicherte Komponenten erscheinen in der Palette unter Benutzerdefiniert, die zuletzt bearbeitete zuerst. Du platzierst sie wie jedes andere Bauteil. Jede Kopie auf der Arbeitsfläche ist ein Kasten mit dem Symbol und einem Anschluss pro Stecker.
 
-Eine platzierte Kopie behält die Schaltung, die die Komponente beim Platzieren hatte. Spätere Änderungen an der Komponente betreffen keine Kopie, bis du sie aktualisierst. Die Einstellungskarte einer veralteten Kopie bietet „Auf neueste Version aktualisieren“ für diese Kopie und „Alle Instanzen aktualisieren“ für jede veraltete Kopie in der offenen Schaltung, mit der Anzahl in Klammern. Beides lässt sich rückgängig machen. Die Kachel in der Palette trägt einen Pfeil, solange Kopien veraltet sind.
+Eine platzierte Kopie behält die Schaltung, die die Komponente beim Platzieren hatte. Spätere Änderungen an der Komponente betreffen keine Kopie, bis du sie aktualisierst. Die Kachel in der Palette trägt einen Pfeil, solange Kopien veraltet sind.
 
-Um die Schaltung zu ändern, wähle „Schaltung bearbeiten“ in der Einstellungskarte einer platzierten Kopie oder der Palettenkachel. „Details bearbeiten“ ändert Name, Symbol und Beschreibung.
+Die Einstellungskarte einer platzierten Kopie oder der Palettenkachel hat diese Aktionen:
+
+| Aktion                            | Was sie tut                                                                                                       |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Auf neueste Version aktualisieren | Aktualisiert diese Kopie. Nur bei einer veralteten Kopie.                                                         |
+| Alle Instanzen aktualisieren      | Aktualisiert jede veraltete Kopie in der offenen Schaltung. Die Anzahl steht in Klammern.                         |
+| Schaltung bearbeiten              | Öffnet die Schaltung der Komponente, um sie zu ändern.                                                            |
+| Details bearbeiten                | Ändert Name, Symbol und Beschreibung. Platzierte Kopien behalten die alten Details, bis du sie aktualisierst.     |
+| In die Cloud hochladen            | Verschiebt eine lokale Komponente in deinen Account. Siehe [Cloud und Teilen](docs:cloud#in-die-cloud-hochladen). |
+| Teilen                            | Öffnet den Teilen-Dialog einer Cloud-Komponente. Siehe [Cloud und Teilen](docs:cloud#teilen).                     |
+| Löschen                           | Entfernt die Komponente aus deiner Bibliothek. Siehe [Löschen](#löschen).                                         |
+| Wiederherstellen & bearbeiten     | Nur bei einer Kopie, deren Komponente gelöscht wurde. Holt sie in deine lokale Bibliothek zurück.                 |
+
+Beide Aktualisierungen lassen sich rückgängig machen.
 
 ## Verschachteln
 

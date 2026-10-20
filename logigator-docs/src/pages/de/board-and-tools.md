@@ -38,7 +38,11 @@ Ziehe mit „Auswählen“ einen Rahmen über die gewünschten Elemente. Jede Ko
 
 Ziehe die Auswahl, um sie zu verschieben. `R` dreht sie im Uhrzeigersinn, `Shift+R` dagegen, und die Pfeiltasten verschieben sie um einen Rasterschritt. Landet die Auswahl auf etwas anderem, bleibt sie angehoben und folgt deinen nächsten Bewegungen, bis sie auf einem freien Platz liegt.
 
-`Escape` wirkt in Stufen: Es bricht ein laufendes Ziehen ab, sonst hebt es die Auswahl auf, sonst wechselt es zu Schwenken.
+`Escape` wirkt in Stufen. Jeder Druck tut das Erste davon, was zutrifft:
+
+1. Bricht ein laufendes Ziehen ab.
+2. Hebt die Auswahl auf.
+3. Wechselt zu Schwenken.
 
 ## Leitungen an der Auswahlkante schneiden
 

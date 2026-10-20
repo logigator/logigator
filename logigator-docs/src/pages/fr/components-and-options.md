@@ -1,77 +1,86 @@
 # Composants et options
 
-Les composants sont les pièces dont un circuit est fait : portes, mémoires, entrées et affichages. Vous les choisissez dans la palette à gauche et réglez leurs options dans la carte de paramètres.
+Les composants sont les pièces dont un circuit est fait : portes, mémoires, entrées et affichages. Vous les choisissez dans la palette à gauche et réglez leurs options dans la carte de paramètres. Cette page liste chaque composant intégré et renvoie à sa description.
 
 ![La palette de composants.](./images/component-palette.webp)
 
 ## La palette
 
-Le champ de recherche en haut filtre la palette par nom. Les catégories sont Basique, Avancé et Entrées / Sorties, plus Composants utilisateur dès que vous avez construit un [composant personnalisé](docs:custom-components). Un clic sur l'en-tête d'une catégorie la replie. Le placement est décrit dans [Plan de travail et outils](docs:board-and-tools).
+Le champ de recherche en haut filtre la palette par nom. Les catégories sont Portes logiques, Additionneurs et sélecteurs, Mémoire, Temporisation, Entrées et Sorties, plus Composants utilisateur dès que vous avez construit un [composant personnalisé](docs:custom-components). Un clic sur l'en-tête d'une catégorie la replie. Le placement est décrit dans [Plan de travail et outils](docs:board-and-tools#placer-des-composants).
 
-Chaque composant met un tick à transmettre un changement à sa sortie. Les tableaux indiquent les options de chaque composant en plus de Direction, que tous possèdent.
+Chaque composant met un tick à transmettre un changement à sa sortie. Les tableaux ci-dessous suivent l'ordre de la palette.
 
-### Basique
+### Portes logiques
 
-| Composant | Rôle                                                                                                                                                                                                                                     | Options                            |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| Porte NON | Inverse son entrée.                                                                                                                                                                                                                      |                                    |
-| Porte ET  | Donne 1 quand toutes les entrées sont à 1.                                                                                                                                                                                               | Entrées, 2 à 64                    |
-| Porte OU  | Donne 1 quand au moins une entrée est à 1.                                                                                                                                                                                               | Entrées, 2 à 64                    |
-| Porte XOR | Donne 1 quand un nombre impair d'entrées est à 1.                                                                                                                                                                                        | Entrées, 2 à 64                    |
-| Retard    | Transmet son entrée telle quelle, un tick plus tard.                                                                                                                                                                                     |                                    |
-| Horloge   | Reste à 0 pendant Retard ticks, puis à 1 pendant autant de ticks en signal carré ou pendant un tick en impulsion, puis recommence. Tant que son entrée STP est à 1, elle reste à 0, et elle recommence un cycle dès que STP repasse à 0. | Forme d'onde, Retard à partir de 1 |
-| Tunnel    | Relié sans fil à tous les autres tunnels portant la même étiquette. Voir [Fils et connexions](docs:wires-and-connections).                                                                                                               | Étiquette, 10 caractères au plus   |
+| Composant                                    | Rôle                                                                |
+| -------------------------------------------- | ------------------------------------------------------------------- |
+| [Porte NON](docs:logic-gates#porte-non)      | Inverse son entrée.                                                 |
+| [Porte ET](docs:logic-gates#porte-et)        | Donne 1 quand toutes les entrées sont à 1.                          |
+| [Porte OU](docs:logic-gates#porte-ou)        | Donne 1 quand au moins une entrée est à 1.                          |
+| [Porte XOR](docs:logic-gates#porte-xor)      | Donne 1 quand un nombre impair d'entrées est à 1.                   |
+| [Tunnel](docs:wires-and-connections#tunnels) | Relié sans fil à tous les autres tunnels portant la même étiquette. |
 
-### Avancé
+### Additionneurs et sélecteurs
 
-| Composant                        | Rôle                                                                                                                                                                                                                                      | Options                                                            |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Demi-additionneur                | Additionne A et B. S est le bit de somme, C la retenue.                                                                                                                                                                                   |                                                                    |
-| Additionneur complet             | Additionne A, B et la retenue entrante Cin. S est le bit de somme, C la retenue.                                                                                                                                                          |                                                                    |
-| ROM                              | Donne le mot stocké à l'adresse présente sur ses entrées. Elle n'a pas d'horloge.                                                                                                                                                         | Taille de mot 1 à 64, Taille d'adresse 1 à 11, Modifier le contenu |
-| Bascule D                        | Mémorise D sur le front montant de CLK. Q est le bit mémorisé, !Q son inverse.                                                                                                                                                            |                                                                    |
-| Bascule JK                       | Sur le front montant de CLK, J met le bit à 1, K le remet à 0, et les deux ensemble l'inversent.                                                                                                                                          |                                                                    |
-| Bascule SR                       | Sur le front montant de CLK, S met le bit à 1 et R le remet à 0.                                                                                                                                                                          |                                                                    |
-| Générateur de nombres aléatoires | Place une nouvelle valeur aléatoire sur ses sorties à chaque front montant de CLK.                                                                                                                                                        | Sorties, 1 à 64                                                    |
-| RAM                              | Sort le mot enregistré à l'adresse présente sur ses entrées. Sur le front montant de CLK, elle y enregistre les entrées de données tant que WE est à 1. Avec Lecture sur Sur horloge, les sorties ne changent qu'au front montant de CLK. | Taille de mot 1 à 64, Taille d'adresse 1 à 16, Lecture             |
-| Décodeur                         | Active la seule sortie dont le numéro correspond à la valeur binaire des entrées.                                                                                                                                                         | Entrées, 1 à 6                                                     |
-| Encodeur                         | Donne le numéro de l'entrée la plus haute qui est à 1. V est à 1 tant qu'une entrée l'est, ce qui distingue l'entrée 0 de l'absence d'entrée. Un encodeur d'un circuit plus ancien n'a pas de V.                                          | Sorties, 1 à 6                                                     |
-| Multiplexeur                     | Transmet à sa sortie l'entrée de données choisie par les lignes de sélection. Avec n lignes de sélection, il y a 2ⁿ entrées de données.                                                                                                   | Lignes de sélection, 1 à 6                                         |
-| Démultiplexeur                   | Transmet l'entrée I à la sortie choisie par les lignes de sélection, qui viennent en premier, comme sur le multiplexeur. Un démultiplexeur d'un circuit plus ancien garde I en premier ; les étiquettes du composant montrent l'ordre.    | Lignes de sélection, 1 à 6                                         |
+| Composant                                                              | Rôle                                                                          |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| [Demi-additionneur](docs:adders-and-selectors#demi-additionneur)       | Additionne deux bits.                                                         |
+| [Additionneur complet](docs:adders-and-selectors#additionneur-complet) | Additionne deux bits et une retenue entrante.                                 |
+| [Multiplexeur](docs:adders-and-selectors#multiplexeur)                 | Transmet à sa sortie l'entrée de données choisie par les lignes de sélection. |
+| [Démultiplexeur](docs:adders-and-selectors#démultiplexeur)             | Transmet son entrée à la sortie choisie par les lignes de sélection.          |
+| [Décodeur](docs:adders-and-selectors#décodeur)                         | Active la seule sortie dont le numéro est présent sur les entrées.            |
+| [Encodeur](docs:adders-and-selectors#encodeur)                         | Donne le numéro de l'entrée la plus haute qui est à 1.                        |
 
-### Entrées / Sorties
+### Mémoire
 
-| Composant            | Rôle                                                                                                                                                                                                                                                                                       | Options                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| Interrupteur         | Bascule entre 0 et 1 à chaque clic pendant une simulation.                                                                                                                                                                                                                                 |                                                                         |
-| Bouton               | Donne 1 tant que vous le maintenez enfoncé.                                                                                                                                                                                                                                                |                                                                         |
-| Bouton à impulsion   | Donne une impulsion d'un tick par clic.                                                                                                                                                                                                                                                    |                                                                         |
-| LED                  | S'allume tant que son entrée est à 1.                                                                                                                                                                                                                                                      |                                                                         |
-| Affichage à segments | Affiche le nombre binaire présent sur ses entrées, l'entrée 0 étant le bit de poids faible.                                                                                                                                                                                                | Entrées 1 à 16, Base décimale, hexadécimale ou octale                   |
-| Matrice de LED       | Une grille carrée de LED. Sur le front montant de CLK, les entrées de données sont écrites dans la ligne choisie par les entrées d'adresse. En 16 × 16, chaque adresse couvre une demi-ligne.                                                                                              | Largeur/Hauteur 4, 8 ou 16                                              |
-| Manette              | Une sortie par bouton, à 1 tant que le bouton est enfoncé. La croix directionnelle est toujours présente. Pendant une simulation, un clic ouvre une manette à l'écran pour jouer.                                                                                                          | Boutons d'action, Boutons de tranche, Boutons de menu, Noms des boutons |
-| Clavier              | D0 à D7 portent le code Latin-1 sur 8 bits de la dernière touche enfoncée. STB envoie une impulsion d'un tick à chaque appui, et KD est à 1 tant qu'une touche est maintenue. Pendant une simulation, un clic ouvre une fenêtre de saisie.                                                 |                                                                         |
-| Terminal             | Un écran de texte. Sur le front montant de CLK, il affiche le caractère dont le code est sur D0 à D7. Le saut de ligne, le retour arrière et les autres codes de contrôle déplacent le curseur à la place. Pendant une simulation, un clic ouvre une fenêtre avec tout ce qu'il a affiché. | Colonnes 8 à 80, Lignes 1 à 24, Taille du texte Petite ou Grande        |
+| Composant                            | Rôle                                                                             |
+| ------------------------------------ | -------------------------------------------------------------------------------- |
+| [Bascule D](docs:memory#bascule-d)   | Mémorise D sur le front montant de CLK.                                          |
+| [Bascule JK](docs:memory#bascule-jk) | Met un bit à 1, le remet à 0 ou l'inverse sur le front montant de CLK.           |
+| [Bascule SR](docs:memory#bascule-sr) | Met un bit à 1 ou le remet à 0 sur le front montant de CLK.                      |
+| [ROM](docs:memory#rom)               | Donne le mot stocké à l'adresse présente sur ses entrées.                        |
+| [RAM](docs:memory#ram)               | Stocke les mots que le circuit écrit et donne celui qui se trouve à une adresse. |
+
+### Temporisation
+
+| Composant                                                                                  | Rôle                                                                               |
+| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| [Horloge](docs:clock-and-timing#horloge)                                                   | Passe d'elle-même de 0 à 1 et inversement, en signal carré ou en impulsion.        |
+| [Retard](docs:clock-and-timing#retard)                                                     | Transmet son entrée telle quelle, un tick plus tard.                               |
+| [Générateur de nombres aléatoires](docs:clock-and-timing#générateur-de-nombres-aléatoires) | Place une nouvelle valeur aléatoire sur ses sorties à chaque front montant de CLK. |
+
+### Entrées
+
+| Composant                                            | Rôle                                                                                 |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [Interrupteur](docs:inputs#interrupteur)             | Bascule entre 0 et 1 à chaque clic pendant une simulation.                           |
+| [Bouton](docs:inputs#bouton)                         | Donne 1 tant que vous le maintenez enfoncé.                                          |
+| [Bouton à impulsion](docs:inputs#bouton-à-impulsion) | Donne une impulsion d'un tick par clic.                                              |
+| [Manette](docs:inputs#manette)                       | Une sortie par bouton d'une manette avec laquelle vous jouez pendant une simulation. |
+| [Clavier](docs:inputs#clavier)                       | Place sur ses sorties le code de chaque touche que vous tapez.                       |
+
+### Sorties
+
+| Composant                                                 | Rôle                                                                                |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [LED](docs:outputs#led)                                   | S'allume tant que son entrée est à 1.                                               |
+| [Affichage à segments](docs:outputs#affichage-à-segments) | Affiche le nombre binaire présent sur ses entrées en décimal, hexadécimal ou octal. |
+| [Matrice de LED](docs:outputs#matrice-de-led)             | Une grille carrée de LED, écrite une ligne à la fois.                               |
+| [Terminal](docs:outputs#terminal)                         | Un écran de texte qui affiche un caractère à chaque front montant de CLK.           |
 
 ## La carte de paramètres
 
-Quand vous sélectionnez un seul composant, ou en choisissez un à placer, sa carte de paramètres apparaît à côté du plan de travail : le nom, une description et les options. Direction a quatre boutons fléchés qui tournent le composant. Une direction choisie pendant le placement est conservée pour le composant suivant du même type. Pendant une simulation, la carte est masquée.
+Quand vous sélectionnez un seul composant, ou en choisissez un à placer, sa carte de paramètres apparaît à côté du plan de travail : le nom, une description et les options. Pendant une simulation, la carte est masquée.
 
 ![La carte de paramètres d'une porte ET sélectionnée.](./images/component-settings.webp)
 
-Modifier Entrées, Sorties ou une option de taille change immédiatement le nombre de ports.
-
-Pour une ROM, « Modifier le contenu » ouvre un éditeur hexadécimal pour les mots stockés. Taille de mot fixe le nombre de bits par mot et Taille d'adresse le nombre d'entrées d'adresse : une ROM avec une taille d'adresse de 4 contient donc 16 mots. Le contenu est enregistré avec le circuit.
-
-Une manette a toujours les quatre directions de la croix directionnelle. Boutons d'action vaut 0, A, A B ou A B X Y, Boutons de tranche 0 ou L R, et Boutons de menu 0, ST ou SL ST, SL étant Select et ST Start. Les valeurs par défaut, A B et SL ST sans boutons de tranche, donnent huit sorties ; avec tous les groupes, il y en a douze. Les ports s'appellent UP, DN, LT, RT, A, B, X, Y, L, R, SL et ST, dans cet ordre.
-
-Noms des boutons ouvre une image de la manette avec un champ à chaque bouton. Un nom de 8 caractères au plus remplace le libellé du port de ce bouton sur le plan de travail et s'affiche à côté du bouton dans la fenêtre de la manette ; un champ vide garde le libellé par défaut. Les noms des boutons que vous désactivez sont conservés et reviennent quand vous les réactivez.
-
-Colonnes et Lignes fixent la taille de l'écran d'un terminal en caractères, 40 × 12 par défaut, et le composant grandit avec lui. Grande dessine chaque caractère une fois et demie plus grand que Petite. Quand vous tournez un terminal, son écran reste droit et seuls les ports changent de place. Ce qu'il fait de chaque code est décrit dans [Simulation](docs:simulation#afficher-sur-un-terminal).
+- Direction, que tous les composants possèdent, a quatre boutons fléchés qui tournent le composant. Une direction choisie pendant le placement est conservée pour le composant suivant du même type.
+- Modifier Entrées, Sorties ou une option de taille change immédiatement le nombre de ports.
+- Les autres options sont décrites avec chaque composant, comme le contenu d'une [ROM](docs:memory#rom), les noms des boutons d'une [manette](docs:inputs#manette) et la taille de l'écran d'un [terminal](docs:outputs#terminal).
 
 ## Inverser un port
 
-Avec l'outil fil, appuyez sur un port d'entrée ou de sortie pour y ajouter une bulle d'inversion. Le signal qui traverse ce port est alors inversé, sans retard supplémentaire. Appuyez de nouveau sur la bulle pour la retirer. Au survol d'un port, l'outil fil montre l'effet qu'aurait un appui. Une bulle sur l'entrée CLK d'une bascule la fait réagir au front descendant.
+Avec l'outil fil, appuyez sur un port d'entrée ou de sortie pour y ajouter une bulle d'inversion. Le signal qui traverse ce port est alors inversé, sans retard supplémentaire. Appuyez de nouveau sur la bulle pour la retirer. Au survol d'un port, l'outil fil montre l'effet qu'aurait un appui. Une bulle sur l'entrée CLK d'une [bascule](docs:memory) la fait réagir au front descendant.
 
 Les tunnels, les fiches Entrée et Sortie et les ports d'un composant personnalisé placé ne peuvent pas être inversés.
 
@@ -83,7 +92,8 @@ Le texte ne figure pas dans la palette. Avec l'outil Texte (`T`), cliquez sur le
 
 ## Voir aussi
 
+- [Portes logiques](docs:logic-gates) : la première des pages de composants
+- [Entrées](docs:inputs) : interrupteurs, boutons, la manette et le clavier
 - [Fils et connexions](docs:wires-and-connections) : relier des ports
 - [Composants personnalisés](docs:custom-components) : construire vos propres pièces
-- [Simulation](docs:simulation) : utiliser interrupteurs et boutons
 - [Plan de travail et outils](docs:board-and-tools) : placer, déplacer et tourner

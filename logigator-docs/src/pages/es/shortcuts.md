@@ -49,7 +49,7 @@ Tus atajos se guardan en este navegador. Borrar los datos del sitio los restable
 
 ## Teclas del mando
 
-Un [mando](docs:simulation#jugar-con-un-mando) tiene sus propias teclas, aparte de los atajos de arriba. Funcionan mientras su ventana tiene el teclado, y ahí van antes que los atajos: `Enter` pulsa Start.
+Un [mando](docs:inputs#mando) tiene sus propias teclas, aparte de los atajos de arriba. Funcionan mientras su ventana tiene el teclado, y ahí van antes que los atajos: `Enter` pulsa Start.
 
 | Botón                                | Tecla predeterminada |
 | ------------------------------------ | -------------------- |
@@ -65,13 +65,19 @@ Un [mando](docs:simulation#jugar-con-un-mando) tiene sus propias teclas, aparte 
 
 Una tecla cuenta por su posición en el teclado; en un teclado español están donde indica la tabla. En un teclado francés AZERTY, por ejemplo, B queda en la W. Chrome y Edge muestran en la ventana cada tecla como la rotula tu teclado.
 
-Para cambiar las teclas, haz clic en «Asignar teclas» en la parte inferior de una ventana de mando. Haz clic en un botón y pulsa la tecla que debe tener. Si otro botón ya tenía esa tecla, los dos intercambian sus teclas y el otro botón se ilumina un momento. `Escape` cancela, y `Backspace` o `Delete` deja el botón sin tecla; `Escape` y `Tab` no se pueden asignar. «Restablecer valores predeterminados» vuelve a la tabla de arriba, y «Listo» vuelve al juego.
+Para cambiar las teclas:
+
+1. Haz clic en «Asignar teclas» en la parte inferior de una ventana de mando.
+2. Haz clic en un botón y pulsa la tecla que debe tener. Si otro botón ya tenía esa tecla, los dos intercambian sus teclas y el otro botón se ilumina un momento.
+3. Haz clic en «Listo» para volver al juego.
+
+Mientras asignas, `Escape` cancela, y `Backspace` o `Delete` deja el botón sin tecla. `Escape` y `Tab` no se pueden asignar. «Restablecer valores predeterminados» vuelve a la tabla de arriba.
 
 Las teclas son las mismas para todos los mandos de todos los proyectos y se guardan en este navegador, como los atajos. Un cambio aparece al momento en cada ventana de mando abierta, también en otras pestañas.
 
 ## Teclas en la ventana de un teclado
 
-Mientras el campo de escritura de la [ventana de un teclado](docs:simulation#escribir-en-un-teclado) tiene el foco, las teclas van al circuito y los atajos de arriba no hacen nada. Estas teclas se comportan ahí de otra manera:
+Mientras el campo de escritura de la [ventana de un teclado](docs:inputs#teclado) tiene el foco, las teclas van al circuito y los atajos de arriba no hacen nada. Estas teclas se comportan ahí de otra manera:
 
 | Tecla       | En el campo de escritura                 |
 | ----------- | ---------------------------------------- |

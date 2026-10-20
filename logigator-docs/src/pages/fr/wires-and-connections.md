@@ -22,7 +22,14 @@ Pour connecter un croisement, appuyez dessus avec l'outil fil. Un point apparaî
 
 ## Tunnels
 
-Un tunnel est relié à tous les autres tunnels du même plan de travail qui portent la même étiquette, comme si un fil les joignait. Utilisez-les pour faire passer une horloge ou un bus à travers un grand circuit. Chaque nouveau tunnel commence avec l'étiquette 0, donc deux nouveaux tunnels sont reliés jusqu'à ce que vous changiez l'un d'eux. Les étiquettes distinguent majuscules et minuscules et font 10 caractères au plus.
+Un tunnel est relié à tous les autres tunnels du même plan de travail qui portent la même étiquette, comme si un fil les joignait. Utilisez-les pour faire passer une horloge ou un bus à travers un grand circuit. Le tunnel se trouve dans la catégorie Portes logiques de la palette.
+
+| Option    | Ce qu'elle fixe                                                                                                                                                                                                              |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Étiquette | Les tunnels qui sont reliés. 10 caractères au plus, majuscules et minuscules distinguées. Chaque nouveau tunnel commence avec l'étiquette 0, donc deux nouveaux tunnels sont reliés jusqu'à ce que vous changiez l'un d'eux. |
+| Direction | Le sens dans lequel le tunnel est tourné, comme pour tout composant.                                                                                                                                                         |
+
+Un tunnel a un seul port, avec son étiquette à côté sur le plan de travail. Ce port ne peut pas être [inversé](docs:components-and-options#inverser-un-port).
 
 Les tunnels ne se relient qu'à l'intérieur d'un même circuit. Un tunnel dans un composant personnalisé ne se relie jamais à un tunnel extérieur.
 

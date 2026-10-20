@@ -547,7 +547,7 @@ const fr: TranslationSchema = {
     },
     docs: {
       title: 'Documentation',
-      lede: "Chaque partie de l'éditeur Logigator, expliquée : le plan de travail et ses outils, la construction de circuits, la simulation et la conservation de votre travail.",
+      lede: "Chaque partie de l'éditeur Logigator, expliquée : le plan de travail et ses outils, la construction de circuits, chaque composant, la simulation et la conservation de votre travail.",
       search: {
         label: 'Rechercher dans la documentation',
         placeholder: 'Rechercher..',
@@ -558,6 +558,7 @@ const fr: TranslationSchema = {
       sections: {
         basics: 'Bases',
         building: 'Construction de circuits',
+        components: 'Composants',
         simulation: 'Simulation',
         projects: 'Projets et cloud'
       },
@@ -567,9 +568,15 @@ const fr: TranslationSchema = {
         phonesAndTablets: 'Téléphones et tablettes',
         shortcuts: 'Raccourcis clavier',
         settings: 'Paramètres',
-        componentsAndOptions: 'Composants et options',
         wiresAndConnections: 'Fils et connexions',
         customComponents: 'Composants personnalisés',
+        componentsAndOptions: 'Composants et options',
+        logicGates: 'Portes logiques',
+        addersAndSelectors: 'Additionneurs et sélecteurs',
+        memory: 'Mémoire',
+        clockAndTiming: 'Temporisation',
+        inputs: 'Entrées',
+        outputs: 'Sorties',
         simulation: 'Simulation',
         inspection: 'Inspection et surveillances',
         savingAndFiles: 'Enregistrement et fichiers',

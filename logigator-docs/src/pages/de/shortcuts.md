@@ -49,7 +49,7 @@ Deine Belegungen werden in diesem Browser gespeichert. Löschst du die Website-D
 
 ## Tasten des Gamepads
 
-Ein [Gamepad](docs:simulation#ein-gamepad-spielen) hat eigene Tasten, getrennt von den Tastaturbefehlen oben. Sie wirken, solange sein Controller-Fenster die Tastatur hat, und gehen dort den Tastaturbefehlen vor: `Enter` drückt Start.
+Ein [Gamepad](docs:inputs#gamepad) hat eigene Tasten, getrennt von den Tastaturbefehlen oben. Sie wirken, solange sein Controller-Fenster die Tastatur hat, und gehen dort den Tastaturbefehlen vor: `Enter` drückt Start.
 
 | Gamepad-Taste                  | Standard       |
 | ------------------------------ | -------------- |
@@ -65,13 +65,19 @@ Ein [Gamepad](docs:simulation#ein-gamepad-spielen) hat eigene Tasten, getrennt v
 
 Es zählt die Lage einer Taste auf der Tastatur. Die Tabelle nennt sie, wie sie auf einer deutschen Tastatur beschriftet sind; auf einer US-Tastatur liegt B zum Beispiel auf Z. Chrome und Edge zeigen im Fenster die Beschriftung deiner Tastatur, andere Browser die einer US-Tastatur.
 
-Um die Tasten zu ändern, klicke unten in einem Gamepad-Fenster auf „Tasten zuweisen“. Klicke auf eine Gamepad-Taste und drücke dann die Tastaturtaste, die sie bekommen soll. Hatte eine andere Gamepad-Taste sie schon, tauschen die beiden, und die andere leuchtet kurz auf. `Escape` bricht ab, und `Backspace` oder `Delete` lässt die Gamepad-Taste ohne Tastaturtaste; `Escape` und `Tab` lassen sich nicht zuweisen. „Standard wiederherstellen“ stellt die Tabelle oben wieder her, und „Fertig“ kehrt zum Spielen zurück.
+So änderst du die Tasten:
+
+1. Klicke unten in einem Gamepad-Fenster auf „Tasten zuweisen“.
+2. Klicke auf eine Gamepad-Taste und drücke dann die Tastaturtaste, die sie bekommen soll. Hatte eine andere Gamepad-Taste sie schon, tauschen die beiden, und die andere leuchtet kurz auf.
+3. Klicke auf „Fertig“, um zum Spielen zurückzukehren.
+
+Während du zuweist, bricht `Escape` ab, und `Backspace` oder `Delete` lässt die Gamepad-Taste ohne Tastaturtaste. `Escape` und `Tab` lassen sich nicht zuweisen. „Standard wiederherstellen“ stellt die Tabelle oben wieder her.
 
 Die Tasten gelten für jedes Gamepad in jedem Projekt und werden wie die Tastaturbefehle in diesem Browser gespeichert. Eine Änderung erscheint sofort in jedem offenen Gamepad-Fenster, auch in anderen Tabs.
 
 ## Tasten im Fenster einer Tastatur
 
-Solange das Eingabefeld im [Fenster einer Tastatur](docs:simulation#in-eine-tastatur-tippen) den Fokus hat, gehen Tasten an die Schaltung, und die Tastaturbefehle oben tun nichts. Diese Tasten verhalten sich dort anders:
+Solange das Eingabefeld im [Fenster einer Tastatur](docs:inputs#tastatur) den Fokus hat, gehen Tasten an die Schaltung, und die Tastaturbefehle oben tun nichts. Diese Tasten verhalten sich dort anders:
 
 | Taste       | Im Eingabefeld                          |
 | ----------- | --------------------------------------- |

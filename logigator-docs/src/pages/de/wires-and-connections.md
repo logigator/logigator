@@ -22,7 +22,14 @@ Um eine Kreuzung zu verbinden, tippe sie mit dem Leitungswerkzeug an. Ein Punkt 
 
 ## Tunnel
 
-Ein Tunnel ist mit jedem anderen Tunnel auf derselben Arbeitsfläche verbunden, der dieselbe Beschriftung trägt, als liefe eine Leitung zwischen ihnen. So führst du einen Takt oder einen Bus quer über eine große Schaltung. Jeder neue Tunnel beginnt mit der Beschriftung 0, zwei neue Tunnel sind also verbunden, bis du einen davon änderst. Beschriftungen unterscheiden Groß- und Kleinschreibung und sind bis zu 10 Zeichen lang.
+Ein Tunnel ist mit jedem anderen Tunnel auf derselben Arbeitsfläche verbunden, der dieselbe Beschriftung trägt, als liefe eine Leitung zwischen ihnen. So führst du einen Takt oder einen Bus quer über eine große Schaltung. Tunnel steht in der Kategorie Logikgatter der Palette.
+
+| Option       | Was sie festlegt                                                                                                                                                                                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Beschriftung | Welche Tunnel verbunden sind. Bis zu 10 Zeichen, Groß- und Kleinschreibung zählen. Jeder neue Tunnel beginnt mit der Beschriftung 0, zwei neue Tunnel sind also verbunden, bis du einen davon änderst. |
+| Richtung     | In welche Richtung der Tunnel zeigt, wie bei jeder Komponente.                                                                                                                                         |
+
+Ein Tunnel hat einen einzigen Anschluss, mit seiner Beschriftung daneben auf der Arbeitsfläche. Der Anschluss lässt sich nicht [negieren](docs:components-and-options#einen-anschluss-negieren).
 
 Tunnel verbinden sich nur innerhalb einer Schaltung. Ein Tunnel in einer benutzerdefinierten Komponente verbindet sich nie mit einem außerhalb.
 

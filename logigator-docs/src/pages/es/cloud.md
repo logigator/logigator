@@ -6,7 +6,15 @@ Con una cuenta de Logigator, los proyectos y componentes personalizados se guard
 
 El menú de la cuenta, en el extremo derecho de la barra de título, muestra «Iniciar sesión» y «Registrarse» mientras no has iniciado sesión. Ambos abren el sitio web de Logigator en una pestaña nueva, y el editor detecta por sí solo cuando has iniciado sesión allí. Con la sesión iniciada, el menú muestra «Cuenta», que abre tu página de cuenta en el sitio, y «Cerrar sesión».
 
-Si un proyecto o componente de la nube tiene cambios sin guardar al cerrar sesión, el editor pregunta si quieres guardarlos antes: «Guardar y cerrar sesión», «Cerrar sesión sin guardar» o «Cancelar». Tras cerrar sesión, un proyecto de la nube abierto se sustituye por un borrador vacío y se cierran las pestañas de los componentes de la nube. Los proyectos y componentes locales no se tocan.
+Si un proyecto o componente de la nube tiene cambios sin guardar al cerrar sesión, el editor pregunta si quieres guardarlos antes:
+
+| Opción                    | Qué pasa                                     |
+| ------------------------- | -------------------------------------------- |
+| Guardar y cerrar sesión   | Guarda los cambios y luego cierra la sesión. |
+| Cerrar sesión sin guardar | Cierra la sesión. Los cambios se pierden.    |
+| Cancelar                  | Mantiene la sesión iniciada.                 |
+
+Tras cerrar sesión, un proyecto de la nube abierto se sustituye por un borrador vacío y se cierran las pestañas de los componentes de la nube. Los proyectos y componentes locales no se tocan.
 
 ## Local y nube
 
@@ -18,9 +26,17 @@ En el sitio web, Mis proyectos y Mis componentes listan también tus documentos 
 
 ## Subir a la nube
 
-Para mover un proyecto local guardado a tu cuenta, elige Archivo → Subir a la nube, o el botón de subir de su fila en el diálogo «Abrir proyecto». Para guardar un borrador directamente en la nube, elige Nube en el diálogo «Guardar». Para un componente personalizado local, usa «Subir a la nube» en su tarjeta de ajustes.
+| Para subir                        | Usa                                                                                       |
+| --------------------------------- | ----------------------------------------------------------------------------------------- |
+| Un proyecto local guardado        | Archivo → Subir a la nube, o el botón de subir de su fila en el diálogo «Abrir proyecto». |
+| Un borrador                       | Nube en el diálogo «Guardar».                                                             |
+| Un componente personalizado local | «Subir a la nube» en su tarjeta de ajustes.                                               |
 
-Un proyecto de la nube solo puede usar componentes de la nube. Si el tuyo usa componentes locales, el diálogo los lista y los sube con él. También pregunta quién puede abrir lo que subes, con Todo el mundo preseleccionado, y la misma elección vale para los componentes subidos. Subir mueve los documentos: las copias locales se eliminan.
+La subida sigue estas reglas:
+
+- Un proyecto de la nube solo puede usar componentes de la nube. Si el tuyo usa componentes locales, el diálogo los lista y los sube con él.
+- El diálogo pregunta quién puede abrir lo que subes, con Todo el mundo preseleccionado. La misma elección vale para los componentes subidos.
+- Subir mueve los documentos: las copias locales se eliminan.
 
 ![El diálogo «Subir a la nube» con un componente que se subirá también.](./images/upload-to-cloud.webp)
 

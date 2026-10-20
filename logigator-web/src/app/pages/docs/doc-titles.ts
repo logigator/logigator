@@ -17,9 +17,15 @@ export const DOC_PAGE_TITLES: Record<DocPageId, TranslationKey> = {
   'phones-and-tablets': 'pages.docs.pages.phonesAndTablets',
   shortcuts: 'pages.docs.pages.shortcuts',
   settings: 'pages.docs.pages.settings',
-  'components-and-options': 'pages.docs.pages.componentsAndOptions',
   'wires-and-connections': 'pages.docs.pages.wiresAndConnections',
   'custom-components': 'pages.docs.pages.customComponents',
+  'components-and-options': 'pages.docs.pages.componentsAndOptions',
+  'logic-gates': 'pages.docs.pages.logicGates',
+  'adders-and-selectors': 'pages.docs.pages.addersAndSelectors',
+  memory: 'pages.docs.pages.memory',
+  'clock-and-timing': 'pages.docs.pages.clockAndTiming',
+  inputs: 'pages.docs.pages.inputs',
+  outputs: 'pages.docs.pages.outputs',
   simulation: 'pages.docs.pages.simulation',
   inspection: 'pages.docs.pages.inspection',
   'saving-and-files': 'pages.docs.pages.savingAndFiles',
@@ -30,6 +36,7 @@ export const DOC_PAGE_TITLES: Record<DocPageId, TranslationKey> = {
 export const DOC_SECTION_TITLES: Record<DocSectionId, TranslationKey> = {
   basics: 'pages.docs.sections.basics',
   building: 'pages.docs.sections.building',
+  components: 'pages.docs.sections.components',
   simulation: 'pages.docs.sections.simulation',
   projects: 'pages.docs.sections.projects'
 };

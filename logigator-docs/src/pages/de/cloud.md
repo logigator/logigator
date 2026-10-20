@@ -6,7 +6,15 @@ Mit einem Logigator-Account liegen Projekte und benutzerdefinierte Komponenten i
 
 Das Account-Menü am rechten Ende der Titelleiste zeigt „Anmelden“ und „Registrieren“, solange du abgemeldet bist. Beide öffnen die Logigator-Website in einem neuen Tab, und der Editor bemerkt von selbst, wenn du dich dort angemeldet hast. Angemeldet zeigt das Menü „Account“, das deine Account-Seite auf der Website öffnet, und „Abmelden“.
 
-Hat ein Cloud-Projekt oder eine Cloud-Komponente beim Abmelden ungespeicherte Änderungen, fragt der Editor, ob du vorher speichern willst: „Speichern & Abmelden“, „Ohne Speichern abmelden“ oder „Abbrechen“. Nach dem Abmelden wird ein offenes Cloud-Projekt durch einen leeren Entwurf ersetzt, und die Tabs von Cloud-Komponenten schließen sich. Lokale Projekte und Komponenten bleiben unberührt.
+Hat ein Cloud-Projekt oder eine Cloud-Komponente beim Abmelden ungespeicherte Änderungen, fragt der Editor, ob du vorher speichern willst:
+
+| Auswahl                 | Was passiert                                      |
+| ----------------------- | ------------------------------------------------- |
+| Speichern & Abmelden    | Speichert die Änderungen und meldet dich dann ab. |
+| Ohne Speichern abmelden | Meldet dich ab. Die Änderungen gehen verloren.    |
+| Abbrechen               | Du bleibst angemeldet.                            |
+
+Nach dem Abmelden wird ein offenes Cloud-Projekt durch einen leeren Entwurf ersetzt, und die Tabs von Cloud-Komponenten schließen sich. Lokale Projekte und Komponenten bleiben unberührt.
 
 ## Lokal und Cloud
 
@@ -18,9 +26,17 @@ Auf der Website listen Meine Projekte und Meine Komponenten deine Cloud-Dokument
 
 ## In die Cloud hochladen
 
-Um ein gespeichertes lokales Projekt in deinen Account zu verschieben, wähle Datei → In die Cloud hochladen oder die Hochladen-Schaltfläche in seiner Zeile im Dialog „Projekt öffnen“. Einen Entwurf speicherst du direkt in der Cloud, indem du im Dialog „Speichern“ Cloud wählst. Für eine lokale benutzerdefinierte Komponente nimmst du „In die Cloud hochladen“ in ihrer Einstellungskarte.
+| Hochladen                                 | Womit                                                                                                      |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Ein gespeichertes lokales Projekt         | Datei → In die Cloud hochladen oder die Hochladen-Schaltfläche in seiner Zeile im Dialog „Projekt öffnen“. |
+| Einen Entwurf                             | Cloud im Dialog „Speichern“.                                                                               |
+| Eine lokale benutzerdefinierte Komponente | „In die Cloud hochladen“ in ihrer Einstellungskarte.                                                       |
 
-Ein Cloud-Projekt kann nur Cloud-Komponenten verwenden. Verwendet deines lokale, listet der Dialog sie auf und lädt sie mit hoch. Er fragt auch, wer das Hochgeladene öffnen kann, mit Alle als Vorauswahl, und dieselbe Wahl gilt für die hochgeladenen Komponenten. Hochladen verschiebt die Dokumente: Die lokalen Kopien werden gelöscht.
+Beim Hochladen gilt:
+
+- Ein Cloud-Projekt kann nur Cloud-Komponenten verwenden. Verwendet deines lokale, listet der Dialog sie auf und lädt sie mit hoch.
+- Der Dialog fragt, wer das Hochgeladene öffnen kann, mit Alle als Vorauswahl. Dieselbe Wahl gilt für die hochgeladenen Komponenten.
+- Hochladen verschiebt die Dokumente: Die lokalen Kopien werden gelöscht.
 
 ![Der Dialog „In die Cloud hochladen“ mit einer Komponente, die mit hochgeladen wird.](./images/upload-to-cloud.webp)
 

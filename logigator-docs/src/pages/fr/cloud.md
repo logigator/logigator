@@ -6,7 +6,15 @@ Avec un compte Logigator, projets et composants personnalisés sont stockés dan
 
 Le menu du compte, à l'extrémité droite de la barre de titre, affiche « Se connecter » et « S'inscrire » tant que vous n'êtes pas connecté. Les deux ouvrent le site Logigator dans un nouvel onglet, et l'éditeur remarque de lui-même que vous vous y êtes connecté. Une fois connecté, le menu affiche « Compte », qui ouvre votre page de compte sur le site, et « Se déconnecter ».
 
-Si un projet ou un composant cloud a des modifications non enregistrées au moment de la déconnexion, l'éditeur demande s'il faut d'abord enregistrer : « Enregistrer et se déconnecter », « Se déconnecter sans enregistrer » ou « Annuler ». Après la déconnexion, un projet cloud ouvert est remplacé par un brouillon vide, et les onglets des composants cloud se ferment. Les projets et composants locaux ne sont pas touchés.
+Si un projet ou un composant cloud a des modifications non enregistrées au moment de la déconnexion, l'éditeur demande s'il faut d'abord enregistrer :
+
+| Choix                           | Effet                                               |
+| ------------------------------- | --------------------------------------------------- |
+| Enregistrer et se déconnecter   | Enregistre les modifications, puis vous déconnecte. |
+| Se déconnecter sans enregistrer | Vous déconnecte. Les modifications sont perdues.    |
+| Annuler                         | Vous restez connecté.                               |
+
+Après la déconnexion, un projet cloud ouvert est remplacé par un brouillon vide, et les onglets des composants cloud se ferment. Les projets et composants locaux ne sont pas touchés.
 
 ## Local et cloud
 
@@ -18,9 +26,17 @@ Sur le site, Mes projets et Mes composants listent aussi vos documents cloud. Vo
 
 ## Téléverser vers le cloud
 
-Pour déplacer un projet local enregistré vers votre compte, choisissez Fichier → Téléverser vers le cloud, ou le bouton de téléversement sur sa ligne dans la fenêtre « Ouvrir un projet ». Pour enregistrer directement un brouillon dans le cloud, choisissez Cloud dans la fenêtre « Enregistrer ». Pour un composant personnalisé local, utilisez « Téléverser vers le cloud » dans sa carte de paramètres.
+| À téléverser                    | Utilisez                                                                                                             |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Un projet local enregistré      | Fichier → Téléverser vers le cloud, ou le bouton de téléversement sur sa ligne dans la fenêtre « Ouvrir un projet ». |
+| Un brouillon                    | Cloud dans la fenêtre « Enregistrer ».                                                                               |
+| Un composant personnalisé local | « Téléverser vers le cloud » dans sa carte de paramètres.                                                            |
 
-Un projet cloud ne peut utiliser que des composants cloud. Si le vôtre en utilise des locaux, la fenêtre les liste et les téléverse avec lui. Elle demande aussi qui peut ouvrir ce que vous téléversez, Tout le monde étant présélectionné, et le même choix s'applique aux composants téléversés. Téléverser déplace les documents : les copies locales sont supprimées.
+Le téléversement suit ces règles :
+
+- Un projet cloud ne peut utiliser que des composants cloud. Si le vôtre en utilise des locaux, la fenêtre de téléversement les liste et les téléverse avec lui.
+- La fenêtre demande qui peut ouvrir ce que vous téléversez, Tout le monde étant présélectionné. Le même choix s'applique aux composants téléversés.
+- Téléverser déplace les documents : les copies locales sont supprimées.
 
 ![La fenêtre « Téléverser vers le cloud » listant un composant qui sera téléversé aussi.](./images/upload-to-cloud.webp)
 
