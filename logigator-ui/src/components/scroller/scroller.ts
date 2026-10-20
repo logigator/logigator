@@ -1,4 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
+import { DataSource } from '@angular/cdk/collections';
 import {
   CdkFixedSizeVirtualScroll,
   CdkVirtualForOf,
@@ -27,6 +28,8 @@ import {
  * without growing it, since the CDK content wrapper is absolutely positioned.
  * A host driving that axis reads {@link scrolled} and {@link viewportElement}.
  * A host that loads what its rows show reads {@link renderedRangeChange}.
+ * A host whose list is long and changes often hands over a `DataSource`
+ * emitting the list, which the viewport reads without copying it.
  */
 @Component({
   selector: 'lg-scroller',
@@ -58,7 +61,7 @@ import {
   `
 })
 export class LgScroller implements AfterViewInit {
-  readonly items = input<readonly unknown[]>([]);
+  readonly items = input<readonly unknown[] | DataSource<unknown>>([]);
   readonly itemSize = input.required<number>();
   readonly scrollHeight = input<string>();
   readonly style = input<Record<string, string> | null>(null);
@@ -104,6 +107,14 @@ export class LgScroller implements AfterViewInit {
   /** The scroll container element, for reading or driving the horizontal axis. */
   get viewportElement(): HTMLElement {
     return this.viewport().elementRef.nativeElement;
+  }
+
+  /**
+   * Re-reads the viewport's size and scroll offset and renders the rows now
+   * in view, for a host that moved `scrollTop` itself.
+   */
+  checkViewportSize(): void {
+    this.viewport().checkViewportSize();
   }
 
   scrollToIndex(index: number, behavior?: ScrollBehavior): void {
