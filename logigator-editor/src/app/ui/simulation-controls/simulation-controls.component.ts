@@ -14,6 +14,8 @@ import { OnboardTargetDirective } from '../../onboarding/onboard-target.directiv
 import { TranslateDirective } from '../../translation/translate.directive';
 import { TranslationService } from '../../translation/translation.service';
 import { TranslationKey } from '../../translation/translation-key.model';
+import { DOCS_LINKS } from '../../documentation/docs-links';
+import { DocsLinkComponent } from '../docs-link/docs-link.component';
 import {
   clockHz,
   formatHz,
@@ -59,7 +61,8 @@ const BEHIND_RATIO = 0.9;
     LgSlider,
     LgTooltip,
     TranslateDirective,
-    OnboardTargetDirective
+    OnboardTargetDirective,
+    DocsLinkComponent
   ],
   templateUrl: './simulation-controls.component.html'
 })
@@ -78,6 +81,7 @@ export class SimulationControlsComponent {
   protected readonly isSimRunning = this.simulationService.isRunning;
   protected readonly simMode = this.simulationService.mode;
   protected readonly simTick = this.simulationService.tick;
+  protected readonly docs = DOCS_LINKS;
   private readonly targetHz = this.simulationService.targetHz;
   private readonly measuredHz = this.simulationService.measuredHz;
 

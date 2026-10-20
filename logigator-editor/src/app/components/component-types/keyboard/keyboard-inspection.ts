@@ -2,6 +2,8 @@ import { computed, signal, Signal } from '@angular/core';
 import { TranslationService } from '../../../translation/translation.service';
 import { SimulationService } from '../../../simulation/simulation.service';
 import { getStaticDI } from '../../../utils/get-di';
+import type { DocsTarget } from '../../../documentation/docs-target';
+import { DOCS_LINKS } from '../../../documentation/docs-links';
 import { ComponentInspection, InputRoute } from '../../component-inspection';
 import { charactersThatFit, pendingCharacters } from './ascii';
 import type { KeyboardComponent, KeyboardHeldKey } from './keyboard.component';
@@ -46,6 +48,7 @@ interface PressedKey {
  */
 export class KeyboardInspection extends ComponentInspection {
   public readonly kind = 'keyboard';
+  public override readonly docs = signal<DocsTarget>(DOCS_LINKS.keyboardWindow);
   public readonly renderer = KeyboardInspectionComponent;
   public readonly title: Signal<string>;
   public override readonly sizing = {

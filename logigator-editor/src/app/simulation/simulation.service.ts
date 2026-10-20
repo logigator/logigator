@@ -32,6 +32,9 @@ import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { DocumentationService } from '../documentation/documentation.service';
+import { DOCS_LINKS } from '../documentation/docs-links';
+import { TranslationService } from '../translation/translation.service';
 import { BuiltInComponentType } from '@logigator/core';
 import { BoardCompilerService } from './compiler/board-compiler.service';
 import {
@@ -84,6 +87,8 @@ export class SimulationService {
   private readonly workerService = inject(SimulationWorkerService);
   private readonly settings = inject(EditorSettingsService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly documentation = inject(DocumentationService);
+  private readonly translation = inject(TranslationService);
 
   private readonly _state = signal<SimulationState>('inactive');
   public readonly state = computed(this._state);
@@ -288,9 +293,18 @@ export class SimulationService {
 
     const board = this.compiler.compile(project);
     if (board.diagnostics.length > 0) {
-      this.toastService.error(
+      // Ports that no longer match their plugs are fixed in the Ports panel,
+      // which its own section explains; anything else is the general list.
+      const docs = board.diagnostics.every((d) => d.kind === 'plug-mismatch')
+        ? DOCS_LINKS.ports
+        : DOCS_LINKS.simulationWontStart;
+      this.toastService.errorWithAction(
         board.diagnostics.map((d) => d.message).join('\n'),
-        'SimulationService'
+        'SimulationService',
+        {
+          label: this.translation.translate('documentation.learnMore'),
+          handler: () => this.documentation.open(docs.page, docs.anchor)
+        }
       );
       this.analytics.capture(AnalyticsEvent.SimulationCompileBlocked, {
         kinds: board.diagnostics.map((d) => d.kind)

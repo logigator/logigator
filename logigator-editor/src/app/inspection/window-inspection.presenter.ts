@@ -1,10 +1,12 @@
 import { computed, inject, Injectable, Signal } from '@angular/core';
 import {
+  LgHelpAction,
   WindowRect,
   WindowRef,
   WindowService,
   WindowTitlePart
 } from '@logigator/ui';
+import { DocumentationService } from '../documentation/documentation.service';
 import {
   entryTitle,
   entryTitleParts,
@@ -22,6 +24,7 @@ const DEFAULT_SIZE = { width: 480, height: 400 };
 @Injectable({ providedIn: 'root' })
 export class WindowInspectionPresenter implements InspectionPresenter {
   private readonly windowService = inject(WindowService);
+  private readonly documentation = inject(DocumentationService);
   private readonly refs = new Map<OpenInspection, WindowRef>();
 
   public show(entry: OpenInspection, dismissed: () => void): void {
@@ -29,6 +32,7 @@ export class WindowInspectionPresenter implements InspectionPresenter {
     const ref = this.windowService.open(inspection.renderer, {
       title: entryTitle(entry),
       titleParts: this._titleParts(entry),
+      help: this._help(entry),
       inputValues: { inspection },
       initialSize: inspection.sizing?.initial ?? DEFAULT_SIZE,
       minSize: inspection.sizing?.min,
@@ -68,6 +72,14 @@ export class WindowInspectionPresenter implements InspectionPresenter {
     rect: Partial<WindowRect>
   ): WindowRect | null {
     return this.refs.get(entry)?.setBounds(rect) ?? null;
+  }
+
+  /** The title bar's help button, opening the inspection's docs section. */
+  private _help(entry: OpenInspection): Signal<LgHelpAction> | undefined {
+    const docs = entry.inspection.docs;
+    return docs
+      ? computed(() => this.documentation.helpAction(docs))
+      : undefined;
   }
 
   /** Breadcrumb segments for the title bar (`navigate` → clickable). */

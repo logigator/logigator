@@ -17,8 +17,11 @@ is created per opened component and lives until its view closes. Non-obvious
 members: `titleParts?` (breadcrumb segments the window title bar renders instead
 of `title`, `navigate`-carrying ones clickable; `title` stays the flat fallback
 for sheet tabs and aria labels), `compactPresentation?` (`'sheet'` by default,
-or `'fullscreen'`), and `onFrame?()`, called after every applied snapshot and
-after `stop()`'s visual reset.
+or `'fullscreen'`), `docs?` (the documentation section the window's or
+sheet's help button opens through `DocumentationService.helpAction`, read when
+pressed: the gamepad's follows assign mode, an entry of `DOCS_LINKS` each), and
+`onFrame?()`, called after every applied snapshot and after `stop()`'s visual
+reset.
 
 Live data is deliberately **pull-based**: no per-link subscriptions. An
 inspection reads what the main thread already holds — the component's options

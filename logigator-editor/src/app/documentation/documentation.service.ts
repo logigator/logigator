@@ -1,10 +1,11 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { DialogRef, DialogService } from '@logigator/ui';
+import { DialogRef, DialogService, LgHelpAction } from '@logigator/ui';
 import { LayoutService } from '../layout/layout.service';
 import { TranslationService } from '../translation/translation.service';
 import { DocumentationDialogComponent } from '../ui/dialogs/documentation-dialog/documentation-dialog.component';
 import { DocPageId } from '@logigator/docs';
 import { docPageUrl } from './docs-pages';
+import { DocsTarget } from './docs-target';
 import { DocsSearchService } from './docs-search.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
@@ -86,6 +87,23 @@ export class DocumentationService {
       this._anchor.set(null);
       this._terms.set([]);
     });
+  }
+
+  /**
+   * The help button of a window, dialog or sheet header, opening `target`.
+   * The label is read in the active language, so a `computed` around this
+   * follows a language switch. The viewer is modal and stacks over whatever
+   * opened it, which stays open beneath, so closing it returns there.
+   */
+  public helpAction(target: DocsTarget | (() => DocsTarget)): LgHelpAction {
+    return {
+      label: this.translation.translate('documentation.help'),
+      command: () => {
+        const { page, anchor } =
+          typeof target === 'function' ? target() : target;
+        this.open(page, anchor);
+      }
+    };
   }
 
   /** Returns the compact viewer to its topic index. */

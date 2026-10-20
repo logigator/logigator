@@ -21,6 +21,7 @@ import { InputFrame } from '../components/component-inspection';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ToastService } from '../logging/toast.service';
+import { DocumentationService } from '../documentation/documentation.service';
 import { EditorSettingsService } from '../settings/editor-settings.service';
 import { Project } from '../project/project';
 import { Wire } from '../wires/wire';
@@ -159,8 +160,11 @@ describe('SimulationService', () => {
     await vi.waitFor(() => expect(service.isRunning()).toBe(true));
   });
 
-  it('refuses to enter on diagnostics and reports via toast', () => {
-    const error = vi.spyOn(toastService, 'error');
+  it('refuses to enter on diagnostics and links the fix from the toast', () => {
+    const error = vi.spyOn(toastService, 'errorWithAction');
+    const docsOpen = vi
+      .spyOn(TestBed.inject(DocumentationService), 'open')
+      .mockImplementation(() => undefined);
     // No plugs but one declared port: a blocking plug-mismatch diagnostic.
     const broken = TestBed.inject(CustomComponentRegistry).registerSnapshot({
       kind: 'snapshot',
@@ -185,6 +189,9 @@ describe('SimulationService', () => {
 
     expect(workModeService.mode()).toBe(previousMode);
     expect(error).toHaveBeenCalledOnce();
+    // A plug mismatch alone is explained where the ports are.
+    error.mock.calls[0][2].handler();
+    expect(docsOpen).toHaveBeenCalledWith('custom-components', 'ports');
   });
 
   it('leaves simulation mode and reports when the worker fails fatally', async () => {

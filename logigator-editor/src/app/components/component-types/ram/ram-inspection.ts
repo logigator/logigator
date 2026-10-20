@@ -1,5 +1,7 @@
 import { signal, Signal, WritableSignal } from '@angular/core';
 import { ByteRange, StateRoute, StateWatch } from '../../component-inspection';
+import type { DocsTarget } from '../../../documentation/docs-target';
+import { DOCS_LINKS } from '../../../documentation/docs-links';
 import { MemoryInspection } from '../../../inspection/memory/memory-inspection';
 import { SimulationService } from '../../../simulation/simulation.service';
 import { getStaticDI } from '../../../utils/get-di';
@@ -31,6 +33,7 @@ export const RAM_WHOLE_READ_BYTES = 4096;
  */
 export class RamInspection extends MemoryInspection {
   public readonly kind = 'ram';
+  public override readonly docs = signal<DocsTarget>(DOCS_LINKS.ramContents);
 
   /** The memory as far as it was read; zero elsewhere. */
   private readonly memory: Uint8Array;

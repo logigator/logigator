@@ -602,6 +602,7 @@ const en = {
     loadError: 'This page could not be loaded.',
     back: 'All topics',
     learnMore: 'Learn more',
+    help: 'Help',
     search: {
       label: 'Search the documentation',
       placeholder: 'Search…',

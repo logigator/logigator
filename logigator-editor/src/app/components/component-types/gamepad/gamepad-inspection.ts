@@ -2,6 +2,8 @@ import { computed, signal, Signal } from '@angular/core';
 import { GamepadControlId, NameMap } from '@logigator/core';
 import { TranslationService } from '../../../translation/translation.service';
 import { getStaticDI } from '../../../utils/get-di';
+import type { DocsTarget } from '../../../documentation/docs-target';
+import { DOCS_LINKS } from '../../../documentation/docs-links';
 import {
   GamepadHardwareService,
   GamepadPadTarget
@@ -72,6 +74,11 @@ export class GamepadInspection
    * the inspection's lifetime, so a view rebuilt in another frame resumes it.
    */
   public readonly assigning = this._assigning.asReadonly();
+
+  /** Assigning keys is described with the other keys, playing with the pad. */
+  public override readonly docs = computed<DocsTarget>(() =>
+    this.assigning() ? DOCS_LINKS.gamepadKeys : DOCS_LINKS.gamepadWindow
+  );
 
   /** The controls at open time; options cannot change during simulation. */
   public readonly controls: readonly GamepadControlId[];

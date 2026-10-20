@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NameMap } from '@logigator/core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
+import { DocumentationService } from '../../../documentation/documentation.service';
 import { NameMapEditor } from './name-map-editor';
 import { NameMapComponentOption } from './name-map.component-option';
 import { NameMapOptionInputComponent } from './name-map-option-input.component';
@@ -109,5 +110,34 @@ describe('NameMapOptionInputComponent', () => {
 
     expect(commit).not.toHaveBeenCalled();
     expect(document.querySelector('app-name-map-dialog')).toBeNull();
+  });
+
+  it("opens the owner's docs section from the dialog's help, keeping the dialog", () => {
+    const open = vi
+      .spyOn(TestBed.inject(DocumentationService), 'open')
+      .mockImplementation(() => undefined);
+    openDialog(
+      render(
+        makeOption().attachEditor(FakeNamesEditor, {
+          page: 'inputs',
+          anchor: 'button-names'
+        })
+      )
+    );
+    (
+      document.querySelector(
+        '.cdk-overlay-container .ph-question'
+      ) as HTMLElement
+    ).click();
+
+    expect(open).toHaveBeenCalledWith('inputs', 'button-names');
+    expect(document.querySelector('app-name-map-dialog')).not.toBeNull();
+  });
+
+  it('draws no help button for an owner that names no docs', () => {
+    openDialog(render(makeOption().attachEditor(FakeNamesEditor)));
+    expect(
+      document.querySelector('.cdk-overlay-container .ph-question')
+    ).toBeNull();
   });
 });

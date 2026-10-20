@@ -1,4 +1,5 @@
 import { Signal, Type } from '@angular/core';
+import type { DocsTarget } from '../documentation/docs-target';
 import type { UserInputPhase } from '../project/project';
 
 /** Size hints (px) for the desktop inspection window hosting the renderer. */
@@ -161,6 +162,11 @@ export abstract class ComponentInspection {
    * which stays the flat fallback for sheet tabs and aria labels.
    */
   public readonly titleParts?: Signal<readonly InspectionTitlePart[]>;
+  /**
+   * The documentation section the hosting header's help button opens, read
+   * when it is pressed; no help button without one.
+   */
+  public readonly docs?: Signal<DocsTarget>;
   /** Desktop window sizing; the presenter falls back to its defaults. */
   public readonly sizing?: ComponentInspectionSizing;
   /**

@@ -47,6 +47,7 @@
   } @else {
     <lg-message severity="info">
       {{ t('saveProjectDialog.localWarning') }}
+      <app-docs-link [target]="docs.localDocuments" />
     </lg-message>
   }
   <div class="flex justify-end">

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApplicationRef, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
@@ -7,6 +7,7 @@ import { ManualFrameScheduler } from '../../testing/fake-simulation-worker';
 import { InputRoute } from '../components/component-inspection';
 import { GamepadComponent } from '../components/component-types/gamepad/gamepad.component';
 import { GamepadInspection } from '../components/component-types/gamepad/gamepad-inspection';
+import { DocumentationService } from '../documentation/documentation.service';
 import { LayoutService } from '../layout/layout.service';
 import { GAMEPAD_KEYS_STORAGE_KEY } from '../shortcuts/gamepad-bindings.service';
 import { SimulationService } from '../simulation/simulation.service';
@@ -179,5 +180,25 @@ describe('InspectionSheetComponent with two gamepad tabs', () => {
     expect(hardware.assignmentOf(secondPad)()).toBeNull();
     expect(first.calls).toEqual(['press a']);
     expect(second.calls).toEqual([]);
+  });
+
+  it("opens the shown tab's docs section from the header's help", () => {
+    const open = vi
+      .spyOn(TestBed.inject(DocumentationService), 'open')
+      .mockImplementation(() => undefined);
+    const pressHelp = (): void =>
+      (
+        document.querySelector(
+          '.cdk-overlay-container .ph-question'
+        ) as HTMLElement
+      ).click();
+
+    (second.entry.inspection as GamepadInspection).setAssigning(true);
+    pressHelp();
+    expect(open).toHaveBeenLastCalledWith('shortcuts', 'gamepad-keys');
+
+    showTab(first);
+    pressHelp();
+    expect(open).toHaveBeenLastCalledWith('inputs', 'gamepad');
   });
 });

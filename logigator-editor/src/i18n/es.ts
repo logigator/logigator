@@ -606,6 +606,7 @@ const es: TranslationSchema = {
     loadError: 'No se pudo cargar esta página.',
     back: 'Todos los temas',
     learnMore: 'Más información',
+    help: 'Ayuda',
     search: {
       label: 'Buscar en la documentación',
       placeholder: 'Buscar…',

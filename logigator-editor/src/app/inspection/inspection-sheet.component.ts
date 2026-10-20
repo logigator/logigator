@@ -1,6 +1,7 @@
 import { NgComponentOutlet } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
-import { LgDrawer } from '@logigator/ui';
+import { LgDrawer, LgHelpAction } from '@logigator/ui';
+import { DocumentationService } from '../documentation/documentation.service';
 import { entryTitle, OpenInspection } from './inspection-presenter';
 import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 
@@ -27,6 +28,7 @@ import { SheetInspectionPresenter } from './sheet-inspection.presenter';
       [visible]="presenter.entries().length > 0"
       (visibleChange)="onVisibleChange($event)"
       [header]="title()"
+      [help]="help()"
       styleClass="h-[calc(45dvh+5.5rem)]"
     >
       <div class="flex h-full flex-col gap-2">
@@ -64,6 +66,7 @@ import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 })
 export class InspectionSheetComponent {
   protected readonly presenter = inject(SheetInspectionPresenter);
+  private readonly documentation = inject(DocumentationService);
 
   /** The active entry, as the one-element list the view is keyed by. */
   protected readonly shown = computed<readonly OpenInspection[]>(() => {
@@ -74,6 +77,12 @@ export class InspectionSheetComponent {
   protected readonly title = computed(() => {
     const active = this.presenter.active();
     return active ? entryTitle(active)() : '';
+  });
+
+  /** The header's help button, for the active view's docs section. */
+  protected readonly help = computed<LgHelpAction | null>(() => {
+    const docs = this.presenter.active()?.inspection.docs;
+    return docs ? this.documentation.helpAction(docs) : null;
   });
 
   protected onVisibleChange(visible: boolean): void {

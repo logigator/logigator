@@ -2,6 +2,8 @@ import { Component, inject, input } from '@angular/core';
 import { TranslationService } from '../../../translation/translation.service';
 import { DialogService } from '@logigator/ui';
 import { DialogId } from '../../../analytics/analytics.mapping';
+import { DOCS_LINKS } from '../../../documentation/docs-links';
+import { DocumentationService } from '../../../documentation/documentation.service';
 import { ComponentOptionInput } from '../../component-option';
 import type { MemoryDataComponentOption } from './memory-data.component-option';
 import { HexEditorComponent } from '../../../ui/hex-editor/hex-editor.component';
@@ -25,6 +27,7 @@ import { DialogOptionButtonComponent } from '../dialog-option-button/dialog-opti
 export class MemoryDataOptionInputComponent implements ComponentOptionInput<string> {
   private readonly dialogService = inject(DialogService);
   private readonly translation = inject(TranslationService);
+  private readonly documentation = inject(DocumentationService);
 
   public readonly option = input.required<MemoryDataComponentOption>();
   public readonly commit = input.required<(value: string) => void>();
@@ -49,6 +52,7 @@ export class MemoryDataOptionInputComponent implements ComponentOptionInput<stri
       ),
       modal: true,
       closable: true,
+      help: this.documentation.helpAction(DOCS_LINKS.romEditor),
       dismissableMask: false,
       telemetryId: DialogId.RomDataEditor,
       width: '64rem',

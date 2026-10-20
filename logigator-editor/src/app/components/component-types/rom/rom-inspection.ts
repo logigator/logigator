@@ -1,5 +1,7 @@
 import { signal, Signal } from '@angular/core';
 import { ByteRange } from '../../component-inspection';
+import type { DocsTarget } from '../../../documentation/docs-target';
+import { DOCS_LINKS } from '../../../documentation/docs-links';
 import {
   base64ToBytes,
   packedByteLength,
@@ -14,6 +16,7 @@ import { RomComponent } from './rom.component';
  */
 export class RomInspection extends MemoryInspection {
   public readonly kind = 'rom';
+  public override readonly docs = signal<DocsTarget>(DOCS_LINKS.romContents);
   /** The ROM image, sized to the full table. */
   public readonly bytes: Signal<Uint8Array>;
   public readonly loaded: Signal<ByteRange | null> = signal(null);

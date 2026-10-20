@@ -19,6 +19,8 @@ import { ComponentListCategoryComponent } from '../side-bar/component-list-categ
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { TranslationService } from '../../translation/translation.service';
 import { TranslateDirective } from '../../translation/translate.directive';
+import { DOCS_LINKS } from '../../documentation/docs-links';
+import { DocsLinkComponent } from '../docs-link/docs-link.component';
 
 type Plug = InputComponent | OutputComponent;
 
@@ -60,7 +62,8 @@ interface PlugRow {
     LgTag,
     LgInputText,
     TranslateDirective,
-    ComponentListCategoryComponent
+    ComponentListCategoryComponent,
+    DocsLinkComponent
   ],
   templateUrl: './ports-panel.component.html',
   styleUrl: './ports-panel.component.scss'
@@ -89,6 +92,7 @@ export class PortsPanelComponent {
 
   protected readonly portComponents =
     this.componentProviderService.portComponents;
+  protected readonly docs = DOCS_LINKS;
 
   protected readonly inputRows = computed(() =>
     this._rows(InputComponent, 'portsPanel.inputName')

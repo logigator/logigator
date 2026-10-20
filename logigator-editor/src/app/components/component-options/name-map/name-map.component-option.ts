@@ -4,6 +4,7 @@ import { ComponentOption } from '../../component-option';
 import { TranslationKey } from '../../../translation/translation-key.model';
 import { NameMapOptionInputComponent } from './name-map-option-input.component';
 import type { NameMapEditor } from './name-map-editor';
+import type { DocsTarget } from '../../../documentation/docs-target';
 
 export interface NameMapComponentOptionConfig {
   /** Longest name stored for any one key. */
@@ -35,6 +36,8 @@ export class NameMapComponentOption extends ComponentOption<NameMap> {
   public visibleKeys: () => readonly string[] = () => this.keys;
   /** The dialog body; supplied via {@link attachEditor}. */
   public editor: Type<NameMapEditor> | null = null;
+  /** What the dialog's help button opens; none without it. */
+  public docs: DocsTarget | null = null;
 
   constructor(
     public readonly label: TranslationKey,
@@ -104,9 +107,13 @@ export class NameMapComponentOption extends ComponentOption<NameMap> {
     return this;
   }
 
-  /** Names the component the dialog hosts to edit the names. */
-  public attachEditor(editor: Type<NameMapEditor>): this {
+  /**
+   * Names the component the dialog hosts to edit the names, and the
+   * documentation section that explains them.
+   */
+  public attachEditor(editor: Type<NameMapEditor>, docs?: DocsTarget): this {
     this.editor = editor;
+    this.docs = docs ?? null;
     return this;
   }
 

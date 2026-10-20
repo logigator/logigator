@@ -21,6 +21,8 @@ import { LoggingService } from '../../logging/logging.service';
 import { ToastService } from '../../logging/toast.service';
 import { TranslationService } from '../../translation/translation.service';
 import { getStaticDI } from '../../utils/get-di';
+import type { DocsTarget } from '../../documentation/docs-target';
+import { DOCS_LINKS } from '../../documentation/docs-links';
 import type { UserInputPhase } from '../../project/project';
 import { CustomComponent } from './custom-component';
 
@@ -44,6 +46,7 @@ export interface WatchLevel {
  */
 export class SubCircuitWatch extends ComponentInspection {
   public readonly kind = 'watch';
+  public override readonly docs = signal<DocsTarget>(DOCS_LINKS.watches);
   public readonly renderer = SubCircuitWatchComponent;
   public readonly title: Signal<string>;
   public override readonly sizing = {

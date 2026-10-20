@@ -2,6 +2,7 @@ import { Component, inject, input } from '@angular/core';
 import { NameMap } from '@logigator/core';
 import { DialogService } from '@logigator/ui';
 import { DialogId } from '../../../analytics/analytics.mapping';
+import { DocumentationService } from '../../../documentation/documentation.service';
 import { LayoutService } from '../../../layout/layout.service';
 import { TranslationService } from '../../../translation/translation.service';
 import { ComponentOptionInput } from '../../component-option';
@@ -26,6 +27,7 @@ export class NameMapOptionInputComponent implements ComponentOptionInput<NameMap
   private readonly dialogService = inject(DialogService);
   private readonly translation = inject(TranslationService);
   private readonly layout = inject(LayoutService);
+  private readonly documentation = inject(DocumentationService);
 
   public readonly option = input.required<NameMapComponentOption>();
   public readonly commit = input.required<(value: NameMap) => void>();
@@ -50,6 +52,7 @@ export class NameMapOptionInputComponent implements ComponentOptionInput<NameMap
       header: this.translation.translate(opt.label),
       modal: true,
       closable: true,
+      help: opt.docs ? this.documentation.helpAction(opt.docs) : undefined,
       dismissableMask: false,
       telemetryId: DialogId.NameMapEditor,
       width: '40rem',

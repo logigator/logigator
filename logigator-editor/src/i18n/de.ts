@@ -612,6 +612,7 @@ const de: TranslationSchema = {
     loadError: 'Diese Seite konnte nicht geladen werden.',
     back: 'Alle Themen',
     learnMore: 'Mehr erfahren',
+    help: 'Hilfe',
     search: {
       label: 'Dokumentation durchsuchen',
       placeholder: 'Suchen…',

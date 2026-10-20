@@ -1,6 +1,6 @@
 import { type LgOverlaySide } from '@logigator/ui';
 import { WorkMode } from '../work-mode/work-mode.enum';
-import { DocPageId } from '@logigator/docs';
+import { DocsTarget } from '../documentation/docs-target';
 import { StepText } from './tutorial.model';
 import { OnboardingPlatform } from './onboarding.service';
 
@@ -25,8 +25,8 @@ export interface Hint {
   readonly target?: Partial<Record<OnboardingPlatform, string>>;
   /** Side of the anchor to sit on, per platform. A declared side is pinned. */
   readonly side?: Partial<Record<OnboardingPlatform, LgOverlaySide>>;
-  /** Documentation page behind the hint's "learn more" link; omit for none. */
-  readonly docsPage?: DocPageId;
+  /** Documentation section behind the hint's "learn more" link; omit for none. */
+  readonly docs?: DocsTarget;
   readonly platforms?: readonly OnboardingPlatform[];
   /** Suppress once this tutorial is complete; it taught the same thing. */
   readonly suppressIfCompleted?: string;

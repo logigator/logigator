@@ -172,6 +172,19 @@ tree they hang in are that member's; `documentation/docs-pages.ts` is the
 editor's own half — the hashed markdown URL per page and language, and the
 title key each id is shown under.
 
+Links into the documentation from the chrome are `DocsTarget`s (page plus
+heading id): fixed ones in `documentation/docs-links.ts`, one per component
+type in `documentation/component-docs.ts` (the settings card's help button),
+and one per onboarding hint. `docs-links.spec.ts` checks all of them against the
+English pages' heading ids. An inline "Learn more" is `<app-docs-link>`, whose
+`opening` output lets a popover close itself before the viewer opens.
+
+A window, dialog or sheet header carries a help button through
+`DocumentationService.helpAction(target)` (`help` on `WindowConfig`,
+`DialogConfig` and `lg-drawer`): the inspections, the ROM contents editor, the
+gamepad's button names and the shortcut manager. The viewer is modal and
+stacks over its opener, which stays open beneath it.
+
 The shell hosts two confirm targets: the keyless `<lg-confirm-dialog />` is the
 generic modal confirm, `<lg-confirm-popup key="inline" />` the anchored one —
 callers opt into the popup with `confirm({ key: 'inline', target })`.

@@ -7,6 +7,7 @@ import { NameMapComponentOption } from '../../component-options/name-map/name-ma
 import { GamepadComponent } from './gamepad.component';
 import { GamepadInspection } from './gamepad-inspection';
 import { GamepadNamesEditorComponent } from './gamepad-names-editor.component';
+import { DOCS_LINKS } from '../../../documentation/docs-links';
 
 export interface GamepadOptions {
   [key: string]: ComponentOption;
@@ -29,7 +30,7 @@ export function bindGamepadOptions(options: GamepadOptions): void {
         menu: options.menu.value
       })
     )
-    .attachEditor(GamepadNamesEditorComponent);
+    .attachEditor(GamepadNamesEditorComponent, DOCS_LINKS.gamepadButtonNames);
 }
 
 export const gamepadComponentConfig: ComponentConfig<GamepadOptions> =

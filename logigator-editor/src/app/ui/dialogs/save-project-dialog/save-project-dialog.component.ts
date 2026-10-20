@@ -12,6 +12,8 @@ import { TranslationService } from '../../../translation/translation.service';
 import { UserService } from '../../../user/user.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { VisibilityPickerComponent } from '../../visibility-picker/visibility-picker.component';
+import { DocsLinkComponent } from '../../docs-link/docs-link.component';
+import { DOCS_LINKS } from '../../../documentation/docs-links';
 
 /** The pre-fill passed to the save dialog. */
 export interface SaveProjectDialogData {
@@ -40,7 +42,8 @@ const NAME_MAX_LENGTH = 20;
     LgButton,
     TranslateDirective,
     LgMessage,
-    VisibilityPickerComponent
+    VisibilityPickerComponent,
+    DocsLinkComponent
   ],
   templateUrl: './save-project-dialog.component.html'
 })
@@ -50,6 +53,7 @@ export class SaveProjectDialogComponent extends LgDialogContent<
 > {
   private readonly translation = inject(TranslationService);
   protected readonly userService = inject(UserService);
+  protected readonly docs = DOCS_LINKS;
 
   protected readonly destinationOptions = [
     {

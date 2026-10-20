@@ -416,7 +416,7 @@ describe('HintService', () => {
 
     learnMore!.click();
     tick();
-    expect(docsOpen).toHaveBeenCalledWith('wires-and-connections');
+    expect(docsOpen).toHaveBeenCalledWith('wires-and-connections', undefined);
     expect(popover()).toBeNull();
   });
 

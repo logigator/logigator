@@ -18,6 +18,7 @@ import { ExportImageDialogComponent } from './dialogs/export-image-dialog/export
 import { ShareDialogComponent } from './dialogs/share-dialog/share-dialog.component';
 import { AboutDialogComponent } from './dialogs/about-dialog/about-dialog.component';
 import { ChangelogService } from '../changelog/changelog.service';
+import { DOCS_LINKS } from '../documentation/docs-links';
 import { DocumentationService } from '../documentation/documentation.service';
 import { OnboardingService } from '../onboarding/onboarding.service';
 import { DebugMenuService } from './debug-menu.service';
@@ -372,6 +373,7 @@ export class EditorMenuService {
       width: '40rem',
       modal: true,
       closable: true,
+      help: this.documentationService.helpAction(DOCS_LINKS.shortcutManager),
       telemetryId: DialogId.ShortcutManager
     });
   }

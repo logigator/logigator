@@ -2,6 +2,8 @@ import { computed, signal, Signal } from '@angular/core';
 import { TranslationService } from '../../../translation/translation.service';
 import { SimulationService } from '../../../simulation/simulation.service';
 import { getStaticDI } from '../../../utils/get-di';
+import type { DocsTarget } from '../../../documentation/docs-target';
+import { DOCS_LINKS } from '../../../documentation/docs-links';
 import { ComponentInspection } from '../../component-inspection';
 import type {
   TerminalScrollbackEntry,
@@ -92,6 +94,7 @@ export function terminalTranscript(
  */
 export class TerminalInspection extends ComponentInspection {
   public readonly kind = 'terminal';
+  public override readonly docs = signal<DocsTarget>(DOCS_LINKS.terminalOutput);
   public readonly renderer = TerminalInspectionComponent;
   public readonly title: Signal<string>;
   public override readonly sizing = {

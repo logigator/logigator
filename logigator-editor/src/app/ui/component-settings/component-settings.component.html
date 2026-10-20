@@ -1,10 +1,24 @@
 @if (componentSettings(); as settings) {
   <lg-card class="block">
     <ng-template #title>
-      <span class="flex items-center gap-2 flex-wrap">
-        <span>{{ text(settings.name) }}</span>
-        @if (settings.source; as source) {
-          <app-source-indicator [source]="source" />
+      <span class="flex items-center gap-2">
+        <span class="flex min-w-0 flex-wrap items-center gap-2">
+          <span>{{ text(settings.name) }}</span>
+          @if (settings.source; as source) {
+            <app-source-indicator [source]="source" />
+          }
+        </span>
+        @if (settings.docs; as docs) {
+          <button
+            type="button"
+            class="ml-auto flex shrink-0 rounded-full text-lg text-muted outline-none hover:text-text focus-visible:outline-2 focus-visible:outline-primary"
+            [lgTooltip]="text('documentation.help')"
+            tooltipPosition="top"
+            [attr.aria-label]="text('documentation.help')"
+            (click)="openDocs(docs)"
+          >
+            <i class="ph ph-question" aria-hidden="true"></i>
+          </button>
         }
       </span>
     </ng-template>

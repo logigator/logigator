@@ -84,6 +84,7 @@
   } @else {
     <lg-message severity="info">
       {{ t('newComponentDialog.localWarning') }}
+      <app-docs-link [target]="docs.localDocuments" />
     </lg-message>
   }
   <div class="flex justify-end">

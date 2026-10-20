@@ -610,6 +610,7 @@ const fr: TranslationSchema = {
     loadError: 'Impossible de charger cette page.',
     back: 'Tous les sujets',
     learnMore: 'En savoir plus',
+    help: 'Aide',
     search: {
       label: 'Rechercher dans la documentation',
       placeholder: 'Rechercher…',

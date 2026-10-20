@@ -53,6 +53,8 @@
         >
           {{ t('openProjectDialog.uploadPrompt') }}
         </lg-file-upload>
+        <!-- Outside the drop zone, whose content takes no pointer events. -->
+        <app-docs-link class="self-center" [target]="docs.circuitFiles" />
         @if (importError()) {
           <div
             class="flex items-center gap-2 self-center rounded-lg bg-error-surface px-4 py-2 text-sm text-error"

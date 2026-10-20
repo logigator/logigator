@@ -20,7 +20,7 @@ export const HINTS: readonly Hint[] = [
     trigger: { kind: 'workMode', mode: WorkMode.WIRE_TOOL },
     target: { desktop: wireTool, compact: wireTool },
     text: 'onboarding.hints.wireTapActions',
-    docsPage: 'wires-and-connections'
+    docs: { page: 'wires-and-connections' }
   },
   {
     id: 'scissor-select',
@@ -42,14 +42,14 @@ export const HINTS: readonly Hint[] = [
     trigger: { kind: 'workMode', mode: WorkMode.SIMULATION },
     target: { desktop: simControls, compact: simControls },
     text: 'onboarding.hints.simControls',
-    docsPage: 'simulation'
+    docs: { page: 'simulation', anchor: 'run-controls' }
   },
   {
     id: 'wire-conflict',
     // Floats: the conflict is somewhere on the board, which no target names.
     trigger: { kind: 'wireConflict' },
     text: 'onboarding.hints.wireConflict',
-    docsPage: 'simulation'
+    docs: { page: 'simulation', anchor: 'conflicting-signals' }
   },
   {
     id: 'selection-actions',
@@ -67,7 +67,7 @@ export const HINTS: readonly Hint[] = [
       desktop: 'onboarding.hints.pastePlacementDesktop',
       compact: 'onboarding.hints.pastePlacementCompact'
     },
-    docsPage: 'board-and-tools'
+    docs: { page: 'board-and-tools', anchor: 'copy-paste-and-delete' }
   },
   {
     id: 'ports-panel',
@@ -83,7 +83,7 @@ export const HINTS: readonly Hint[] = [
       desktop: 'onboarding.hints.portsPanelDesktop',
       compact: 'onboarding.hints.portsPanelCompact'
     },
-    docsPage: 'custom-components'
+    docs: { page: 'custom-components', anchor: 'ports' }
   },
   {
     id: 'pan-zoom-compact',

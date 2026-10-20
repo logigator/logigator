@@ -1,7 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LgSelectButton } from '@logigator/ui';
+import { LgSelectButton, LgTooltip } from '@logigator/ui';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { SelectionInspectorService } from '../../project/selection-inspector.service';
@@ -20,6 +20,9 @@ import {
   SourceIndicatorComponent,
   SourceIndicatorState
 } from '../source-indicator/source-indicator.component';
+import { DocumentationService } from '../../documentation/documentation.service';
+import { componentDocs } from '../../documentation/component-docs';
+import { DocsTarget } from '../../documentation/docs-target';
 
 // Clockwise from East, the order the Direction enum encodes.
 const DIRECTION_CHOICES: { value: Direction; icon: string }[] = [
@@ -39,6 +42,7 @@ let nextDirectionInputId = 0;
     LgCard,
     LgMarkdown,
     LgSelectButton,
+    LgTooltip,
     SourceIndicatorComponent
   ],
   templateUrl: './component-settings.component.html',
@@ -52,6 +56,7 @@ export class ComponentSettingsComponent {
   private readonly projectService = inject(ProjectService);
   private readonly translation = inject(TranslationService);
   private readonly registry = inject(CustomComponentRegistry);
+  private readonly documentation = inject(DocumentationService);
 
   // The placement ghost while placing, otherwise the single selected placed
   // component. Each branch supplies the `commit` a renderer invokes on edit:
@@ -85,7 +90,8 @@ export class ComponentSettingsComponent {
           this.workModeService.setPlacementDirection(ghost.type, value),
         actions: ghost.actions ?? [],
         context: { config: ghost, component: null, project: null },
-        source: this._customSource(ghost.type)
+        source: this._customSource(ghost.type),
+        docs: componentDocs(ghost.type)
       };
     }
 
@@ -115,7 +121,8 @@ export class ComponentSettingsComponent {
         },
         actions: selected.config.actions ?? [],
         context: { config: selected.config, component: selected, project },
-        source: this._customSource(selected.config.type)
+        source: this._customSource(selected.config.type),
+        docs: componentDocs(selected.config.type)
       };
     }
 
@@ -154,6 +161,10 @@ export class ComponentSettingsComponent {
     this.registry.revision();
     if (typeId < CUSTOM_TYPE_ID_BASE) return null;
     return this.registry.resolveMaster(typeId)?.master.source ?? 'embedded';
+  }
+
+  protected openDocs({ page, anchor }: DocsTarget): void {
+    this.documentation.open(page, anchor);
   }
 
   /** Resolves display text: translates a key, returns a literal verbatim. */

@@ -385,8 +385,8 @@ export class HintService {
         this.dismiss();
       })
     );
-    const docsPage = session.hint.docsPage;
-    if (docsPage) {
+    const docs = session.hint.docs;
+    if (docs) {
       cmp.setInput('hasDocsLink', true);
       session.subscriptions.add(
         cmp.instance.learnMore.subscribe(() => {
@@ -395,7 +395,7 @@ export class HintService {
           // instead and fires again on its next trigger.
           this.queue = [];
           this.dismiss();
-          this.documentation.open(docsPage);
+          this.documentation.open(docs.page, docs.anchor);
         })
       );
     }

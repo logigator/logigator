@@ -30,17 +30,31 @@ export class ToastService {
   private readonly analytics = inject(AnalyticsService);
 
   public error(message: string, context: string, cause?: unknown): void {
-    this.logging.error(cause ?? message, context);
-    this.analytics.capture(AnalyticsEvent.ErrorShown, {
-      context,
-      message,
-      cause: formatCause(cause)
-    });
+    this.reportError(message, context, cause);
     this.messageService.add({
       severity: 'danger',
       summary: this.translation.translate('logging.error'),
       detail: message,
       life: 8000
+    });
+  }
+
+  /**
+   * An error offering a one-click follow-up. Like {@link warnWithAction} it
+   * never auto-dismisses, and like {@link error} it reports to analytics.
+   */
+  public errorWithAction(
+    message: string,
+    context: string,
+    action: ToastAction
+  ): void {
+    this.reportError(message, context);
+    this.messageService.add({
+      severity: 'danger',
+      summary: this.translation.translate('logging.error'),
+      detail: message,
+      life: 0,
+      action
     });
   }
 
@@ -90,6 +104,15 @@ export class ToastService {
       summary: this.translation.translate('logging.info'),
       detail: message,
       life: 5000
+    });
+  }
+
+  private reportError(message: string, context: string, cause?: unknown): void {
+    this.logging.error(cause ?? message, context);
+    this.analytics.capture(AnalyticsEvent.ErrorShown, {
+      context,
+      message,
+      cause: formatCause(cause)
     });
   }
 }

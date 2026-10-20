@@ -15,6 +15,8 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
 import { UserService } from '../../../user/user.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { VisibilityPickerComponent } from '../../visibility-picker/visibility-picker.component';
+import { DocsLinkComponent } from '../../docs-link/docs-link.component';
+import { DOCS_LINKS } from '../../../documentation/docs-links';
 import { normalizeAuthoredText } from '@logigator/core';
 
 /**
@@ -36,7 +38,8 @@ const DESCRIPTION_MAX_LENGTH = 2048;
     LgMessage,
     VisibilityPickerComponent,
     LgMarkdownField,
-    LgTextarea
+    LgTextarea,
+    DocsLinkComponent
   ],
   templateUrl: './new-component-dialog.component.html'
 })
@@ -45,6 +48,7 @@ export class NewComponentDialogComponent {
   private readonly customComponentService = inject(CustomComponentService);
   private readonly translation = inject(TranslationService);
   protected readonly userService = inject(UserService);
+  protected readonly docs = DOCS_LINKS;
 
   protected readonly sourceOptions = [
     {

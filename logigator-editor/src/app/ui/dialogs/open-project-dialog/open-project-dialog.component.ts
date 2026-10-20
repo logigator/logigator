@@ -30,6 +30,8 @@ import {
 import { ShareDialogComponent } from '../share-dialog/share-dialog.component';
 import type { BrowserProjectSummary } from '../../../persistence/browser/browser-project.types';
 import { TranslateDirective } from '../../../translation/translate.directive';
+import { DocsLinkComponent } from '../../docs-link/docs-link.component';
+import { DOCS_LINKS } from '../../../documentation/docs-links';
 
 const PAGE_SIZE = 20;
 
@@ -42,7 +44,8 @@ const PAGE_SIZE = 20;
     LgFileUpload,
     TranslateDirective,
     ProjectListComponent,
-    LgMessage
+    LgMessage,
+    DocsLinkComponent
   ],
   templateUrl: './open-project-dialog.component.html'
 })
@@ -55,6 +58,7 @@ export class OpenProjectDialogComponent implements OnInit {
   private readonly toastService = inject(ToastService);
   private readonly translation = inject(TranslationService);
   protected readonly userService = inject(UserService);
+  protected readonly docs = DOCS_LINKS;
 
   private readonly ctx = 'OpenProjectDialogComponent';
 
