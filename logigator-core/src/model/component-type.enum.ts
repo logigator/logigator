@@ -34,8 +34,10 @@ export enum BuiltInComponentType {
   BUTTON = 205,
   // One output per controller button; absent from the legacy v0 format.
   GAMEPAD = 206,
-  // The held key's ASCII code plus a strobe; absent from the legacy v0 format.
-  KEYBOARD = 207
+  // The held key's Latin-1 code plus a strobe; absent from the legacy v0 format.
+  KEYBOARD = 207,
+  // Prints the byte on D at each clock edge; absent from the legacy v0 format.
+  TERMINAL = 208
 }
 
 /** A runtime-allocated custom component type id ({@link CUSTOM_TYPE_ID_BASE}+). */

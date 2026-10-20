@@ -172,6 +172,7 @@ export { romMeta } from './catalog/built-ins/rom.meta';
 export { segmentDisplayMeta } from './catalog/built-ins/segment-display.meta';
 export { srFfMeta } from './catalog/built-ins/sr-ff.meta';
 export { switchMeta } from './catalog/built-ins/switch.meta';
+export { terminalMeta } from './catalog/built-ins/terminal.meta';
 export { textMeta } from './catalog/built-ins/text.meta';
 export { tunnelMeta } from './catalog/built-ins/tunnel.meta';
 export { xorMeta } from './catalog/built-ins/xor.meta';
@@ -198,6 +199,19 @@ export {
   KEYBOARD_KEY_DOWN_OUTPUT,
   KEYBOARD_STROBE_OUTPUT
 } from './catalog/built-ins/keyboard.meta';
+export {
+  TERMINAL_CLOCK_INPUT,
+  TERMINAL_DATA_BITS,
+  TERMINAL_LABEL_COLUMN_WIDTH,
+  terminalGlyphMetrics,
+  terminalScreen
+} from './catalog/built-ins/terminal.meta';
+export type {
+  TerminalGlyphMetrics,
+  TerminalScreen,
+  TerminalTextSize,
+  TerminalValues
+} from './catalog/built-ins/terminal.meta';
 export {
   SegmentBase,
   segmentReadoutDigits

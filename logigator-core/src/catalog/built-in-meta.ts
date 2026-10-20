@@ -27,6 +27,7 @@ import { romMeta } from './built-ins/rom.meta';
 import { segmentDisplayMeta } from './built-ins/segment-display.meta';
 import { srFfMeta } from './built-ins/sr-ff.meta';
 import { switchMeta } from './built-ins/switch.meta';
+import { terminalMeta } from './built-ins/terminal.meta';
 import { textMeta } from './built-ins/text.meta';
 import { tunnelMeta } from './built-ins/tunnel.meta';
 import { xorMeta } from './built-ins/xor.meta';
@@ -61,7 +62,8 @@ const ALL = [
   ledMatrixMeta,
   buttonMeta,
   gamepadMeta,
-  keyboardMeta
+  keyboardMeta,
+  terminalMeta
 ];
 
 /**

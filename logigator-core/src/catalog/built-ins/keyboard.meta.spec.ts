@@ -24,7 +24,7 @@ describe('keyboardMeta', () => {
   it('is a glyph column and a one-cell label column wide, one row per output', () => {
     expect(keyboardMeta.body()).toEqual({
       width: KEYBOARD_GLYPH_COLUMN_WIDTH + 1,
-      height: 9
+      height: 10
     });
   });
 });
