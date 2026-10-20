@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { Changelog, parseChangelog } from '@logigator/docs';
+import { ChangelogRelease, parseChangelog } from '@logigator/docs';
 import { DialogService } from '@logigator/ui';
 import { TranslationService } from '../translation/translation.service';
 import { ChangelogDialogComponent } from '../ui/dialogs/changelog-dialog/changelog-dialog.component';
@@ -54,15 +54,16 @@ export class ChangelogService {
   private readonly analytics = inject(AnalyticsService);
 
   /**
-   * The released notes in the active language, English as fallback, as one
-   * markdown document for the dialog.
+   * The releases in the active language, English as fallback, newest first.
+   * The document's title and intro are left out: they introduce the file to
+   * the repository's readers, and the dialog has a header of its own.
    */
-  public load(): Observable<string> {
+  public load(): Observable<ChangelogRelease[]> {
     const active = this.translation.getActiveLang();
     const lang = active in CHANGELOG_URLS ? active : 'en';
     return this.http
       .get(CHANGELOG_URLS[lang], { responseType: 'text' })
-      .pipe(map((markdown) => dialogMarkdown(parseChangelog(markdown, lang))));
+      .pipe(map((markdown) => parseChangelog(markdown, lang).releases));
   }
 
   /** Records the running version as seen so the dialog no longer auto-opens. */
@@ -142,20 +143,4 @@ export class ChangelogService {
   private isReturningLegacyUser(): boolean {
     return LEGACY_COOKIES.some((name) => this.cookieService.get(name) !== null);
   }
-}
-
-/**
- * The document without what only the repository reads: the unreleased notes
- * and the headings' link brackets.
- */
-function dialogMarkdown({ title, intro, releases }: Changelog): string {
-  return [
-    `# ${title}`,
-    intro,
-    ...releases.map(
-      ({ version, date, body }) => `## ${version} — ${date}\n\n${body}`
-    )
-  ]
-    .filter(Boolean)
-    .join('\n\n');
 }

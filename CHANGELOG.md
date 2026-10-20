@@ -5,6 +5,11 @@ listed first.
 
 ## [Unreleased]
 
+### 🔄 Changed
+
+- **A tidier What's New.** Each release in the editor's What's New dialog now
+  opens with its version and a date written out in your language.
+
 ## [2.2.0] - 2026-09-17
 
 ### ✨ Added

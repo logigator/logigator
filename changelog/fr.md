@@ -5,6 +5,12 @@ la plus récente est indiquée en premier.
 
 ## [Unreleased]
 
+### 🔄 Modifié
+
+- **Des Nouveautés plus lisibles.** Dans la fenêtre Nouveautés de l'éditeur,
+  chaque version commence désormais par son numéro et une date écrite en toutes
+  lettres dans votre langue.
+
 ## [2.2.0] - 2026-09-17
 
 ### ✨ Ajouté

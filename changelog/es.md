@@ -5,6 +5,11 @@ reciente se muestra primero.
 
 ## [Unreleased]
 
+### 🔄 Cambiado
+
+- **Novedades más claras.** En el diálogo de Novedades del editor, cada versión
+  empieza ahora con su número y una fecha escrita en tu idioma.
+
 ## [2.2.0] - 2026-09-17
 
 ### ✨ Añadido

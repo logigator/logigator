@@ -5,6 +5,12 @@ aktuellste Veröffentlichung steht ganz oben.
 
 ## [Unreleased]
 
+### 🔄 Geändert
+
+- **Übersichtlichere Neuigkeiten.** Im Neuigkeiten-Dialog des Editors beginnt
+  jede Version jetzt mit ihrer Nummer und einem ausgeschriebenen Datum in deiner
+  Sprache.
+
 ## [2.2.0] - 2026-09-17
 
 ### ✨ Hinzugefügt
