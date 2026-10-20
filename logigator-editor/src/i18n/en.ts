@@ -97,7 +97,8 @@ const en = {
       showGrid: 'Show Grid',
       autoStartSimulation: 'Auto-start simulation',
       dragSelectionInPanMode: 'Drag selection in Pan mode',
-      highlightConflicts: 'Highlight conflicts'
+      highlightConflicts: 'Highlight conflicts',
+      onboardingTips: 'Show onboarding tips'
     },
     descriptions: {
       fpsCounter: 'Shows frames per second in the corner of the board.',
@@ -107,7 +108,9 @@ const en = {
       dragSelectionInPanMode:
         'A drag with the Pan tool that starts inside the selection moves the selection. Off, every drag pans.',
       highlightConflicts:
-        'During simulation, draws a wire in orange when the outputs driving it disagree, or when an SR flip-flop was clocked with S and R both at 1.'
+        'During simulation, draws a wire in orange when the outputs driving it disagree, or when an SR flip-flop was clocked with S and R both at 1.',
+      onboardingTips:
+        'Shows a tip the first time you meet something new in the editor.'
     },
     info: 'What "{{setting}}" does'
   },
@@ -1127,11 +1130,6 @@ const en = {
     }
   },
   onboarding: {
-    settings: {
-      showTips: 'Show onboarding tips',
-      showTipsDescription:
-        'Shows a tip the first time you meet something new in the editor.'
-    },
     menu: {
       showTipsAgain: 'Show Tips Again'
     },

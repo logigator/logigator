@@ -96,7 +96,8 @@ const fr: TranslationSchema = {
       showGrid: 'Afficher la grille',
       autoStartSimulation: 'Démarrage automatique de la simulation',
       dragSelectionInPanMode: 'Faire glisser la sélection en mode Déplacement',
-      highlightConflicts: 'Mettre en évidence les conflits'
+      highlightConflicts: 'Mettre en évidence les conflits',
+      onboardingTips: "Afficher les conseils d'intégration"
     },
     descriptions: {
       fpsCounter:
@@ -108,7 +109,9 @@ const fr: TranslationSchema = {
       dragSelectionInPanMode:
         'Un glisser avec Déplacement qui commence dans la sélection déplace la sélection. Désactivé, tout glisser déplace la vue.',
       highlightConflicts:
-        "Pendant la simulation, dessine un fil en orange quand les sorties qui le pilotent donnent des valeurs différentes, ou quand une bascule SR a reçu un front d'horloge avec S et R à 1."
+        "Pendant la simulation, dessine un fil en orange quand les sorties qui le pilotent donnent des valeurs différentes, ou quand une bascule SR a reçu un front d'horloge avec S et R à 1.",
+      onboardingTips:
+        "Affiche un conseil la première fois que vous rencontrez quelque chose de nouveau dans l'éditeur."
     },
     info: 'Ce que fait « {{setting}} »'
   },
@@ -1145,11 +1148,6 @@ const fr: TranslationSchema = {
     }
   },
   onboarding: {
-    settings: {
-      showTips: "Afficher les conseils d'intégration",
-      showTipsDescription:
-        "Affiche un conseil la première fois que vous rencontrez quelque chose de nouveau dans l'éditeur."
-    },
     menu: {
       showTipsAgain: 'Afficher à nouveau les conseils'
     },

@@ -97,7 +97,8 @@ const de: TranslationSchema = {
       showGrid: 'Raster anzeigen',
       autoStartSimulation: 'Simulation automatisch starten',
       dragSelectionInPanMode: 'Auswahl im Schwenkmodus verschieben',
-      highlightConflicts: 'Konflikte hervorheben'
+      highlightConflicts: 'Konflikte hervorheben',
+      onboardingTips: 'Einführungstipps anzeigen'
     },
     descriptions: {
       fpsCounter: 'Zeigt die Bilder pro Sekunde in der Ecke der Arbeitsfläche.',
@@ -108,7 +109,9 @@ const de: TranslationSchema = {
       dragSelectionInPanMode:
         'Ein Ziehen mit „Schwenken“, das in der Auswahl beginnt, verschiebt die Auswahl. Aus verschiebt jedes Ziehen die Ansicht.',
       highlightConflicts:
-        'Zeichnet in der Simulation eine Leitung orange, wenn die Ausgänge an ihr verschiedene Werte ausgeben oder ein SR-Flip-Flop mit S und R gleichzeitig auf 1 getaktet wurde.'
+        'Zeichnet in der Simulation eine Leitung orange, wenn die Ausgänge an ihr verschiedene Werte ausgeben oder ein SR-Flip-Flop mit S und R gleichzeitig auf 1 getaktet wurde.',
+      onboardingTips:
+        'Zeigt einen Tipp, wenn dir im Editor zum ersten Mal etwas Neues begegnet.'
     },
     info: 'Was „{{setting}}“ bewirkt'
   },
@@ -1152,11 +1155,6 @@ const de: TranslationSchema = {
     }
   },
   onboarding: {
-    settings: {
-      showTips: 'Einführungstipps anzeigen',
-      showTipsDescription:
-        'Zeigt einen Tipp, wenn dir im Editor zum ersten Mal etwas Neues begegnet.'
-    },
     menu: {
       showTipsAgain: 'Tipps erneut anzeigen'
     },

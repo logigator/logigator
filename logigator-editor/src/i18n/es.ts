@@ -96,7 +96,8 @@ const es: TranslationSchema = {
       showGrid: 'Mostrar cuadrícula',
       autoStartSimulation: 'Iniciar la simulación automáticamente',
       dragSelectionInPanMode: 'Arrastrar la selección en modo Desplazar',
-      highlightConflicts: 'Resaltar conflictos'
+      highlightConflicts: 'Resaltar conflictos',
+      onboardingTips: 'Mostrar consejos de introducción'
     },
     descriptions: {
       fpsCounter:
@@ -108,7 +109,9 @@ const es: TranslationSchema = {
       dragSelectionInPanMode:
         'Un arrastre con Desplazar que empieza dentro de la selección mueve la selección. Desactivado, todo arrastre desplaza la vista.',
       highlightConflicts:
-        'Durante la simulación, dibuja un cable en naranja cuando las salidas que lo controlan dan valores distintos, o cuando un biestable SR recibió un flanco de reloj con S y R a 1.'
+        'Durante la simulación, dibuja un cable en naranja cuando las salidas que lo controlan dan valores distintos, o cuando un biestable SR recibió un flanco de reloj con S y R a 1.',
+      onboardingTips:
+        'Muestra un consejo la primera vez que te encuentras con algo nuevo en el editor.'
     },
     info: 'Qué hace «{{setting}}»'
   },
@@ -1138,11 +1141,6 @@ const es: TranslationSchema = {
     }
   },
   onboarding: {
-    settings: {
-      showTips: 'Mostrar consejos de introducción',
-      showTipsDescription:
-        'Muestra un consejo la primera vez que te encuentras con algo nuevo en el editor.'
-    },
     menu: {
       showTipsAgain: 'Mostrar los consejos de nuevo'
     },

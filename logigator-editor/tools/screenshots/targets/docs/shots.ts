@@ -1111,9 +1111,9 @@ export const SHOTS: Shot[] = [
         'logigator.settings': JSON.stringify({
           fpsCounter: true,
           showGrid: true,
-          autoStartSimulation: true
-        }),
-        'logigator.onboarding.tips-enabled': 'true'
+          autoStartSimulation: true,
+          onboardingTips: true
+        })
       }
     },
     async run(ed) {

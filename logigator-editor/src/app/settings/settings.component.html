@@ -25,29 +25,4 @@
       />
     </div>
   }
-
-  <div class="flex items-center justify-between gap-4">
-    <div class="flex items-center gap-1.5">
-      <label for="setting-onboarding-tips" class="text-sm">{{
-        t('onboarding.settings.showTips')
-      }}</label>
-      <button
-        type="button"
-        class="flex rounded-full text-muted outline-none hover:text-text focus-visible:outline-2 focus-visible:outline-primary"
-        [lgTooltip]="t('onboarding.settings.showTipsDescription')"
-        tooltipPosition="top"
-        [attr.aria-label]="
-          t('settings.info', { setting: t('onboarding.settings.showTips') })
-        "
-      >
-        <i class="ph ph-info" aria-hidden="true"></i>
-      </button>
-    </div>
-    <lg-toggle-switch
-      inputId="setting-onboarding-tips"
-      [ngModel]="onboarding.tipsEnabled()"
-      (ngModelChange)="setTipsEnabled($event)"
-      [ngModelOptions]="{ standalone: true }"
-    />
-  </div>
 </div>

@@ -55,21 +55,30 @@ export class EditorSettingsService {
     () => this.persist()
   );
 
+  /** Master switch for the tutorials, hints and first-run nudge. */
+  public readonly onboardingTips = new EditorSetting(
+    'onboardingTips',
+    'settings.options.onboardingTips',
+    'settings.descriptions.onboardingTips',
+    this.stored['onboardingTips'] ?? true,
+    () => this.persist()
+  );
+
   public readonly settings: readonly EditorSetting[] = [
     this.showGrid,
     this.autoStartSimulation,
     this.highlightConflicts,
     this.dragSelectionInPanMode,
-    this.fpsCounter
+    this.fpsCounter,
+    this.onboardingTips
   ];
 
   private load(): Record<string, boolean> {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return {};
-    }
-
     try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        return {};
+      }
       const parsed: unknown = JSON.parse(raw);
       return typeof parsed === 'object' && parsed !== null
         ? (parsed as Record<string, boolean>)
@@ -84,6 +93,10 @@ export class EditorSettingsService {
     for (const setting of this.settings) {
       data[setting.key] = setting.value();
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // Private-mode / disabled storage: settings degrade to session-only.
+    }
   }
 }

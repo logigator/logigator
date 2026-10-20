@@ -65,10 +65,10 @@ export const SEEDED_LOCAL_STORAGE: Readonly<Record<string, string>> = {
   'logigator.settings': JSON.stringify({
     fpsCounter: false,
     showGrid: true,
-    autoStartSimulation: false
+    autoStartSimulation: false,
+    // Silences the first-run nudge, the coach marks and the just-in-time hints.
+    onboardingTips: false
   }),
-  // Silences the first-run nudge, the coach marks and the just-in-time hints.
-  'logigator.onboarding.tips-enabled': 'false',
   'logigator.onboarding.nudge-dismissed': 'true',
   // Suppresses the "What's new" auto-popup. Any high version works — the
   // check is a plain inequality.

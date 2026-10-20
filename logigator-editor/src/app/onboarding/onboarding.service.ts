@@ -1,8 +1,16 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import {
+  computed,
+  effect,
+  inject,
+  Injectable,
+  signal,
+  untracked
+} from '@angular/core';
 import { LayoutService } from '../layout/layout.service';
 import { LoggingService } from '../logging/logging.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { EditorSettingsService } from '../settings/editor-settings.service';
 
 /**
  * The two device axes onboarding content is authored for. Derived from the
@@ -14,7 +22,6 @@ export type OnboardingPlatform = 'desktop' | 'compact';
 /** The flagship first-run tutorial, launched only from the first-run nudge. */
 export const GETTING_STARTED_TUTORIAL = 'getting-started';
 
-const TIPS_ENABLED_KEY = 'logigator.onboarding.tips-enabled';
 const COMPLETED_TUTORIALS_KEY = 'logigator.onboarding.completed-tutorials';
 const SEEN_HINTS_KEY = 'logigator.onboarding.seen-hints';
 const NUDGE_DISMISSED_KEY = 'logigator.onboarding.nudge-dismissed';
@@ -22,19 +29,20 @@ const NUDGE_DISMISSED_KEY = 'logigator.onboarding.nudge-dismissed';
 /**
  * Orchestrator and persistence gate for the whole onboarding surface: the
  * tutorials and the just-in-time hints both read their enable/seen/completed
- * state from here, and the user-visible "show tips" toggle is the same flag.
- * Storage is plain `localStorage`, degrading silently when it is unavailable so
- * the editor never breaks over a preference write.
+ * state from here. The enable flag is the user's `onboardingTips` editor
+ * setting; what has been seen or completed is onboarding's own record, kept in
+ * plain `localStorage` and degrading silently when it is unavailable so the
+ * editor never breaks over a write.
  */
 @Injectable({ providedIn: 'root' })
 export class OnboardingService {
   private readonly layout = inject(LayoutService);
   private readonly logging = inject(LoggingService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly settings = inject(EditorSettingsService);
 
-  private readonly _tipsEnabled = signal(this.loadBool(TIPS_ENABLED_KEY, true));
   /** Master switch: false silences every tutorial and hint. */
-  public readonly tipsEnabled = this._tipsEnabled.asReadonly();
+  public readonly tipsEnabled = this.settings.onboardingTips.value;
 
   private readonly _nudgeDismissed = signal(
     this.loadBool(NUDGE_DISMISSED_KEY, false)
@@ -58,25 +66,17 @@ export class OnboardingService {
     this.layout.isCompact() ? 'compact' : 'desktop'
   );
 
-  /**
-   * Flips the master switch and persists it. Turning tips off also ends any
-   * running tutorial without marking it complete, so it can be resumed later.
-   */
-  public setTipsEnabled(enabled: boolean): void {
-    this._tipsEnabled.set(enabled);
-    this.saveBool(TIPS_ENABLED_KEY, enabled);
-    this.logging.debug(
-      `tips ${enabled ? 'enabled' : 'disabled'}`,
-      'OnboardingService'
-    );
-    if (!enabled && this._activeTutorial() !== null) {
-      this.endTutorial(false);
-    }
+  constructor() {
+    // Tips turned off from anywhere end a running tutorial without marking it
+    // complete, so it can be resumed later.
+    effect(() => {
+      if (!this.tipsEnabled()) untracked(() => this.endTutorial(false));
+    });
   }
 
-  /** The "turn off all tips" control on the coach-mark bubble and in settings. */
+  /** The "turn off all tips" control on the coach-mark bubble. */
   public disableAllTips(): void {
-    this.setTipsEnabled(false);
+    this.settings.onboardingTips.set(false);
   }
 
   /**
@@ -91,7 +91,7 @@ export class OnboardingService {
     this.saveSet(COMPLETED_TUTORIALS_KEY, this._completedTutorials);
     this._nudgeDismissed.set(false);
     this.saveBool(NUDGE_DISMISSED_KEY, false);
-    this.setTipsEnabled(true);
+    this.settings.onboardingTips.set(true);
   }
 
   public hasCompletedTutorial(id: string): boolean {

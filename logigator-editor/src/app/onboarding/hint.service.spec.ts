@@ -17,6 +17,7 @@ import {
 import { OnboardingService } from './onboarding.service';
 import { HintService } from './hint.service';
 import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
+import { EditorSettingsService } from '../settings/editor-settings.service';
 
 function popover(): Element | null {
   return document.querySelector('.cdk-overlay-container app-hint-popover');
@@ -142,7 +143,7 @@ describe('HintService', () => {
   });
 
   it('is suppressed when tips are turned off', () => {
-    onboarding.setTipsEnabled(false);
+    onboarding.disableAllTips();
     enterWireTool();
     expect(popover()).toBeNull();
     expect(onboarding.hasSeenHint('wire-tap-actions')).toBe(false);
@@ -364,9 +365,9 @@ describe('HintService', () => {
     conflictShown$.next();
     tick();
 
-    onboarding.setTipsEnabled(false);
+    onboarding.disableAllTips();
     tick();
-    onboarding.setTipsEnabled(true);
+    TestBed.inject(EditorSettingsService).onboardingTips.set(true);
     pressEscape();
     tick();
     expect(popover()).toBeNull();
