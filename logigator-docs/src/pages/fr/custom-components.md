@@ -11,7 +11,7 @@ Un composant personnalisé transforme un circuit en une seule pièce avec son pr
    - Nom, 20 caractères au plus, est le nom affiché dans la palette.
    - Symbole, 5 caractères au plus, est dessiné sur le bloc.
    - Description est facultative.
-   - Stockage détermine où le composant est conservé. Local le garde dans ce navigateur. Cloud le garde dans votre compte, nécessite d'être connecté et demande aussi qui peut l'ouvrir, Tout le monde étant présélectionné (voir [Cloud et partage](docs:cloud)).
+   - Stockage détermine où le composant est conservé. Local le garde dans ce navigateur. Cloud le garde dans votre compte, nécessite d'être connecté et demande aussi qui peut l'ouvrir, Tout le monde étant présélectionné (voir [Cloud et partage](docs:cloud#partager)).
 3. Cliquez sur « Créer ». Le composant s'ouvre dans un nouvel onglet avec un plan de travail vide.
 4. Construisez son circuit et donnez-lui des [ports](#ports).
 5. Enregistrez (`Ctrl+S`) dans cet onglet pour enregistrer le composant.

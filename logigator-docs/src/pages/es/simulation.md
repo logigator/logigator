@@ -70,7 +70,7 @@ La simulación sigue igual: un cable con varias salidas está a 1 en cuanto una 
 
 Un conflicto dentro de un componente personalizado no se muestra en el tablero. Haz clic en el componente para abrir un [monitor](docs:inspection#monitores), donde sus cables lo muestran.
 
-Desactivar el ajuste «Resaltar conflictos», activado de forma predeterminada, quita el naranja. Consulta [Ajustes](docs:settings).
+Desactivar el ajuste «Resaltar conflictos», activado de forma predeterminada, quita el naranja. Consulta [Ajustes](docs:settings#ajustes-del-editor).
 
 ### Soluciones
 

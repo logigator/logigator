@@ -35,7 +35,7 @@ Pendant la saisie dans un champ de texte, seul `Escape` réagit. Pendant une sim
 
 ## Touches maintenues
 
-Les deux actions marquées « maintenir » agissent tant que la touche est enfoncée, au lieu de se déclencher une fois. Maintenez `Alt` en relâchant un cadre de sélection pour couper les fils à son bord (voir [Plan de travail et outils](docs:board-and-tools)). Maintenez `Ctrl` en cliquant ou en traçant un cadre pour ajouter à la sélection ou en retirer. Cela fonctionne avec Sélectionner, Déplacement et l'outil fil.
+Les deux actions marquées « maintenir » agissent tant que la touche est enfoncée, au lieu de se déclencher une fois. Maintenez `Alt` en relâchant un cadre de sélection pour couper les fils à son bord (voir [Plan de travail et outils](docs:board-and-tools#couper-les-fils-au-bord-de-la-sélection)). Maintenez `Ctrl` en cliquant ou en traçant un cadre pour ajouter à la sélection ou en retirer. Cela fonctionne avec Sélectionner, Déplacement et l'outil fil.
 
 ## Modifier un raccourci
 

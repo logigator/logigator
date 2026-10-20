@@ -70,7 +70,7 @@ The simulation keeps running as before: a wire with several outputs on it is 1 a
 
 A conflict inside a custom component is not shown on the board. Click the component to open a [watch](docs:inspection#watches), where its wires show it.
 
-Switching off the Highlight conflicts setting, which is on by default, turns the orange off. See [Settings](docs:settings).
+Switching off the Highlight conflicts setting, which is on by default, turns the orange off. See [Settings](docs:settings#editor-settings).
 
 ### Fixes
 

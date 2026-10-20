@@ -35,7 +35,7 @@ Shortcuts do nothing while you type in a text field, except `Escape`. During a s
 
 ## Held keys
 
-The two actions marked "hold" act while the key is down instead of firing once. Hold `Alt` while releasing a selection box to cut the wires at its edge (see [Board and tools](docs:board-and-tools)). Hold `Ctrl` while clicking or drawing a box to add to the selection or remove from it. That works with Select, Pan and the Wire tool.
+The two actions marked "hold" act while the key is down instead of firing once. Hold `Alt` while releasing a selection box to cut the wires at its edge (see [Board and tools](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Hold `Ctrl` while clicking or drawing a box to add to the selection or remove from it. That works with Select, Pan and the Wire tool.
 
 ## Changing a binding
 

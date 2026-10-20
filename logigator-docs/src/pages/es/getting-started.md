@@ -2,7 +2,7 @@
 
 Logigator es un simulador de circuitos lógicos que funciona en el navegador. Colocas puertas en una cuadrícula, trazas cables entre ellas y pulsas «Iniciar simulación» para ver cómo recorren las señales el circuito. Un circuito terminado se puede guardar como [componente personalizado](docs:custom-components) y usar como un solo bloque dentro de otro más grande.
 
-No necesitas una cuenta. Sin ella, guardas los proyectos en el navegador o los [exportas a un archivo](docs:saving-and-files). Al iniciar sesión tienes además [almacenamiento en la nube y enlaces para compartir](docs:cloud).
+No necesitas una cuenta. Sin ella, guardas los proyectos en el navegador o los [exportas a un archivo](docs:saving-and-files#archivos-de-circuito). Al iniciar sesión tienes además [almacenamiento en la nube y enlaces para compartir](docs:cloud).
 
 ![El editor con un semisumador en el tablero.](./images/board-overview.webp)
 
@@ -10,7 +10,7 @@ No necesitas una cuenta. Sin ella, guardas los proyectos en el navegador o los [
 
 - El tablero, en el centro, es la cuadrícula en la que construyes. La rueda del ratón hace zoom, y arrastrar con el botón derecho o central desplaza la vista.
 - La barra de título muestra el nombre del proyecto y dónde está guardado (Borrador, Local, Nube o Compartido), seguido de los menús Archivo, Editar, Vista y Ayuda. El lápiz junto al nombre cambia el nombre del proyecto.
-- La barra de herramientas tiene botones para guardar y abrir, el portapapeles, girar, deshacer y hacer zoom, luego las cinco [herramientas](docs:board-and-tools) y, en el extremo derecho, «Iniciar simulación».
+- La barra de herramientas tiene botones para guardar y abrir, el portapapeles, girar, deshacer y hacer zoom, luego las cinco [herramientas](docs:board-and-tools#herramientas) y, en el extremo derecho, «Iniciar simulación».
 - La paleta de componentes, a la izquierda, lista todas las piezas que puedes colocar.
 - La barra de estado, abajo, muestra una indicación sobre la herramienta activa, la posición del cursor en la cuadrícula, «Guardado» o «Cambios sin guardar» y cuántos elementos hay seleccionados.
 - El minimapa y el botón «Informar de un error» están en la esquina inferior derecha del tablero.

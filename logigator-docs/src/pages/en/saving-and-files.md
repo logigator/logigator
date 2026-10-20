@@ -8,7 +8,7 @@ File → Save, the toolbar's save button or `Ctrl+S` saves the open project. A n
 
 - Name, up to 20 characters.
 - Destination, Local or Cloud. Cloud needs you to be signed in and is preselected when you are.
-- Who can open it, for Cloud only. Everyone is preselected, which lists the project in the community and lets search engines find it. Pick Only you to keep it private. See [Cloud and sharing](docs:cloud).
+- Who can open it, for Cloud only. Everyone is preselected, which lists the project in the community and lets search engines find it. Pick Only you to keep it private. See [Cloud and sharing](docs:cloud#sharing).
 
 ![The Save dialog with Cloud chosen and the visibility options below.](./images/save-project.webp)
 
@@ -45,7 +45,7 @@ File → Export to file downloads the open project as a `.lgix` file. The file c
 
 To import, open File → Open → From File and choose a file. The editor reads `.lgix` files and the `.json` files the old Logigator editor exported. The import is saved right away as a new Local project.
 
-A project opened from a share link can't be exported. Clone it first (see [Cloud and sharing](docs:cloud)).
+A project opened from a share link can't be exported. Clone it first (see [Cloud and sharing](docs:cloud#opening-someone-else-s-link)).
 
 ## Exporting an image
 

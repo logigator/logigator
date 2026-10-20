@@ -4,7 +4,7 @@ Durante una [simulación](docs:simulation), en marcha o en pausa, cuatro tipos d
 
 ![Una ventana de monitor junto al circuito en marcha al que pertenece.](./images/inspection-showcase.webp)
 
-En el escritorio, cada vista se abre en una ventana que puedes mover y cambiar de tamaño. Otro clic en el componente trae su ventana al frente. En la [vista táctil](docs:phones-and-tablets), las vistas de ROM, de RAM y de terminal comparten un panel en la parte inferior de la pantalla, y un monitor ocupa toda la pantalla. Al salir de la simulación se cierran todas.
+En el escritorio, cada vista se abre en una ventana que puedes mover y cambiar de tamaño. Otro clic en el componente trae su ventana al frente. En la [vista táctil](docs:phones-and-tablets#simulación-e-inspección), las vistas de ROM, de RAM y de terminal comparten un panel en la parte inferior de la pantalla, y un monitor ocupa toda la pantalla. Al salir de la simulación se cierran todas.
 
 ## Contenido de una ROM
 

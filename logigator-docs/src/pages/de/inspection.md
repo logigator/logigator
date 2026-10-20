@@ -4,7 +4,7 @@ Während einer [Simulation](docs:simulation), ob laufend oder pausiert, lassen s
 
 ![Ein Beobachtungsfenster neben der laufenden Schaltung, zu der es gehört.](./images/inspection-showcase.webp)
 
-Am Desktop öffnet sich jede Ansicht als Fenster, das du verschieben und in der Größe ändern kannst. Ein erneuter Klick auf die Komponente holt ihr Fenster nach vorn. In der [Touch-Ansicht](docs:phones-and-tablets) teilen sich ROM-, RAM- und Terminal-Ansichten eine Leiste am unteren Bildschirmrand, und eine Beobachtung füllt den ganzen Bildschirm. Verlässt du die Simulation, schließen sich alle.
+Am Desktop öffnet sich jede Ansicht als Fenster, das du verschieben und in der Größe ändern kannst. Ein erneuter Klick auf die Komponente holt ihr Fenster nach vorn. In der [Touch-Ansicht](docs:phones-and-tablets#simulation-und-inspektion) teilen sich ROM-, RAM- und Terminal-Ansichten eine Leiste am unteren Bildschirmrand, und eine Beobachtung füllt den ganzen Bildschirm. Verlässt du die Simulation, schließen sich alle.
 
 ## ROM-Inhalt
 

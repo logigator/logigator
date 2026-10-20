@@ -35,7 +35,7 @@ Während du in ein Textfeld tippst, reagiert kein Kürzel außer `Escape`. In ei
 
 ## Gehaltene Tasten
 
-Die beiden mit „halten“ markierten Aktionen wirken, solange die Taste gedrückt ist, statt einmal auszulösen. Halte `Alt`, während du einen Auswahlrahmen loslässt, um die Leitungen an seiner Kante zu schneiden (siehe [Arbeitsfläche und Werkzeuge](docs:board-and-tools)). Halte `Ctrl` beim Klicken oder Aufziehen eines Rahmens, um zur Auswahl hinzuzufügen oder daraus zu entfernen. Das funktioniert mit Auswählen, Schwenken und dem Leitungswerkzeug.
+Die beiden mit „halten“ markierten Aktionen wirken, solange die Taste gedrückt ist, statt einmal auszulösen. Halte `Alt`, während du einen Auswahlrahmen loslässt, um die Leitungen an seiner Kante zu schneiden (siehe [Arbeitsfläche und Werkzeuge](docs:board-and-tools#leitungen-an-der-auswahlkante-schneiden)). Halte `Ctrl` beim Klicken oder Aufziehen eines Rahmens, um zur Auswahl hinzuzufügen oder daraus zu entfernen. Das funktioniert mit Auswählen, Schwenken und dem Leitungswerkzeug.
 
 ## Eine Belegung ändern
 

@@ -35,7 +35,7 @@ Mientras escribes en un campo de texto, ningún atajo responde salvo `Escape`. D
 
 ## Teclas mantenidas
 
-Las dos acciones marcadas con «mantener» actúan mientras la tecla está pulsada, en lugar de dispararse una vez. Mantén `Alt` al soltar un marco de selección para cortar los cables en su borde (consulta [Tablero y herramientas](docs:board-and-tools)). Mantén `Ctrl` al hacer clic o trazar un marco para añadir a la selección o quitar de ella. Funciona con Seleccionar, Desplazar y la herramienta de cable.
+Las dos acciones marcadas con «mantener» actúan mientras la tecla está pulsada, en lugar de dispararse una vez. Mantén `Alt` al soltar un marco de selección para cortar los cables en su borde (consulta [Tablero y herramientas](docs:board-and-tools#cortar-cables-en-el-borde-de-la-selección)). Mantén `Ctrl` al hacer clic o trazar un marco para añadir a la selección o quitar de ella. Funciona con Seleccionar, Desplazar y la herramienta de cable.
 
 ## Cambiar un atajo
 

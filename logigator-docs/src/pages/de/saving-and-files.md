@@ -8,7 +8,7 @@ Datei → Speichern, die Speichern-Schaltfläche in der Werkzeugleiste oder `Ctr
 
 - Name, bis 20 Zeichen.
 - Speicherort, Lokal oder Cloud. Cloud setzt eine Anmeldung voraus und ist dann vorausgewählt.
-- Wer kann es öffnen, nur bei Cloud. Vorausgewählt ist Alle: Das Projekt erscheint dann in der Community und ist über Suchmaschinen auffindbar. Wähle „Nur du“, um es privat zu halten. Siehe [Cloud und Teilen](docs:cloud).
+- Wer kann es öffnen, nur bei Cloud. Vorausgewählt ist Alle: Das Projekt erscheint dann in der Community und ist über Suchmaschinen auffindbar. Wähle „Nur du“, um es privat zu halten. Siehe [Cloud und Teilen](docs:cloud#teilen).
 
 ![Der Dialog „Speichern“ mit gewählter Cloud und den Sichtbarkeitsoptionen darunter.](./images/save-project.webp)
 
@@ -45,7 +45,7 @@ Datei → Als Datei exportieren lädt das offene Projekt als `.lgix`-Datei herun
 
 Zum Importieren öffnest du Datei → Öffnen → Aus Datei und wählst eine Datei. Der Editor liest `.lgix`-Dateien und die `.json`-Dateien, die der alte Logigator-Editor exportiert hat. Der Import wird sofort als neues lokales Projekt gespeichert.
 
-Ein Projekt, das über einen Freigabelink geöffnet wurde, lässt sich nicht exportieren. Klone es zuerst (siehe [Cloud und Teilen](docs:cloud)).
+Ein Projekt, das über einen Freigabelink geöffnet wurde, lässt sich nicht exportieren. Klone es zuerst (siehe [Cloud und Teilen](docs:cloud#einen-fremden-link-öffnen)).
 
 ## Ein Bild exportieren
 

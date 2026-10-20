@@ -70,7 +70,7 @@ La simulation continue sans changement : un fil relié à plusieurs sorties est 
 
 Un conflit à l'intérieur d'un composant personnalisé n'apparaît pas sur le plan de travail. Cliquez sur le composant pour ouvrir une [surveillance](docs:inspection#surveillances), où ses fils le montrent.
 
-Désactiver le paramètre « Mettre en évidence les conflits », activé par défaut, supprime ce marquage en orange. Voir [Paramètres](docs:settings).
+Désactiver le paramètre « Mettre en évidence les conflits », activé par défaut, supprime ce marquage en orange. Voir [Paramètres](docs:settings#paramètres-de-l-éditeur).
 
 ### Corrections
 

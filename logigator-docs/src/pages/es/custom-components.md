@@ -11,7 +11,7 @@ Un componente personalizado convierte un circuito en una sola pieza con su propi
    - Nombre, hasta 20 caracteres, es como aparece en la paleta.
    - Símbolo, hasta 5 caracteres, se dibuja en el bloque.
    - Descripción es opcional.
-   - Almacenar decide dónde se guarda el componente. Local lo guarda en este navegador. Nube lo guarda en tu cuenta, requiere haber iniciado sesión y pregunta además quién puede abrirlo, con Todo el mundo preseleccionado (consulta [Nube y compartir](docs:cloud)).
+   - Almacenar decide dónde se guarda el componente. Local lo guarda en este navegador. Nube lo guarda en tu cuenta, requiere haber iniciado sesión y pregunta además quién puede abrirlo, con Todo el mundo preseleccionado (consulta [Nube y compartir](docs:cloud#compartir)).
 3. Haz clic en «Crear». El componente se abre en una pestaña nueva con el tablero vacío.
 4. Construye su circuito y dale [puertos](#puertos).
 5. Guarda (`Ctrl+S`) en esa pestaña para guardar el componente.

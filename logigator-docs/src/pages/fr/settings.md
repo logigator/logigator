@@ -17,7 +17,7 @@ Thème bascule entre Clair et Sombre. Sombre est la valeur par défaut. Langue p
 | Mettre en évidence les conflits                | activé     | Pendant la [simulation](docs:simulation#signaux-en-conflit), dessine un fil en orange quand les sorties qui le pilotent donnent des valeurs différentes, ou quand une bascule SR a reçu un front d'horloge avec S et R à 1. |
 | Faire glisser la sélection en mode Déplacement | activé     | Un glisser avec Déplacement qui commence dans la sélection déplace la sélection. Désactivé, tout glisser déplace la vue.                                                                                                    |
 | Compteur FPS                                   | désactivé  | Affiche les images par seconde dans le coin du plan de travail.                                                                                                                                                             |
-| Afficher les conseils d'intégration            | activé     | Affiche un conseil la première fois que vous rencontrez quelque chose de nouveau dans l'éditeur. Voir [Prise en main](docs:getting-started).                                                                                |
+| Afficher les conseils d'intégration            | activé     | Affiche un conseil la première fois que vous rencontrez quelque chose de nouveau dans l'éditeur. Voir [Prise en main](docs:getting-started#tutoriel-et-conseils).                                                           |
 
 Ces six paramètres, vos raccourcis clavier et l'état de la minicarte sont enregistrés uniquement dans ce navigateur. Un autre navigateur ou appareil démarre avec les valeurs par défaut, et effacer les données du site les réinitialise.
 

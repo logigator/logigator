@@ -4,7 +4,7 @@ Pendant une [simulation](docs:simulation), en cours ou en pause, quatre sortes d
 
 ![Une fenêtre de surveillance à côté du circuit en cours auquel elle appartient.](./images/inspection-showcase.webp)
 
-Sur ordinateur, chaque vue s'ouvre dans une fenêtre que vous pouvez déplacer et redimensionner. Un nouveau clic sur le composant ramène sa fenêtre au premier plan. En [disposition tactile](docs:phones-and-tablets), les vues de ROM, de RAM et de terminal partagent un panneau en bas de l'écran, et une surveillance occupe tout l'écran. Quitter la simulation les ferme toutes.
+Sur ordinateur, chaque vue s'ouvre dans une fenêtre que vous pouvez déplacer et redimensionner. Un nouveau clic sur le composant ramène sa fenêtre au premier plan. En [disposition tactile](docs:phones-and-tablets#simulation-et-inspection), les vues de ROM, de RAM et de terminal partagent un panneau en bas de l'écran, et une surveillance occupe tout l'écran. Quitter la simulation les ferme toutes.
 
 ## Contenu d'une ROM
 

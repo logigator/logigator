@@ -8,7 +8,7 @@ Fichier → Enregistrer, le bouton d'enregistrement de la barre d'outils ou `Ctr
 
 - Nom, 20 caractères au plus.
 - Destination, Local ou Cloud. Cloud nécessite d'être connecté et est alors présélectionné.
-- Qui peut l'ouvrir, pour Cloud uniquement. Tout le monde est présélectionné : le projet apparaît alors dans la communauté et peut être trouvé par les moteurs de recherche. Choisissez « Toi uniquement » pour le garder privé. Voir [Cloud et partage](docs:cloud).
+- Qui peut l'ouvrir, pour Cloud uniquement. Tout le monde est présélectionné : le projet apparaît alors dans la communauté et peut être trouvé par les moteurs de recherche. Choisissez « Toi uniquement » pour le garder privé. Voir [Cloud et partage](docs:cloud#partager).
 
 ![La fenêtre « Enregistrer » avec Cloud choisi et les options de visibilité en dessous.](./images/save-project.webp)
 
@@ -45,7 +45,7 @@ Fichier → Exporter vers un fichier télécharge le projet ouvert sous forme de
 
 Pour importer, ouvrez Fichier → Ouvrir → À partir d'un fichier et choisissez un fichier. L'éditeur lit les fichiers `.lgix` et les fichiers `.json` exportés par l'ancien éditeur Logigator. L'import est aussitôt enregistré comme nouveau projet local.
 
-Un projet ouvert depuis un lien de partage ne peut pas être exporté. Clonez-le d'abord (voir [Cloud et partage](docs:cloud)).
+Un projet ouvert depuis un lien de partage ne peut pas être exporté. Clonez-le d'abord (voir [Cloud et partage](docs:cloud#ouvrir-le-lien-de-quelqu-un-d-autre)).
 
 ## Exporter une image
 

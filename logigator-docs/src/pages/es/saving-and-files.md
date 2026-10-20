@@ -8,7 +8,7 @@ Archivo → Guardar, el botón de guardar de la barra de herramientas o `Ctrl+S`
 
 - Nombre, hasta 20 caracteres.
 - Destino, Local o Nube. Nube requiere haber iniciado sesión y en ese caso viene preseleccionada.
-- Quién puede abrirlo, solo con Nube. Viene preseleccionado Todo el mundo: el proyecto aparece entonces en la comunidad y los buscadores pueden encontrarlo. Elige «Solo tú» para mantenerlo privado. Consulta [Nube y compartir](docs:cloud).
+- Quién puede abrirlo, solo con Nube. Viene preseleccionado Todo el mundo: el proyecto aparece entonces en la comunidad y los buscadores pueden encontrarlo. Elige «Solo tú» para mantenerlo privado. Consulta [Nube y compartir](docs:cloud#compartir).
 
 ![El diálogo «Guardar» con Nube elegida y las opciones de visibilidad debajo.](./images/save-project.webp)
 
@@ -45,7 +45,7 @@ Archivo → Exportar a archivo descarga el proyecto abierto como archivo `.lgix`
 
 Para importar, abre Archivo → Abrir → Desde archivo y elige un archivo. El editor lee archivos `.lgix` y los archivos `.json` que exportaba el antiguo editor de Logigator. La importación se guarda al momento como un proyecto local nuevo.
 
-Un proyecto abierto desde un enlace para compartir no se puede exportar. Clónalo primero (consulta [Nube y compartir](docs:cloud)).
+Un proyecto abierto desde un enlace para compartir no se puede exportar. Clónalo primero (consulta [Nube y compartir](docs:cloud#abrir-el-enlace-de-otra-persona)).
 
 ## Exportar una imagen
 

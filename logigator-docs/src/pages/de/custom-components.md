@@ -11,7 +11,7 @@ Eine benutzerdefinierte Komponente macht aus einer Schaltung ein einzelnes Baute
    - Name, bis 20 Zeichen, ist der Name in der Palette.
    - Symbol, bis 5 Zeichen, steht auf dem Kasten.
    - Beschreibung ist optional.
-   - Speicherort legt fest, wo die Komponente liegt. Lokal hält sie in diesem Browser. Cloud hält sie in deinem Account, setzt eine Anmeldung voraus und fragt zusätzlich, wer sie öffnen kann, mit Alle als Vorauswahl (siehe [Cloud und Teilen](docs:cloud)).
+   - Speicherort legt fest, wo die Komponente liegt. Lokal hält sie in diesem Browser. Cloud hält sie in deinem Account, setzt eine Anmeldung voraus und fragt zusätzlich, wer sie öffnen kann, mit Alle als Vorauswahl (siehe [Cloud und Teilen](docs:cloud#teilen)).
 3. Klicke auf „Erstellen“. Die Komponente öffnet sich in einem neuen Tab mit leerer Arbeitsfläche.
 4. Baue ihre Schaltung und gib ihr [Anschlüsse](#anschlüsse).
 5. Speichere (`Ctrl+S`) in diesem Tab, um die Komponente zu speichern.

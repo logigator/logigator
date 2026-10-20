@@ -70,7 +70,7 @@ Die Simulation läuft unverändert weiter: Eine Leitung mit mehreren Ausgängen 
 
 Ein Konflikt in einer benutzerdefinierten Komponente erscheint nicht auf der Arbeitsfläche. Klicke auf die Komponente, um eine [Beobachtung](docs:inspection#beobachtungen) zu öffnen, in der ihre Leitungen ihn zeigen.
 
-Schaltest du die Einstellung „Konflikte hervorheben“ ab, die standardmäßig an ist, verschwindet das Orange. Siehe [Einstellungen](docs:settings).
+Schaltest du die Einstellung „Konflikte hervorheben“ ab, die standardmäßig an ist, verschwindet das Orange. Siehe [Einstellungen](docs:settings#editor-einstellungen).
 
 ### Abhilfe
 

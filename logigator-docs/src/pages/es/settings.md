@@ -17,7 +17,7 @@ Tema cambia entre Claro y Oscuro. Oscuro es el predeterminado. Idioma ofrece Eng
 | Resaltar conflictos                      | activado       | Durante la [simulación](docs:simulation#señales-en-conflicto), dibuja un cable en naranja cuando las salidas que lo controlan dan valores distintos, o cuando un biestable SR recibió un flanco de reloj con S y R a 1. |
 | Arrastrar la selección en modo Desplazar | activado       | Un arrastre con Desplazar que empieza dentro de la selección mueve la selección. Desactivado, todo arrastre desplaza la vista.                                                                                          |
 | Contador de FPS                          | desactivado    | Muestra los fotogramas por segundo en la esquina del tablero.                                                                                                                                                           |
-| Mostrar consejos de introducción         | activado       | Muestra un consejo la primera vez que te encuentras con algo nuevo en el editor. Consulta [Primeros pasos](docs:getting-started).                                                                                       |
+| Mostrar consejos de introducción         | activado       | Muestra un consejo la primera vez que te encuentras con algo nuevo en el editor. Consulta [Primeros pasos](docs:getting-started#tutorial-y-consejos).                                                                   |
 
 Estos seis ajustes, tus atajos de teclado y el estado del minimapa se guardan solo en este navegador. Otro navegador u otro dispositivo empieza con los valores predeterminados, y borrar los datos del sitio los restablece.
 

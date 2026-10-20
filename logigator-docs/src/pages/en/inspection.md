@@ -4,7 +4,7 @@ During a [simulation](docs:simulation), running or paused, four kinds of compone
 
 ![A watch window beside the running circuit it belongs to.](./images/inspection-showcase.webp)
 
-On a desktop, each view opens as a window that you can move and resize. Clicking the component again brings its window to the front. In the [touch layout](docs:phones-and-tablets), ROM, RAM and terminal views share a sheet at the bottom of the screen and a watch fills the whole screen. Leaving the simulation closes all of them.
+On a desktop, each view opens as a window that you can move and resize. Clicking the component again brings its window to the front. In the [touch layout](docs:phones-and-tablets#simulation-and-inspection), ROM, RAM and terminal views share a sheet at the bottom of the screen and a watch fills the whole screen. Leaving the simulation closes all of them.
 
 ## ROM contents
 

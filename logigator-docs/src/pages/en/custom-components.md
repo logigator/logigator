@@ -11,7 +11,7 @@ A custom component turns a circuit into a single part with its own symbol and na
    - Name, up to 20 characters, is how the component appears in the palette.
    - Symbol, up to 5 characters, is drawn on its box.
    - Description is optional.
-   - Store decides where the component is kept. Local keeps it in this browser. Cloud keeps it in your account and needs you to be signed in; it also asks who can open it, with Everyone preselected (see [Cloud and sharing](docs:cloud)).
+   - Store decides where the component is kept. Local keeps it in this browser. Cloud keeps it in your account and needs you to be signed in; it also asks who can open it, with Everyone preselected (see [Cloud and sharing](docs:cloud#sharing)).
 3. Click Create. The component opens in a new tab with an empty board.
 4. Build its circuit and give it [ports](#ports).
 5. Save (`Ctrl+S`) in that tab to save the component.
