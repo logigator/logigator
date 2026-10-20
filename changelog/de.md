@@ -5,11 +5,122 @@ aktuellste Veröffentlichung steht ganz oben.
 
 ## [Unreleased]
 
+Die **ganze Website ist neu gebaut**, passend zum Editor, und die Dokumentation
+steht jetzt direkt auf der Website. Im Editor zeigen Leitungen widersprüchliche
+Signale sofort an, und mit Gamepad, Tastatur und Terminal nehmen deine
+Schaltungen während der Simulation Eingaben an und geben Text aus.
+
+### ✨ Hinzugefügt
+
+- **🌐 Ein neu gebautes logigator.com.** Eine frische Startseite und
+  überarbeitete Seiten überall, die Dokumentation und das Änderungsprotokoll
+  direkt auf der Website, und alle Beispiele neu gemacht, mit fünf neuen, sodass
+  jede eingebaute Komponente in mindestens einem vorkommt.
+- **🟠 Hervorgehobene Konflikte.** Während der Simulation wird eine Leitung,
+  deren Ausgänge sich widersprechen, jetzt orange, sodass sich ein Kurzschluss
+  sofort zeigt. Die Leitung zählt weiter als 1, solange mindestens ein Ausgang an
+  ihr 1 ist. Das ist standardmäßig an, ein Tipp erklärt es beim ersten Mal,
+  und die Einstellung „Konflikte hervorheben“ schaltet es ab.
+- **🎮 Gamepad, Tastatur und Terminal.** Spiel eine Schaltung auf einem
+  Controller am Bildschirm, mit deinen eigenen Tasten oder einem echten Gamepad,
+  auch zu zweit. Tippe live hinein oder füge einen ganzen Text ein, und sieh zu,
+  wie sie während der Simulation auf ein Terminal schreibt.
+- **🔗 Seiten für geteilte Links.** Ein geteilter Link öffnet eine Seite mit der
+  Schaltung, ihrem Autor und ihren Sternen, bereit zum Öffnen im Editor oder als
+  eigene Kopie. In einen Chat eingefügt, erscheint er als Karte mit deiner
+  Schaltung, und du kannst ihn in andere Seiten einbetten.
+- **🔒 Private Projekte und Komponenten.** Neben „Alle mit dem Link“ und „Alle“
+  behält „Nur du“ ein Dokument für dich. Sein Link bleibt bei jeder Wahl
+  derselbe, sodass du ihn später wieder weitergeben kannst.
+- **Mehr zu entdecken in der Community.** Stöbere nach Trend, jetzt die
+  Voreinstellung, suche schon beim Tippen, und finde im Profil eines Mitglieds
+  eine Beschreibung, eine Website und Links, dazu die Sterne, die seine Arbeiten
+  gesammelt haben. Ein veröffentlichtes Projekt oder eine Komponente ohne Inhalt
+  bleibt aus den Listen heraus.
+- **Beschreibungen mit Formatierung.** Fett, Listen, Links und mehr in
+  Beschreibungen und Profilen, direkt an Ort und Stelle bearbeitet. Auch die
+  Beschreibungen der eingebauten Komponenten im Editor nutzen sie.
+- **Eine Live-Ansicht des RAM.** Tippe während der Simulation auf ein RAM, um
+  seinen Inhalt in einer Hex-Ansicht zu verfolgen, die der gelesenen Adresse
+  folgt.
+- **Hilfe genau dort, wo du sie brauchst.** Fenster und Dialoge haben einen
+  Hilfe-Knopf, der den passenden Abschnitt öffnet, jede Einstellung erklärt sich
+  neben ihrem Schalter, und die neu geschriebene Dokumentation beschreibt jede
+  Komponente und hat eine Seite für Smartphones und Tablets.
+- **Ein Taster, der an bleibt, solange du ihn hältst.** Der Taster, der einen
+  einzelnen Impuls sendet, heißt jetzt Impulstaster.
+- **Bildexport als verlustfreies WebP**, wo dein Browser es unterstützt. WebP
+  wird nur noch angeboten, wo dein Browser es schreiben kann.
+- „Registrieren“ neben „Anmelden“ im Kontomenü des Editors.
+- Ein Hinweis, wenn dein Browser älter ist als die, mit denen der Editor getestet
+  wird.
+
 ### 🔄 Geändert
 
+- **Komponenten näher an echten Bauteilen.** Ein neuer Taktgeber gibt ein
+  Rechtecksignal aus, so lange an wie aus, sodass ein Zyklus doppelt so lange
+  dauert wie seine Verzögerung. Ein neues RAM zeigt das adressierte Wort sofort.
+  Der Impuls und das Lesen beim Takt bleiben als Optionen erhalten. Ein neuer
+  Demultiplexer nimmt seine Auswahlleitungen zuerst, und ein neuer Enkodierer
+  zeigt, ob überhaupt ein Eingang an ist. Früher gespeicherte Schaltungen
+  arbeiten weiter wie bisher.
+- **⚡ Große Schaltungen öffnen schneller und lassen sich flüssig verschieben.**
+  Teile der Arbeitsfläche, die du nicht siehst, werden nicht mehr vorab
+  vorbereitet, sodass große Schaltungen früher erscheinen und beim Schwenken mit
+  deinem Bildschirm mithalten, auch weit herausgezoomt.
+- **Große Schaltungen speichern schneller und brauchen viel weniger Platz**, in
+  der Cloud und in deinem Browser.
+- **Eine Geschwindigkeitssteuerung.** Ein einziger Knopf wählt „Jedes Bild“,
+  eine feste Geschwindigkeit bis 10 MHz oder „So schnell wie möglich“ und zeigt,
+  mit welcher Frequenz jeder Taktgeber auf der Arbeitsfläche läuft.
+- **Flüssiges Zoomen.** Mausrad und Trackpad zoomen stufenlos am Zeiger, und die
+  mittlere Maustaste schwenkt die Arbeitsfläche genauso wie die rechte.
+- **Eine nach Funktion gruppierte Palette**: Logikgatter, Eingaben, Ausgaben,
+  Addierer und Selektoren, Speicher und Zeitsteuerung. Zugeklappte Kategorien
+  bleiben zugeklappt.
+- Eine Komponente, die du platzierst, sitzt mittig unter dem Zeiger.
+- Der Schalter für die Tipps steht bei den anderen Editor-Einstellungen, und
+  wenn du ihn ausschaltest, endet ein laufendes Tutorial.
+- Ein Konto, dessen E-Mail-Adresse nicht innerhalb von 90 Tagen bestätigt wird,
+  wird gelöscht.
 - **Übersichtlichere Neuigkeiten.** Im Neuigkeiten-Dialog des Editors beginnt
   jede Version jetzt mit ihrer Nummer und einem ausgeschriebenen Datum in deiner
   Sprache.
+
+### 🗑️ Entfernt
+
+- Die Links zum alten Editor im Hilfe-Menü und im Fehlerbericht-Dialog. Der alte
+  Editor geht mit dieser Version in den Ruhestand.
+- Die Download-Seite der alten Desktop-App.
+
+### 🐛 Behoben
+
+- Ein negierter Eingang an einer LED oder einem Segment Display kehrt jetzt um,
+  was sie anzeigen, und Ein- und Ausgänge sowie Tunnel nehmen keine Negation
+  mehr an, die nichts bewirkt hat.
+- Das Rückgängigmachen oder Wiederholen einer Anschlussnegation ist sofort zu
+  sehen.
+- Ein Text lässt sich durch einen Klick auf seine Schrift auswählen, und
+  Bildexporte zeigen ihn vollständig.
+- Ein neu platzierter oder eingefügter Eingang oder Ausgang wird zum letzten
+  Anschluss seiner Art statt zum ersten.
+- Das erste Zurück nach dem Öffnen des Editors verlässt ihn, statt auf derselben
+  Seite zu bleiben.
+- Kopieren, Einfügen oder Simulieren einer sehr großen Schaltung schlägt nicht
+  mehr fehl.
+- „Inhalt bearbeiten“ funktioniert bei einem ROM, das du gerade platzierst, und
+  was du eingibst, wird mit ihm platziert.
+- Komponenten und aus deinem Browser hochgeladene Projekte bekommen ein
+  Vorschaubild statt eines Platzhalters.
+- Ein Tipp, der erscheint, während ein anderer offen ist, wartet, bis er dran
+  ist, statt übersprungen zu werden.
+
+### 🔒 Sicherheit
+
+- Eine neue E-Mail-Adresse verlangt dein Passwort, und ein neues Passwort meldet
+  dich auf deinen anderen Geräten ab.
+- Eine Anfrage zum Zurücksetzen des Passworts verrät nicht mehr, ob es zu einer
+  Adresse ein Konto gibt.
 
 ## [2.2.0] - 2026-09-17
 

@@ -5,10 +5,111 @@ listed first.
 
 ## [Unreleased]
 
+The **whole website is rebuilt** to match the editor, with the documentation
+now right on the site. In the editor, wires show conflicting signals as they
+happen, and a gamepad, a keyboard and a terminal let your circuits take input
+and print text while they run.
+
+### ✨ Added
+
+- **🌐 A rebuilt logigator.com.** A fresh home page and redesigned pages
+  throughout, the documentation and the changelog right on the site, and every
+  example reworked with five new ones, so each built-in component appears in at
+  least one.
+- **🟠 Conflict highlighting.** During simulation, a wire whose outputs disagree
+  now turns orange, so a short circuit shows itself the moment it happens. The
+  wire still counts as 1 as long as at least one output on it is 1. It is on by
+  default, a tip explains it the first time, and the "Highlight conflicts"
+  setting turns it off.
+- **🎮 Gamepad, keyboard and terminal.** Play a circuit on an on-screen
+  controller, with your own keys or a real gamepad, two players at once. Type
+  into it live or paste a whole text, and watch it print to a terminal while
+  the simulation runs.
+- **🔗 Share pages.** A shared link opens a page showing the circuit, its author
+  and its stars, ready to open in the editor or save as your own copy. Pasted
+  into a chat, it unfurls as a card with your circuit, and you can embed it in
+  other pages.
+- **🔒 Private projects and components.** Besides "Anyone with the link" and
+  "Everyone", "Only you" keeps a document to yourself. Its link stays the same
+  whichever you pick, so you can hand it out again later.
+- **More to discover in the community.** Browse by trending, now the default,
+  search as you type, and find a bio, a website and links on a member's
+  profile, along with the stars their work has collected. A published project
+  or component with nothing on it stays out of the listings.
+- **Descriptions with formatting.** Bold, lists, links and more in descriptions
+  and bios, edited right in place. Every built-in component's description in
+  the editor uses it too.
+- **A live view of RAM.** Tap a running RAM to watch its contents in a hex view
+  that follows the address being read.
+- **Help where you need it.** Windows and dialogs carry a help button that opens
+  the right section, every setting explains itself beside its switch, and the
+  rewritten documentation has a reference for every component and a page for
+  phones and tablets.
+- **A button that stays on while you hold it.** The button that sends a single
+  pulse is now called the Pulse button.
+- **Lossless WebP image export**, where your browser supports it. WebP is only
+  offered where your browser can write it.
+- Sign Up next to Log In in the editor's account menu.
+- A notice when your browser is older than the editor is tested with.
+
 ### 🔄 Changed
 
+- **Components closer to real parts.** A new clock puts out a square wave, on
+  for as long as it was off, so one cycle takes twice its Delay. A new RAM
+  shows the addressed word right away. The pulse and reading on the clock stay
+  available as options. A new demultiplexer takes its select lines first, and a
+  new encoder says whether any input is on. Circuits saved before keep working
+  as they did.
+- **⚡ Large circuits open faster and pan smoothly.** Parts of the board you
+  can't see are no longer prepared up front, so big circuits appear sooner and
+  keep up with your screen while you pan, even zoomed out.
+- **Large circuits save faster and take far less space**, in the cloud and in
+  your browser.
+- **One speed control.** A single button picks every frame, a fixed speed of up
+  to 10 MHz, or as fast as possible, and lists the frequency each clock on the
+  board runs at.
+- **Smooth zooming.** The mouse wheel and the trackpad zoom smoothly at the
+  pointer, and the middle mouse button pans the board as well as the right.
+- **A palette grouped by function**: logic gates, inputs, outputs, adders and
+  selectors, memory and timing. Categories you fold stay folded.
+- A component you are placing is centred on the pointer.
+- The switch for tips sits with the other editor settings, and turning it off
+  ends a running tutorial.
+- An account whose email address isn't confirmed within 90 days is deleted.
 - **A tidier What's New.** Each release in the editor's What's New dialog now
   opens with its version and a date written out in your language.
+
+### 🗑️ Removed
+
+- The links to the old editor in the Help menu and the bug report dialog. The
+  old editor retires with this release.
+- The download page for the old desktop app.
+
+### 🐛 Fixed
+
+- A negated input on an LED or segment display now inverts what it shows, and
+  plugs and tunnels no longer take an inversion that had no effect.
+- Undoing or redoing a port inversion shows the change right away.
+- A text label can be selected by clicking its text, and image exports include
+  all of it.
+- A newly placed or pasted input or output plug becomes the last port of its
+  kind instead of the first.
+- The first Back after opening the editor leaves it instead of staying on the
+  same page.
+- Copying, pasting or simulating a very large circuit no longer fails.
+- Edit contents works on a ROM you are about to place, and what you enter is
+  placed with it.
+- Components, and projects uploaded from your browser, get a preview picture
+  instead of a placeholder.
+- A tip that comes up while another is showing waits its turn instead of being
+  skipped.
+
+### 🔒 Security
+
+- Changing your email address asks for your password, and a new password signs
+  you out on your other devices.
+- Asking for a password reset no longer reveals whether an address has an
+  account.
 
 ## [2.2.0] - 2026-09-17
 

@@ -5,11 +5,125 @@ la plus récente est indiquée en premier.
 
 ## [Unreleased]
 
+**Tout le site a été reconstruit** pour aller avec l'éditeur, et la
+documentation se trouve désormais directement sur le site. Dans l'éditeur, les
+fils signalent les signaux contradictoires dès qu'ils apparaissent, et une
+manette, un clavier et un terminal permettent à vos circuits de recevoir des
+entrées et d'afficher du texte pendant la simulation.
+
+### ✨ Ajouté
+
+- **🌐 Un logigator.com reconstruit.** Une nouvelle page d'accueil et des pages
+  repensées partout, la documentation et le journal des modifications
+  directement sur le site, et tous les exemples refaits, dont cinq nouveaux, pour
+  que chaque composant intégré apparaisse dans au moins l'un d'eux.
+- **🟠 La mise en évidence des conflits.** Pendant la simulation, un fil dont les
+  sorties se contredisent devient désormais orange, pour qu'un court-circuit se
+  voie dès qu'il se produit. Le fil compte toujours comme 1 tant qu'au moins une
+  sortie y envoie 1. Elle est activée par défaut, un conseil l'explique
+  la première fois, et le réglage « Mettre en évidence les conflits » la
+  désactive.
+- **🎮 Manette, clavier et terminal.** Jouez avec un circuit sur une manette à
+  l'écran, avec vos propres touches ou une vraie manette, même à deux. Tapez-y
+  en direct ou collez un texte entier, et regardez-le écrire sur un terminal
+  pendant la simulation.
+- **🔗 Des pages pour les liens partagés.** Un lien partagé ouvre une page qui
+  montre le circuit, son auteur et ses étoiles, prête à l'ouvrir dans l'éditeur
+  ou à en garder votre propre copie. Collé dans une discussion, il s'affiche
+  comme une carte avec votre circuit, et vous pouvez l'intégrer dans d'autres
+  pages.
+- **🔒 Des projets et composants privés.** En plus de « Toute personne avec le
+  lien » et « Tout le monde », « Vous uniquement » garde un document pour vous.
+  Son lien reste le même quel que soit votre choix, pour que vous puissiez le
+  repartager plus tard.
+- **Plus à découvrir dans la communauté.** Parcourez par tendance, désormais le
+  tri par défaut, cherchez dès la saisie, et trouvez sur le profil d'un membre
+  une présentation, un site web et des liens, ainsi que les étoiles récoltées
+  par ses créations. Un projet ou un composant publié sans contenu reste hors
+  des listes.
+- **Des descriptions mises en forme.** Gras, listes, liens et plus encore dans
+  les descriptions et les profils, modifiés directement sur place. Les
+  descriptions des composants intégrés dans l'éditeur en profitent aussi.
+- **Une vue en direct de la RAM.** Touchez une RAM pendant la simulation pour
+  suivre son contenu dans une vue hexadécimale qui suit l'adresse lue.
+- **De l'aide là où vous en avez besoin.** Fenêtres et dialogues ont un bouton
+  d'aide qui ouvre la bonne section, chaque réglage s'explique à côté de son
+  interrupteur, et la documentation réécrite décrit chaque composant et a une
+  page pour les téléphones et tablettes.
+- **Un bouton qui reste allumé tant que vous le maintenez.** Le bouton qui envoie
+  une seule impulsion s'appelle désormais bouton à impulsion.
+- **L'export d'images en WebP sans perte**, là où votre navigateur le prend en
+  charge. Le WebP n'est proposé que là où votre navigateur sait l'écrire.
+- « S'inscrire » à côté de « Se connecter » dans le menu du compte de
+  l'éditeur.
+- Un avertissement quand votre navigateur est plus ancien que ceux avec lesquels
+  l'éditeur est testé.
+
 ### 🔄 Modifié
 
+- **Des composants plus proches des vrais.** Une nouvelle horloge produit un
+  signal carré, à 1 aussi longtemps qu'à 0, si bien qu'un cycle dure deux fois
+  son retard. Une nouvelle RAM affiche le mot adressé immédiatement.
+  L'impulsion et la lecture sur l'horloge restent disponibles en option. Un
+  nouveau démultiplexeur prend d'abord ses lignes de sélection, et un nouvel
+  encodeur indique si une entrée est active. Les circuits enregistrés
+  auparavant fonctionnent comme avant.
+- **⚡ Les grands circuits s'ouvrent plus vite et défilent sans à-coups.** Les
+  parties du plan que vous ne voyez pas ne sont plus préparées d'avance : les
+  grands circuits apparaissent plus tôt et suivent votre écran quand vous les
+  déplacez, même en zoom arrière.
+- **Les grands circuits s'enregistrent plus vite et prennent bien moins de
+  place**, dans le cloud comme dans votre navigateur.
+- **Un seul réglage de vitesse.** Un même bouton choisit « Chaque image », une
+  vitesse fixe jusqu'à 10 MHz ou « Aussi vite que possible », et indique la
+  fréquence de chaque horloge du plan.
+- **Un zoom fluide.** La molette de la souris et le pavé tactile zooment en
+  douceur sous le pointeur, et le bouton du milieu de la souris déplace le plan
+  aussi bien que le bouton droit.
+- **Une palette groupée par fonction** : portes logiques, entrées, sorties,
+  additionneurs et sélecteurs, mémoire et temporisation. Les catégories que vous
+  repliez le restent.
+- Un composant en cours de placement est centré sous le pointeur.
+- L'interrupteur des conseils se trouve avec les autres réglages de l'éditeur,
+  et le désactiver met fin à un tutoriel en cours.
+- Un compte dont l'adresse e-mail n'est pas confirmée dans les 90 jours est
+  supprimé.
 - **Des Nouveautés plus lisibles.** Dans la fenêtre Nouveautés de l'éditeur,
   chaque version commence désormais par son numéro et une date écrite en toutes
   lettres dans votre langue.
+
+### 🗑️ Supprimé
+
+- Les liens vers l'ancien éditeur dans le menu Aide et la fenêtre de rapport de
+  bug. L'ancien éditeur prend sa retraite avec cette version.
+- La page de téléchargement de l'ancienne application de bureau.
+
+### 🐛 Corrigé
+
+- Une entrée inversée sur une LED ou un affichage à segments inverse désormais
+  ce qu'ils affichent, et les entrées, sorties et tunnels n'acceptent plus une
+  inversion qui restait sans effet.
+- Annuler ou rétablir l'inversion d'un port s'affiche immédiatement.
+- Un texte se sélectionne d'un clic sur ses caractères, et les exports d'image
+  l'incluent en entier.
+- Une entrée ou une sortie nouvellement placée ou collée devient le dernier
+  port de son type au lieu du premier.
+- Le premier retour arrière après l'ouverture de l'éditeur le quitte au lieu de
+  rester sur la même page.
+- Copier, coller ou simuler un très grand circuit n'échoue plus.
+- « Modifier le contenu » fonctionne sur une ROM en cours de placement, et ce
+  que vous saisissez est placé avec elle.
+- Les composants et les projets téléversés depuis votre navigateur reçoivent un
+  aperçu au lieu d'une image par défaut.
+- Un conseil qui apparaît pendant qu'un autre est affiché attend son tour au
+  lieu d'être sauté.
+
+### 🔒 Sécurité
+
+- Changer d'adresse e-mail demande votre mot de passe, et un nouveau mot de
+  passe vous déconnecte de vos autres appareils.
+- Demander la réinitialisation du mot de passe ne révèle plus si une adresse a
+  un compte.
 
 ## [2.2.0] - 2026-09-17
 
