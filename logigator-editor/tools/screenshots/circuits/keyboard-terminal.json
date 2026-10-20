@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "name": "Terminal",
+  "components": [
+    {
+      "type": 207,
+      "x": [0],
+      "y": [0]
+    },
+    {
+      "type": 208,
+      "x": [8],
+      "y": [0],
+      "opt": {
+        "columns": [40],
+        "rows": [12],
+        "textSize": ["small"]
+      }
+    }
+  ],
+  "wires": "7,0:w3;0,1:w3;0,1:w3;0,1:w3;0,1:w3;0,1:w3;0,1:w3;0,1:w3;0,1:w3",
+  "definitions": []
+}

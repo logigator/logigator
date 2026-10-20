@@ -516,6 +516,87 @@ export const SHOTS: Shot[] = [
     }
   },
   {
+    // A keyboard typing into a terminal until two lines have scrolled off its
+    // screen, so the window shows them above the band the board also shows.
+    name: 'terminal-window',
+    async run(ed) {
+      await ed.load('keyboard-terminal');
+      await ed.enterSimulation();
+      const [keyboard] = await ed.componentsOfType('KBD');
+      const [terminal] = await ed.componentsOfType('TTY');
+      const lines = [
+        'hello',
+        'world',
+        'The quick brown fox jumps over the lazy dog.',
+        'Victor jagt zwölf Boxkämpfer quer über den großen Sylter Deich.',
+        'Portez ce vieux whisky au juge blond qui fume.',
+        'El veloz murciélago hindú comía feliz cardillo y kiwi.',
+        '0123456789',
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        'abcdefghijklmnopqrstuvwxyz'
+      ];
+      const text = lines.map((line) => `${line}\n`).join('');
+      await ed.api((a) => __logigator.sim.type(a.id, a.text), {
+        id: keyboard.id,
+        text
+      });
+      // Four steps per character while paused; the readout says when the
+      // last one has been printed.
+      await ed.stepSimulation(text.length * 4);
+      for (let attempt = 0; ; attempt++) {
+        const readout = await ed.api(
+          (id) => __logigator.sim.readTerminal(id),
+          terminal.id
+        );
+        const last = readout.screen[readout.cursor.row - 1];
+        if (readout.cursor.column === 0 && last === lines.at(-1)) break;
+        if (attempt === 10) {
+          throw new Error(`the terminal reads ${JSON.stringify(readout)}`);
+        }
+        await ed.stepSimulation(4);
+      }
+
+      const circuit = await ed.contentClip({
+        pad: 2,
+        zoom: BOARD_ZOOM,
+        anchor: 'top-left'
+      });
+      await ed.openWatch('TTY');
+      // The window opens scrolled to the screen; it grows until the
+      // scrollback above it is in view too.
+      const overflow = await ed
+        .watchWindow()
+        .locator('cdk-virtual-scroll-viewport')
+        .evaluate((viewport) => viewport.scrollHeight - viewport.clientHeight);
+      if (overflow > 0) {
+        const { height } = await ed.box(ed.watchWindow());
+        await ed.api(
+          (a) => __logigator.inspect.setBounds(a.id, { height: a.height }),
+          { id: ed.requireWatch(), height: Math.ceil(height + overflow) }
+        );
+        await ed.settle();
+      }
+      const opened = await ed.box(ed.watchWindow());
+      await ed.moveWatch({
+        x: circuit.x + circuit.width + 24,
+        // Its margin stays on the board, the window outgrowing the circuit.
+        y: circuit.y + Math.max(8, (circuit.height - opened.height) / 2)
+      });
+      const output = await ed.unionClip(ed.watchWindow(), 8);
+
+      // Whichever of the two is shorter is centred on the other.
+      const board = await ed.canvasBox();
+      const bounds = await ed.contentBounds();
+      if (output.height > circuit.height) {
+        await ed.centerContentAt({
+          y: output.y + output.height / 2 - board.y
+        });
+      }
+      await ed.parkPointer();
+      return { clip: mergeRects(await ed.gridClip(bounds, 2), output) };
+    }
+  },
+  {
     // Animated: the watch following the board it mirrors, inner circuit
     // lighting with the outer one.
     name: 'inspection-showcase',
