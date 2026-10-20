@@ -602,7 +602,7 @@ const en = {
     },
     changelog: {
       title: 'Changelog',
-      lede: 'Every release of the Logigator editor, newest first: what was added, what changed, and what was fixed.',
+      lede: 'Every release of Logigator, newest first: what was added, what changed, and what was fixed.',
       feed: 'Subscribe via Atom'
     },
     imprint: {

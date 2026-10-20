@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
+import { Changelog, parseChangelog } from '@logigator/docs';
 import { DialogService } from '@logigator/ui';
 import { TranslationService } from '../translation/translation.service';
 import { ChangelogDialogComponent } from '../ui/dialogs/changelog-dialog/changelog-dialog.component';
@@ -8,10 +9,10 @@ import { environment } from '../../environments/environment';
 import { CookieService } from '../storage/cookie.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
-import changelogEn from '@logigator/docs/changelog/en.md';
-import changelogDe from '@logigator/docs/changelog/de.md';
-import changelogFr from '@logigator/docs/changelog/fr.md';
-import changelogEs from '@logigator/docs/changelog/es.md';
+import changelogEn from '@logigator/changelog/en.md';
+import changelogDe from '@logigator/changelog/de.md';
+import changelogFr from '@logigator/changelog/fr.md';
+import changelogEs from '@logigator/changelog/es.md';
 
 const LAST_SEEN_KEY = 'logigator.changelog.lastSeenVersion';
 
@@ -52,11 +53,16 @@ export class ChangelogService {
   private readonly cookieService = inject(CookieService);
   private readonly analytics = inject(AnalyticsService);
 
-  /** Changelog markdown for the active language, English as fallback. */
+  /**
+   * The released notes in the active language, English as fallback, as one
+   * markdown document for the dialog.
+   */
   public load(): Observable<string> {
-    const lang = this.translation.getActiveLang();
-    const url = CHANGELOG_URLS[lang] ?? CHANGELOG_URLS['en'];
-    return this.http.get(url, { responseType: 'text' });
+    const active = this.translation.getActiveLang();
+    const lang = active in CHANGELOG_URLS ? active : 'en';
+    return this.http
+      .get(CHANGELOG_URLS[lang], { responseType: 'text' })
+      .pipe(map((markdown) => dialogMarkdown(parseChangelog(markdown, lang))));
   }
 
   /** Records the running version as seen so the dialog no longer auto-opens. */
@@ -136,4 +142,20 @@ export class ChangelogService {
   private isReturningLegacyUser(): boolean {
     return LEGACY_COOKIES.some((name) => this.cookieService.get(name) !== null);
   }
+}
+
+/**
+ * The document without what only the repository reads: the unreleased notes
+ * and the headings' link brackets.
+ */
+function dialogMarkdown({ title, intro, releases }: Changelog): string {
+  return [
+    `# ${title}`,
+    intro,
+    ...releases.map(
+      ({ version, date, body }) => `## ${version} — ${date}\n\n${body}`
+    )
+  ]
+    .filter(Boolean)
+    .join('\n\n');
 }

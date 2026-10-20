@@ -41,6 +41,8 @@ COPY ["./logigator-ui", "./logigator-ui/"]
 COPY ["./logigator-core", "./logigator-core/"]
 COPY ["./logigator-contract", "./logigator-contract/"]
 COPY ["./logigator-docs", "./logigator-docs/"]
+COPY ["./CHANGELOG.md", "./"]
+COPY ["./changelog", "./changelog/"]
 COPY ["./logigator-editor", "./logigator-editor/"]
 
 # Version stamping for the About dialog. Empty args fall back to the angular.json

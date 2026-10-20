@@ -588,7 +588,7 @@ const es: TranslationSchema = {
     },
     changelog: {
       title: 'Registro de cambios',
-      lede: 'Cada versión del editor de Logigator, la más reciente primero: qué se añadió, qué cambió y qué se corrigió.',
+      lede: 'Cada versión de Logigator, la más reciente primero: qué se añadió, qué cambió y qué se corrigió.',
       feed: 'Suscribirse mediante Atom'
     },
     imprint: {

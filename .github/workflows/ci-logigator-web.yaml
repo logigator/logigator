@@ -21,7 +21,7 @@ jobs:
           # The site compiles @logigator/ui, @logigator/core and
           # @logigator/contract from source, so a change to any of them has to
           # run this workflow too.
-          paths: '["logigator-web/**", "logigator-ui/**", "logigator-core/**", "logigator-contract/**", "logigator-docs/**", "package.json", "yarn.lock", ".yarnrc.yml", "angular.json", "tsconfig.json", "eslint.config.mjs"]'
+          paths: '["logigator-web/**", "logigator-ui/**", "logigator-core/**", "logigator-contract/**", "logigator-docs/**", "CHANGELOG.md", "changelog/**", "package.json", "yarn.lock", ".yarnrc.yml", "angular.json", "tsconfig.json", "eslint.config.mjs"]'
 
   ci:
     name: 'CI logigator-web'

@@ -80,4 +80,41 @@ describe('ChangelogService', () => {
       expect(open).not.toHaveBeenCalled();
     });
   });
+
+  describe('load', () => {
+    it('shows released notes only, without the repository’s link syntax', () => {
+      let markdown = '';
+      service.load().subscribe((md) => (markdown = md));
+
+      http
+        .expectOne(() => true)
+        .flush(
+          [
+            '# Changelog',
+            '',
+            'Newest first.',
+            '',
+            '## [Unreleased]',
+            '',
+            '### ✨ Added',
+            '',
+            '- Not out yet.',
+            '',
+            '## [2.1.0] - 2026-08-06',
+            '',
+            '### 🐛 Fixed',
+            '',
+            '- A fix.',
+            '',
+            '[Unreleased]: https://example.com/compare/v2.1.0...HEAD',
+            '[2.1.0]: https://example.com/releases/tag/v2.1.0',
+            ''
+          ].join('\n')
+        );
+
+      expect(markdown).toBe(
+        '# Changelog\n\nNewest first.\n\n## 2.1.0 — 2026-08-06\n\n### 🐛 Fixed\n\n- A fix.'
+      );
+    });
+  });
 });

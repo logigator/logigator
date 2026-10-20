@@ -594,7 +594,7 @@ const de: TranslationSchema = {
     },
     changelog: {
       title: 'Änderungsprotokoll',
-      lede: 'Jede Version des Logigator-Editors, die neueste zuerst: was hinzugekommen ist, was sich geändert hat und was behoben wurde.',
+      lede: 'Jede Version von Logigator, die neueste zuerst: was hinzugekommen ist, was sich geändert hat und was behoben wurde.',
       feed: 'Per Atom abonnieren'
     },
     imprint: {

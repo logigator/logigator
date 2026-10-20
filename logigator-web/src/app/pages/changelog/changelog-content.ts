@@ -14,10 +14,10 @@ import { Changelog, parseChangelog } from '@logigator/docs';
  * `Record<LanguageId, …>` makes a language with no file a compile error.
  */
 const CONTENT: Record<LanguageId, () => Promise<{ default: string }>> = {
-  en: () => import('@logigator/docs/changelog/en.md'),
-  de: () => import('@logigator/docs/changelog/de.md'),
-  fr: () => import('@logigator/docs/changelog/fr.md'),
-  es: () => import('@logigator/docs/changelog/es.md')
+  en: () => import('@logigator/changelog/en.md'),
+  de: () => import('@logigator/changelog/de.md'),
+  fr: () => import('@logigator/changelog/fr.md'),
+  es: () => import('@logigator/changelog/es.md')
 };
 
 /**
@@ -33,7 +33,7 @@ export function loadChangelog(lang: LanguageId): Promise<Changelog> {
   let pending = PARSED.get(lang);
   if (!pending) {
     pending = CONTENT[lang]().then(({ default: markdown }) =>
-      parseChangelog(markdown)
+      parseChangelog(markdown, lang)
     );
     PARSED.set(lang, pending);
   }

@@ -1,0 +1,200 @@
+# Änderungsprotokoll
+
+Alle nennenswerten Änderungen an Logigator werden hier festgehalten. Die
+aktuellste Veröffentlichung steht ganz oben.
+
+## [Unreleased]
+
+## [2.2.0] - 2026-09-17
+
+### ✨ Hinzugefügt
+
+- **Auswahlen, die du erweitern kannst.** Halte Ctrl — auf einem Mac ⌘ — und ein
+  Klick fügt die Komponente oder Leitung unter dem Zeiger der Auswahl hinzu oder
+  nimmt sie wieder heraus, während ein Auswahlrahmen aufnimmt, was er überdeckt.
+  Die Taste lässt sich in den Tastenkürzeln neu belegen, neben „Leitungen an der
+  Auswahlkante schneiden“.
+- **Auswahl im Leitungswerkzeug.** Ein Tippen, das weder einen Anschluss noch
+  eine Kreuzung trifft, wählt jetzt das kleinste Element unter dem Zeiger aus,
+  sodass du es löschen, kopieren oder verschieben kannst.
+- **Verschieben von Auswahlen im Schwenkmodus.** Ziehst du die aktuelle Auswahl,
+  wird sie verschoben statt die Arbeitsfläche; überall sonst schwenkt der Druck
+  wie bisher. Die neue Einstellung „Auswahl im Schwenkmodus verschieben“
+  schaltet das wieder ab.
+
+### 🐛 Behoben
+
+- Ein Doppelklick mit dem Leitungswerkzeug nimmt das Tippen zurück, das er
+  wiederholt: Ein Doppelklick auf einen Anschluss zeichnet die Leitung, die du
+  erreichen wolltest, und lässt keine überflüssige Negationsblase zurück.
+- Ein Klick in die Lücke innerhalb deiner Auswahl hebt sie nicht mehr auf.
+- Lange Menüs und ihre Untermenüs scrollen, statt auf einem kleinen Bildschirm
+  unten aus dem Fenster zu laufen.
+- Auf Apple-Plattformen in Chromium-basierten Browsern wird ⌘ erkannt, wo bisher
+  Ctrl angezeigt wurde.
+
+## [2.1.3] - 2026-09-16
+
+### 🐛 Behoben
+
+- Eine Simulation startet nicht mehr fehl, wenn die Zahlen-Einstellung einer
+  Komponente einen Nachkommawert hat, etwa eine Verzögerung von 1,9 beim
+  Taktgeber, oder größer ist, als die Simulation annimmt. Eine so gespeicherte
+  Schaltung lädt mit gerundetem und begrenztem Wert und wird von da an als ganze
+  Zahl gespeichert.
+- Beim Platzieren einer benutzerdefinierten Komponente bleiben jetzt die Richtung
+  und die Optionen aus dem Einstellungsbereich erhalten, statt sie immer gleich
+  ausgerichtet und ohne sie abzulegen.
+- Eine Komponente, die du gerade platzieren willst, lässt sich vor dem Ablegen
+  drehen: mit R oder Shift+R oder über die Dreh-Buttons in der Werkzeugleiste.
+  Auch eine Platzierung, die du bereits ziehst, dreht sich damit, und die nächste
+  Komponente dieser Art startet in der Richtung, in die du diese gedreht hast.
+
+## [2.1.2] - 2026-09-10
+
+### 🐛 Behoben
+
+- Das Drehen eines Handys oder Tablets bringt den Editor nicht mehr zum Absturz.
+- Leitungen zu reparieren, während eine Simulation läuft, führt nicht mehr zum
+  Absturz. Die Simulation wird vorher beendet.
+- Ein Freigabelink zu einer benutzerdefinierten Komponente öffnet sie jetzt so
+  wie deine eigenen Komponenten: mit ihrem Namen in der Titelleiste und bereit,
+  in deine Komponenten geklont zu werden.
+- Wenn du mit dem Zurück-Button des Browsers zurückgehst, bleiben Menüs,
+  Auswahllisten und Tutorial-Hinweise nicht mehr hängen.
+- Links in der Hilfe und im Änderungsprotokoll des Editors springen jetzt in
+  jeder Sprache zur richtigen Überschrift.
+- Wo zwei Anschlussspitzen aufeinandertreffen, negiert ein Tippen mit dem
+  Leitungswerkzeug jetzt den Anschluss auf der Seite, auf die du getippt hast,
+  statt den gegenüberliegenden.
+- Der Editor lässt sich weiter bedienen, wenn ein Verschieben oder Einfügen
+  nicht abgeschlossen werden kann.
+
+## [2.1.1] - 2026-08-31
+
+### 🐛 Behoben
+
+- Der Editor öffnet sich jetzt in der Sprache und dem Design, die du auf dem
+  Rest von Logigator verwendest, und wenn du eines davon im Editor wechselst,
+  ändert es sich auf der ganzen Seite.
+- Beim ersten Besuch wählt der Editor seine Sprache anhand aller Sprachen, die
+  dein Browser anfragt, statt nur der ersten.
+
+## [2.1.0] - 2026-08-06
+
+### ✨ Hinzugefügt
+
+- **Aktualisierung veralteter Komponenten in einem Schritt.** Bringe alle
+  platzierten Instanzen einer veralteten benutzerdefinierten Komponente auf
+  einmal auf den neuesten Stand, direkt im Einstellungsbereich. Die Palette
+  markiert Komponenten, deren platzierte Instanzen veraltet sind.
+- **Ein Blick in geteilte Komponenten.** Öffne die benutzerdefinierten
+  Komponenten, die in einer geteilten Schaltung eingebettet sind,
+  schreibgeschützt. Deiner Bibliothek wird nichts hinzugefügt.
+
+### 🔄 Geändert
+
+- Einfügen braucht auf Handys und Tablets keine Auswahl mehr, und eingefügte
+  Elemente landen unter dem Mauszeiger statt dort, wo sie kopiert wurden.
+- Der Anschlüsse-Bereich steht jetzt an erster Stelle in der Seitenleiste, während
+  eine benutzerdefinierte Komponente bearbeitet wird.
+
+### 🐛 Behoben
+
+- Ein Klick auf einen Schalter oder Taster, während die Simulation noch startete,
+  brachte die Simulation zum Absturz.
+- Das Öffnen eines anderen Projekts während einer laufenden Simulation brachte die
+  Simulation zum Absturz.
+- Ein Klick innerhalb eines schwebenden Einfügens, aber zwischen dessen
+  Komponenten, brach das Einfügen ab, statt es zu greifen.
+- Tooltips und Popovers am Bildschirmrand zeigten mit ihrer Spitze am Element
+  vorbei, an dem sie hängen.
+
+## [2.0.0] - 2026-08-04
+
+Logigator wurde **komplett neu aufgebaut** — mit einem verbesserten Renderer,
+einer deutlich effizienteren Rendering-Pipeline, einer modernen Oberfläche und
+einer Fülle neuer Funktionen. Alles, worauf du dich
+verlassen hast, ist weiterhin da, jetzt schneller, robuster und einfacher zu
+bedienen, dazu einige große neue Möglichkeiten.
+
+### ✨ Hinzugefügt
+
+- **📱 Volle Unterstützung für Smartphones und Tablets.** Der Editor ist jetzt
+  vollständig responsiv und touch-freundlich, mit Multitouch-Schwenken und
+  -Zoomen — baue Schaltungen überall, nicht nur am Schreibtisch.
+- **⛔ Negierte Ein- und Ausgänge.** Invertiere ein Signal direkt am Anschluss
+  einer Komponente — kein separates NICHT-Gatter zum Platzieren und Verdrahten —
+  für sauberere, kompaktere Schaltungen.
+- **💾 Lokales Speichern ohne Account.** Behalte Projekte und benutzerdefinierte
+  Komponenten auf deinem eigenen Gerät und nimm sie jederzeit wieder auf. Wenn
+  du bereit bist, lade sie mit einem Klick in die Cloud hoch, und Logigator
+  bringt jede benutzerdefinierte Komponente mit, von der sie abhängen.
+- **♾️ Eine unendliche Arbeitsfläche in alle Richtungen.** Baue vom Ursprung aus
+  in jede Richtung — nach links, rechts, oben und unten. Der bisherige Editor
+  kannte nur positive Koordinaten, sodass der Ursprung eine harte Wand war,
+  hinter der sich nichts platzieren ließ; jetzt wächst die Arbeitsfläche einfach
+  mit deiner Schaltung.
+- **🧩 In sich geschlossene Projekte.** Jedes Projekt bringt jetzt eine eigene
+  Kopie der benutzerdefinierten Komponenten mit, die es verwendet, sodass es
+  sich immer öffnen, darstellen und simulieren lässt — auch offline oder wenn
+  die ursprüngliche Komponente fehlt. Eine fehlende Komponente stellst du in
+  einem Schritt in deiner Bibliothek wieder her.
+- **🗺️ Minimap.** Eine Live-Übersicht deiner gesamten Schaltung hilft dir, dich
+  in großen Entwürfen mit einem Blick zurechtzufinden.
+- **Drehen ganzer Auswahlen** — Komponenten und Leitungen gemeinsam — in
+  90°-Schritten, im oder gegen den Uhrzeigersinn; eine kollidierende Platzierung
+  bleibt schwebend, bis du sie an einer gültigen Stelle ablegst.
+- **Verschieben mit den Pfeiltasten** für Auswahlen, eine Rastereinheit pro
+  Druck.
+- **Klares Kollisions-Feedback** — Komponenten und Leitungen färben sich rot,
+  solange eine Platzierung, ein Ziehen oder eine Drehung etwas überlappen würde,
+  sodass ungültige Positionen auf einen Blick offensichtlich sind.
+- **Ein neues Dateiformat, mit komprimierten `.lgix`-Dateien.** Dateien aus
+  früheren Versionen lassen sich weiterhin öffnen und werden beim Laden
+  aktualisiert.
+- **Verwaltung von Projekten und Komponenten im Editor** — benenne und lösche
+  deine gespeicherten Projekte und benutzerdefinierten Komponenten direkt aus
+  dem Öffnen-Dialog und der Bibliothek, statt dafür ins Account-Center auf der
+  Website zu gehen.
+- **Fork-Zuschreibung** — eine kopierte Schaltung merkt sich, woher sie stammt,
+  auch nach dem Herunterladen und erneuten Hochladen, sodass die ursprünglichen
+  Ersteller genannt bleiben.
+- Ein **praktisches Tutorial**, das dich echte Komponenten platzieren und
+  verdrahten lässt. Es geht weiter, sobald du einen Schritt erledigt hast, läuft
+  auf einer eigenen Fläche, sodass deine Arbeit unangetastet bleibt, und
+  funktioniert auf Desktop und Touch.
+- **Just-in-Time-Hinweise**, die beim ersten Erreichen einer passenden Situation
+  erscheinen (Verdrahten, Simulieren, Einfügen und mehr) und jeweils in die
+  Dokumentation verlinken.
+- **Fehlermeldungen im Editor**, die automatisch die Details mitschicken, die
+  zum Aufspüren eines Problems nötig sind, sodass du nur beschreiben musst, was
+  passiert ist.
+- Diese **Neuigkeiten**-Seite, jederzeit über **Hilfe → Neuigkeiten**
+  erreichbar, mit einer kurzen Zusammenfassung, die sich beim ersten Laden einer
+  neuen Version automatisch öffnet.
+
+### 🔄 Geändert
+
+- **⚡ Ein neu gebautes Fundament.** Rendering-Pipeline, Simulations-Engine und
+  Kollisionssystem wurden alle von Grund auf neu gebaut: GPU-beschleunigte
+  Grafik hält große Schaltungen flüssig, ein neuer Simulationskern treibt die
+  Logik an, und ein robusteres Kollisionssystem macht das Bearbeiten weit
+  stabiler und weniger fehleranfällig.
+- Aufgefrischte, konsistente Oberfläche über Menüs, Dialoge, Panels und Toasts
+  hinweg, mit einer neu gestalteten Werkbank in der Seitenleiste.
+- **Sofortiger Wechsel zwischen hellem und dunklem Design** — ohne Neuladen der
+  Seite, wo der bisherige Editor die Änderung erst nach dem Neuladen übernahm.
+- **Ein Raster, das zeigt, wo verbunden wird** — die Rasterpunkte liegen jetzt
+  genau auf den Punkten, an denen Leitungen, Anschluss-Spitzen und Kreuzungen
+  enden, sodass Leitungen durch die Punkte statt zwischen ihnen verlaufen.
+- Ein **einfacheres, vereinheitlichtes Werkzeugset**: Ein Leitungswerkzeug
+  verlegt Leitungen und verbindet, trennt oder negiert Verbindungen mit einem
+  Tippen; die exakte Auswahl gehört jetzt zum Auswahlwerkzeug; und das Schwenken
+  hat ein eigenes Werkzeug.
+- **Komponenten-Updates zu deinen Bedingungen.** Wenn eine neuere Version einer
+  benutzerdefinierten Komponente verfügbar ist, kennzeichnet der Editor dies und
+  lässt dich platzierte Instanzen aktualisieren, wann du willst, statt dass sich
+  jede Kopie ändert, sobald die Komponente bearbeitet wird.
+- **Neu strukturierte In-App-Dokumentation**, in Abschnitten, die aufeinander
+  verweisen, auf dem Desktop als Fenster und auf dem Smartphone im Vollbild.

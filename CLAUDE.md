@@ -14,7 +14,7 @@ The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (core
   runtime dependencies
 - `logigator-contract/` — `@logigator/contract`, the API surface as zod schemas; zod only
 - `logigator-docs/` — `@logigator/docs`, the documentation pages (markdown, four locales), their
-  screenshots, the page tree, the search matcher and the changelog; no dependencies at all
+  screenshots, the page tree, the search matcher and the changelog parser; no dependencies at all
 - `logigator-api/` — NestJS on Fastify, API only
 
 **One shared-code rule:** the four libraries are never built. Every consumer compiles their
@@ -29,6 +29,10 @@ root `dist/<project>/`.
 Two deprecated packages stay **independent** (own `yarn.lock`/`.yarnrc.yml`, not workspace
 members): `logigator-backend/` (Express/TypeORM/Handlebars, still serving everything outside `/api`)
 and `logigator-editor-legacy/` (Angular 17 editor).
+
+**The changelog** is `CHANGELOG.md` (English) plus `changelog/<lang>.md`, in Keep a Changelog 1.1
+format, imported by the apps as `@logigator/changelog/<lang>.md`. Entries collect under
+`## [Unreleased]`, which no app shows.
 
 **The capture tool** (`logigator-editor/tools/screenshots`) is a standalone package with its own
 lockfile, outside the workspace. It drives a real editor through `window.__logigator` and Playwright
@@ -217,8 +221,10 @@ Layering is one-directional, **core ← contract ← api**; `@logigator/docs` de
   `.loose()` on purpose, so older clients tolerate added fields.
 - `logigator-docs/src/` — pages, images, `docs-structure.ts`, `images.ts` (written by the capture
   tool), `docs-search.ts`, `changelog.ts`. **It imports no markdown**: each app writes its own import
-  map. Page titles are each app's translation keys. A `## <version> — <date>` changelog heading that
-  doesn't parse throws.
+  map. Page titles are each app's translation keys. The changelog parser throws on a `## …` heading
+  or a `### …` section it doesn't know (`### <CHANGE_EMOJI> <CHANGE_SECTION_TITLES>`, e.g. `### ✨ Added`);
+  `changelog-documents.spec.ts` holds every translation to English's releases and entry counts,
+  and the newest release to the editor's version.
 - **Consent is one question for the whole origin**: codec, categories, `CONSENT_REVISION` and text
   are core's (`origin/`). Locale files import their language **by path**
   (`@logigator/core/consent-text/de`) so all four don't land in the main bundle. Changing what a

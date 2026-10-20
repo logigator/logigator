@@ -29,6 +29,8 @@
       "@logigator/contract": ["logigator-contract/src/public-api.ts"],
       "@logigator/docs": ["logigator-docs/src/public-api.ts"],
       "@logigator/docs/*": ["logigator-docs/src/*"],
+      "@logigator/changelog/en.md": ["CHANGELOG.md"],
+      "@logigator/changelog/*": ["changelog/*"],
       "@assets/*": ["logigator-editor/src/assets/*"]
     },
     "target": "ES2022",

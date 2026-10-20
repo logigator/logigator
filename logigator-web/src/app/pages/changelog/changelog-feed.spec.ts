@@ -5,14 +5,17 @@ import { renderChangelogFeed } from './changelog-feed';
 const CHANGELOG: Changelog = {
   title: 'Changelog',
   intro: 'The most recent release is listed first.',
+  unreleased: null,
   releases: [
     {
       version: '2.1.0',
       date: '2026-08-06',
-      body: '- Wires & junctions no longer <br> break.'
+      body: '- Wires & junctions no longer <br> break.',
+      sections: []
     },
-    { version: '2.0.0', date: '2026-08-04', body: 'Rebuilt.' }
-  ]
+    { version: '2.0.0', date: '2026-08-04', body: 'Rebuilt.', sections: [] }
+  ],
+  links: {}
 };
 
 const feed = (): string =>

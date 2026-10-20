@@ -12,7 +12,7 @@ import { TranslationService } from '../../translation/translation.service';
 import { ChangelogContentService } from './changelog-content.service';
 
 /**
- * Every release of the editor, newest first: the version and its date beside
+ * Every release of Logigator, newest first: the version and its date beside
  * the notes, which are the same markdown the editor's "what's new" dialog
  * shows.
  *
