@@ -171,13 +171,21 @@ worker and drive frames deterministically.
 The engine runs inside the worker; the main thread **samples** it.
 
 - **`continuous`** — the worker calls `runAsync()` and lets the engine run free.
-- **`target`** (fixed Hz) — a `setTimeout` loop runs the ticks the wall clock
-  says are due. Batches are bounded by **wall-clock time** (`PACE_BATCH_MS`),
-  not tick count: a tick-count cap proportional to the target would block the
-  worker for hundreds of ms in one synchronous `run`, starving the snapshot pull
-  and freezing the canvas. A batch cut short by the budget means an unreachable
-  target, so the next runs back-to-back instead of idling. The pure decisions
-  live in `pacing.ts`.
+- **`target`** (fixed Hz) — a loop runs the ticks the wall clock says are due
+  with `runAsync({ ticks })`, then idles `PACE_INTERVAL_MS` once caught up.
+  `runAsync` works in batches of about 5 ms and yields to the message queue
+  between them, so a large deficit never blocks the snapshot pull, and an
+  unreachable target runs as fast as `continuous`. Neither mode yields through
+  a timer of its own: browsers clamp a nested `setTimeout(0)` to 4 ms, which
+  left the worker idle a third of the time. The pure decisions live in
+  `pacing.ts`.
+
+The worker handles its messages **one at a time** (`serial-queue.ts`): a run
+control awaits the run it stops, and a `start` handled during that wait would
+start a second run beside the first, which the engine refuses. A stop also
+wakes target mode from its idle wait, so nothing queued behind it waits out
+the interval.
+
 - **`sync`** — not a worker mode: the engine idles and the bridge posts one
   `step` per rendered frame, capping the tick rate at the frame rate.
 
@@ -547,9 +555,11 @@ being locked in between is what keeps the mapping's live object references valid
 `play()` / `pause()` / `step()` / `stop()`, plus `setMode` and `setTargetHz`.
 Setting a rate also selects `target` mode — entering a speed is asking for it —
 and the floor is `MIN_TARGET_HZ` (0.1 Hz, in `pacing.ts`, which the worker
-clamps to as well). A mode or rate change re-paces an active run, and resets the
-measured rate, since a sample taken under the old pacing says nothing about the
-new one. `clockHalfPeriods` lists the distinct clock half-periods of the
+clamps to as well). The measured rate is the tick count's change over the last
+three one-second status polls, timed by the worker's clock when it read the
+tick, so the delay of the reply to the main thread doesn't enter it. A mode or
+rate change re-paces an active run, and resets the measured rate, since a
+sample taken under the old pacing says nothing about the new one. `clockHalfPeriods` lists the distinct clock half-periods of the
 session's flattened board, which is what lets the speed popover
 (`ui/simulation-controls/`) turn a tick rate into the frequency each clock runs
 at; the popover's slider stops, speed parsing and formatting are the pure

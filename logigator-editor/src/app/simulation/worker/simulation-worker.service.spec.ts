@@ -289,30 +289,37 @@ describe('SimulationWorkerService', () => {
     expect(service.snapshotCounts).toEqual({ full: 0, delta: 0 });
   });
 
-  it('computes the measured rate from consecutive status reports', async () => {
+  it('measures the rate on the worker clock, over the last three polls', async () => {
     await service.startSession(DESCRIPTOR, hooks);
+    const report = (reqId: number, tick: number, at: number) =>
+      fakeWorker.emit({
+        kind: 'status',
+        reqId,
+        tick,
+        at,
+        componentCount: 1,
+        linkCount: 1
+      });
 
-    const now = vi.spyOn(performance, 'now');
-    now.mockReturnValue(1000);
-    fakeWorker.emit({
-      kind: 'status',
-      reqId: 1,
-      tick: 100,
-      componentCount: 1,
-      linkCount: 1
-    });
+    report(1, 100, 1000);
     expect(service.measuredHz()).toBe(0);
 
-    now.mockReturnValue(2000);
-    fakeWorker.emit({
-      kind: 'status',
-      reqId: 2,
-      tick: 5100,
-      componentCount: 1,
-      linkCount: 1
-    });
+    report(2, 5100, 2000);
     expect(service.measuredHz()).toBe(5000);
     expect(service.tick()).toBe(5100);
+
+    // A slow second: averaged with the one before, not shown alone.
+    report(3, 6100, 3000);
+    expect(service.measuredHz()).toBe(3000);
+
+    report(4, 11_100, 4000);
+    expect(service.measuredHz()).toBe(3667);
+
+    // The first report leaves the window.
+    report(5, 16_100, 5000);
+    expect(service.measuredHz()).toBe(3667);
+    report(6, 21_100, 6000);
+    expect(service.measuredHz()).toBe(5000);
   });
 
   it('pause interrupts the run and flushes one final snapshot', async () => {

@@ -148,6 +148,12 @@ export type WorkerToMainMessage =
       kind: 'status';
       reqId: number;
       tick: number;
+      /**
+       * The worker's `performance.now()` when `tick` was read, so a rate taken
+       * between two reports carries no delay of the message to the main
+       * thread.
+       */
+      at: number;
       componentCount: number;
       linkCount: number;
     };

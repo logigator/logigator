@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nextPaceDelayMs, PACE_INTERVAL_MS, ticksDue } from './pacing';
+import { ticksDue } from './pacing';
 
 describe('pacing', () => {
   describe('ticksDue', () => {
@@ -19,25 +19,9 @@ describe('pacing', () => {
     });
 
     it('scales the deficit with the target rate, not a fixed cap', () => {
-      // The batch is bounded by wall-clock ms at the call site, not by
-      // clamping this value.
+      // `runAsync` splits the run into short batches at the call site; this
+      // value is never clamped.
       expect(ticksDue(5_000_000, 1000, 0)).toBe(5_000_000);
-    });
-  });
-
-  describe('nextPaceDelayMs', () => {
-    it('idles a full interval when caught up', () => {
-      expect(nextPaceDelayMs(0, 0)).toBe(PACE_INTERVAL_MS);
-      expect(nextPaceDelayMs(-5, 0)).toBe(PACE_INTERVAL_MS);
-    });
-
-    it('idles a full interval when the batch met the full deficit', () => {
-      expect(nextPaceDelayMs(50, 50)).toBe(PACE_INTERVAL_MS);
-    });
-
-    it('reschedules back-to-back when the budget cut the batch short', () => {
-      // Only 40_000 of 5_000_000 ran within the ms budget → still behind.
-      expect(nextPaceDelayMs(5_000_000, 40_000)).toBe(0);
     });
   });
 });

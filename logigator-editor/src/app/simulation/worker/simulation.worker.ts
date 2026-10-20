@@ -1,15 +1,10 @@
 import init, { Simulation } from '@logigator/sim/wasm';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
 import { InputProgressReader } from './input-progress';
+import { createSerialQueue } from './serial-queue';
 import { RecordReader } from './record-reads';
 import { StateReader } from './state-reads';
-import {
-  nextPaceDelayMs,
-  MIN_TARGET_HZ,
-  PACE_BATCH_MS,
-  PACE_INTERVAL_MS,
-  ticksDue
-} from './pacing';
+import { MIN_TARGET_HZ, PACE_INTERVAL_MS, ticksDue } from './pacing';
 import {
   MainToWorkerMessage,
   packSnapshot,
@@ -37,11 +32,12 @@ let sim: Simulation | null = null;
 let descriptor: BoardDescriptor | null = null;
 
 let runMode: 'idle' | 'continuous' | 'target' = 'idle';
-/** In-flight `runAsync` promise while in continuous mode. */
+/** The active run: the `runAsync` promise, or target mode's pace loop. */
 let runPromise: Promise<void> | null = null;
-let paceTimer: ReturnType<typeof setTimeout> | null = null;
 let paceHz = 0;
 let paceStart = { tick: 0, time: 0 };
+/** Ends target mode's idle wait early, so a stop never sits it out. */
+let wakePace: (() => void) | null = null;
 
 const bufferPool: ArrayBuffer[] = [];
 
@@ -70,9 +66,13 @@ void init({
     });
   });
 
+// One message at a time: a run control awaits the run it stops, and a second
+// one handled meanwhile would start a run beside the first.
+const enqueue = createSerialQueue();
+
 addEventListener('message', (event) => {
   const msg = event.data;
-  handle(msg).catch((err: unknown) => {
+  enqueue(() => handle(msg)).catch((err: unknown) => {
     postMessage({
       kind: 'error',
       reqId: 'reqId' in msg ? msg.reqId : null,
@@ -93,11 +93,10 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
     case 'start': {
       await stopRun();
       const simulation = requireSim();
+      let run: Promise<void>;
       if (msg.config.mode === 'continuous') {
         runMode = 'continuous';
-        runPromise = simulation.runAsync().catch((err: unknown) => {
-          postMessage({ kind: 'error', reqId: null, message: String(err) });
-        });
+        run = simulation.runAsync();
       } else {
         runMode = 'target';
         paceHz = Math.max(MIN_TARGET_HZ, msg.config.hz);
@@ -105,8 +104,11 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
           tick: simulation.getStatus().tick,
           time: performance.now()
         };
-        paceTimer = setTimeout(paceLoop, PACE_INTERVAL_MS);
+        run = paceLoop(simulation);
       }
+      runPromise = run.catch((err: unknown) => {
+        postMessage({ kind: 'error', reqId: null, message: String(err) });
+      });
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     }
@@ -167,6 +169,7 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
         kind: 'status',
         reqId: msg.reqId,
         tick: status.tick,
+        at: performance.now(),
         componentCount: status.componentCount,
         linkCount: status.linkCount
       });
@@ -190,12 +193,9 @@ function requireSim(): Simulation {
 /** Interrupts whatever run is active; resolves once the engine is idle. */
 async function stopRun(): Promise<void> {
   runMode = 'idle';
-  if (paceTimer !== null) {
-    clearTimeout(paceTimer);
-    paceTimer = null;
-  }
   if (runPromise) {
     sim?.stop();
+    wakePace?.();
     await runPromise;
     runPromise = null;
   }
@@ -203,23 +203,30 @@ async function stopRun(): Promise<void> {
 
 /**
  * Target-Hz pacing: each iteration runs the ticks the wall clock says are due
- * since the run started. Batches are bounded by wall-clock time, not tick
- * count — a tick-count cap would block the worker in one synchronous `run` and
- * starve the per-frame snapshot pull.
+ * since the run started, through `runAsync`, whose batches of about 5 ms yield
+ * to the message queue in between. A target the board can't reach therefore
+ * runs back-to-back as fast as continuous mode; a reached one idles
+ * {@link PACE_INTERVAL_MS} between iterations. A timer never stands in for the
+ * yield: browsers clamp a nested `setTimeout(0)` to 4 ms.
  */
-function paceLoop(): void {
-  if (runMode !== 'target' || !sim) {
-    return;
+async function paceLoop(simulation: Simulation): Promise<void> {
+  while (runMode === 'target') {
+    const elapsed = performance.now() - paceStart.time;
+    const ran = simulation.getStatus().tick - paceStart.tick;
+    const due = ticksDue(paceHz, elapsed, ran);
+    if (due > 0) {
+      await simulation.runAsync({ ticks: due });
+    } else {
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, PACE_INTERVAL_MS);
+        wakePace = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+      });
+      wakePace = null;
+    }
   }
-  const elapsed = performance.now() - paceStart.time;
-  const currentTick = sim.getStatus().tick;
-  const due = ticksDue(paceHz, elapsed, currentTick - paceStart.tick);
-  let ran = 0;
-  if (due > 0) {
-    sim.run({ ticks: due, ms: PACE_BATCH_MS });
-    ran = sim.getStatus().tick - currentTick;
-  }
-  paceTimer = setTimeout(paceLoop, nextPaceDelayMs(due, ran));
 }
 
 /**

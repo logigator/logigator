@@ -14,13 +14,6 @@ export const MIN_TARGET_HZ = 0.1;
 export const PACE_INTERVAL_MS = 10;
 
 /**
- * Wall-clock budget for one catch-up batch: short enough that a high target
- * rate can't monopolize the worker in one long synchronous `run` and starve the
- * per-frame snapshot pull.
- */
-export const PACE_BATCH_MS = 5;
-
-/**
  * Ticks still due since the run started. Zero or negative means caught up.
  */
 export function ticksDue(
@@ -29,13 +22,4 @@ export function ticksDue(
   ticksSinceStart: number
 ): number {
   return Math.floor((paceHz * elapsedMs) / 1000) - ticksSinceStart;
-}
-
-/**
- * Delay before the next pace iteration. A batch cut short by the wall-clock
- * budget (`ran < due`) means the target is unreachable, so the next batch runs
- * back-to-back, yielding only to the message queue.
- */
-export function nextPaceDelayMs(due: number, ran: number): number {
-  return due > 0 && ran < due ? 0 : PACE_INTERVAL_MS;
 }

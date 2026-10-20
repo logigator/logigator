@@ -133,6 +133,7 @@ export class FakeSimulationWorker {
             kind: 'status',
             reqId: msg.reqId,
             tick: this.statusTick,
+            at: performance.now(),
             componentCount: 0,
             linkCount: 0
           });

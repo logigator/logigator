@@ -63,6 +63,13 @@ export interface SimulationSessionHooks {
 const STATUS_POLL_MS = 1000;
 
 /**
+ * Status reports the measured rate spans, the newest included: the average
+ * over the last three polls, steady against a single slow batch and still
+ * following a real change within three seconds.
+ */
+const RATE_WINDOW_REPORTS = 4;
+
+/**
  * A watch over a recorder unit's records, from {@link
  * SimulationWorkerService.watchRecords}.
  */
@@ -148,7 +155,8 @@ export class SimulationWorkerService {
   private wantSnapshot = false;
   private fullSnapshots = 0;
   private deltaSnapshots = 0;
-  private lastStatus: { tick: number; at: number } | null = null;
+  /** The last {@link RATE_WINDOW_REPORTS} status reports, oldest first. */
+  private statusReports: { tick: number; at: number }[] = [];
   /**
    * Event frames each input unit had not yet applied as of the last snapshot
    * that reported a change; absent means none.
@@ -170,7 +178,10 @@ export class SimulationWorkerService {
   private readonly recordWatches = new Map<number, RecordWatchEntry>();
 
   private readonly _measuredHz = signal(0);
-  /** Measured simulation speed in ticks/s, computed from status-poll deltas. */
+  /**
+   * Measured simulation speed in ticks/s, averaged over the status reports of
+   * the last few seconds.
+   */
   public readonly measuredHz = this._measuredHz.asReadonly();
 
   private readonly _tick = signal(0);
@@ -253,7 +264,7 @@ export class SimulationWorkerService {
     this.snapshotInFlight = false;
     this.wantFullSnapshot = false;
     this.wantSnapshot = false;
-    this.lastStatus = null;
+    this.statusReports = [];
     this.inputProgress.clear();
     this.submissions.clear();
     this.stateWatches.clear();
@@ -286,7 +297,7 @@ export class SimulationWorkerService {
     }
     this.runMode = mode;
     // A rate measured under the previous pacing says nothing about this one.
-    this.lastStatus = null;
+    this.statusReports = [];
     this._measuredHz.set(0);
     this._startFrameLoop();
     this._startStatusPolling();
@@ -301,7 +312,7 @@ export class SimulationWorkerService {
     this._stopStatusPolling();
     this.runMode = 'idle';
     this._measuredHz.set(0);
-    this.lastStatus = null;
+    this.statusReports = [];
     await this._request({ kind: 'pause' });
     this._requestSnapshot();
   }
@@ -334,7 +345,7 @@ export class SimulationWorkerService {
     this._settleSubmissions(stopId);
     this._measuredHz.set(0);
     this._tick.set(0);
-    this.lastStatus = null;
+    this.statusReports = [];
   }
 
   /**
@@ -731,20 +742,21 @@ export class SimulationWorkerService {
         break;
       }
       case 'status': {
-        const now = performance.now();
         this._tick.set(msg.tick);
-        if (this.lastStatus && now > this.lastStatus.at) {
+        const reports = this.statusReports;
+        reports.push({ tick: msg.tick, at: msg.at });
+        if (reports.length > RATE_WINDOW_REPORTS) {
+          reports.shift();
+        }
+        const first = reports[0];
+        if (msg.at > first.at) {
           this._measuredHz.set(
             Math.max(
               0,
-              Math.round(
-                ((msg.tick - this.lastStatus.tick) * 1000) /
-                  (now - this.lastStatus.at)
-              )
+              Math.round(((msg.tick - first.tick) * 1000) / (msg.at - first.at))
             )
           );
         }
-        this.lastStatus = { tick: msg.tick, at: now };
         break;
       }
     }
