@@ -95,8 +95,16 @@ describe('checkTranslatedDescription', () => {
   });
 
   it('refuses a translation the description column cannot hold', () => {
-    const long = `${FAITHFUL}\n\n${'Sehr lange Erklärung. '.repeat(100)}`;
+    const long = `${FAITHFUL}\n\n${'Sehr lange Erklärung. '.repeat(200)}`;
     expect(checkTranslatedDescription(ORIGINAL, long)).not.toBeNull();
+  });
+
+  it('accepts a translation longer than an author may write', () => {
+    // A description at the author's limit grows in translation, so the
+    // translated text gets room of its own.
+    const grown = `${FAITHFUL}\n\n${'Lange Erklärung. '.repeat(150)}`;
+    expect(grown.length).toBeGreaterThan(2048);
+    expect(checkTranslatedDescription(ORIGINAL, grown)).toBeNull();
   });
 
   it('measures the length after normalization', () => {

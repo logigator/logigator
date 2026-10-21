@@ -1,0 +1,2 @@
+ALTER TABLE "component_texts" ALTER COLUMN "description" SET DATA TYPE varchar(4096) USING "description"::varchar(4096);--> statement-breakpoint
+ALTER TABLE "project_texts" ALTER COLUMN "description" SET DATA TYPE varchar(4096) USING "description"::varchar(4096);

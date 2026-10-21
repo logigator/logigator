@@ -1,8 +1,6 @@
 import { Marked, type Token, type Tokens } from 'marked';
 import { normalizeAuthoredText } from '@logigator/core';
-
-/** The description column's length, which a stored translation has to fit. */
-const MAX_DESCRIPTION_LENGTH = 2048;
+import { TRANSLATED_DESCRIPTION_LENGTH } from '../database/schema/texts';
 
 /**
  * Lexes the way `@logigator/ui` renders an authored field, so a construct the
@@ -87,8 +85,8 @@ export function checkTranslatedDescription(
   translated: string
 ): string | null {
   const length = normalizeAuthoredText(translated).length;
-  if (length > MAX_DESCRIPTION_LENGTH) {
-    return `it is ${length} characters long, over the limit of ${MAX_DESCRIPTION_LENGTH}`;
+  if (length > TRANSLATED_DESCRIPTION_LENGTH) {
+    return `it is ${length} characters long, over the limit of ${TRANSLATED_DESCRIPTION_LENGTH}`;
   }
 
   const source = shapeOf(original);

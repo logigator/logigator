@@ -36,13 +36,23 @@ export const documentTextOrigin = pgEnum('document_text_origin', [
  * name, so writing these rows bumps no `version` and leaves `lastEditedAt`
  * alone.
  */
+/**
+ * The longest description a text row holds: twice what an author may write.
+ * A translation runs longer than its original, German by a fifth or more, so a
+ * description written up to the author's limit has to fit translated. An
+ * author's own version is held to the author's limit by the request schema.
+ */
+export const TRANSLATED_DESCRIPTION_LENGTH = 4096;
+
 function documentTextColumns() {
   return {
     language: varchar('language', { length: 8 }).notNull(),
     origin: documentTextOrigin('origin').notNull(),
     /** Null: no text for this field in this language; the original stands. */
     name: varchar('name', { length: 20 }),
-    description: varchar('description', { length: 2048 }),
+    description: varchar('description', {
+      length: TRANSLATED_DESCRIPTION_LENGTH
+    }),
     sourceDigest: char('source_digest', { length: 32 }).notNull(),
     /** The model that served a machine row, as the response named it. */
     model: varchar('model', { length: 128 }),
