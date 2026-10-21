@@ -187,6 +187,9 @@ Angular 22, standalone + zoneless, rendered per request by `@angular/ssr` behind
 - `@angular/platform-server`, `@angular/router` and `@angular/ssr` are **pinned exactly**. The
   router is real here and a stub in the editor; `yarn build:editor` catches a hoisting flip.
 - PostHog loads only after an `analytics` consent grant (dynamic import).
+- **Community reads pass the page language as `lang`**; `name`/`description` come back resolved.
+  Machine text is fetched on click in the browser and never rendered on the server or placed in
+  the transfer state.
 
 ### UI Library (logigator-ui)
 
@@ -237,7 +240,8 @@ and provided under the `ENV` token; providers never read `process.env`. `GET /ap
 liveness probe; `GET /api/health/ready` checks Postgres and Redis. `src/` layers: `config/`,
 `database/` (Drizzle over `pg`, `schema/`, `migrate.ts`, startup migration gate), `redis/`,
 `session/`, `auth/`, `users/`, `mail/`, `storage/` (images, `share-card/`), `documents/`, `sharing/`,
-`community/`, `reports/`, `common/`, plus `app.setup.ts` (shared by `main.ts` and the E2E harness).
+`community/`, `reports/`, `translation/` (OpenRouter client and worker), `common/`, plus `app.setup.ts`
+(shared by `main.ts` and the E2E harness).
 
 **Invariants:**
 
@@ -254,6 +258,13 @@ liveness probe; `GET /api/health/ready` checks Postgres and Redis. `src/` layers
 - **The startup gate refuses a database whose applied migrations differ from the build's**, in
   either direction. Nothing migrates on boot.
 - `AuthGuard` is per-route, never global.
+- **Machine-translated text leaves the API only through
+  `GET /api/community/{kind}/:link/translation/:lang`**, never on a document or listing response. A
+  translation, and a detected language, is served only while its digest matches the document's
+  generated `text_digest`. Nothing private is ever sent to OpenRouter.
+- **The model and its routing are the OpenRouter preset's**; the request carries no `provider`,
+  sampling or `reasoning` field. `marked` is used to check translations only: the API still stores
+  every description as the source it was given.
 
 **Build: Rspack** (`rspack.config.mjs`), ESM output, entries for the server plus `migrate`,
 `renormalize` and `seed-examples`. Its comments explain each setting; the ones that break silently:

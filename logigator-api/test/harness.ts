@@ -22,6 +22,12 @@ import {
 import { runMigrations } from '../src/database/migrate';
 import { MAIL_TRANSPORT } from '../src/mail/mail.transport';
 import { createRedisClient } from '../src/redis/redis.client';
+import {
+  TRANSLATION_CLOCK,
+  type TranslationClock,
+  TranslationWorker
+} from '../src/translation/translation.worker';
+import { TRANSLATOR, type Translator } from '../src/translation/translator';
 import { MailCapture } from './mail-capture';
 
 /**
@@ -98,12 +104,48 @@ export async function createThrowawayDatabase(): Promise<ThrowawayDatabase> {
   };
 }
 
+/**
+ * The translation worker under a spec's control: its interval is too long to
+ * fire during a run, so a spec drives each tick itself, and the worker's clock
+ * runs ahead only when told to.
+ */
+export interface TranslationDriver {
+  tick(): Promise<void>;
+  /** Moves the worker's clock, which decides when a pause ends. */
+  advance(ms: number): void;
+}
+
+/** Real time plus whatever a spec has skipped ahead. */
+class ManualClock implements TranslationClock {
+  private offset = 0;
+
+  now(): number {
+    return Date.now() + this.offset;
+  }
+
+  advance(ms: number): void {
+    this.offset += ms;
+  }
+}
+
+export interface E2eAppOptions {
+  /**
+   * Runs the translation worker against this instead of OpenRouter. The env
+   * then carries a placeholder key, no debounce and an interval that never
+   * fires; `overrides` still win, so `TRANSLATION_ENABLED=false` leaves the
+   * worker out exactly as in production.
+   */
+  translator?: Translator;
+}
+
 export interface E2eApp {
   app: NestFastifyApplication;
   env: Env;
   db: Database;
   /** What the API tried to mail, in order. */
   mail: MailCapture;
+  /** Null unless a translator was given and the worker is registered. */
+  translation: TranslationDriver | null;
   inject(options: InjectOptions): Promise<LightMyRequestResponse>;
   /** Drops the database, clears the Redis keys, removes the storage dir. */
   close(): Promise<void>;
@@ -119,7 +161,8 @@ export interface E2eApp {
  * runs at its minimum cost.
  */
 export async function startE2eApp(
-  overrides: Record<string, string> = {}
+  overrides: Record<string, string> = {},
+  options: E2eAppOptions = {}
 ): Promise<E2eApp> {
   const { redisUrl } = requireServiceUrls();
   const run = randomUUID().replaceAll('-', '').slice(0, 12);
@@ -138,18 +181,34 @@ export async function startE2eApp(
     STORAGE_DIR: storageDir,
     BCRYPT_COST: '4',
     PUBLIC_URL: 'http://logigator.test',
+    ...(options.translator
+      ? {
+          OPENROUTER_API_KEY: 'e2e-placeholder',
+          OPENROUTER_PRESET: 'e2e',
+          TRANSLATION_DEBOUNCE_SECONDS: '0',
+          TRANSLATION_POLL_SECONDS: String(24 * 60 * 60)
+        }
+      : {}),
     ...overrides
   });
 
   const mail = new MailCapture();
-  const moduleRef = await Test.createTestingModule({
+  const clock = new ManualClock();
+  let builder = Test.createTestingModule({
     imports: [AppModule.forEnv(env)]
   })
     .overrideProvider(MAIL_TRANSPORT)
     .useValue(mail.transport)
     .overrideProvider(MIGRATIONS_FOLDER)
-    .useValue(MIGRATIONS_FOLDER_PATH)
-    .compile();
+    .useValue(MIGRATIONS_FOLDER_PATH);
+  if (options.translator) {
+    builder = builder
+      .overrideProvider(TRANSLATOR)
+      .useValue(options.translator)
+      .overrideProvider(TRANSLATION_CLOCK)
+      .useValue(clock);
+  }
+  const moduleRef = await builder.compile();
 
   const app = moduleRef.createNestApplication<NestFastifyApplication>(
     new FastifyAdapter(apiServerOptions(env)),
@@ -161,11 +220,20 @@ export async function startE2eApp(
   await app.init();
   await app.getHttpAdapter().getInstance().ready();
 
+  const worker =
+    options.translator && env.TRANSLATION_WORKER_ENABLED
+      ? app.get(TranslationWorker)
+      : null;
+
   return {
     app,
     env,
     db: app.get<Database>(DB),
     mail,
+    translation: worker && {
+      tick: () => worker.tick(),
+      advance: (ms) => clock.advance(ms)
+    },
     inject: (options) => app.inject(options),
     close: async () => {
       await app.close();
