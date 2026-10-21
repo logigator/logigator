@@ -341,10 +341,31 @@ describe('OpenRouterClient.translate', () => {
     expect((await translator.translate(INPUT, 'doc-1')).kind).toBe('document');
   });
 
-  it('pauses for the budget on a guardrail 403 and on 402', async () => {
+  it('pauses for the budget on a spent key limit and on an empty account', async () => {
+    // The bodies OpenRouter answers with: a key past its daily limit is a 403
+    // that carries metadata but no moderation reasons, and an account without
+    // credits is a 402.
     const { fetch } = fakeFetch(
-      json(403, { error: { code: 403, message: 'Key limit exceeded' } }),
-      json(402, { error: { code: 402, message: 'Insufficient credits' } })
+      json(403, {
+        error: {
+          code: 403,
+          message: 'Key limit exceeded (daily limit).',
+          metadata: {
+            limit_source: 'openrouter_key_limit',
+            scope: 'key_limit',
+            limit_usd: 0.01,
+            spend_usd: 0.08,
+            resets_at: '2026-10-22T00:00:00.000Z'
+          }
+        }
+      }),
+      json(402, {
+        error: {
+          code: 402,
+          message: 'Insufficient credits.',
+          metadata: { limit_source: 'openrouter_credits' }
+        }
+      })
     );
     const { client: translator } = client(fetch);
 
