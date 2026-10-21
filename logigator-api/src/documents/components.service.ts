@@ -10,6 +10,7 @@ import type {
   SaveCircuitRequest,
   UpdateComponentRequest
 } from '@logigator/contract';
+import type { Locale } from '../common/locale';
 import { DB, type Database } from '../database/database.module';
 import { components, type ComponentRow } from '../database/schema';
 import { FileStorageService } from '../storage/file-storage.service';
@@ -77,7 +78,8 @@ export class ComponentsService {
 
   async create(
     userId: string,
-    body: CreateComponentRequest
+    body: CreateComponentRequest,
+    locale: Locale
   ): Promise<ComponentSummary> {
     const ingested = this.documents.ingest(body.document, body.name);
     const forkedFromId = await this.resolveParent(ingested.claimedParentId);
@@ -90,6 +92,7 @@ export class ComponentsService {
           name: body.name,
           symbol: body.symbol,
           description: body.description ?? '',
+          textLanguageHint: locale,
           // Absent means `unlisted`, as it does for a project: a component
           // nobody was told about, with a link its author can hand out.
           visibility: body.visibility ?? 'unlisted',
@@ -181,7 +184,8 @@ export class ComponentsService {
   async update(
     userId: string,
     id: string,
-    body: UpdateComponentRequest
+    body: UpdateComponentRequest,
+    locale: Locale
   ): Promise<ComponentSummary> {
     const existing = await this.require(userId, id);
 
@@ -189,10 +193,9 @@ export class ComponentsService {
       throw linkPublished('component');
     }
 
-    const contentChanged =
-      body.name !== undefined ||
-      body.symbol !== undefined ||
-      body.description !== undefined;
+    const textChanged =
+      body.name !== undefined || body.description !== undefined;
+    const contentChanged = textChanged || body.symbol !== undefined;
 
     const changes = {
       ...(body.name === undefined
@@ -205,6 +208,7 @@ export class ComponentsService {
       ...(body.description === undefined
         ? {}
         : { description: body.description }),
+      ...(textChanged ? { textLanguageHint: locale } : {}),
       ...(body.visibility === undefined ? {} : { visibility: body.visibility }),
       ...(body.regenerateLink ? { link: randomUUID() } : {}),
       ...(contentChanged

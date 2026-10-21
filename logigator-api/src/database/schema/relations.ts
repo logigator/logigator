@@ -2,6 +2,7 @@ import { defineRelations } from 'drizzle-orm';
 import { componentDependencies, projectDependencies } from './dependencies';
 import { components, projects } from './documents';
 import { componentStars, projectStars } from './stars';
+import { componentTexts, projectTexts } from './texts';
 import { users } from './users';
 
 export const tables = {
@@ -11,7 +12,9 @@ export const tables = {
   projectDependencies,
   componentDependencies,
   projectStars,
-  componentStars
+  componentStars,
+  projectTexts,
+  componentTexts
 };
 
 /**
@@ -64,6 +67,10 @@ export const relations = defineRelations(tables, (r) => ({
       from: r.projects.id.through(r.projectStars.projectId),
       to: r.users.id.through(r.projectStars.userId),
       alias: 'project_stars'
+    }),
+    texts: r.many.projectTexts({
+      from: r.projects.id,
+      to: r.projectTexts.documentId
     })
   },
   components: {
@@ -94,6 +101,24 @@ export const relations = defineRelations(tables, (r) => ({
       from: r.components.id.through(r.componentStars.componentId),
       to: r.users.id.through(r.componentStars.userId),
       alias: 'component_stars'
+    }),
+    texts: r.many.componentTexts({
+      from: r.components.id,
+      to: r.componentTexts.documentId
+    })
+  },
+  projectTexts: {
+    document: r.one.projects({
+      from: r.projectTexts.documentId,
+      to: r.projects.id,
+      optional: false
+    })
+  },
+  componentTexts: {
+    document: r.one.components({
+      from: r.componentTexts.documentId,
+      to: r.components.id,
+      optional: false
     })
   }
 }));

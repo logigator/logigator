@@ -1,4 +1,6 @@
+import { sql } from 'drizzle-orm';
 import {
+  char,
   index,
   integer,
   jsonb,
@@ -112,8 +114,64 @@ function circuitColumns() {
       .defaultNow(),
     lastEditedAt: timestamp('last_edited_at', { withTimezone: true })
       .notNull()
-      .defaultNow()
+      .defaultNow(),
+    /**
+     * The text a translation is made for, as the database computes it. U+001F
+     * separates the fields, so moving characters from the name into the
+     * description is still a different text.
+     *
+     * Generated rather than written: a document is pending translation exactly
+     * while `translatedDigest` differs from this, so every write path that
+     * changes the name or the description makes it pending again without
+     * having to know that translations exist.
+     */
+    textDigest: char('text_digest', { length: 32 })
+      .notNull()
+      .generatedAlwaysAs(sql`md5("name" || chr(31) || "description")`),
+    /**
+     * The writer's UI language at the last write of the name or description.
+     * Only a hint for detection, which breaks a tie between languages that
+     * spell the text alike; it says nothing about what the text is written in.
+     */
+    textLanguageHint: varchar('text_language_hint', { length: 8 }),
+    /**
+     * Detected ISO 639-1 codes, or `zxx` for nothing to translate. Valid only
+     * while `translatedDigest` equals `textDigest`: a read that finds them
+     * apart treats the languages as unknown, so a detection of an older text
+     * is never served.
+     */
+    nameLanguage: varchar('name_language', { length: 8 }),
+    descriptionLanguage: varchar('description_language', { length: 8 }),
+    /** The `textDigest` the two languages and the machine texts were made for. */
+    translatedDigest: char('translated_digest', { length: 32 }),
+    /**
+     * A translation worker's lease. A lease older than its term is free again,
+     * so the rows a crashed worker held come back on their own.
+     */
+    translationClaimedAt: timestamp('translation_claimed_at', {
+      withTimezone: true
+    }),
+    /**
+     * Failed translations of the text `translationAttemptDigest` names. Counted
+     * against a digest so that an edit, which moves the digest, starts the
+     * count over: a text that keeps failing is parked until it changes.
+     */
+    translationAttempts: integer('translation_attempts').notNull().default(0),
+    translationAttemptDigest: char('translation_attempt_digest', { length: 32 })
   };
+}
+
+/**
+ * What the translation worker scans: pending rows that may leave the
+ * database, oldest edit first. Private documents are never sent to a
+ * translator, so they are outside the index as well as the claim.
+ */
+function translationPendingWhere(t: {
+  translatedDigest: AnyPgColumn;
+  textDigest: AnyPgColumn;
+  visibility: AnyPgColumn;
+}) {
+  return sql`${t.translatedDigest} IS DISTINCT FROM ${t.textDigest} AND ${t.visibility} <> 'private'`;
 }
 
 /** A board: a circuit that is opened and simulated, never embedded in another. */
@@ -136,7 +194,10 @@ export const projects = pgTable(
     // `visibility = 'public'` down the edit time, so the state stays the
     // leading column.
     index('projects_visibility_idx').on(t.visibility, t.lastEditedAt),
-    index('projects_forked_from_idx').on(t.forkedFromId)
+    index('projects_forked_from_idx').on(t.forkedFromId),
+    index('projects_translation_pending_idx')
+      .on(t.lastEditedAt)
+      .where(translationPendingWhere(t))
   ]
 );
 
@@ -165,7 +226,10 @@ export const components = pgTable(
     index('components_user_idx').on(t.userId),
     index('components_format_version_idx').on(t.formatVersion),
     index('components_visibility_idx').on(t.visibility, t.lastEditedAt),
-    index('components_forked_from_idx').on(t.forkedFromId)
+    index('components_forked_from_idx').on(t.forkedFromId),
+    index('components_translation_pending_idx')
+      .on(t.lastEditedAt)
+      .where(translationPendingWhere(t))
   ]
 );
 

@@ -7,4 +7,5 @@ export * from './users';
 export * from './documents';
 export * from './dependencies';
 export * from './stars';
+export * from './texts';
 export { relations, tables } from './relations';

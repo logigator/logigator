@@ -977,6 +977,92 @@ describe('stored circuits', () => {
     });
   });
 
+  describe('translation bookkeeping', () => {
+    async function textState(id: string) {
+      const [row] = await api.db
+        .select({
+          textDigest: projects.textDigest,
+          translatedDigest: projects.translatedDigest,
+          textLanguageHint: projects.textLanguageHint
+        })
+        .from(projects)
+        .where(eq(projects.id, id));
+      return row;
+    }
+
+    /** What the worker writes once a text is done, so the next edit shows. */
+    async function markTranslated(id: string): Promise<void> {
+      await api.db
+        .update(projects)
+        .set({ translatedDigest: sql`${projects.textDigest}` })
+        .where(eq(projects.id, id));
+    }
+
+    it('makes a document pending again exactly when its text changes', async () => {
+      const created = await api.inject({
+        method: 'POST',
+        url: '/api/projects',
+        headers: { ...jar.headers(), 'accept-language': 'de' },
+        payload: { name: 'Volladdierer', description: 'Zwei Bits.' }
+      });
+      const { id } = created.json<ProjectSummary>();
+
+      const fresh = await textState(id);
+      expect(fresh.translatedDigest).toBeNull();
+      expect(fresh.textLanguageHint).toBe('de');
+      await markTranslated(id);
+
+      // Neither a visibility change nor a save writes the text, so the
+      // translation stands, and so does the hint of whoever wrote the text.
+      const published = await api.inject({
+        method: 'PATCH',
+        url: `/api/projects/${id}`,
+        headers: { ...jar.headers(), 'accept-language': 'fr' },
+        payload: { visibility: 'public' }
+      });
+      expect(published.statusCode).toBe(200);
+      const saved = await api.inject({
+        method: 'PUT',
+        url: `/api/projects/${id}`,
+        headers: { ...jar.headers(), 'accept-language': 'fr' },
+        payload: {
+          version: created.json<ProjectSummary>().version,
+          document: circuitDocument('Volladdierer', HALF_ADDER_BODY)
+        }
+      });
+      expect(saved.statusCode).toBe(200);
+      const untouched = await textState(id);
+      expect(untouched.textDigest).toBe(fresh.textDigest);
+      expect(untouched.translatedDigest).toBe(fresh.textDigest);
+      expect(untouched.textLanguageHint).toBe('de');
+
+      const described = await api.inject({
+        method: 'PATCH',
+        url: `/api/projects/${id}`,
+        headers: { ...jar.headers(), 'accept-language': 'fr' },
+        payload: { description: 'Deux bits.' }
+      });
+      expect(described.statusCode).toBe(200);
+
+      const edited = await textState(id);
+      expect(edited.textDigest).not.toBe(fresh.textDigest);
+      expect(edited.translatedDigest).not.toBe(edited.textDigest);
+      expect(edited.textLanguageHint).toBe('fr');
+    });
+
+    it('tells a name from a description that holds the same characters', async () => {
+      const first = await createProject({ name: 'Half', description: 'adder' });
+      const second = await createProject({
+        name: 'Halfa',
+        description: 'dder'
+      });
+
+      expect((await textState(first.id)).textDigest).not.toBe(
+        (await textState(second.id)).textDigest
+      );
+    });
+  });
+
   describe('listing', () => {
     it('pages, counts the whole match, and orders by last edit', async () => {
       const cookies = await signUp('lister@example.com', 'Lister');

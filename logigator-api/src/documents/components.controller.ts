@@ -28,6 +28,7 @@ import {
 } from '@logigator/contract';
 import type { FastifyRequest } from 'fastify';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
+import { localeFromRequest } from '../common/locale';
 import { UuidParam } from '../common/uuid-param.pipe';
 import { components, type UserRow } from '../database/schema';
 import { mapPage, toComponentSummary } from './circuit-responses';
@@ -60,9 +61,10 @@ export class ComponentsController {
   create(
     @CurrentUser() user: UserRow,
     @Body({ schema: createComponentRequestSchema })
-    body: CreateComponentRequest
+    body: CreateComponentRequest,
+    @Req() request: FastifyRequest
   ): Promise<ComponentSummary> {
-    return this.components.create(user.id, body);
+    return this.components.create(user.id, body, localeFromRequest(request));
   }
 
   @Get(':id')
@@ -88,9 +90,15 @@ export class ComponentsController {
     @CurrentUser() user: UserRow,
     @Param('id', UuidParam) id: string,
     @Body({ schema: updateComponentRequestSchema })
-    body: UpdateComponentRequest
+    body: UpdateComponentRequest,
+    @Req() request: FastifyRequest
   ): Promise<ComponentSummary> {
-    return this.components.update(user.id, id, body);
+    return this.components.update(
+      user.id,
+      id,
+      body,
+      localeFromRequest(request)
+    );
   }
 
   @Delete(':id')

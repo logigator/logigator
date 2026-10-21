@@ -28,6 +28,7 @@ import {
 } from '@logigator/contract';
 import type { FastifyRequest } from 'fastify';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
+import { localeFromRequest } from '../common/locale';
 import { UuidParam } from '../common/uuid-param.pipe';
 import { projects, type UserRow } from '../database/schema';
 import { mapPage, toProjectSummary } from './circuit-responses';
@@ -60,9 +61,10 @@ export class ProjectsController {
   create(
     @CurrentUser() user: UserRow,
     @Body({ schema: createProjectRequestSchema })
-    body: CreateProjectRequest
+    body: CreateProjectRequest,
+    @Req() request: FastifyRequest
   ): Promise<ProjectSummary> {
-    return this.projects.create(user.id, body);
+    return this.projects.create(user.id, body, localeFromRequest(request));
   }
 
   @Get(':id')
@@ -88,9 +90,10 @@ export class ProjectsController {
     @CurrentUser() user: UserRow,
     @Param('id', UuidParam) id: string,
     @Body({ schema: updateProjectRequestSchema })
-    body: UpdateProjectRequest
+    body: UpdateProjectRequest,
+    @Req() request: FastifyRequest
   ): Promise<ProjectSummary> {
-    return this.projects.update(user.id, id, body);
+    return this.projects.update(user.id, id, body, localeFromRequest(request));
   }
 
   @Delete(':id')

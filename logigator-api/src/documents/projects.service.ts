@@ -10,6 +10,7 @@ import type {
   SaveCircuitRequest,
   UpdateProjectRequest
 } from '@logigator/contract';
+import type { Locale } from '../common/locale';
 import { DB, type Database } from '../database/database.module';
 import { projects, type ProjectRow } from '../database/schema';
 import { FileStorageService } from '../storage/file-storage.service';
@@ -88,7 +89,8 @@ export class ProjectsService {
    */
   async create(
     userId: string,
-    body: CreateProjectRequest
+    body: CreateProjectRequest,
+    locale: Locale
   ): Promise<ProjectSummary> {
     const ingested = this.documents.ingest(body.document, body.name);
     const forkedFromId = await this.resolveParent(ingested.claimedParentId);
@@ -100,6 +102,7 @@ export class ProjectsService {
           userId,
           name: body.name,
           description: body.description ?? '',
+          textLanguageHint: locale,
           // Absent means `unlisted`: a document created by a client that names
           // no state is one nobody was told about, and a link that resolves is
           // what its owner needs to hand it out.
@@ -199,7 +202,8 @@ export class ProjectsService {
   async update(
     userId: string,
     id: string,
-    body: UpdateProjectRequest
+    body: UpdateProjectRequest,
+    locale: Locale
   ): Promise<ProjectSummary> {
     if (body.regenerateLink) {
       const existing = await this.require(userId, id);
@@ -224,7 +228,11 @@ export class ProjectsService {
       ...(body.visibility === undefined ? {} : { visibility: body.visibility }),
       ...(body.regenerateLink ? { link: randomUUID() } : {}),
       ...(contentChanged
-        ? { version: sql`${projects.version} + 1`, lastEditedAt: new Date() }
+        ? {
+            textLanguageHint: locale,
+            version: sql`${projects.version} + 1`,
+            lastEditedAt: new Date()
+          }
         : {})
     };
 
