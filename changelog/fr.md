@@ -117,6 +117,8 @@ entrées et d'afficher du texte pendant la simulation.
   aperçu au lieu d'une image par défaut.
 - Un conseil qui apparaît pendant qu'un autre est affiché attend son tour au
   lieu d'être sauté.
+- Une matrice de LED à l'intérieur d'un composant personnalisé s'allume désormais
+  dans sa surveillance.
 
 ### 🔒 Sécurité
 

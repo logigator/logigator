@@ -130,7 +130,9 @@ export class WatchSession {
         for (const point of wire.connectionPoints) addJunctionAt(target, point);
       }
       for (const { component, portIndex } of target.ports) {
-        addJunctionAt(target, component.connectionPoints[portIndex]);
+        // An LED matrix's cell pseudo-ports have no point on the board.
+        const point = component.connectionPoints[portIndex];
+        if (point) addJunctionAt(target, point);
       }
     }
 

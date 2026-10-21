@@ -156,10 +156,9 @@ interface EmitContext {
   /** Directly placed custom instances, keyed by component id. */
   instances: Map<number, EmittedInstance>;
   /**
-   * LED matrices with their engine-only cell nodes (unit outputs on no net).
-   * The top-level pass maps them back onto the component as pseudo-ports;
-   * inside a template they only feed the engine, so an inner matrix simulates
-   * without lighting up in a watch.
+   * LED matrices with their engine-only cell nodes (unit outputs on no net),
+   * mapped back onto the component as pseudo-ports: by the top-level pass into
+   * its render targets, by a template into its watch port nets.
    */
   displays: { component: Component; nodes: number[] }[];
 }
@@ -766,11 +765,25 @@ export class BoardCompilerService {
       const wireNets = Int32Array.from(wires, (wire) =>
         localId(netNodes[netOfWire.get(wire)!])
       );
-      const watchPortNets = components.map((component) =>
-        Int32Array.from(portNets.get(component) ?? [], (netIndex) =>
-          localId(netNodes[netIndex])
-        )
+      const cellNodesOf = new Map(
+        ctx.displays.map(({ component, nodes }) => [component, nodes])
       );
+      const watchPortNets = components.map((component) => {
+        const ports = Int32Array.from(
+          portNets.get(component) ?? [],
+          (netIndex) => localId(netNodes[netIndex])
+        );
+        const cells = cellNodesOf.get(component);
+        if (!cells) return ports;
+        // An LED matrix's cells follow its inputs as pseudo-ports, as on the
+        // board, so a watch copy lights them through the same applier.
+        const withCells = new Int32Array(component.numInputs + cells.length);
+        withCells.set(ports);
+        cells.forEach((node, cellIndex) => {
+          withCells[component.numInputs + cellIndex] = localId(node);
+        });
+        return withCells;
+      });
       const userInputs = new Map<number, number>();
       for (const [id, unitIndex] of ctx.userInputs) {
         userInputs.set(indexOfId.get(id)!, unitIndex);

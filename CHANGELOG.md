@@ -103,6 +103,8 @@ and print text while they run.
   instead of a placeholder.
 - A tip that comes up while another is showing waits its turn instead of being
   skipped.
+- An LED Matrix inside a custom component now lights up in the component's
+  watch.
 
 ### 🔒 Security
 

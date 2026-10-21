@@ -111,6 +111,8 @@ circuitos reciben entradas y muestran texto mientras se simulan.
   previa en lugar de una imagen genérica.
 - Un consejo que aparece mientras otro está abierto espera su turno en lugar de
   saltarse.
+- Una matriz de LEDs dentro de un componente personalizado ahora se enciende
+  en su monitor.
 
 ### 🔒 Seguridad
 

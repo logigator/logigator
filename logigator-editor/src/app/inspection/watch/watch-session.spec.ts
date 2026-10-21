@@ -11,6 +11,7 @@ import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { SwitchComponent } from '../../components/component-types/switch/switch.component';
 import { outputComponentConfig } from '../../components/component-types/output/output.config';
+import { ledMatrixComponentConfig } from '../../components/component-types/led-matrix/led-matrix.config';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { Project } from '../../project/project';
 import { ProjectService } from '../../project/project.service';
@@ -184,6 +185,59 @@ describe('WatchSession', () => {
     expect(copiedSwitch.isActive(0)).toBe(true);
     // Nothing changed since.
     expect(session.onFrame()).toBe(false);
+    session.destroy();
+  });
+
+  it('lights an LED matrix copy’s cells from their unit’s outputs', async () => {
+    const matrix = Component.deserialize(
+      { pos: [0, 0], options: { size: 4 } },
+      ledMatrixComponentConfig
+    );
+    const s = Component.serialize(matrix);
+    matrix.destroy({ children: true });
+    const box = registry.registerSnapshot({
+      kind: 'snapshot',
+      source: 'browser',
+      name: 'MatrixBox',
+      symbol: 'MB',
+      description: '',
+      numInputs: 0,
+      numOutputs: 0,
+      labels: [],
+      circuit: {
+        components: [{ type: s.type, pos: s.pos, options: s.options }],
+        wires: []
+      }
+    });
+    const instance = Component.deserialize(
+      { pos: [0, 0], options: {} },
+      provider.getComponent(box)!
+    );
+    project.addComponent(instance);
+    simulation.enter();
+    await vi.waitFor(() => expect(simulation.state()).toBe('ready'));
+    const session = openSession(instance.id);
+    const copy = session.components[0];
+
+    const cells = simulation.board!.descriptor.components[0].outputs;
+    fakeWorker.emit({
+      kind: 'snapshot',
+      reqId: 99,
+      tick: 1,
+      isDelta: false,
+      ...packSnapshot(
+        undefined,
+        null,
+        fullBits(simulation.board!.linkCount, [cells[5]])
+      )
+    });
+
+    expect(cells).toHaveLength(16);
+    cells.forEach((_, cellIndex) => {
+      expect(copy.isPortPowered(copy.numInputs + cellIndex)).toBe(
+        cellIndex === 5
+      );
+    });
     session.destroy();
   });
 

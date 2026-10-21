@@ -79,7 +79,8 @@ numbering and its output layout.
   `sendFrames` / `sendUnitFrames` instead.
 - **`LED_MATRIX`** — a unit whose cell outputs sit on no net: fresh nodes per
   cell, mapped back onto the component as pseudo-ports past the input range
-  (row-major). An inner matrix simulates but stays dark in a watch.
+  (row-major): into the render targets at the top level, into the template's
+  watch `portNets` inside one, so an inner matrix lights in a watch too.
 - **Custom** (`type >= CUSTOM_TYPE_ID_BASE`) — flattened by template
   instantiation.
 - **`TUNNEL`** — no unit; tunnels sharing a label are net-unioned before

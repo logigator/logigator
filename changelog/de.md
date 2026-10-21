@@ -114,6 +114,8 @@ Schaltungen während der Simulation Eingaben an und geben Text aus.
   Vorschaubild statt eines Platzhalters.
 - Ein Tipp, der erscheint, während ein anderer offen ist, wartet, bis er dran
   ist, statt übersprungen zu werden.
+- Eine LED-Matrix in einer benutzerdefinierten Komponente leuchtet jetzt in
+  deren Beobachtung.
 
 ### 🔒 Sicherheit
 
