@@ -68,7 +68,7 @@ describe('StargazersPage', () => {
   ): Promise<HTMLElement> {
     const documents = TestBed.inject(CommunityDocumentService);
     const read = documents.resolve('projects', LINK);
-    const detail = http.expectOne(DETAIL_URL);
+    const detail = http.expectOne((request) => request.url === DETAIL_URL);
     if (answers.documentFailure) {
       fail(detail, answers.documentFailure);
     } else {

@@ -33,7 +33,7 @@ describe('the community pages’ JSON-LD', () => {
     const content = TestBed.inject(CommunityDocumentService);
     const resolved = content.resolve('projects', LINK);
     http
-      .expectOne(DETAIL_URL)
+      .expectOne((request) => request.url === DETAIL_URL)
       .flush({ ...communityRow('Half adder', LINK, patch), forkedFrom });
     await resolved;
   }
@@ -77,6 +77,23 @@ describe('the community pages’ JSON-LD', () => {
     );
   });
 
+  it.each([
+    ['it', 'it'],
+    ['zxx', undefined],
+    [null, undefined]
+  ])(
+    'states the description’s language only where it is a real one (%s)',
+    async (detected, inLanguage) => {
+      await resolveDocument({
+        description: 'Somma due bit.',
+        textLanguage: { name: 'zxx', description: detected }
+      });
+      apply(documentPage, `/en/community/projects/${LINK}`);
+
+      expect(jsonLdNode('CreativeWork')?.['inLanguage']).toBe(inLanguage);
+    }
+  );
+
   it('names the parent a fork was built on', async () => {
     await resolveDocument({}, {
       id: PARENT_LINK,
@@ -96,7 +113,7 @@ describe('the community pages’ JSON-LD', () => {
     const content = TestBed.inject(CommunityDocumentService);
     const resolved = content.resolve('projects', LINK);
     http
-      .expectOne(DETAIL_URL)
+      .expectOne((request) => request.url === DETAIL_URL)
       .flush(
         { code: 'not_found', message: 'No such published document.' },
         { status: 404, statusText: 'Not Found' }

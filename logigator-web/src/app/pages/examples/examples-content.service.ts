@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { CommunityApiService } from '../../api/services/community-api.service';
 import { EXAMPLES_ACCOUNT_ID } from '@logigator/core';
 import { contentSection } from '../../transfer/content-section';
+import { TranslationService } from '../../translation/translation.service';
 
 /**
  * The API's cap on a page, so the list the page draws is the whole list. The
@@ -18,10 +19,12 @@ const PAGE_SIZE = 100;
 @Injectable({ providedIn: 'root' })
 export class ExamplesContentService {
   private readonly communityApi = inject(CommunityApiService);
+  private readonly translation = inject(TranslationService);
 
   public readonly examples = contentSection('examples.list', () =>
     this.communityApi.userProjects(EXAMPLES_ACCOUNT_ID, {
-      size: PAGE_SIZE
+      size: PAGE_SIZE,
+      lang: this.translation.getActiveLang()
     })
   );
 

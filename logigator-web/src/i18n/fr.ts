@@ -351,7 +351,12 @@ const fr: TranslationSchema = {
           'Ce circuit est vide, il n’apparaît donc pas encore dans les listes communautaires. Il y figurera dès qu’il contiendra un composant ou un fil.',
         forkedFrom: 'Dérivé de',
         forkedFromBy: 'par {{author}}',
-        errorHeading: 'Le circuit n’a pas pu être chargé'
+        errorHeading: 'Le circuit n’a pas pu être chargé',
+        translate: 'Traduire',
+        machineTranslatedFrom:
+          'Traduction automatique, original en {{language}}',
+        machineTranslated: 'Traduction automatique',
+        showOriginal: 'Afficher l’original'
       },
       stargazers: {
         title: 'Étoiles',

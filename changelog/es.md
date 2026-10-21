@@ -37,7 +37,8 @@ circuitos reciben entradas y muestran texto mientras se simulan.
   por defecto, busca mientras escribes y encuentra en el perfil de un miembro
   una presentación, una web y enlaces, junto con las estrellas que han reunido
   sus trabajos. Un proyecto o componente publicado sin contenido queda fuera de
-  las listas.
+  las listas. Los nombres y descripciones en otro idioma se traducen con un
+  clic, y cada ejemplo se lee en tu idioma.
 - **Descripciones con formato.** Negrita, listas, enlaces y más en las
   descripciones y los perfiles, editados directamente en su sitio. Las
   descripciones de los componentes integrados del editor también lo usan.

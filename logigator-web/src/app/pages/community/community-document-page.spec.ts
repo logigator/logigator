@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { TestBed } from '@angular/core/testing';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { PLATFORM_ID, TransferState } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { RETURN_PATH_PARAM } from '@logigator/core';
@@ -13,6 +14,31 @@ import { CommunityDocumentService } from './community-document.service';
 const LINK = '11111111-1111-4111-8111-111111111111';
 const DETAIL_URL = `/api/community/projects/${LINK}`;
 const PAGE_PATH = `/en/community/projects/${LINK}`;
+const TRANSLATION_PATH = `/api/community/projects/${LINK}/translation/`;
+
+/**
+ * The flag `@angular/build` defines for the server bundle; see
+ * `verify-email-page.spec.ts`.
+ */
+declare global {
+  var ngServerMode: boolean | undefined;
+}
+
+/** A German original, read on the English page. */
+const GERMAN = {
+  name: 'Halbaddierer',
+  description: 'Addiert **zwei** Bits und gibt den Übertrag aus.',
+  textLanguage: { name: 'de', description: 'de' },
+  machineTranslation: true
+};
+
+/** What the translation endpoint answers for it. */
+const MACHINE = {
+  language: 'en',
+  name: 'Half adder, by machine',
+  description: 'Adds **two** bits, by machine, and outputs the carry.',
+  sourceLanguage: { name: 'de', description: 'de' }
+};
 
 describe('CommunityDocumentPage', () => {
   let http: HttpTestingController;
@@ -20,12 +46,16 @@ describe('CommunityDocumentPage', () => {
   async function render(
     patch: Record<string, unknown> = {},
     fail?: { status: number; body: object }
-  ): Promise<{ el: HTMLElement; detectChanges: () => void }> {
+  ): Promise<{
+    el: HTMLElement;
+    detectChanges: () => void;
+    fixture: ComponentFixture<CommunityDocumentPage>;
+  }> {
     const resolved = TestBed.inject(CommunityDocumentService).resolve(
       'projects',
       LINK
     );
-    const request = http.expectOne(DETAIL_URL);
+    const request = http.expectOne((request) => request.url === DETAIL_URL);
     if (fail) {
       request.flush(fail.body, { status: fail.status, statusText: 'x' });
     } else {
@@ -42,7 +72,8 @@ describe('CommunityDocumentPage', () => {
     fixture.detectChanges();
     return {
       el: fixture.nativeElement,
-      detectChanges: () => fixture.detectChanges()
+      detectChanges: () => fixture.detectChanges(),
+      fixture
     };
   }
 
@@ -271,15 +302,17 @@ describe('CommunityDocumentPage', () => {
       'projects',
       LINK
     );
-    http.expectOne(DETAIL_URL).flush({
-      ...communityRow('Half adder', LINK),
-      forkedFrom: {
-        id: parent,
-        name: 'Adder',
-        link: parent,
-        authorName: 'ada'
-      }
-    });
+    http
+      .expectOne((request) => request.url === DETAIL_URL)
+      .flush({
+        ...communityRow('Half adder', LINK),
+        forkedFrom: {
+          id: parent,
+          name: 'Adder',
+          link: parent,
+          authorName: 'ada'
+        }
+      });
     await resolved;
     await TestBed.inject(TranslationService).setActiveLang('en');
 
@@ -293,5 +326,173 @@ describe('CommunityDocumentPage', () => {
     expect(
       [...el.querySelectorAll('a')].map((link) => link.getAttribute('href'))
     ).toContain(`/en/community/projects/${parent}`);
+  });
+
+  describe('texts in another language', () => {
+    function heading(el: HTMLElement): HTMLElement {
+      return el.querySelector('h1')!;
+    }
+
+    function description(el: HTMLElement): HTMLElement | null {
+      return el.querySelector('lg-markdown')?.parentElement ?? null;
+    }
+
+    /** By its icon: the label is a locale's, the control is the page's. */
+    function translateButton(el: HTMLElement): HTMLButtonElement | null {
+      return el.querySelector('.ph-translate')?.closest('button') ?? null;
+    }
+
+    /** The one control the note carries once the machine text is shown. */
+    function showOriginalButton(el: HTMLElement): HTMLButtonElement | null {
+      const live = el.querySelector('[aria-live]');
+      return live && !translateButton(el) ? live.querySelector('button') : null;
+    }
+
+    async function settle(
+      fixture: ComponentFixture<CommunityDocumentPage>
+    ): Promise<void> {
+      await fixture.whenStable();
+      fixture.detectChanges();
+    }
+
+    it.each([
+      // Unknown, or nothing to translate: the page's own language stands.
+      [{ name: null, description: null }, null, null],
+      [{ name: 'zxx', description: 'zxx' }, null, null],
+      // The page's own language needs saying no more than it already is.
+      [{ name: 'en', description: 'en' }, null, null],
+      // Any language, not only one the site is written in.
+      [{ name: 'zxx', description: 'it' }, null, 'it'],
+      [{ name: 'de', description: 'zxx' }, 'de', null]
+    ])(
+      'tags each text with its language only where it is a different, real one (%o)',
+      async (textLanguage, nameLang, descriptionLang) => {
+        const { el } = await render({
+          description: 'Some text.',
+          textLanguage
+        });
+
+        expect(heading(el).getAttribute('lang')).toBe(nameLang);
+        expect(description(el)?.getAttribute('lang')).toBe(descriptionLang);
+      }
+    );
+
+    it.each([false, true])(
+      'offers a translation exactly where the read flags one (%s)',
+      async (machineTranslation) => {
+        const { el } = await render({ ...GERMAN, machineTranslation });
+
+        expect(translateButton(el) !== null).toBe(machineTranslation);
+        // Offering is not fetching: the text comes on the click alone.
+        expect(
+          http.match((request) => request.url.startsWith(TRANSLATION_PATH))
+        ).toEqual([]);
+      }
+    );
+
+    it('swaps the machine text in and restores the original exactly', async () => {
+      const { el, fixture } = await render(GERMAN);
+      await settle(fixture);
+      const originalHeading = heading(el).outerHTML;
+      const originalDescription = description(el)?.outerHTML;
+      expect(heading(el).getAttribute('lang')).toBe('de');
+
+      translateButton(el)!.click();
+      const request = http.expectOne(
+        (candidate) => candidate.url === `${TRANSLATION_PATH}en`
+      );
+      request.flush(MACHINE);
+      await settle(fixture);
+
+      expect(heading(el).textContent?.trim()).toBe(MACHINE.name);
+      expect(description(el)?.textContent).toContain('by machine');
+      expect(description(el)?.textContent).not.toContain('Übertrag');
+      // The shown text is the page's language now, so it inherits the page's.
+      expect(heading(el).hasAttribute('lang')).toBe(false);
+      expect(description(el)?.hasAttribute('lang')).toBe(false);
+
+      showOriginalButton(el)!.click();
+      await settle(fixture);
+
+      expect(heading(el).outerHTML).toBe(originalHeading);
+      expect(description(el)?.outerHTML).toBe(originalDescription);
+      expect(translateButton(el)).not.toBeNull();
+    });
+
+    it('swaps only the fields the translation answered', async () => {
+      const { el, fixture } = await render(GERMAN);
+
+      translateButton(el)!.click();
+      http
+        .expectOne((candidate) => candidate.url.startsWith(TRANSLATION_PATH))
+        .flush({ ...MACHINE, name: null });
+      await settle(fixture);
+
+      expect(heading(el).textContent?.trim()).toBe(GERMAN.name);
+      expect(heading(el).getAttribute('lang')).toBe('de');
+      expect(description(el)?.textContent).toContain('by machine');
+      expect(description(el)?.hasAttribute('lang')).toBe(false);
+    });
+
+    it('keeps the original and says so when the translation cannot be fetched', async () => {
+      const { el, fixture } = await render(GERMAN);
+
+      translateButton(el)!.click();
+      http
+        .expectOne((candidate) => candidate.url.startsWith(TRANSLATION_PATH))
+        .flush(
+          { code: 'service_unavailable', message: 'down' },
+          { status: 503, statusText: 'Service Unavailable' }
+        );
+      await settle(fixture);
+
+      expect(el.querySelector('[role=alert]')).not.toBeNull();
+      expect(heading(el).textContent?.trim()).toBe(GERMAN.name);
+      expect(translateButton(el)).not.toBeNull();
+    });
+  });
+
+  describe('during a server render', () => {
+    beforeEach(() => {
+      TestBed.resetTestingModule();
+      configureTestBed([{ provide: PLATFORM_ID, useValue: 'server' }]);
+      http = TestBed.inject(HttpTestingController);
+      globalThis.ngServerMode = true;
+    });
+
+    afterEach(() => {
+      globalThis.ngServerMode = undefined;
+    });
+
+    /**
+     * Every server read reaches the browser inside the HTML, so whatever the
+     * render holds a crawler reads. The machine text has to be in neither the
+     * markup nor the transfer state — even where the button is pressed before
+     * hydration.
+     */
+    it('carries neither the machine text nor anything holding it', async () => {
+      const { el, fixture } = await render(GERMAN);
+      el.querySelector('.ph-translate')?.closest('button')?.click();
+      await fixture.whenStable();
+
+      // Answered rather than left pending, so a render that did ask would put
+      // the text where the assertions below look for it.
+      const asked = http.match((request) =>
+        request.url.startsWith(TRANSLATION_PATH)
+      );
+      for (const request of asked) request.flush(MACHINE);
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(asked).toEqual([]);
+
+      const state = TestBed.inject(TransferState).toJson();
+      // The read itself does cross, flag and all.
+      expect(state).toContain(GERMAN.name);
+      expect(state).toContain('machineTranslation');
+      for (const page of [state, el.outerHTML]) {
+        expect(page).not.toContain('by machine');
+        expect(page).not.toContain('sourceLanguage');
+      }
+    });
   });
 });

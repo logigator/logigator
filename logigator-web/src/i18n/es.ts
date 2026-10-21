@@ -355,7 +355,11 @@ const es: TranslationSchema = {
           'Este circuito está vacío, así que todavía no aparece en la comunidad. Aparecerá en cuanto tenga un componente o un cable.',
         forkedFrom: 'Derivado de',
         forkedFromBy: 'de {{author}}',
-        errorHeading: 'No se pudo cargar el circuito'
+        errorHeading: 'No se pudo cargar el circuito',
+        translate: 'Traducir',
+        machineTranslatedFrom: 'Traducción automática del {{language}}',
+        machineTranslated: 'Traducción automática',
+        showOriginal: 'Ver original'
       },
       stargazers: {
         title: 'Estrellas',

@@ -358,7 +358,12 @@ const de: TranslationSchema = {
           'Diese Schaltung ist leer und wird deshalb noch nicht in der Community gelistet. Sie erscheint dort, sobald sie einen Baustein oder eine Leitung enthält.',
         forkedFrom: 'Abgeleitet von',
         forkedFromBy: 'von {{author}}',
-        errorHeading: 'Die Schaltung konnte nicht geladen werden'
+        errorHeading: 'Die Schaltung konnte nicht geladen werden',
+        translate: 'Übersetzen',
+        machineTranslatedFrom:
+          'Maschinell übersetzt, Original auf {{language}}',
+        machineTranslated: 'Maschinell übersetzt',
+        showOriginal: 'Original anzeigen'
       },
       stargazers: {
         title: 'Sterne',

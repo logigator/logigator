@@ -36,7 +36,9 @@ Schaltungen während der Simulation Eingaben an und geben Text aus.
   Voreinstellung, suche schon beim Tippen, und finde im Profil eines Mitglieds
   eine Beschreibung, eine Website und Links, dazu die Sterne, die seine Arbeiten
   gesammelt haben. Ein veröffentlichtes Projekt oder eine Komponente ohne Inhalt
-  bleibt aus den Listen heraus.
+  bleibt aus den Listen heraus. Namen und Beschreibungen in einer anderen
+  Sprache übersetzt du mit einem Klick, und alle Beispiele gibt es in deiner
+  Sprache.
 - **Beschreibungen mit Formatierung.** Fett, Listen, Links und mehr in
   Beschreibungen und Profilen, direkt an Ort und Stelle bearbeitet. Auch die
   Beschreibungen der eingebauten Komponenten im Editor nutzen sie.

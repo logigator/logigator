@@ -16,6 +16,7 @@ import { CommunityApiService } from '../../api/services/community-api.service';
 import { genericFailureKey } from '../../forms/api-failure';
 import { TransferHandoffService } from '../../transfer/transfer-handoff.service';
 import { TranslationKey } from '../../translation/translation-key.model';
+import { TranslationService } from '../../translation/translation.service';
 
 /** Either detail shape; `kind` says which, and a component adds its ports. */
 export type CommunityDocument =
@@ -51,6 +52,7 @@ const DETAIL_STATE = makeStateKey<DetailResult>('community.document');
 export class CommunityDocumentService {
   private readonly communityApi = inject(CommunityApiService);
   private readonly handoff = inject(TransferHandoffService);
+  private readonly translation = inject(TranslationService);
 
   private readonly result = signal<DetailResult>({ missing: true });
   /** Overrides the resolved tally once the reader has toggled their star. */
@@ -159,16 +161,23 @@ export class CommunityDocumentService {
     kind: CommunityKind,
     link: string
   ): Promise<DetailResult> {
+    // The URL's language, which the language guard has made the active one
+    // before this route's guards run; a switch navigates, so this asks again.
+    const lang = this.translation.getActiveLang();
     try {
       const document =
         kind === 'projects'
           ? {
               kind: 'projects' as const,
-              ...(await firstValueFrom(this.communityApi.projectDetail(link)))
+              ...(await firstValueFrom(
+                this.communityApi.projectDetail(link, lang)
+              ))
             }
           : {
               kind: 'components' as const,
-              ...(await firstValueFrom(this.communityApi.componentDetail(link)))
+              ...(await firstValueFrom(
+                this.communityApi.componentDetail(link, lang)
+              ))
             };
       return { document };
     } catch (error) {

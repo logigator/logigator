@@ -72,7 +72,7 @@ describe('the JSON-LD graph in every language', () => {
       LINK
     );
     http
-      .expectOne(`/api/community/projects/${LINK}`)
+      .expectOne((request) => request.url === `/api/community/projects/${LINK}`)
       .flush({ ...communityRow('Half adder', LINK), forkedFrom: null });
     await resolved;
   }

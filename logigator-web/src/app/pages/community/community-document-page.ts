@@ -2,8 +2,12 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  inject
+  inject,
+  linkedSignal,
+  PLATFORM_ID,
+  signal
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -15,6 +19,8 @@ import {
   LgTag
 } from '@logigator/ui';
 import { RETURN_PATH_PARAM } from '@logigator/core';
+import type { DocumentTranslationResponse } from '@logigator/contract';
+import { CommunityApiService } from '../../api/services/community-api.service';
 import { ShareApiService } from '../../api/services/share-api.service';
 import { shareCardUrl } from '../../documents/crawler-image';
 import { CircuitPreview } from '../../documents/circuit-preview';
@@ -24,6 +30,8 @@ import { VisibilityTag } from '../../documents/visibility-tag';
 import { SiteLinks } from '../../layout/site-links';
 import { SITE_ORIGIN } from '../../seo/site-origin';
 import { SectionError } from '../../states/section-error';
+import { genericFailureKey } from '../../forms/api-failure';
+import { TranslationKey } from '../../translation/translation-key.model';
 import { NotFoundPage } from '../not-found/not-found-page';
 import { TranslateDirective } from '../../translation/translate.directive';
 import { TranslationService } from '../../translation/translation.service';
@@ -31,6 +39,7 @@ import { SessionService } from '../../user/session.service';
 import { apiKindOf } from './community-kind';
 import { CommunityDocumentService } from './community-document.service';
 import { StarIcon } from './star-icon';
+import { realLanguage, textLangAttribute } from './text-language';
 
 /**
  * One circuit, at the address its link is: its render, who made it, what it is
@@ -79,6 +88,8 @@ export class CommunityDocumentPage {
   private readonly session = inject(SessionService);
   private readonly router = inject(Router);
   private readonly translation = inject(TranslationService);
+  private readonly communityApi = inject(CommunityApiService);
+  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly origin = inject(SITE_ORIGIN).replace(/\/+$/, '');
 
   protected readonly links = inject(SiteLinks);
@@ -90,6 +101,98 @@ export class CommunityDocumentPage {
   protected readonly pendingAction = this.content.pendingAction;
   protected readonly actionFailureKey = this.content.actionFailureKey;
   protected readonly retrying = this.content.retrying;
+
+  /**
+   * The machine translation the reader asked for, while it is shown. Held here
+   * and nowhere else: it is fetched on a click, so it is never in the server
+   * render, the transfer state or the URL, and a crawler never sees it. It
+   * belongs to the document it was fetched for and is dropped with it, which a
+   * language switch does too.
+   */
+  private readonly machineText = linkedSignal<
+    unknown,
+    DocumentTranslationResponse | null
+  >({ source: this.document, computation: () => null });
+
+  protected readonly translating = signal(false);
+  /** Why the last translation request failed, for the line under the button. */
+  protected readonly translateFailureKey = linkedSignal<
+    unknown,
+    TranslationKey | null
+  >({ source: this.document, computation: () => null });
+
+  /**
+   * The name and description the page shows, each with its language: the
+   * read's own, or the machine text for each field the translation answered.
+   * The read is never written to, so showing the original again restores it
+   * exactly.
+   */
+  protected readonly shown = computed(() => {
+    const document = this.document();
+    if (!document) return null;
+    const machine = this.machineText();
+    const original = {
+      name: document.name,
+      nameLanguage: document.textLanguage.name,
+      description: document.description,
+      descriptionLanguage: document.textLanguage.description
+    };
+    if (!machine) return original;
+    return {
+      ...original,
+      ...(machine.name !== null
+        ? { name: machine.name, nameLanguage: machine.language }
+        : {}),
+      ...(machine.description !== null
+        ? {
+            description: machine.description,
+            descriptionLanguage: machine.language
+          }
+        : {})
+    };
+  });
+
+  /** `lang` for the heading and the description, where they differ from the page's. */
+  protected readonly nameLang = computed(() =>
+    textLangAttribute(
+      this.shown()?.nameLanguage ?? null,
+      this.translation.activeLang()
+    )
+  );
+  protected readonly descriptionLang = computed(() =>
+    textLangAttribute(
+      this.shown()?.descriptionLanguage ?? null,
+      this.translation.activeLang()
+    )
+  );
+
+  /**
+   * The note naming what the shown text was translated from. The description's
+   * source where it was translated, since the note sits under it and a short
+   * title is the likelier of the two to be detected wrongly; the name's
+   * otherwise. Named by `Intl` because the source can be any language, not one
+   * the locale files know.
+   */
+  protected readonly machineNote = computed(() => {
+    const machine = this.machineText();
+    if (!machine) return null;
+    const source =
+      (machine.description !== null
+        ? realLanguage(machine.sourceLanguage.description)
+        : null) ??
+      (machine.name !== null
+        ? realLanguage(machine.sourceLanguage.name)
+        : null);
+    const language = source ? this.languageName(source) : null;
+    return language
+      ? this.translation.translate(
+          'pages.community.document.machineTranslatedFrom',
+          { language }
+        )
+      : this.translation.translate(
+          'pages.community.document.machineTranslated'
+        );
+  });
 
   /** The figure takes the fixed column, so it needs a `sizes` of its own. */
   protected readonly PREVIEW_SIZES = '(min-width: 768px) 336px, 100vw';
@@ -271,8 +374,56 @@ export class CommunityDocumentPage {
     }
   }
 
+  /**
+   * Fetches the machine translation for the page's language and shows it. Asked
+   * of the API directly every time, never through the hand-off: the response
+   * must not reach the transfer state or any cache, which is what keeps the
+   * machine text out of every page a crawler reads.
+   */
+  protected async translate(): Promise<void> {
+    const document = this.document();
+    if (!document || !this.isBrowser || this.translating()) return;
+
+    this.translating.set(true);
+    this.translateFailureKey.set(null);
+    try {
+      const machine = await firstValueFrom(
+        this.communityApi.translation(
+          document.kind,
+          document.link,
+          this.translation.activeLang()
+        )
+      );
+      // A navigation while the request was out has replaced the document.
+      if (this.document() === document) this.machineText.set(machine);
+    } catch (error) {
+      if (this.document() === document) {
+        this.translateFailureKey.set(genericFailureKey(error));
+      }
+    } finally {
+      this.translating.set(false);
+    }
+  }
+
+  protected showOriginal(): void {
+    this.machineText.set(null);
+  }
+
   protected retry(): Promise<void> {
     return this.content.retry();
+  }
+
+  /** Falls back to the code for one `Intl` cannot name or will not take. */
+  private languageName(code: string): string {
+    try {
+      return (
+        new Intl.DisplayNames([this.translation.activeLang()], {
+          type: 'language'
+        }).of(code) ?? code
+      );
+    } catch {
+      return code;
+    }
   }
 
   private signIn(): Promise<boolean> {

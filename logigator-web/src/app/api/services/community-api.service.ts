@@ -5,6 +5,7 @@ import {
   communityComponentPageSchema,
   communityProjectDetailSchema,
   communityProjectPageSchema,
+  documentTranslationResponseSchema,
   publicProfileSchema,
   stargazerPageSchema,
   starResponseSchema,
@@ -13,10 +14,12 @@ import {
   type CommunityProjectDetail,
   type CommunityProjectPage,
   type CommunityQuery,
+  type DocumentTranslationResponse,
   type PublicProfile,
   type StargazerPage,
   type StarResponse
 } from '@logigator/contract';
+import type { LanguageId } from '@logigator/core';
 import { ApiBaseService, type QueryParams } from './api-base.service';
 
 /**
@@ -26,6 +29,11 @@ import { ApiBaseService, type QueryParams } from './api-base.service';
 export type CommunityOrder = CommunityQuery['orderBy'];
 
 export interface CommunityListQuery {
+  /**
+   * The page language the names and descriptions are resolved for. Required:
+   * a read that names none gets an English page's texts.
+   */
+  lang: LanguageId;
   page?: number;
   size?: number;
   search?: string;
@@ -45,9 +53,7 @@ export class CommunityApiService {
   private readonly api = inject(ApiBaseService);
 
   /** GET /api/community/projects */
-  public projects(
-    query: CommunityListQuery = {}
-  ): Observable<CommunityProjectPage> {
+  public projects(query: CommunityListQuery): Observable<CommunityProjectPage> {
     return this.api.get(
       '/api/community/projects',
       communityProjectPageSchema,
@@ -57,7 +63,7 @@ export class CommunityApiService {
 
   /** GET /api/community/components */
   public components(
-    query: CommunityListQuery = {}
+    query: CommunityListQuery
   ): Observable<CommunityComponentPage> {
     return this.api.get(
       '/api/community/components',
@@ -72,7 +78,7 @@ export class CommunityApiService {
    */
   public userProjects(
     userId: string,
-    query: Omit<CommunityListQuery, 'orderBy'> = {}
+    query: Omit<CommunityListQuery, 'orderBy'>
   ): Observable<CommunityProjectPage> {
     return this.api.get(
       `/api/community/users/${userId}/projects`,
@@ -84,7 +90,7 @@ export class CommunityApiService {
   /** GET /api/community/users/:id/components */
   public userComponents(
     userId: string,
-    query: Omit<CommunityListQuery, 'orderBy'> = {}
+    query: Omit<CommunityListQuery, 'orderBy'>
   ): Observable<CommunityComponentPage> {
     return this.api.get(
       `/api/community/users/${userId}/components`,
@@ -100,7 +106,7 @@ export class CommunityApiService {
    */
   public userStarredProjects(
     userId: string,
-    query: Omit<CommunityListQuery, 'orderBy'> = {}
+    query: Omit<CommunityListQuery, 'orderBy'>
   ): Observable<CommunityProjectPage> {
     return this.api.get(
       `/api/community/users/${userId}/starred/projects`,
@@ -112,7 +118,7 @@ export class CommunityApiService {
   /** GET /api/community/users/:id/starred/components */
   public userStarredComponents(
     userId: string,
-    query: Omit<CommunityListQuery, 'orderBy'> = {}
+    query: Omit<CommunityListQuery, 'orderBy'>
   ): Observable<CommunityComponentPage> {
     return this.api.get(
       `/api/community/users/${userId}/starred/components`,
@@ -122,18 +128,43 @@ export class CommunityApiService {
   }
 
   /** GET /api/community/projects/:link — a published project's own page. */
-  public projectDetail(link: string): Observable<CommunityProjectDetail> {
+  public projectDetail(
+    link: string,
+    lang: LanguageId
+  ): Observable<CommunityProjectDetail> {
     return this.api.get(
       `/api/community/projects/${link}`,
-      communityProjectDetailSchema
+      communityProjectDetailSchema,
+      { lang }
     );
   }
 
   /** GET /api/community/components/:link */
-  public componentDetail(link: string): Observable<CommunityComponentDetail> {
+  public componentDetail(
+    link: string,
+    lang: LanguageId
+  ): Observable<CommunityComponentDetail> {
     return this.api.get(
       `/api/community/components/${link}`,
-      communityComponentDetailSchema
+      communityComponentDetailSchema,
+      { lang }
+    );
+  }
+
+  /**
+   * GET /api/community/{projects,components}/:link/translation/:lang — the
+   * machine translation a detail read flags with `machineTranslation`. Asked
+   * for in the browser when the reader clicks, and only there: a server read
+   * would carry the text into the page source.
+   */
+  public translation(
+    kind: CommunityKind,
+    link: string,
+    lang: LanguageId
+  ): Observable<DocumentTranslationResponse> {
+    return this.api.get(
+      `/api/community/${kind}/${link}/translation/${lang}`,
+      documentTranslationResponseSchema
     );
   }
 
@@ -141,7 +172,7 @@ export class CommunityApiService {
   public stargazers(
     kind: CommunityKind,
     link: string,
-    query: Omit<CommunityListQuery, 'orderBy' | 'search'> = {}
+    query: Omit<CommunityListQuery, 'orderBy' | 'search' | 'lang'> = {}
   ): Observable<StargazerPage> {
     return this.api.get(
       `/api/community/${kind}/${link}/stargazers`,
@@ -174,8 +205,9 @@ export class CommunityApiService {
 }
 
 /** Spelled out because an interface is not assignable to an index signature. */
-function toParams(query: CommunityListQuery): QueryParams {
+function toParams(query: Partial<CommunityListQuery>): QueryParams {
   return {
+    lang: query.lang,
     page: query.page,
     size: query.size,
     search: query.search,

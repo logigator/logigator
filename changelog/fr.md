@@ -40,7 +40,8 @@ entrées et d'afficher du texte pendant la simulation.
   tri par défaut, cherchez dès la saisie, et trouvez sur le profil d'un membre
   une présentation, un site web et des liens, ainsi que les étoiles récoltées
   par ses créations. Un projet ou un composant publié sans contenu reste hors
-  des listes.
+  des listes. Les noms et descriptions écrits dans une autre langue se
+  traduisent en un clic, et chaque exemple se lit dans votre langue.
 - **Des descriptions mises en forme.** Gras, listes, liens et plus encore dans
   les descriptions et les profils, modifiés directement sur place. Les
   descriptions des composants intégrés dans l'éditeur en profitent aussi.

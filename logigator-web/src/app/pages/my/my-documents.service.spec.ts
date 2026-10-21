@@ -4,14 +4,14 @@ import {
   HttpTestingController,
   type TestRequest
 } from '@angular/common/http/testing';
-import type { ProjectSummary } from '@logigator/contract';
+import type { OwnedProjectSummary } from '@logigator/contract';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { MyDocumentsService } from './my-documents.service';
 
 const ID_A = '11111111-1111-4111-8111-111111111111';
 const ID_B = '22222222-2222-4222-8222-222222222222';
 
-function row(id: string, name: string): ProjectSummary {
+function row(id: string, name: string): OwnedProjectSummary {
   return {
     id,
     name,
@@ -23,7 +23,10 @@ function row(id: string, name: string): ProjectSummary {
     wireCount: 0,
     preview: null,
     createdAt: '2026-01-01T00:00:00.000Z',
-    lastEditedAt: '2026-01-01T00:00:00.000Z'
+    lastEditedAt: '2026-01-01T00:00:00.000Z',
+    nameLanguage: null,
+    descriptionLanguage: null,
+    texts: []
   };
 }
 
@@ -36,7 +39,7 @@ describe('MyDocumentsService', () => {
   }
 
   async function resolveWith(
-    entries: ProjectSummary[],
+    entries: OwnedProjectSummary[],
     total = entries.length
   ) {
     const resolved = documents.resolve('projects', { page: 0, search: '' });

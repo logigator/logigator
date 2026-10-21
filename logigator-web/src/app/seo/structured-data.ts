@@ -147,7 +147,11 @@ export interface CreativeWorkNode extends JsonLdNode {
   image?: string;
   dateCreated: string;
   dateModified: string;
-  inLanguage?: LanguageId;
+  /**
+   * The description's language, which is the author's and so any ISO 639-1
+   * code rather than one of the site's.
+   */
+  inLanguage?: string;
   license?: string;
   isPartOf?: JsonLdRef;
   isBasedOn?: { '@type': 'CreativeWork'; name: string; url: string };

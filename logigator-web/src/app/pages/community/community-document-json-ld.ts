@@ -9,6 +9,7 @@ import {
   PersonNode
 } from '../../seo/structured-data';
 import { CommunityDocumentService } from './community-document.service';
+import { realLanguage } from './text-language';
 
 /**
  * What a published circuit is, as data: who made it, when, what it looks like,
@@ -42,6 +43,9 @@ export function communityDocumentJsonLd(context: JsonLdContext): JsonLdNode[] {
   // The parent is named even where it is no longer public: withholding the
   // credit because somebody unpublished would turn a fork into original work.
   const parent = document.forkedFrom;
+  // The language of the description the page rendered: the author's own
+  // text, never a machine translation, which the server does not have.
+  const language = realLanguage(document.textLanguage.description);
 
   const work: CreativeWorkNode = {
     '@type': 'CreativeWork',
@@ -53,6 +57,7 @@ export function communityDocumentJsonLd(context: JsonLdContext): JsonLdNode[] {
     dateModified: document.lastEditedAt,
     isPartOf: { '@id': context.siteId },
     ...(summary ? { description: summary } : {}),
+    ...(language ? { inLanguage: language } : {}),
     ...(preview ? { image: context.absolute(preview) } : {}),
     ...(parent
       ? {

@@ -3,6 +3,7 @@ import type { CommunityKind } from '../../api/services/community-api.service';
 import { CommunityApiService } from '../../api/services/community-api.service';
 import { CommunityRow } from '../../documents/circuit-tile-entry';
 import { contentSection } from '../../transfer/content-section';
+import { TranslationService } from '../../translation/translation.service';
 import { BROWSE_PAGE_SIZE, DEFAULT_ORDER, ListingQuery } from './listing-query';
 
 /**
@@ -21,6 +22,7 @@ import { BROWSE_PAGE_SIZE, DEFAULT_ORDER, ListingQuery } from './listing-query';
 @Injectable({ providedIn: 'root' })
 export class CommunityBrowseService {
   private readonly communityApi = inject(CommunityApiService);
+  private readonly translation = inject(TranslationService);
 
   private readonly _kind = signal<CommunityKind>('projects');
   private readonly _query = signal<ListingQuery>({
@@ -40,6 +42,7 @@ export class CommunityBrowseService {
         page,
         size: BROWSE_PAGE_SIZE,
         orderBy,
+        lang: this.translation.getActiveLang(),
         // Omitted rather than sent empty: the API trims and treats the absent
         // case as "no filter", and an empty `search=` in the log is noise.
         ...(search ? { search } : {})

@@ -13,6 +13,7 @@ import { genericFailureKey } from '../../forms/api-failure';
 import { contentSection } from '../../transfer/content-section';
 import { TransferHandoffService } from '../../transfer/transfer-handoff.service';
 import { TranslationKey } from '../../translation/translation-key.model';
+import { TranslationService } from '../../translation/translation.service';
 import { BROWSE_PAGE_SIZE, ListingQuery } from './listing-query';
 
 /** Which of a member's four public listings a route shows. */
@@ -39,6 +40,7 @@ const PROFILE_STATE = makeStateKey<ProfileResult>('community.profile');
 export class ProfileService {
   private readonly communityApi = inject(CommunityApiService);
   private readonly handoff = inject(TransferHandoffService);
+  private readonly translation = inject(TranslationService);
 
   private readonly result = signal<ProfileResult>({ missing: true });
   private readonly _section = signal<ProfileSection>('projects');
@@ -66,7 +68,11 @@ export class ProfileService {
   public readonly listing = contentSection<CommunityRow>(
     'community.profile.listing',
     () => {
-      const request = { page: this._query().page, size: BROWSE_PAGE_SIZE };
+      const request = {
+        page: this._query().page,
+        size: BROWSE_PAGE_SIZE,
+        lang: this.translation.getActiveLang()
+      };
       const id = this.userId;
       switch (this._section()) {
         case 'projects':

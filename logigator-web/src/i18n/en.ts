@@ -365,7 +365,12 @@ const en = {
           'This circuit is empty, so it isn’t listed in the community yet. It appears there as soon as it has a component or a wire on it.',
         forkedFrom: 'Forked from',
         forkedFromBy: 'by {{author}}',
-        errorHeading: 'The circuit could not be loaded'
+        errorHeading: 'The circuit could not be loaded',
+        translate: 'Translate',
+        /** `language` is the source language's name, from `Intl.DisplayNames`. */
+        machineTranslatedFrom: 'Machine-translated from {{language}}',
+        machineTranslated: 'Machine-translated',
+        showOriginal: 'Show original'
       },
       stargazers: {
         title: 'Stargazers',

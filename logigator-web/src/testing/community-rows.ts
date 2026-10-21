@@ -37,6 +37,10 @@ export function communityRow(
     },
     stars: 12,
     starred: false,
+    // Not looked at yet, which is what every document is until the API's
+    // translator has run: no `lang` on the page, and nothing to offer.
+    textLanguage: { name: null, description: null },
+    machineTranslation: false,
     ...patch
   };
 }

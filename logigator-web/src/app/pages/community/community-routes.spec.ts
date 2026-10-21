@@ -195,7 +195,7 @@ describe('the community routes', () => {
       'It carries between stages. '.repeat(40);
     const resolved = content.resolve('projects', LINK);
     http
-      .expectOne(`/api/community/projects/${LINK}`)
+      .expectOne((request) => request.url === `/api/community/projects/${LINK}`)
       .flush({ ...detail({ visibility: 'public' }), description: long });
     await resolved;
 
@@ -215,7 +215,7 @@ describe('the community routes', () => {
 
     const resolved = content.resolve('projects', LINK);
     http
-      .expectOne(`/api/community/projects/${LINK}`)
+      .expectOne((request) => request.url === `/api/community/projects/${LINK}`)
       .flush({ ...detail({ visibility: 'public' }), description: '' });
     await resolved;
 
@@ -278,21 +278,21 @@ describe('the community routes', () => {
 
     const published = content.resolve('projects', LINK);
     http
-      .expectOne(`/api/community/projects/${LINK}`)
+      .expectOne((request) => request.url === `/api/community/projects/${LINK}`)
       .flush(detail({ visibility: 'public' }));
     await published;
     expect(TestBed.runInInjectionContext(noindex)).toBe(false);
 
     const unlisted = content.resolve('projects', LINK);
     http
-      .expectOne(`/api/community/projects/${LINK}`)
+      .expectOne((request) => request.url === `/api/community/projects/${LINK}`)
       .flush(detail({ visibility: 'unlisted' }));
     await unlisted;
     expect(TestBed.runInInjectionContext(noindex)).toBe(true);
 
     const priv = content.resolve('projects', LINK);
     http
-      .expectOne(`/api/community/projects/${LINK}`)
+      .expectOne((request) => request.url === `/api/community/projects/${LINK}`)
       .flush(detail({ visibility: 'private' }));
     await priv;
     expect(TestBed.runInInjectionContext(noindex)).toBe(true);
@@ -309,7 +309,9 @@ describe('the community routes', () => {
     const indexed = async (patch: Partial<CommunityProjectDetail>) => {
       const resolved = content.resolve('projects', LINK);
       http
-        .expectOne(`/api/community/projects/${LINK}`)
+        .expectOne(
+          (request) => request.url === `/api/community/projects/${LINK}`
+        )
         .flush(detail({ visibility: 'public', ...patch }));
       await resolved;
       return !TestBed.runInInjectionContext(noindex);
@@ -356,7 +358,7 @@ describe('the community routes', () => {
 
     const published = content.resolve('projects', LINK);
     http
-      .expectOne(`/api/community/projects/${LINK}`)
+      .expectOne((request) => request.url === `/api/community/projects/${LINK}`)
       .flush(detail({ visibility: 'public' }));
     await published;
     expect(trail()).not.toEqual([]);
@@ -364,7 +366,7 @@ describe('the community routes', () => {
 
     const unlisted = content.resolve('projects', LINK);
     http
-      .expectOne(`/api/community/projects/${LINK}`)
+      .expectOne((request) => request.url === `/api/community/projects/${LINK}`)
       .flush(detail({ visibility: 'unlisted' }));
     await unlisted;
     expect(trail()).toEqual([]);
@@ -372,7 +374,7 @@ describe('the community routes', () => {
 
     const priv = content.resolve('projects', LINK);
     http
-      .expectOne(`/api/community/projects/${LINK}`)
+      .expectOne((request) => request.url === `/api/community/projects/${LINK}`)
       .flush(detail({ visibility: 'private' }));
     await priv;
     expect(trail()).toEqual([]);

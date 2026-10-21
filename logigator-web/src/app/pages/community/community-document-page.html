@@ -62,10 +62,14 @@
       </lg-message>
       }
 
+      <!-- A text in another language than the page's says so, for
+             pronunciation and hyphenation; one with none, or none known yet,
+             inherits the page's. -->
       <h1
         class="text-3xl leading-tight font-bold break-words text-text-hover md:text-4xl"
+        [attr.lang]="nameLang()"
       >
-        {{ doc.name }}
+        {{ shown()?.name }}
       </h1>
 
       <a
@@ -194,7 +198,7 @@
     <h2 class="text-base font-semibold text-text-hover">
       {{ t('pages.community.document.about') }}
     </h2>
-    @if (doc.description) {
+    @if (shown()?.description; as description) {
     <!-- The author's own markdown, rendered under the user-content rule: the
            tag set is closed to what markdown syntax emits, raw HTML comes out
            as text and every link is marked as a visitor's. The wrap stays on
@@ -203,14 +207,52 @@
            a description being as wide as the column it is given. The rule is
            the boundary: the heading above belongs to the page, everything
            inside is a quotation from whoever published this. -->
-    <div class="mt-2.5 border-l-2 border-border pl-4 break-words">
-      <lg-markdown [data]="doc.description" userContent />
+    <div
+      class="mt-2.5 border-l-2 border-border pl-4 break-words"
+      [attr.lang]="descriptionLang()"
+    >
+      <lg-markdown [data]="description" userContent />
     </div>
     } @else {
     <p class="mt-2.5 max-w-prose leading-relaxed text-pretty text-muted">
       {{ t('pages.community.document.noDescription') }}
     </p>
-    }
+    } @if (doc.machineTranslation) {
+    <!-- Offered, never shown by default: the machine text is fetched on the
+           click, so the page a crawler reads holds only the author's words.
+           Polite, so the swap is announced where the button was. -->
+    <div
+      class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted"
+      aria-live="polite"
+    >
+      @if (machineNote(); as note) {
+      <span>{{ note }}</span>
+      <span aria-hidden="true">·</span>
+      <button
+        type="button"
+        class="text-primary hover:underline"
+        (click)="showOriginal()"
+      >
+        {{ t('pages.community.document.showOriginal') }}
+      </button>
+      } @else {
+      <button
+        lgButton
+        outlined
+        severity="secondary"
+        size="sm"
+        type="button"
+        [loading]="translating()"
+        (click)="translate()"
+      >
+        <i class="ph ph-translate" aria-hidden="true"></i>
+        {{ t('pages.community.document.translate') }}
+      </button>
+      }
+    </div>
+    @if (translateFailureKey(); as failure) {
+    <p class="mt-2 text-sm text-error" role="alert">{{ t(failure) }}</p>
+    } }
   </section>
 
   <!-- Only a listed document has stargazers to list, so a document that is not

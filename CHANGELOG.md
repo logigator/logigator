@@ -33,9 +33,11 @@ and print text while they run.
   "Everyone", "Only you" keeps a document to yourself. Its link stays the same
   whichever you pick, so you can hand it out again later.
 - **More to discover in the community.** Browse by trending, now the default,
-  search as you type, and find a bio, a website and links on a member's
-  profile, along with the stars their work has collected. A published project
-  or component with nothing on it stays out of the listings.
+  search as you type, and find a bio, a website and links on a member's profile,
+  along with the stars their work has collected. A published project or
+  component with nothing on it stays out of the listings. Names and descriptions
+  in another language translate with one click, and every example reads in your
+  language.
 - **Descriptions with formatting.** Bold, lists, links and more in descriptions
   and bios, edited right in place. Every built-in component's description in
   the editor uses it too.

@@ -29,7 +29,7 @@ describe('CommunityDocumentService', () => {
     // indexed.
     const resolved = content.resolve('projects', LINK);
     http
-      .expectOne(DETAIL_URL)
+      .expectOne((request) => request.url === DETAIL_URL)
       .flush(
         { code: 'not_found', message: 'No such published document.' },
         { status: 404, statusText: 'Not Found' }
@@ -43,7 +43,7 @@ describe('CommunityDocumentService', () => {
   it('keeps the page with a retry for a failure that is not a 404', async () => {
     const resolved = content.resolve('projects', LINK);
     http
-      .expectOne(DETAIL_URL)
+      .expectOne((request) => request.url === DETAIL_URL)
       .flush(
         { code: 'service_unavailable', message: 'Postgres is unreachable.' },
         { status: 503, statusText: 'Service Unavailable' }
@@ -54,7 +54,7 @@ describe('CommunityDocumentService', () => {
     expect(content.failureKey()).toBe('forms.errors.serviceUnavailable');
 
     const retried = content.retry();
-    http.expectOne(DETAIL_URL).flush(detail());
+    http.expectOne((request) => request.url === DETAIL_URL).flush(detail());
     await retried;
     expect(content.document()?.name).toBe('Half adder');
   });
@@ -63,7 +63,9 @@ describe('CommunityDocumentService', () => {
     // Another reader's star between two clicks would leave a locally
     // incremented tally one out, and `PUT` answers the count it produced.
     const resolved = content.resolve('projects', LINK);
-    http.expectOne(DETAIL_URL).flush(detail({ stars: 12, starred: false }));
+    http
+      .expectOne((request) => request.url === DETAIL_URL)
+      .flush(detail({ stars: 12, starred: false }));
     await resolved;
     expect(content.stars()).toBe(12);
 
@@ -79,7 +81,9 @@ describe('CommunityDocumentService', () => {
 
   it('states the star it wants rather than toggling', async () => {
     const resolved = content.resolve('projects', LINK);
-    http.expectOne(DETAIL_URL).flush(detail({ stars: 5, starred: true }));
+    http
+      .expectOne((request) => request.url === DETAIL_URL)
+      .flush(detail({ stars: 5, starred: true }));
     await resolved;
 
     const unstarred = content.setStar(false);
@@ -94,7 +98,9 @@ describe('CommunityDocumentService', () => {
 
   it('leaves the resolved tally standing when the star could not be set', async () => {
     const resolved = content.resolve('projects', LINK);
-    http.expectOne(DETAIL_URL).flush(detail({ stars: 12, starred: false }));
+    http
+      .expectOne((request) => request.url === DETAIL_URL)
+      .flush(detail({ stars: 12, starred: false }));
     await resolved;
 
     const attempted = content.setStar(true);
