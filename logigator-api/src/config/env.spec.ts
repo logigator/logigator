@@ -38,6 +38,12 @@ describe('loadEnv', () => {
       SESSION_TOUCH_INTERVAL_MINUTES: 60,
       COOKIE_SECURE: false,
       TRUST_PROXY: false,
+      TRANSLATION_ENABLED: true,
+      TRANSLATION_POLL_SECONDS: 30,
+      TRANSLATION_DEBOUNCE_SECONDS: 120,
+      TRANSLATION_BATCH: 5,
+      TRANSLATION_DAILY_LIMIT_PER_USER: 50,
+      TRANSLATION_WORKER_ENABLED: false,
       AUTH_TOKEN_TTL_MINUTES: 60,
       BCRYPT_COST: 12
     });
@@ -80,6 +86,47 @@ describe('loadEnv', () => {
     expect(() =>
       loadEnv({ GOOGLE_CLIENT_ID: 'id', GOOGLE_CLIENT_SECRET: 'secret' })
     ).not.toThrow();
+  });
+
+  it('refuses an OpenRouter key without a preset', () => {
+    // The preset is what names the model; a request without one has nowhere
+    // to go, and the failure would surface only once a document is claimed.
+    expect(() => loadEnv({ OPENROUTER_API_KEY: 'sk-or-key' })).toThrowError(
+      /OPENROUTER_PRESET/
+    );
+    expect(() =>
+      loadEnv({
+        OPENROUTER_API_KEY: 'sk-or-key',
+        OPENROUTER_PRESET: 'logigator'
+      })
+    ).not.toThrow();
+  });
+
+  it('refuses a preset written with its prefix', () => {
+    // Sent as `@preset/<slug>`, so a prefixed value would name a preset that
+    // cannot exist.
+    expect(() =>
+      loadEnv({
+        OPENROUTER_API_KEY: 'sk-or-key',
+        OPENROUTER_PRESET: '@preset/logigator'
+      })
+    ).toThrowError(/OPENROUTER_PRESET/);
+  });
+
+  it('runs the translation worker only when enabled and keyed', () => {
+    const keyed = {
+      OPENROUTER_API_KEY: 'sk-or-key',
+      OPENROUTER_PRESET: 'logigator'
+    };
+
+    expect(loadEnv(keyed).TRANSLATION_WORKER_ENABLED).toBe(true);
+    expect(
+      loadEnv({ ...keyed, TRANSLATION_ENABLED: 'false' })
+        .TRANSLATION_WORKER_ENABLED
+    ).toBe(false);
+    expect(
+      loadEnv({ TRANSLATION_ENABLED: 'true' }).TRANSLATION_WORKER_ENABLED
+    ).toBe(false);
   });
 
   it('derives the OAuth URLs from the public URL', () => {

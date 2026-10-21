@@ -8158,6 +8158,7 @@ __metadata:
     drizzle-orm: "npm:1.0.0-rc.4"
     eslint: "npm:^10.9.1"
     fastify: "npm:5.12.1"
+    marked: "npm:^18.0.7"
     nodemailer: "npm:^9.0.6"
     openid-client: "npm:^6.8.7"
     pg: "npm:^8.23.0"

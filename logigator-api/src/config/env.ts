@@ -155,6 +155,45 @@ const variables = z.object({
     })
     .default('false'),
 
+  /**
+   * Whether new names and descriptions are sent for detection and translation.
+   * `false` stops new work only: translations made earlier are still served,
+   * because reads answer from the database and never consult this switch.
+   */
+  TRANSLATION_ENABLED: z.stringbool().default(true),
+  /**
+   * The OpenRouter key translation runs on, a key of its own: its daily limit
+   * is the feature's spend budget, and its usage is the feature's cost. Unset
+   * means nothing is ever sent, which is the development default.
+   */
+  OPENROUTER_API_KEY: z.string().optional(),
+  /**
+   * The OpenRouter preset's slug, sent as `@preset/<slug>`. The model, its
+   * fallbacks, its token cap, its reasoning effort and its routing are the
+   * preset's, so the API names none of them and a model change needs no deploy.
+   */
+  OPENROUTER_PRESET: z
+    .string()
+    .refine((value) => !value.includes('/') && !value.startsWith('@'), {
+      error: 'must be the slug alone — the API sends it as @preset/<slug>'
+    })
+    .optional(),
+  /** How often the translation worker looks for documents to translate. */
+  TRANSLATION_POLL_SECONDS: z.coerce.number().int().min(1).default(30),
+  /**
+   * How long a document's text has to stay unchanged before it is claimed, so
+   * autosave and typing settle first and one edit session costs one call.
+   */
+  TRANSLATION_DEBOUNCE_SECONDS: z.coerce.number().int().min(0).default(120),
+  /** How many documents of each kind one tick claims. */
+  TRANSLATION_BATCH: z.coerce.number().int().min(1).default(5),
+  /**
+   * Translation calls one owner's documents may cost per UTC day. OpenRouter's
+   * key limit is the global budget, and it knows nothing of our users; this is
+   * what keeps one account mass-creating documents from spending it.
+   */
+  TRANSLATION_DAILY_LIMIT_PER_USER: z.coerce.number().int().min(1).default(50),
+
   /** Lifetime of the one-shot mail tokens (verification, password reset). */
   AUTH_TOKEN_TTL_MINUTES: z.coerce.number().int().min(1).default(60),
   /** Cost of new hashes; existing ones carry their own and still verify. */
@@ -223,6 +262,19 @@ export const envSchema = variables
       });
     }
   })
+  .check((ctx) => {
+    // A key with no preset would send every document to a model nobody chose,
+    // or to none: the request names the preset and nothing else.
+    if (ctx.value.OPENROUTER_API_KEY && !ctx.value.OPENROUTER_PRESET) {
+      ctx.issues.push({
+        code: 'custom',
+        input: ctx.value.OPENROUTER_PRESET,
+        path: ['OPENROUTER_PRESET'],
+        message:
+          'must be set together with OPENROUTER_API_KEY — the preset is what names the model'
+      });
+    }
+  })
   // Resolved here so every consumer reads a value rather than re-deriving the
   // rules.
   .transform((env) => ({
@@ -231,7 +283,11 @@ export const envSchema = variables
     TRUST_PROXY: resolveTrustProxy(env.TRUST_PROXY),
     GOOGLE_CALLBACK_URL:
       env.GOOGLE_CALLBACK_URL ?? `${env.PUBLIC_URL}/api/auth/google/callback`,
-    OAUTH_RETURN_URL: env.OAUTH_RETURN_URL ?? `${env.PUBLIC_URL}/login`
+    OAUTH_RETURN_URL: env.OAUTH_RETURN_URL ?? `${env.PUBLIC_URL}/login`,
+    // Off without a key as well as when switched off: either way nothing may
+    // be claimed, since a claimed document is one somebody expects sent.
+    TRANSLATION_WORKER_ENABLED:
+      env.TRANSLATION_ENABLED && Boolean(env.OPENROUTER_API_KEY)
   }));
 
 /**

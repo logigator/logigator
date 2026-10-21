@@ -17,14 +17,15 @@ export default {
   // ESM output: every `@nestjs/*` package ships as ESM, and the source is
   // ESM-authored.
   experiments: { outputModule: true, topLevelAwait: true },
-  // The server, the migration runner, the document re-normalizer and the
-  // example seed. Bundling all four keeps deploys free of drizzle-kit and of
-  // any TypeScript loader.
+  // The server, the migration runner, the document re-normalizer, the example
+  // seed and the translation evaluation. Bundling all of them keeps deploys
+  // free of drizzle-kit and of any TypeScript loader.
   entry: {
     main: './src/main.ts',
     migrate: './src/database/migrate.main.ts',
     renormalize: './src/database/renormalize.main.ts',
-    'seed-examples': './src/database/seed-examples.main.ts'
+    'seed-examples': './src/database/seed-examples.main.ts',
+    'translation-evaluate': './src/translation/evaluation/evaluate.main.ts'
   },
   output: {
     // Every artifact in the workspace lands in the root dist/ under its name.
