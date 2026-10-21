@@ -9,7 +9,18 @@ import {
   emailSchema,
   usernameSchema
 } from '@logigator/contract';
+import { type Locale, LOCALES } from '../common/locale';
 import type { PreviewSources } from './preview-upload';
+
+const localeSchema = z.enum(LOCALES);
+
+/**
+ * A field written once, or per site language. Every language is held to the
+ * limits of the original, so a seed never writes a text the API would refuse
+ * from an author.
+ */
+const textSchema = <S extends z.ZodType<string>>(text: S) =>
+  z.union([text, z.partialRecord(localeSchema, text)]);
 
 /**
  * One seeded document as the manifest states it. The id and the link are
@@ -21,11 +32,76 @@ const exampleEntrySchema = z.object({
   slug: z.string().regex(/^[a-z0-9-]+$/),
   id: z.string().uuid(),
   link: z.string().uuid(),
-  name: documentNameSchema,
-  description: documentDescriptionSchema,
+  /** What the original is written in; the other languages are human versions. */
+  language: localeSchema,
+  name: textSchema(documentNameSchema),
+  description: textSchema(documentDescriptionSchema),
   visibility: documentVisibilitySchema,
   createdAt: z.coerce.date()
 });
+
+/** One language's human version of an example; null where a field has none. */
+export interface ExampleTextVersion {
+  name: string | null;
+  description: string | null;
+}
+
+/** The human versions of an example, keyed by every language but the original's. */
+export type ExampleTexts = Partial<Record<Locale, ExampleTextVersion>>;
+
+type ResolvedTexts<E> = Omit<E, 'name' | 'description'> & {
+  name: string;
+  description: string;
+  texts: ExampleTexts;
+};
+
+/**
+ * Splits an entry's texts into the original, which stays in `name` and
+ * `description` as every document carries it, and the human versions beside
+ * it. A field written once is in the original's language.
+ */
+const withTexts = <E extends z.output<typeof exampleEntrySchema>>(
+  schema: z.ZodType<E>
+) =>
+  schema.transform((entry, ctx): ResolvedTexts<E> => {
+    const inLanguages = (text: E['name']): Partial<Record<Locale, string>> =>
+      typeof text === 'string' ? { [entry.language]: text } : text;
+    const names = inLanguages(entry.name);
+    const descriptions = inLanguages(entry.description);
+
+    const name = names[entry.language];
+    const description = descriptions[entry.language];
+    for (const [field, original] of [
+      ['name', name],
+      ['description', description]
+    ] as const) {
+      if (original === undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [field],
+          message: `Has no text in the original's language "${entry.language}".`
+        });
+      }
+    }
+    if (name === undefined || description === undefined) {
+      return z.NEVER;
+    }
+
+    const texts: ExampleTexts = {};
+    for (const locale of LOCALES) {
+      const version = {
+        name: names[locale] ?? null,
+        description: descriptions[locale] ?? null
+      };
+      if (
+        locale !== entry.language &&
+        (version.name !== null || version.description !== null)
+      ) {
+        texts[locale] = version;
+      }
+    }
+    return { ...entry, name, description, texts };
+  });
 
 const exampleManifestSchema = z.object({
   /** Its id is core's `EXAMPLES_ACCOUNT_ID`, which the site reads too. */
@@ -35,13 +111,16 @@ const exampleManifestSchema = z.object({
   }),
   /** Seeded first, so a project's edges find the masters it embeds. */
   components: z.array(
-    exampleEntrySchema.extend({ symbol: componentSymbolSchema })
+    withTexts(exampleEntrySchema.extend({ symbol: componentSymbolSchema }))
   ),
   /** In the order the examples are listed, which the seed stamps on them. */
-  projects: z.array(exampleEntrySchema)
+  projects: z.array(withTexts(exampleEntrySchema))
 });
 
-type ExampleEntry = z.infer<typeof exampleEntrySchema>;
+export type ExampleManifest = z.output<typeof exampleManifestSchema>;
+
+/** A manifest entry with its texts resolved. */
+export type ExampleEntry = ExampleManifest['projects'][number];
 
 /** A seeded document with its files read. */
 export type Example<E = ExampleEntry> = E & {
@@ -49,10 +128,8 @@ export type Example<E = ExampleEntry> = E & {
   preview: PreviewSources;
 };
 
-export type ExampleAccount = z.infer<typeof exampleManifestSchema>['account'];
-export type ExampleComponent = Example<
-  z.infer<typeof exampleManifestSchema>['components'][number]
->;
+export type ExampleAccount = ExampleManifest['account'];
+export type ExampleComponent = Example<ExampleManifest['components'][number]>;
 export type ExampleProject = Example;
 
 export interface ExampleSet {
@@ -77,7 +154,7 @@ export function defaultExamplesFolder(): string {
  * the format has its own validator, which the write path runs.
  */
 export async function loadExampleSet(folder: string): Promise<ExampleSet> {
-  const manifest = exampleManifestSchema.parse(
+  const manifest = parseExampleManifest(
     JSON.parse(await readFile(join(folder, 'examples.json'), 'utf8'))
   );
   const withFiles = <E extends ExampleEntry>(entry: E) =>
@@ -88,6 +165,10 @@ export async function loadExampleSet(folder: string): Promise<ExampleSet> {
     components: await Promise.all(manifest.components.map(withFiles)),
     projects: await Promise.all(manifest.projects.map(withFiles))
   };
+}
+
+export function parseExampleManifest(value: unknown): ExampleManifest {
+  return exampleManifestSchema.parse(value);
 }
 
 async function readExampleFiles<E extends ExampleEntry>(
