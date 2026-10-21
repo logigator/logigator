@@ -1,14 +1,4 @@
-import {
-  and,
-  count,
-  desc,
-  eq,
-  ilike,
-  ne,
-  sql,
-  type Column,
-  type SQL
-} from 'drizzle-orm';
+import { and, count, desc, eq, ne, sql, type SQL } from 'drizzle-orm';
 import type { Page, PageQuery } from '@logigator/contract';
 import type { Queryable } from '../database/database.module';
 import {
@@ -18,6 +8,7 @@ import {
   type ComponentRow,
   type ProjectRow
 } from '../database/schema';
+import { nameOrHumanNameMatches } from './document-text-queries';
 
 /**
  * Either stored-circuit table. Projects and components are the same thing — a
@@ -201,16 +192,17 @@ export async function pageOf(
 }
 
 /**
- * A name search, or `undefined` when there is nothing to search for. `%` and
- * `_` are escaped — left alone they let a search box ask for every row.
+ * A name search, or `undefined` when there is nothing to search for. It matches
+ * the original name and the author's versions in every language. `%` and `_`
+ * are escaped — left alone they let a search box ask for every row.
  */
 export function nameMatches(
-  name: Column,
+  table: CircuitTable,
   search: string | undefined
 ): SQL | undefined {
   if (!search) return undefined;
   const escaped = search.replaceAll(/[\\%_]/g, (char) => `\\${char}`);
-  return ilike(name, `%${escaped}%`);
+  return nameOrHumanNameMatches(table, `%${escaped}%`);
 }
 
 /** One ancestor of a fork, with the author the server derived rather than read. */

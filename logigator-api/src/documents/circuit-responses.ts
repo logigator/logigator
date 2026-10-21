@@ -1,7 +1,10 @@
 import type {
   Author,
   ComponentSummary,
+  DocumentTextVersion,
   ForkAttribution,
+  OwnedComponentSummary,
+  OwnedProjectSummary,
   Page,
   ProjectSummary
 } from '@logigator/contract';
@@ -9,6 +12,7 @@ import type { ComponentRow, ProjectRow, UserRow } from '../database/schema';
 import { AVATAR_VARIANTS, variantUrls } from '../storage/image-variants';
 import { previewUrls } from '../storage/image-variants';
 import type { AncestorRow, CircuitRow } from './circuit-queries';
+import { currentLanguages } from './document-texts';
 
 /**
  * Rows as clients read them. Every mapper is total and explicit — no
@@ -43,6 +47,37 @@ export function toComponentSummary(row: ComponentRow): ComponentSummary {
     numOutputs: row.numOutputs,
     labels: row.labels
   };
+}
+
+/**
+ * What only the owner reads about a document's texts: the detected languages
+ * of the original, null while they describe an older text, and the versions
+ * the author wrote in other languages.
+ */
+export function toOwnerTextFields(
+  row: CircuitRow,
+  texts: readonly DocumentTextVersion[]
+) {
+  const languages = currentLanguages(row);
+  return {
+    nameLanguage: languages.name,
+    descriptionLanguage: languages.description,
+    texts: [...texts]
+  };
+}
+
+export function toOwnedProjectSummary(
+  row: ProjectRow,
+  texts: readonly DocumentTextVersion[]
+): OwnedProjectSummary {
+  return { ...toProjectSummary(row), ...toOwnerTextFields(row, texts) };
+}
+
+export function toOwnedComponentSummary(
+  row: ComponentRow,
+  texts: readonly DocumentTextVersion[]
+): OwnedComponentSummary {
+  return { ...toComponentSummary(row), ...toOwnerTextFields(row, texts) };
 }
 
 export function mapPage<TRow, TEntry>(

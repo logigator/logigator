@@ -1,10 +1,22 @@
 import { isDeepStrictEqual } from 'node:util';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, eq, notInArray } from 'drizzle-orm';
-import { EXAMPLES_ACCOUNT_ID } from '@logigator/core';
-import { DB, type Database } from '../database/database.module';
-import { components, projects, users } from '../database/schema';
+import { and, eq, notInArray, sql } from 'drizzle-orm';
+import { EXAMPLES_ACCOUNT_ID, type LanguageId } from '@logigator/core';
+import {
+  DB,
+  type Database,
+  type Transaction
+} from '../database/database.module';
+import {
+  components,
+  projects,
+  users,
+  type ComponentRow,
+  type ProjectRow
+} from '../database/schema';
 import { CircuitDocumentService } from './circuit-document.service';
+import type { CircuitTable } from './circuit-queries';
+import { putHumanText, textTableOf } from './document-text-queries';
 import {
   COMPONENT_EDGES,
   DependenciesService,
@@ -13,6 +25,7 @@ import {
 import type {
   ExampleAccount,
   ExampleComponent,
+  ExampleEntry,
   ExampleProject,
   ExampleSet
 } from './example-set';
@@ -52,7 +65,12 @@ const LIST_ORDER_STEP_MS = 1000;
  *   dependency edges are re-extracted rather than stated.
  * - **Idempotent.** A row whose name, description, visibility, symbol and
  *   document already match is left alone — no version bump, no new preview
- *   asset — so a second run writes nothing.
+ *   asset — so a second run writes nothing. The same holds for its texts.
+ * - **The other languages are human versions**, written as an author's are,
+ *   and a language the manifest no longer has is removed. The original's
+ *   language is the manifest's, set together with the digest it is for, so
+ *   no seeded row is ever pending translation: the examples have a human
+ *   version in every language, and no reader is offered a machine one.
  * - **An edit is a version bump**, as a save is, so an editor holding an older
  *   copy is told; a visibility change alone is not, as through the API.
  * - **The manifest order is the listing order.** The listings run down the edit
@@ -144,14 +162,17 @@ export class SeedExamplesService {
       wireCount: ingested.wireCount
     };
     const edited = !existing || !sameContent(existing, content);
+    const restated = !!existing && existing.visibility !== example.visibility;
+    const textsCurrent =
+      !edited && (await this.textsMatch(projects, existing, example));
     const status = documentStatus(
       existing,
-      edited || existing.visibility !== example.visibility
+      edited || restated || !textsCurrent
     );
 
     if (status !== 'unchanged') {
       await this.db.transaction(async (tx) => {
-        if (existing) {
+        if (existing && (edited || restated)) {
           const [row] = await tx
             .update(projects)
             .set({
@@ -169,7 +190,7 @@ export class SeedExamplesService {
             )
             .returning({ id: projects.id });
           if (!row) throw changedWhileSeeding('Project', example);
-        } else {
+        } else if (!existing) {
           await tx.insert(projects).values({
             ...content,
             id: example.id,
@@ -186,6 +207,7 @@ export class SeedExamplesService {
           example.id,
           ingested.dependencies
         );
+        if (!textsCurrent) await writeTexts(tx, projects, owner, example);
       });
     }
 
@@ -228,14 +250,17 @@ export class SeedExamplesService {
       labels: ingested.summary.labels
     };
     const edited = !existing || !sameContent(existing, content);
+    const restated = !!existing && existing.visibility !== example.visibility;
+    const textsCurrent =
+      !edited && (await this.textsMatch(components, existing, example));
     const status = documentStatus(
       existing,
-      edited || existing.visibility !== example.visibility
+      edited || restated || !textsCurrent
     );
 
     if (status !== 'unchanged') {
       await this.db.transaction(async (tx) => {
-        if (existing) {
+        if (existing && (edited || restated)) {
           const [row] = await tx
             .update(components)
             .set({
@@ -253,7 +278,7 @@ export class SeedExamplesService {
             )
             .returning({ id: components.id });
           if (!row) throw changedWhileSeeding('Component', example);
-        } else {
+        } else if (!existing) {
           await tx.insert(components).values({
             ...content,
             id: example.id,
@@ -270,6 +295,7 @@ export class SeedExamplesService {
           example.id,
           ingested.dependencies
         );
+        if (!textsCurrent) await writeTexts(tx, components, owner, example);
       });
     }
 
@@ -289,6 +315,49 @@ export class SeedExamplesService {
       document: status,
       preview: writePreview ? 'written' : 'kept'
     };
+  }
+
+  /**
+   * Whether an unedited row's texts already are what the manifest states: the
+   * original's languages for its current digest, and exactly the manifest's
+   * human versions, each written against that digest.
+   */
+  private async textsMatch(
+    table: CircuitTable,
+    existing: ProjectRow | ComponentRow,
+    example: ExampleEntry
+  ): Promise<boolean> {
+    if (
+      existing.nameLanguage !== example.language ||
+      existing.descriptionLanguage !== example.language ||
+      existing.translatedDigest !== existing.textDigest
+    ) {
+      return false;
+    }
+
+    const texts = textTableOf(table);
+    const rows = await this.db
+      .select({
+        language: texts.language,
+        name: texts.name,
+        description: texts.description,
+        sourceDigest: texts.sourceDigest
+      })
+      .from(texts)
+      .where(and(eq(texts.documentId, existing.id), eq(texts.origin, 'human')));
+
+    return (
+      rows.length === Object.keys(example.texts).length &&
+      rows.every((row) => {
+        const wanted = example.texts[row.language as LanguageId];
+        return (
+          wanted !== undefined &&
+          wanted.name === row.name &&
+          wanted.description === row.description &&
+          row.sourceDigest === existing.textDigest
+        );
+      })
+    );
   }
 
   /**
@@ -348,6 +417,47 @@ export class SeedExamplesService {
       );
     }
   }
+}
+
+/**
+ * Makes a row's texts what the manifest states, after its name and description
+ * are written: the human versions through the author's own upsert, so each is
+ * stamped with the digest of the text just written, and the languages with the
+ * digest the row now holds, read in the statement that sets them.
+ */
+async function writeTexts(
+  tx: Transaction,
+  table: CircuitTable,
+  owner: string,
+  example: ExampleEntry
+): Promise<void> {
+  const texts = textTableOf(table);
+  const languages = Object.keys(example.texts);
+  await tx
+    .delete(texts)
+    .where(
+      and(
+        eq(texts.documentId, example.id),
+        eq(texts.origin, 'human'),
+        languages.length > 0 ? notInArray(texts.language, languages) : undefined
+      )
+    );
+
+  for (const [language, version] of Object.entries(example.texts)) {
+    await putHumanText(tx, table, owner, example.id, language as LanguageId, {
+      name: version.name ?? undefined,
+      description: version.description ?? undefined
+    });
+  }
+
+  await tx
+    .update(table)
+    .set({
+      nameLanguage: example.language,
+      descriptionLanguage: example.language,
+      translatedDigest: sql`${table.textDigest}`
+    })
+    .where(eq(table.id, example.id));
 }
 
 /** The columns a run compares; the derived ones follow from the document. */

@@ -14,21 +14,26 @@ import type {
   Author,
   CommunityComponent,
   CommunityComponentDetail,
+  CommunityPageQuery,
   CommunityProject,
   CommunityProjectDetail,
   CommunityQuery,
+  DocumentTranslationResponse,
   Page,
   PageQuery,
   PublicProfile,
   StarResponse
 } from '@logigator/contract';
-import { EXAMPLES_ACCOUNT_ID } from '@logigator/core';
+import { alias } from 'drizzle-orm/pg-core';
+import { EXAMPLES_ACCOUNT_ID, type LanguageId } from '@logigator/core';
 import { ApiException } from '../common/api-exception';
 import { DB, type Database } from '../database/database.module';
 import {
   componentStars,
+  componentTexts,
   components,
   projectStars,
+  projectTexts,
   projects,
   users,
   type ComponentRow,
@@ -45,6 +50,15 @@ import {
   toComponentSummary,
   toProjectSummary
 } from '../documents/circuit-responses';
+import {
+  humanTextOn,
+  machineTextFor
+} from '../documents/document-text-queries';
+import {
+  resolveTexts,
+  type OriginalTexts,
+  type ResolvedTexts
+} from '../documents/document-texts';
 import { AVATAR_VARIANTS, variantUrls } from '../storage/image-variants';
 import { toSocialLinks } from '../users/social-links';
 import {
@@ -64,6 +78,28 @@ const authorColumns = {
 
 /** A page of exactly one, for the detail endpoints. */
 const JUST_ONE: PageQuery = { page: 0, size: 1 };
+
+/**
+ * The text tables under the names the joins below give them: the author's
+ * version in the reader's language beside every row, and, for the translation
+ * endpoint alone, the machine row of that language.
+ */
+const projectHuman = alias(projectTexts, 'human_text');
+const componentHuman = alias(componentTexts, 'human_text');
+const projectMachine = alias(projectTexts, 'machine_text');
+const componentMachine = alias(componentTexts, 'machine_text');
+
+/**
+ * What a community row carries beside its document: the author's version in
+ * the reader's language, if any, and whether a current machine text exists per
+ * field. Never the machine text itself.
+ */
+interface TextColumns {
+  humanName: string | null;
+  humanDescription: string | null;
+  machineName: boolean;
+  machineDescription: boolean;
+}
 
 /**
  * How far back a star still counts as trending. A named constant rather than an
@@ -113,7 +149,7 @@ export class CommunityService {
     const where = and(
       listed(projects),
       ne(projects.userId, EXAMPLES_ACCOUNT_ID),
-      nameMatches(projects.name, query.search)
+      nameMatches(projects, query.search)
     );
     return this.projectPage(where, query, callerId, this.projectRanking(query));
   }
@@ -125,7 +161,7 @@ export class CommunityService {
     const where = and(
       listed(components),
       ne(components.userId, EXAMPLES_ACCOUNT_ID),
-      nameMatches(components.name, query.search)
+      nameMatches(components, query.search)
     );
     return this.componentPage(
       where,
@@ -138,7 +174,7 @@ export class CommunityService {
   /** A user's published work, for their profile. */
   listUserProjects(
     userId: string,
-    query: PageQuery,
+    query: CommunityPageQuery,
     callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.projectPage(
@@ -150,7 +186,7 @@ export class CommunityService {
 
   listUserComponents(
     userId: string,
-    query: PageQuery,
+    query: CommunityPageQuery,
     callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.componentPage(
@@ -172,7 +208,7 @@ export class CommunityService {
    */
   listStarredProjects(
     userId: string,
-    query: PageQuery,
+    query: CommunityPageQuery,
     callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.projectPage(
@@ -184,7 +220,7 @@ export class CommunityService {
 
   listStarredComponents(
     userId: string,
-    query: PageQuery,
+    query: CommunityPageQuery,
     callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.componentPage(
@@ -206,36 +242,100 @@ export class CommunityService {
    */
   async projectDetail(
     link: string,
+    language: LanguageId,
     callerId: string | null
   ): Promise<CommunityProjectDetail> {
     const [row] = await this.projectRows(
       and(linkResolvesFor(projects, callerId), eq(projects.link, link)),
-      JUST_ONE,
+      { ...JUST_ONE, lang: language },
       callerId
     );
     if (!row) throw notPublished();
 
     return {
-      ...this.toCommunityProject(row),
+      ...this.toCommunityProject(row, language),
       forkedFrom: await this.parentOf(projects, row.circuit)
     };
   }
 
   async componentDetail(
     link: string,
+    language: LanguageId,
     callerId: string | null
   ): Promise<CommunityComponentDetail> {
     const [row] = await this.componentRows(
       and(linkResolvesFor(components, callerId), eq(components.link, link)),
-      JUST_ONE,
+      { ...JUST_ONE, lang: language },
       callerId
     );
     if (!row) throw notPublished();
 
     return {
-      ...this.toCommunityComponent(row),
+      ...this.toCommunityComponent(row, language),
       forkedFrom: await this.parentOf(components, row.circuit)
     };
+  }
+
+  /**
+   * The machine translation of a document's texts into one language, for the
+   * reader who asked for it. The only read that returns machine text: every
+   * other response carries the flag alone, and this answers exactly the fields
+   * the flag was raised for, by the same resolution. Nothing to offer is a
+   * `404`, as is a link that does not resolve for the caller.
+   */
+  async projectTranslation(
+    link: string,
+    language: LanguageId,
+    callerId: string | null
+  ): Promise<DocumentTranslationResponse> {
+    const [row] = await this.db
+      .select({
+        circuit: originalColumns(projects),
+        humanName: projectHuman.name,
+        humanDescription: projectHuman.description,
+        machineDigest: projectMachine.sourceDigest,
+        machineName: projectMachine.name,
+        machineDescription: projectMachine.description
+      })
+      .from(projects)
+      .leftJoin(projectHuman, humanTextOn(projectHuman, projects.id, language))
+      .leftJoin(
+        projectMachine,
+        machineTextOn(projectMachine, projects.id, language)
+      )
+      .where(and(linkResolvesFor(projects, callerId), eq(projects.link, link)))
+      .limit(1);
+    return toTranslation(row, language);
+  }
+
+  async componentTranslation(
+    link: string,
+    language: LanguageId,
+    callerId: string | null
+  ): Promise<DocumentTranslationResponse> {
+    const [row] = await this.db
+      .select({
+        circuit: originalColumns(components),
+        humanName: componentHuman.name,
+        humanDescription: componentHuman.description,
+        machineDigest: componentMachine.sourceDigest,
+        machineName: componentMachine.name,
+        machineDescription: componentMachine.description
+      })
+      .from(components)
+      .leftJoin(
+        componentHuman,
+        humanTextOn(componentHuman, components.id, language)
+      )
+      .leftJoin(
+        componentMachine,
+        machineTextOn(componentMachine, components.id, language)
+      )
+      .where(
+        and(linkResolvesFor(components, callerId), eq(components.link, link))
+      )
+      .limit(1);
+    return toTranslation(row, language);
   }
 
   // ---- stars ----
@@ -396,9 +496,15 @@ export class CommunityService {
 
   // ---- the two queries everything above is built from ----
 
+  /**
+   * The rows of a community read, with the texts resolved for `query.lang`
+   * read in the same statement: the author's version through a left join, and
+   * the machine rows only as `EXISTS`, so their text never leaves the
+   * database here.
+   */
   private projectRows(
     where: SQL | undefined,
-    query: PageQuery,
+    query: CommunityPageQuery,
     callerId: string | null,
     order: SQL[] = [desc(projects.lastEditedAt), desc(projects.id)]
   ) {
@@ -408,12 +514,24 @@ export class CommunityService {
           circuit: projects,
           author: authorColumns,
           stars: starCount(projectStars, projectStars.projectId, projects.id),
-          starred: this.projectStarredBy(callerId)
+          starred: this.projectStarredBy(callerId),
+          humanName: projectHuman.name,
+          humanDescription: projectHuman.description,
+          machineName: machineTextFor(projects, 'name', query.lang),
+          machineDescription: machineTextFor(
+            projects,
+            'description',
+            query.lang
+          )
         })
         .from(projects)
         // Inner, not left: the owner column cascades, so a document without an
         // author cannot exist.
         .innerJoin(users, eq(users.id, projects.userId))
+        .leftJoin(
+          projectHuman,
+          humanTextOn(projectHuman, projects.id, query.lang)
+        )
         .where(where)
         .orderBy(...order)
         .limit(query.size)
@@ -423,7 +541,7 @@ export class CommunityService {
 
   private componentRows(
     where: SQL | undefined,
-    query: PageQuery,
+    query: CommunityPageQuery,
     callerId: string | null,
     order: SQL[] = [desc(components.lastEditedAt), desc(components.id)]
   ) {
@@ -436,10 +554,22 @@ export class CommunityService {
           componentStars.componentId,
           components.id
         ),
-        starred: this.componentStarredBy(callerId)
+        starred: this.componentStarredBy(callerId),
+        humanName: componentHuman.name,
+        humanDescription: componentHuman.description,
+        machineName: machineTextFor(components, 'name', query.lang),
+        machineDescription: machineTextFor(
+          components,
+          'description',
+          query.lang
+        )
       })
       .from(components)
       .innerJoin(users, eq(users.id, components.userId))
+      .leftJoin(
+        componentHuman,
+        humanTextOn(componentHuman, components.id, query.lang)
+      )
       .where(where)
       .orderBy(...order)
       .limit(query.size)
@@ -448,7 +578,7 @@ export class CommunityService {
 
   private async projectPage(
     where: SQL | undefined,
-    query: PageQuery,
+    query: CommunityPageQuery,
     callerId: string | null,
     order?: SQL[]
   ): Promise<Page<CommunityProject>> {
@@ -458,7 +588,7 @@ export class CommunityService {
     ]);
 
     return {
-      entries: rows.map((row) => this.toCommunityProject(row)),
+      entries: rows.map((row) => this.toCommunityProject(row, query.lang)),
       page: query.page,
       pageSize: query.size,
       total: totals?.value ?? 0
@@ -467,7 +597,7 @@ export class CommunityService {
 
   private async componentPage(
     where: SQL | undefined,
-    query: PageQuery,
+    query: CommunityPageQuery,
     callerId: string | null,
     order?: SQL[]
   ): Promise<Page<CommunityComponent>> {
@@ -477,7 +607,7 @@ export class CommunityService {
     ]);
 
     return {
-      entries: rows.map((row) => this.toCommunityComponent(row)),
+      entries: rows.map((row) => this.toCommunityComponent(row, query.lang)),
       page: query.page,
       pageSize: query.size,
       total: totals?.value ?? 0
@@ -486,14 +616,18 @@ export class CommunityService {
 
   // ---- pieces ----
 
-  private toCommunityProject(row: {
-    circuit: ProjectRow;
-    author: { id: string; username: string; avatarId: string | null };
-    stars: number;
-    starred: boolean;
-  }): CommunityProject {
+  private toCommunityProject(
+    row: TextColumns & {
+      circuit: ProjectRow;
+      author: { id: string; username: string; avatarId: string | null };
+      stars: number;
+      starred: boolean;
+    },
+    language: LanguageId
+  ): CommunityProject {
     return {
       ...toProjectSummary(row.circuit),
+      ...resolvedFields(resolveRowTexts(row.circuit, row, language)),
       author: toAuthor(row.author),
       // `count(*)` is `bigint`, which `pg` hands over as a string.
       stars: Number(row.stars),
@@ -501,14 +635,18 @@ export class CommunityService {
     };
   }
 
-  private toCommunityComponent(row: {
-    circuit: ComponentRow;
-    author: { id: string; username: string; avatarId: string | null };
-    stars: number;
-    starred: boolean;
-  }): CommunityComponent {
+  private toCommunityComponent(
+    row: TextColumns & {
+      circuit: ComponentRow;
+      author: { id: string; username: string; avatarId: string | null };
+      stars: number;
+      starred: boolean;
+    },
+    language: LanguageId
+  ): CommunityComponent {
     return {
       ...toComponentSummary(row.circuit),
+      ...resolvedFields(resolveRowTexts(row.circuit, row, language)),
       author: toAuthor(row.author),
       stars: Number(row.stars),
       starred: row.starred
@@ -691,4 +829,120 @@ function notPublished(): ApiException {
     'not_found',
     'No such published document.'
   );
+}
+
+/** The columns the resolution reads off a document row. */
+function originalColumns(table: typeof projects | typeof components) {
+  return {
+    name: table.name,
+    description: table.description,
+    textDigest: table.textDigest,
+    translatedDigest: table.translatedDigest,
+    nameLanguage: table.nameLanguage,
+    descriptionLanguage: table.descriptionLanguage
+  };
+}
+
+/**
+ * The machine row of the reader's language, whatever text it was written for:
+ * the resolution compares its digest, as it does for the flag.
+ */
+function machineTextOn(
+  machine: typeof projectMachine | typeof componentMachine,
+  documentId: Column,
+  language: LanguageId
+): SQL | undefined {
+  return and(
+    eq(machine.documentId, documentId),
+    eq(machine.language, language),
+    eq(machine.origin, 'machine')
+  );
+}
+
+/**
+ * Resolves a community row. The machine `EXISTS` already compared the digest,
+ * so a field it found is current for the text the row holds.
+ */
+function resolveRowTexts(
+  circuit: OriginalTexts,
+  row: TextColumns,
+  language: LanguageId
+): ResolvedTexts {
+  return resolveTexts(
+    circuit,
+    { name: row.humanName, description: row.humanDescription },
+    {
+      sourceDigest: circuit.textDigest,
+      name: row.machineName,
+      description: row.machineDescription
+    },
+    language
+  );
+}
+
+/** The resolved texts in the fields a community response carries them in. */
+function resolvedFields(texts: ResolvedTexts) {
+  return {
+    name: texts.name.text,
+    description: texts.description.text,
+    textLanguage: {
+      name: texts.name.language,
+      description: texts.description.language
+    },
+    machineTranslation: texts.machineTranslation
+  };
+}
+
+/**
+ * The translation endpoint's answer for a row it read, or a `404` when the
+ * link does not resolve or no field offers a machine text.
+ */
+function toTranslation(
+  row:
+    | {
+        circuit: OriginalTexts;
+        humanName: string | null;
+        humanDescription: string | null;
+        machineDigest: string | null;
+        machineName: string | null;
+        machineDescription: string | null;
+      }
+    | undefined,
+  language: LanguageId
+): DocumentTranslationResponse {
+  if (!row) throw notPublished();
+
+  const texts = resolveTexts(
+    row.circuit,
+    { name: row.humanName, description: row.humanDescription },
+    row.machineDigest === null
+      ? null
+      : {
+          sourceDigest: row.machineDigest,
+          name: row.machineName !== null,
+          description: row.machineDescription !== null
+        },
+    language
+  );
+  if (!texts.machineTranslation) {
+    throw new ApiException(
+      HttpStatus.NOT_FOUND,
+      'not_found',
+      'No machine translation into this language.'
+    );
+  }
+
+  return {
+    language,
+    name: texts.name.machineTranslation ? row.machineName : null,
+    description: texts.description.machineTranslation
+      ? row.machineDescription
+      : null,
+    sourceLanguage: {
+      name: texts.name.machineTranslation ? texts.name.language : null,
+      description: texts.description.machineTranslation
+        ? texts.description.language
+        : null
+    }
+  };
 }

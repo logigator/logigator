@@ -2,6 +2,10 @@ import * as z from 'zod';
 import { imageVariantSchema } from '../image/image.contract';
 import { pageQuerySchema, pageSchema } from '../page/page.contract';
 import { authorSchema } from '../document/document.contract';
+import {
+  documentTextFields,
+  textLanguageQuerySchema
+} from '../document/document-text.contract';
 import { componentSummarySchema } from '../document/component.contract';
 import { projectSummarySchema } from '../document/project.contract';
 import { socialLinkSchema } from '../social/social.contract';
@@ -17,21 +21,33 @@ import { socialLinkSchema } from '../social/social.contract';
  * `stars` answers with.
  */
 export const communityQuerySchema = pageQuerySchema.extend({
-  orderBy: z.enum(['trending', 'stars', 'latest']).default('trending')
+  orderBy: z.enum(['trending', 'stars', 'latest']).default('trending'),
+  ...textLanguageQuerySchema.shape
 });
 
 export type CommunityQuery = z.infer<typeof communityQuerySchema>;
 
 /**
+ * The query of the listings without a ranking choice: a member's documents and
+ * stars. They show texts too, so they are resolved for a page language as well.
+ */
+export const communityPageQuerySchema = pageQuerySchema.extend(
+  textLanguageQuerySchema.shape
+);
+
+export type CommunityPageQuery = z.infer<typeof communityPageQuerySchema>;
+
+/**
  * What a public listing adds to a summary: who made it, how many stars it has,
- * and whether the caller is one of them. `starred` is `false` rather than
+ * whether the caller is one of them, and in which language its texts are. `starred` is `false` rather than
  * absent for an anonymous caller, so a browse page renders the same control
  * either way.
  */
 const communityFields = {
   author: authorSchema,
   stars: z.number().int().nonnegative(),
-  starred: z.boolean()
+  starred: z.boolean(),
+  ...documentTextFields
 } as const;
 
 /** The immediate parent of a fork, with the link its community page lives at. */

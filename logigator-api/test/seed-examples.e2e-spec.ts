@@ -1,8 +1,14 @@
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { eq, inArray } from 'drizzle-orm';
-import { EXAMPLES_ACCOUNT_ID } from '@logigator/core';
-import { projectDependencies, projects } from '../src/database/schema';
+import { and, eq, inArray } from 'drizzle-orm';
+import { EXAMPLES_ACCOUNT_ID, type LanguageId } from '@logigator/core';
+import {
+  componentTexts,
+  components,
+  projectDependencies,
+  projectTexts,
+  projects
+} from '../src/database/schema';
 import { loadExampleSet, type ExampleSet } from '../src/documents/example-set';
 import { SeedExamplesService } from '../src/documents/seed-examples.service';
 import { CookieJar } from './cookie-jar';
@@ -29,10 +35,24 @@ describe('seeding the examples', () => {
         )
       );
 
-  async function listed(): Promise<{ id: string; name: string }[]> {
+  const seededTexts = () =>
+    api.db
+      .select()
+      .from(projectTexts)
+      .where(
+        inArray(
+          projectTexts.documentId,
+          set.projects.map((example) => example.id)
+        )
+      )
+      .orderBy(projectTexts.documentId, projectTexts.language);
+
+  async function listed(
+    lang = 'en'
+  ): Promise<{ id: string; name: string; machineTranslation: boolean }[]> {
     const response = await api.inject({
       method: 'GET',
-      url: `/api/community/users/${EXAMPLES_ACCOUNT_ID}/projects?size=100`
+      url: `/api/community/users/${EXAMPLES_ACCOUNT_ID}/projects?size=100&lang=${lang}`
     });
     expect(response.statusCode).toBe(200);
     return response.json().entries;
@@ -96,14 +116,65 @@ describe('seeding the examples', () => {
     );
   });
 
+  it('writes every other language as a human version, and nothing is pending', async () => {
+    for (const [table, texts, examples] of [
+      [projects, projectTexts, set.projects],
+      [components, componentTexts, set.components]
+    ] as const) {
+      for (const example of examples) {
+        const [row] = await api.db
+          .select()
+          .from(table)
+          .where(eq(table.id, example.id));
+        expect(row.nameLanguage).toBe(example.language);
+        expect(row.descriptionLanguage).toBe(example.language);
+        expect(row.translatedDigest).toBe(row.textDigest);
+
+        const versions = await api.db
+          .select({
+            language: texts.language,
+            origin: texts.origin,
+            name: texts.name,
+            description: texts.description,
+            sourceDigest: texts.sourceDigest
+          })
+          .from(texts)
+          .where(eq(texts.documentId, example.id));
+        expect(
+          Object.fromEntries(
+            versions.map((version) => [
+              version.language,
+              { name: version.name, description: version.description }
+            ])
+          )
+        ).toEqual(example.texts);
+        for (const version of versions) {
+          expect(version.origin).toBe('human');
+          expect(version.sourceDigest).toBe(row.textDigest);
+        }
+      }
+    }
+  });
+
+  it('lists each example in the reader’s language, with no machine translation offered', async () => {
+    const german = await listed('de');
+
+    expect(german.map((row) => row.name)).toEqual(
+      set.projects.map((example) => example.texts.de?.name ?? example.name)
+    );
+    expect(german.every((row) => !row.machineTranslation)).toBe(true);
+  });
+
   it('writes nothing on a second run', async () => {
     const before = await seededRows();
+    const textsBefore = await seededTexts();
 
     const report = await seed();
 
     expect(report.every((row) => row.document === 'unchanged')).toBe(true);
     expect(report.every((row) => row.preview === 'kept')).toBe(true);
     expect(await seededRows()).toEqual(before);
+    expect(await seededTexts()).toEqual(textsBefore);
   });
 
   it('bumps an edited example and keeps the listing in manifest order', async () => {
@@ -127,6 +198,18 @@ describe('seeding the examples', () => {
       .from(projects)
       .where(eq(projects.id, edited.id));
     expect(after.version).toBe(before.version + 1);
+    // The edit moves the digest, and the seed's languages and human versions
+    // move with it, so the example is still not pending.
+    expect(after.textDigest).not.toBe(before.textDigest);
+    expect(after.translatedDigest).toBe(after.textDigest);
+    const versions = await api.db
+      .select({ sourceDigest: projectTexts.sourceDigest })
+      .from(projectTexts)
+      .where(eq(projectTexts.documentId, edited.id));
+    expect(versions.length).toBeGreaterThan(0);
+    expect(
+      versions.every((version) => version.sourceDigest === after.textDigest)
+    ).toBe(true);
     // The edit is a new preview too: both are written from the same files.
     expect(after.previewId).not.toBe(before.previewId);
     expect(
@@ -135,6 +218,51 @@ describe('seeding the examples', () => {
     expect((await listed()).map((row) => row.id)).toEqual(
       set.projects.map((example) => example.id)
     );
+  });
+
+  it('removes a human version the manifest no longer has, as no edit', async () => {
+    // Back to the manifest as checked in, which the test before edited.
+    await seed();
+    const [first] = set.projects;
+    const dropped = Object.keys(first.texts)[0] as LanguageId;
+    const kept = { ...first.texts };
+    delete kept[dropped];
+    const [before] = await api.db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, first.id));
+
+    const report = await seed({
+      ...set,
+      projects: set.projects.map((example) =>
+        example === first ? { ...example, texts: kept } : example
+      )
+    });
+
+    const remaining = await api.db
+      .select({ language: projectTexts.language })
+      .from(projectTexts)
+      .where(
+        and(
+          eq(projectTexts.documentId, first.id),
+          eq(projectTexts.origin, 'human')
+        )
+      );
+    expect(remaining.map((row) => row.language).sort()).toEqual(
+      Object.keys(kept).sort()
+    );
+    const [after] = await api.db
+      .select()
+      .from(projects)
+      .where(eq(projects.id, first.id));
+    expect(after.version).toBe(before.version);
+    expect(after.previewId).toBe(before.previewId);
+    expect(
+      report.filter((row) => row.document !== 'unchanged').map((r) => r.slug)
+    ).toEqual([first.slug]);
+
+    // And the full manifest puts it back.
+    await seed();
   });
 
   it('refuses a fixed id another account already holds', async () => {

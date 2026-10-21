@@ -12,6 +12,7 @@ import {
   forkAttributionSchema,
   requireSomeField
 } from './document.contract';
+import { ownerTextFields } from './document-text.contract';
 
 /**
  * The fields a component has beyond a project's, and a placed instance's whole
@@ -33,7 +34,13 @@ export const componentSummarySchema = z.object(componentFields).loose();
 
 export type ComponentSummary = z.infer<typeof componentSummarySchema>;
 
-export const componentPageSchema = pageSchema(componentSummarySchema);
+/** A component in its owner's own listing; see `ownedProjectSummarySchema`. */
+export const ownedComponentSummarySchema =
+  componentSummarySchema.extend(ownerTextFields);
+
+export type OwnedComponentSummary = z.infer<typeof ownedComponentSummarySchema>;
+
+export const componentPageSchema = pageSchema(ownedComponentSummarySchema);
 
 export type ComponentPage = z.infer<typeof componentPageSchema>;
 
@@ -41,6 +48,7 @@ export type ComponentPage = z.infer<typeof componentPageSchema>;
 export const componentResponseSchema = z
   .object({
     ...componentFields,
+    ...ownerTextFields,
     document: circuitDocumentSchema,
     dependencies: z.array(documentDependencySchema),
     attribution: z.array(forkAttributionSchema)

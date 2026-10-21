@@ -3,13 +3,17 @@ import { and, eq, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type {
   CreateProjectRequest,
+  DocumentTextsResponse,
+  OwnedProjectSummary,
   Page,
   PageQuery,
+  PutDocumentTextRequest,
   ProjectResponse,
   ProjectSummary,
   SaveCircuitRequest,
   UpdateProjectRequest
 } from '@logigator/contract';
+import type { LanguageId } from '@logigator/core';
 import type { Locale } from '../common/locale';
 import { DB, type Database } from '../database/database.module';
 import { projects, type ProjectRow } from '../database/schema';
@@ -27,7 +31,18 @@ import {
   nameMatches,
   pageOf
 } from './circuit-queries';
-import { toAttribution, toProjectSummary } from './circuit-responses';
+import {
+  mapPage,
+  toAttribution,
+  toOwnedProjectSummary,
+  toOwnerTextFields,
+  toProjectSummary
+} from './circuit-responses';
+import {
+  deleteHumanText,
+  humanVersionsOf,
+  putHumanText
+} from './document-text-queries';
 import { DependenciesService, PROJECT_EDGES } from './dependencies.service';
 import { renameInDocument } from './rename-in-document';
 
@@ -50,15 +65,23 @@ export class ProjectsService {
     private readonly files: FileStorageService
   ) {}
 
-  list(userId: string, query: PageQuery): Promise<Page<ProjectRow>> {
-    return pageOf(
+  async list(
+    userId: string,
+    query: PageQuery
+  ): Promise<Page<OwnedProjectSummary>> {
+    const page = await pageOf(
       this.db,
       projects,
-      and(
-        eq(projects.userId, userId),
-        nameMatches(projects.name, query.search)
-      ),
+      and(eq(projects.userId, userId), nameMatches(projects, query.search)),
       query
+    );
+    const versions = await humanVersionsOf(
+      this.db,
+      projects,
+      page.entries.map((row) => row.id)
+    );
+    return mapPage(page, (row) =>
+      toOwnedProjectSummary(row, versions.get(row.id) ?? [])
     );
   }
 
@@ -69,13 +92,15 @@ export class ProjectsService {
    */
   async open(userId: string, id: string): Promise<ProjectResponse> {
     const row = await this.require(userId, id);
-    const [dependencies, lineage] = await Promise.all([
+    const [dependencies, lineage, versions] = await Promise.all([
       this.dependencies.summaries(PROJECT_EDGES, row.id),
-      forkLineage(this.db, projects, row)
+      forkLineage(this.db, projects, row),
+      humanVersionsOf(this.db, projects, [row.id])
     ]);
 
     return {
       ...toProjectSummary(row),
+      ...toOwnerTextFields(row, versions.get(row.id) ?? []),
       document: this.documents.read(row.document, row.id),
       dependencies,
       attribution: toAttribution(lineage)
@@ -250,6 +275,46 @@ export class ProjectsService {
 
     if (!row) throw circuitNotFound('project');
     return toProjectSummary(row);
+  }
+
+  /**
+   * Writes the author's version of the name and description in one language.
+   * Not an edit of the project: no version bump, and the edit time stands.
+   */
+  async putText(
+    userId: string,
+    id: string,
+    language: LanguageId,
+    body: PutDocumentTextRequest
+  ): Promise<DocumentTextsResponse> {
+    if (!(await putHumanText(this.db, projects, userId, id, language, body))) {
+      throw circuitNotFound('project');
+    }
+    return this.texts(userId, id);
+  }
+
+  /**
+   * Removes the author's version in one language. Removing one that does not
+   * exist is not an error: the project is then in the state the caller asked
+   * for.
+   */
+  async deleteText(
+    userId: string,
+    id: string,
+    language: LanguageId
+  ): Promise<DocumentTextsResponse> {
+    await deleteHumanText(this.db, projects, userId, id, language);
+    return this.texts(userId, id);
+  }
+
+  /** The owner's text fields, read after a write to them. */
+  private async texts(
+    userId: string,
+    id: string
+  ): Promise<DocumentTextsResponse> {
+    const row = await this.require(userId, id);
+    const versions = await humanVersionsOf(this.db, projects, [row.id]);
+    return toOwnerTextFields(row, versions.get(row.id) ?? []);
   }
 
   /**

@@ -16,22 +16,28 @@ import {
 import {
   createComponentRequestSchema,
   pageQuerySchema,
+  putDocumentTextRequestSchema,
   saveCircuitRequestSchema,
   updateComponentRequestSchema,
   type ComponentResponse,
   type ComponentSummary,
   type CreateComponentRequest,
+  type DocumentTextsResponse,
+  type OwnedComponentSummary,
   type Page,
   type PageQuery,
+  type PutDocumentTextRequest,
   type SaveCircuitRequest,
   type UpdateComponentRequest
 } from '@logigator/contract';
 import type { FastifyRequest } from 'fastify';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
+import type { LanguageId } from '@logigator/core';
 import { localeFromRequest } from '../common/locale';
+import { SiteLanguageParam } from '../common/site-language-param.pipe';
 import { UuidParam } from '../common/uuid-param.pipe';
 import { components, type UserRow } from '../database/schema';
-import { mapPage, toComponentSummary } from './circuit-responses';
+import { toComponentSummary } from './circuit-responses';
 import { readPreviewUpload } from './preview-upload';
 import { PreviewService } from './preview.service';
 import { ComponentsService } from './components.service';
@@ -46,14 +52,11 @@ export class ComponentsController {
   ) {}
 
   @Get()
-  async list(
+  list(
     @CurrentUser() user: UserRow,
     @Query({ schema: pageQuerySchema }) query: PageQuery
-  ): Promise<Page<ComponentSummary>> {
-    return mapPage(
-      await this.components.list(user.id, query),
-      toComponentSummary
-    );
+  ): Promise<Page<OwnedComponentSummary>> {
+    return this.components.list(user.id, query);
   }
 
   @Post()
@@ -108,6 +111,32 @@ export class ComponentsController {
     @Param('id', UuidParam) id: string
   ): Promise<void> {
     return this.components.delete(user.id, id);
+  }
+
+  /**
+   * The author's version of the name and description in one site language.
+   * `PUT` replaces the version whole and `DELETE` removes it; both answer the
+   * owner's text fields as they stand afterwards, as the owner's reads carry
+   * them.
+   */
+  @Put(':id/texts/:lang')
+  putText(
+    @CurrentUser() user: UserRow,
+    @Param('id', UuidParam) id: string,
+    @Param('lang', SiteLanguageParam) language: LanguageId,
+    @Body({ schema: putDocumentTextRequestSchema })
+    body: PutDocumentTextRequest
+  ): Promise<DocumentTextsResponse> {
+    return this.components.putText(user.id, id, language, body);
+  }
+
+  @Delete(':id/texts/:lang')
+  deleteText(
+    @CurrentUser() user: UserRow,
+    @Param('id', UuidParam) id: string,
+    @Param('lang', SiteLanguageParam) language: LanguageId
+  ): Promise<DocumentTextsResponse> {
+    return this.components.deleteText(user.id, id, language);
   }
 
   /**

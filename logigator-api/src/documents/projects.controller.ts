@@ -16,11 +16,15 @@ import {
 import {
   createProjectRequestSchema,
   pageQuerySchema,
+  putDocumentTextRequestSchema,
   saveCircuitRequestSchema,
   updateProjectRequestSchema,
   type CreateProjectRequest,
+  type DocumentTextsResponse,
+  type OwnedProjectSummary,
   type Page,
   type PageQuery,
+  type PutDocumentTextRequest,
   type ProjectResponse,
   type ProjectSummary,
   type SaveCircuitRequest,
@@ -28,10 +32,12 @@ import {
 } from '@logigator/contract';
 import type { FastifyRequest } from 'fastify';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
+import type { LanguageId } from '@logigator/core';
 import { localeFromRequest } from '../common/locale';
+import { SiteLanguageParam } from '../common/site-language-param.pipe';
 import { UuidParam } from '../common/uuid-param.pipe';
 import { projects, type UserRow } from '../database/schema';
-import { mapPage, toProjectSummary } from './circuit-responses';
+import { toProjectSummary } from './circuit-responses';
 import { readPreviewUpload } from './preview-upload';
 import { PreviewService } from './preview.service';
 import { ProjectsService } from './projects.service';
@@ -49,11 +55,11 @@ export class ProjectsController {
   ) {}
 
   @Get()
-  async list(
+  list(
     @CurrentUser() user: UserRow,
     @Query({ schema: pageQuerySchema }) query: PageQuery
-  ): Promise<Page<ProjectSummary>> {
-    return mapPage(await this.projects.list(user.id, query), toProjectSummary);
+  ): Promise<Page<OwnedProjectSummary>> {
+    return this.projects.list(user.id, query);
   }
 
   @Post()
@@ -103,6 +109,32 @@ export class ProjectsController {
     @Param('id', UuidParam) id: string
   ): Promise<void> {
     return this.projects.delete(user.id, id);
+  }
+
+  /**
+   * The author's version of the name and description in one site language.
+   * `PUT` replaces the version whole and `DELETE` removes it; both answer the
+   * owner's text fields as they stand afterwards, as the owner's reads carry
+   * them.
+   */
+  @Put(':id/texts/:lang')
+  putText(
+    @CurrentUser() user: UserRow,
+    @Param('id', UuidParam) id: string,
+    @Param('lang', SiteLanguageParam) language: LanguageId,
+    @Body({ schema: putDocumentTextRequestSchema })
+    body: PutDocumentTextRequest
+  ): Promise<DocumentTextsResponse> {
+    return this.projects.putText(user.id, id, language, body);
+  }
+
+  @Delete(':id/texts/:lang')
+  deleteText(
+    @CurrentUser() user: UserRow,
+    @Param('id', UuidParam) id: string,
+    @Param('lang', SiteLanguageParam) language: LanguageId
+  ): Promise<DocumentTextsResponse> {
+    return this.projects.deleteText(user.id, id, language);
   }
 
   /**

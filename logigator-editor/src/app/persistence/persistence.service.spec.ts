@@ -122,6 +122,13 @@ function circuitDocument(
   return assembleCircuitFile(body, definitions, name).file;
 }
 
+/** What an owner's read adds to a summary: no detected languages, no versions. */
+const OWNER_TEXT_FIELDS = {
+  nameLanguage: null,
+  descriptionLanguage: null,
+  texts: []
+};
+
 function projectSummaryResponse(
   overrides: Partial<{ id: string; name: string; version: number }> = {}
 ) {
@@ -148,6 +155,7 @@ function projectDetailResponse(
       name,
       version: overrides.version
     }),
+    ...OWNER_TEXT_FIELDS,
     document: circuitDocument(name, overrides.body),
     dependencies: [],
     attribution: overrides.attribution ?? []
@@ -186,6 +194,7 @@ function componentDetailResponse(
       name,
       version: overrides.version
     }),
+    ...OWNER_TEXT_FIELDS,
     document: circuitDocument(name, overrides.body, overrides.definitions),
     dependencies: [],
     attribution: []
@@ -2435,6 +2444,7 @@ describe('PersistenceService', () => {
               name: 'Cloud Comp',
               version: 2
             }),
+            ...OWNER_TEXT_FIELDS,
             symbol: 'CL',
             numInputs: 1,
             numOutputs: 1,

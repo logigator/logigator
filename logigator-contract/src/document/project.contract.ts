@@ -11,13 +11,23 @@ import {
   forkAttributionSchema,
   requireSomeField
 } from './document.contract';
+import { ownerTextFields } from './document-text.contract';
 
 /** A project in a listing: everything but the document itself. */
 export const projectSummarySchema = z.object(circuitFields).loose();
 
 export type ProjectSummary = z.infer<typeof projectSummarySchema>;
 
-export const projectPageSchema = pageSchema(projectSummarySchema);
+/**
+ * A project in its owner's own listing, with the languages of its texts and
+ * the versions its author wrote in other languages.
+ */
+export const ownedProjectSummarySchema =
+  projectSummarySchema.extend(ownerTextFields);
+
+export type OwnedProjectSummary = z.infer<typeof ownedProjectSummarySchema>;
+
+export const projectPageSchema = pageSchema(ownedProjectSummarySchema);
 
 export type ProjectPage = z.infer<typeof projectPageSchema>;
 
@@ -30,6 +40,7 @@ export type ProjectPage = z.infer<typeof projectPageSchema>;
 export const projectResponseSchema = z
   .object({
     ...circuitFields,
+    ...ownerTextFields,
     document: circuitDocumentSchema,
     dependencies: z.array(documentDependencySchema),
     /** Fork lineage, root-first; empty for a project that is nobody's fork. */

@@ -5,11 +5,15 @@ import type {
   ComponentResponse,
   ComponentSummary,
   CreateComponentRequest,
+  DocumentTextsResponse,
+  OwnedComponentSummary,
   Page,
   PageQuery,
+  PutDocumentTextRequest,
   SaveCircuitRequest,
   UpdateComponentRequest
 } from '@logigator/contract';
+import type { LanguageId } from '@logigator/core';
 import type { Locale } from '../common/locale';
 import { DB, type Database } from '../database/database.module';
 import { components, type ComponentRow } from '../database/schema';
@@ -27,7 +31,18 @@ import {
   nameMatches,
   pageOf
 } from './circuit-queries';
-import { toAttribution, toComponentSummary } from './circuit-responses';
+import {
+  mapPage,
+  toAttribution,
+  toOwnedComponentSummary,
+  toOwnerTextFields,
+  toComponentSummary
+} from './circuit-responses';
+import {
+  deleteHumanText,
+  humanVersionsOf,
+  putHumanText
+} from './document-text-queries';
 import { COMPONENT_EDGES, DependenciesService } from './dependencies.service';
 import { renameInDocument } from './rename-in-document';
 
@@ -49,27 +64,37 @@ export class ComponentsService {
     private readonly files: FileStorageService
   ) {}
 
-  list(userId: string, query: PageQuery): Promise<Page<ComponentRow>> {
-    return pageOf(
+  async list(
+    userId: string,
+    query: PageQuery
+  ): Promise<Page<OwnedComponentSummary>> {
+    const page = await pageOf(
       this.db,
       components,
-      and(
-        eq(components.userId, userId),
-        nameMatches(components.name, query.search)
-      ),
+      and(eq(components.userId, userId), nameMatches(components, query.search)),
       query
+    );
+    const versions = await humanVersionsOf(
+      this.db,
+      components,
+      page.entries.map((row) => row.id)
+    );
+    return mapPage(page, (row) =>
+      toOwnedComponentSummary(row, versions.get(row.id) ?? [])
     );
   }
 
   async open(userId: string, id: string): Promise<ComponentResponse> {
     const row = await this.require(userId, id);
-    const [dependencies, lineage] = await Promise.all([
+    const [dependencies, lineage, versions] = await Promise.all([
       this.dependencies.summaries(COMPONENT_EDGES, row.id),
-      forkLineage(this.db, components, row)
+      forkLineage(this.db, components, row),
+      humanVersionsOf(this.db, components, [row.id])
     ]);
 
     return {
       ...toComponentSummary(row),
+      ...toOwnerTextFields(row, versions.get(row.id) ?? []),
       document: this.documents.read(row.document, row.id),
       dependencies,
       attribution: toAttribution(lineage)
@@ -228,6 +253,48 @@ export class ComponentsService {
 
     if (!row) throw circuitNotFound('component');
     return toComponentSummary(row);
+  }
+
+  /**
+   * Writes the author's version of the name and description in one language.
+   * Not an edit of the component: no version bump, and the edit time stands.
+   */
+  async putText(
+    userId: string,
+    id: string,
+    language: LanguageId,
+    body: PutDocumentTextRequest
+  ): Promise<DocumentTextsResponse> {
+    if (
+      !(await putHumanText(this.db, components, userId, id, language, body))
+    ) {
+      throw circuitNotFound('component');
+    }
+    return this.texts(userId, id);
+  }
+
+  /**
+   * Removes the author's version in one language. Removing one that does not
+   * exist is not an error: the component is then in the state the caller asked
+   * for.
+   */
+  async deleteText(
+    userId: string,
+    id: string,
+    language: LanguageId
+  ): Promise<DocumentTextsResponse> {
+    await deleteHumanText(this.db, components, userId, id, language);
+    return this.texts(userId, id);
+  }
+
+  /** The owner's text fields, read after a write to them. */
+  private async texts(
+    userId: string,
+    id: string
+  ): Promise<DocumentTextsResponse> {
+    const row = await this.require(userId, id);
+    const versions = await humanVersionsOf(this.db, components, [row.id]);
+    return toOwnerTextFields(row, versions.get(row.id) ?? []);
   }
 
   /**

@@ -2,26 +2,34 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   Param,
   Put,
   Query,
   UseGuards
 } from '@nestjs/common';
 import {
+  communityPageQuerySchema,
   communityQuerySchema,
   pageQuerySchema,
+  textLanguageQuerySchema,
   type Author,
   type CommunityComponent,
   type CommunityComponentDetail,
+  type CommunityPageQuery,
   type CommunityProject,
   type CommunityProjectDetail,
   type CommunityQuery,
+  type DocumentTranslationResponse,
   type Page,
   type PageQuery,
   type PublicProfile,
-  type StarResponse
+  type StarResponse,
+  type TextLanguageQuery
 } from '@logigator/contract';
+import type { LanguageId } from '@logigator/core';
 import { AuthGuard, CurrentUser, SessionUserId } from '../auth/auth.guard';
+import { SiteLanguageParam } from '../common/site-language-param.pipe';
 import { UuidParam } from '../common/uuid-param.pipe';
 import type { UserRow } from '../database/schema';
 import { CommunityService } from './community.service';
@@ -65,7 +73,7 @@ export class CommunityController {
   @UseGuards(AuthGuard)
   starredProjects(
     @CurrentUser() user: UserRow,
-    @Query({ schema: pageQuerySchema }) query: PageQuery
+    @Query({ schema: communityPageQuerySchema }) query: CommunityPageQuery
   ): Promise<Page<CommunityProject>> {
     return this.community.listStarredProjects(user.id, query, user.id);
   }
@@ -74,7 +82,7 @@ export class CommunityController {
   @UseGuards(AuthGuard)
   starredComponents(
     @CurrentUser() user: UserRow,
-    @Query({ schema: pageQuerySchema }) query: PageQuery
+    @Query({ schema: communityPageQuerySchema }) query: CommunityPageQuery
   ): Promise<Page<CommunityComponent>> {
     return this.community.listStarredComponents(user.id, query, user.id);
   }
@@ -82,17 +90,46 @@ export class CommunityController {
   @Get('projects/:link')
   projectDetail(
     @Param('link', UuidParam) link: string,
+    @Query({ schema: textLanguageQuerySchema }) query: TextLanguageQuery,
     @SessionUserId() callerId: string | null
   ): Promise<CommunityProjectDetail> {
-    return this.community.projectDetail(link, callerId);
+    return this.community.projectDetail(link, query.lang, callerId);
   }
 
   @Get('components/:link')
   componentDetail(
     @Param('link', UuidParam) link: string,
+    @Query({ schema: textLanguageQuerySchema }) query: TextLanguageQuery,
     @SessionUserId() callerId: string | null
   ): Promise<CommunityComponentDetail> {
-    return this.community.componentDetail(link, callerId);
+    return this.community.componentDetail(link, query.lang, callerId);
+  }
+
+  /**
+   * A document's machine translation, fetched by the page when its reader asks
+   * for one. Kept out of every index and every cache: it is the one response
+   * that carries machine text, which the site never renders on the server.
+   */
+  @Get('projects/:link/translation/:lang')
+  @Header('X-Robots-Tag', 'noindex')
+  @Header('Cache-Control', 'no-store')
+  projectTranslation(
+    @Param('link', UuidParam) link: string,
+    @Param('lang', SiteLanguageParam) language: LanguageId,
+    @SessionUserId() callerId: string | null
+  ): Promise<DocumentTranslationResponse> {
+    return this.community.projectTranslation(link, language, callerId);
+  }
+
+  @Get('components/:link/translation/:lang')
+  @Header('X-Robots-Tag', 'noindex')
+  @Header('Cache-Control', 'no-store')
+  componentTranslation(
+    @Param('link', UuidParam) link: string,
+    @Param('lang', SiteLanguageParam) language: LanguageId,
+    @SessionUserId() callerId: string | null
+  ): Promise<DocumentTranslationResponse> {
+    return this.community.componentTranslation(link, language, callerId);
   }
 
   /**
@@ -159,7 +196,7 @@ export class CommunityController {
   @Get('users/:id/projects')
   userProjects(
     @Param('id', UuidParam) id: string,
-    @Query({ schema: pageQuerySchema }) query: PageQuery,
+    @Query({ schema: communityPageQuerySchema }) query: CommunityPageQuery,
     @SessionUserId() callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.community.listUserProjects(id, query, callerId);
@@ -168,7 +205,7 @@ export class CommunityController {
   @Get('users/:id/components')
   userComponents(
     @Param('id', UuidParam) id: string,
-    @Query({ schema: pageQuerySchema }) query: PageQuery,
+    @Query({ schema: communityPageQuerySchema }) query: CommunityPageQuery,
     @SessionUserId() callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.community.listUserComponents(id, query, callerId);
@@ -184,7 +221,7 @@ export class CommunityController {
   @Get('users/:id/starred/projects')
   userStarredProjects(
     @Param('id', UuidParam) id: string,
-    @Query({ schema: pageQuerySchema }) query: PageQuery,
+    @Query({ schema: communityPageQuerySchema }) query: CommunityPageQuery,
     @SessionUserId() callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.community.listStarredProjects(id, query, callerId);
@@ -193,7 +230,7 @@ export class CommunityController {
   @Get('users/:id/starred/components')
   userStarredComponents(
     @Param('id', UuidParam) id: string,
-    @Query({ schema: pageQuerySchema }) query: PageQuery,
+    @Query({ schema: communityPageQuerySchema }) query: CommunityPageQuery,
     @SessionUserId() callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.community.listStarredComponents(id, query, callerId);

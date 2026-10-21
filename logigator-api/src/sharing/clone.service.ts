@@ -24,6 +24,7 @@ import {
   DependenciesService,
   PROJECT_EDGES
 } from '../documents/dependencies.service';
+import { copyTexts } from '../documents/document-text-queries';
 import { FileStorageService } from '../storage/file-storage.service';
 import { transitiveDependencyIds } from './dependency-graph';
 import {
@@ -50,6 +51,12 @@ type PreviewMap = ReadonlyMap<string, string>;
  * New ids are chosen before any insert, so insert order is irrelevant — every
  * document is rewritten against the complete map, with no topological sort and
  * no fix-up pass.
+ *
+ * The texts come along too: the author's versions in other languages, the
+ * machine translations, and the detected languages with the digest they were
+ * made for. The copy holds the same name and description, so all of it is as
+ * current for the copy as it was for the original, and the copy is not queued
+ * for a translation of a text that already has one.
  *
  * Previews come along as copies of the originals' assets. Re-pointing sources
  * changes no pixel, and the copy is not the only document that needs one: a
@@ -195,6 +202,7 @@ export class CloneService {
         componentCount: ingested.componentCount,
         wireCount: ingested.wireCount,
         previewId: previews.get(source.id) ?? null,
+        ...textColumns(source),
         // The attribution trust anchor: every author in the chain is derived
         // from these keys.
         forkedFromId: source.id
@@ -207,6 +215,7 @@ export class CloneService {
       row.id,
       ingested.dependencies
     );
+    await copyTexts(tx, projects, source.id, row.id);
     return row;
   }
 
@@ -241,6 +250,7 @@ export class CloneService {
         numOutputs: ingested.summary.numOutputs,
         labels: ingested.summary.labels,
         previewId: previews.get(source.id) ?? null,
+        ...textColumns(source),
         forkedFromId: source.id
       })
       .returning();
@@ -251,8 +261,23 @@ export class CloneService {
       row.id,
       ingested.dependencies
     );
+    await copyTexts(tx, components, source.id, row.id);
     return row;
   }
+}
+
+/**
+ * The source's translation bookkeeping, carried over as it stands. Copied from
+ * the same read as the name and description, so the digest the languages were
+ * made for is compared against the text they describe.
+ */
+function textColumns(source: ProjectRow | ComponentRow) {
+  return {
+    textLanguageHint: source.textLanguageHint,
+    nameLanguage: source.nameLanguage,
+    descriptionLanguage: source.descriptionLanguage,
+    translatedDigest: source.translatedDigest
+  };
 }
 
 /**

@@ -119,6 +119,8 @@ export {
   type ProjectPage,
   type ProjectResponse,
   type ProjectSummary,
+  ownedProjectSummarySchema,
+  type OwnedProjectSummary,
   type UpdateProjectRequest
 } from './document/project.contract';
 export {
@@ -131,8 +133,25 @@ export {
   type ComponentResponse,
   type ComponentSummary,
   type CreateComponentRequest,
+  ownedComponentSummarySchema,
+  type OwnedComponentSummary,
   type UpdateComponentRequest
 } from './document/component.contract';
+export {
+  documentTextFields,
+  documentTextsResponseSchema,
+  documentTextVersionSchema,
+  documentTranslationResponseSchema,
+  ownerTextFields,
+  putDocumentTextRequestSchema,
+  siteLanguageSchema,
+  textLanguageQuerySchema,
+  type DocumentTextsResponse,
+  type DocumentTextVersion,
+  type DocumentTranslationResponse,
+  type PutDocumentTextRequest,
+  type TextLanguageQuery
+} from './document/document-text.contract';
 export {
   cloneResponseSchema,
   shareResponseSchema,
@@ -146,6 +165,7 @@ export {
   communityProjectDetailSchema,
   communityProjectPageSchema,
   communityProjectSchema,
+  communityPageQuerySchema,
   communityQuerySchema,
   publicProfileSchema,
   stargazerPageSchema,
@@ -155,6 +175,7 @@ export {
   type CommunityComponentPage,
   type CommunityProject,
   type CommunityProjectDetail,
+  type CommunityPageQuery,
   type CommunityProjectPage,
   type CommunityQuery,
   type PublicProfile,
