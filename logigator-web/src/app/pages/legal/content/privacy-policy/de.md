@@ -65,7 +65,7 @@ Rechtsgrundlage ist die Erfüllung des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DS
 
 ## Übersetzung von Namen und Beschreibungen
 
-Name und Beschreibung von Schaltungen, die für **alle mit dem Link** oder für **alle** sichtbar sind, werden automatisch ins Deutsche, Englische, Französische und Spanische übersetzt. Dazu übermittelt unser Server Name und Beschreibung an OpenRouter, Inc. (USA), das sie an den Anbieter eines KI-Modells weitergibt. Daten zu deinem Konto werden nicht übermittelt. Schaltungen, die **nur du** sehen kannst, werden nie übermittelt.
+Name und Beschreibung von Schaltungen, die für **alle mit dem Link** oder für **alle** sichtbar sind, werden automatisch ins Deutsche, Englische, Französische und Spanische übersetzt. Dazu übermittelt unser Server Name und Beschreibung an OpenRouter, Inc. (USA), das sie an den Anbieter eines KI-Modells weitergibt. Wir setzen nur Anbieter ein, die die Texte nicht speichern und nicht zum Training von KI-Modellen verwenden. Daten zu deinem Konto werden nicht übermittelt. Schaltungen, die **nur du** sehen kannst, werden nie übermittelt.
 
 Die Übersetzungen speichern wir bei der Schaltung und löschen sie mit ihr.
 

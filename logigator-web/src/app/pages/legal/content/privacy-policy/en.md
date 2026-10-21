@@ -65,7 +65,7 @@ The legal basis is the performance of the terms of use (Art. 6(1)(b) GDPR). The 
 
 ## Translating names and descriptions
 
-The names and descriptions of circuits visible to **anyone with the link** or to **everyone** are translated automatically into English, German, French and Spanish. For this, our server sends the name and description to OpenRouter, Inc. (USA), which passes them on to the provider of an AI model. No data about your account is sent. Circuits visible **only to you** are never sent.
+The names and descriptions of circuits visible to **anyone with the link** or to **everyone** are translated automatically into English, German, French and Spanish. For this, our server sends the name and description to OpenRouter, Inc. (USA), which passes them on to the provider of an AI model. We only use providers that do not store the texts and do not use them to train AI models. No data about your account is sent. Circuits visible **only to you** are never sent.
 
 We store the translations with the circuit and delete them with it.
 

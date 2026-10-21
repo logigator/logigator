@@ -65,7 +65,7 @@ La base jurídica es la ejecución de las condiciones de uso (art. 6, apdo. 1, l
 
 ## Traducción de nombres y descripciones
 
-El nombre y la descripción de los circuitos visibles para **cualquiera con el enlace** o para **todo el mundo** se traducen automáticamente al inglés, al alemán, al francés y al español. Para ello, nuestro servidor envía el nombre y la descripción a OpenRouter, Inc. (EE. UU.), que los pasa al proveedor de un modelo de IA. No se envía ningún dato de tu cuenta. Los circuitos visibles **solo para ti** nunca se envían.
+El nombre y la descripción de los circuitos visibles para **cualquiera con el enlace** o para **todo el mundo** se traducen automáticamente al inglés, al alemán, al francés y al español. Para ello, nuestro servidor envía el nombre y la descripción a OpenRouter, Inc. (EE. UU.), que los pasa al proveedor de un modelo de IA. Solo usamos proveedores que no guardan los textos ni los usan para entrenar modelos de IA. No se envía ningún dato de tu cuenta. Los circuitos visibles **solo para ti** nunca se envían.
 
 Guardamos las traducciones con el circuito y las eliminamos con él.
 
