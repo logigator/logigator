@@ -1,4 +1,4 @@
-Stand: 18. Oktober 2026
+Stand: 21. Oktober 2026
 
 Diese Erklärung beschreibt, welche personenbezogenen Daten Logigator verarbeitet, wozu, auf welcher Rechtsgrundlage und wie lange. Sie gilt für die Website und den Editor unter logigator.com. Verbindlich ist die deutsche Fassung; die englische, französische und spanische sind Übersetzungen.
 
@@ -8,6 +8,7 @@ Diese Erklärung beschreibt, welche personenbezogenen Daten Logigator verarbeite
 - [Bereitstellung der Website](#bereitstellung-der-website)
 - [Benutzerkonto](#benutzerkonto)
 - [Schaltungen und Community](#schaltungen-und-community)
+- [Übersetzung von Namen und Beschreibungen](#übersetzung-von-namen-und-beschreibungen)
 - [Cookies und Speicher im Browser](#cookies-und-speicher-im-browser)
 - [Statistik mit PostHog](#statistik-mit-posthog)
 - [Fehlerberichte](#fehlerberichte)
@@ -61,6 +62,14 @@ Schaltungen, die du in der Cloud speicherst, liegen auf unseren Servern, zusamme
 Dein öffentliches Profil zeigt deinen Benutzernamen, dein Profilbild, deine Profilangaben, seit wann du dabei bist, deine öffentlichen Schaltungen und die öffentlichen Schaltungen, denen du einen Stern gegeben hast. Bei öffentlichen Schaltungen ist sichtbar, wer ihnen einen Stern gegeben hat. Kopiert jemand eine Schaltung, verweist die Kopie auf das Original.
 
 Rechtsgrundlage ist die Erfüllung des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DSGVO). Die Daten bleiben gespeichert, bis du sie oder dein Konto löschst.
+
+## Übersetzung von Namen und Beschreibungen
+
+Name und Beschreibung von Schaltungen, die für **alle mit dem Link** oder für **alle** sichtbar sind, werden automatisch ins Deutsche, Englische, Französische und Spanische übersetzt. Dazu übermittelt unser Server Name und Beschreibung an OpenRouter, Inc. (USA), das sie an den Anbieter eines KI-Modells weitergibt. Daten zu deinem Konto werden nicht übermittelt. Schaltungen, die **nur du** sehen kannst, werden nie übermittelt.
+
+Die Übersetzungen speichern wir bei der Schaltung und löschen sie mit ihr.
+
+Rechtsgrundlage ist unser berechtigtes Interesse daran, Schaltungen auch in anderen Sprachen verständlich zu machen (Art. 6 Abs. 1 lit. f DSGVO).
 
 ## Cookies und Speicher im Browser
 
@@ -121,13 +130,14 @@ Rechtsgrundlage ist deine Einwilligung durch den Klick (Art. 6 Abs. 1 lit. a DSG
 
 Wir verkaufen keine Daten und zeigen keine Werbung. Daten erhalten nur die hier genannten Dienstleister, jeweils für den beschriebenen Zweck:
 
-| Dienstleister          | Zweck                               | Sitz                 |
-| ---------------------- | ----------------------------------- | -------------------- |
-| Cloudflare, Inc.       | Schutz und Auslieferung der Website | USA                  |
-| PostHog, Inc.          | Statistik, nur mit Einwilligung     | USA, Daten in der EU |
-| SMTP2GO                | Versand von E-Mails                 | Neuseeland           |
-| Zoho Corporation B.V.  | Postfach                            | Niederlande          |
-| Google Ireland Limited | Anmeldung mit Google, YouTube       | Irland               |
+| Dienstleister          | Zweck                                    | Sitz                 |
+| ---------------------- | ---------------------------------------- | -------------------- |
+| Cloudflare, Inc.       | Schutz und Auslieferung der Website      | USA                  |
+| PostHog, Inc.          | Statistik, nur mit Einwilligung          | USA, Daten in der EU |
+| SMTP2GO                | Versand von E-Mails                      | Neuseeland           |
+| Zoho Corporation B.V.  | Postfach                                 | Niederlande          |
+| Google Ireland Limited | Anmeldung mit Google, YouTube            | Irland               |
+| OpenRouter, Inc.       | Übersetzung von Namen und Beschreibungen | USA                  |
 
 Für Neuseeland hat die EU-Kommission ein angemessenes Datenschutzniveau festgestellt. Übermittlungen in die USA stützen sich auf das EU-US Data Privacy Framework, soweit der Empfänger danach zertifiziert ist, und sonst auf die Standardvertragsklauseln der EU-Kommission.
 

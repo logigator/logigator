@@ -1,4 +1,4 @@
-Dernière mise à jour : 18 octobre 2026
+Dernière mise à jour : 21 octobre 2026
 
 Cette politique décrit quelles données personnelles Logigator traite, dans quel but, sur quelle base juridique et pendant combien de temps. Elle s’applique au site web et à l’éditeur sur logigator.com. La version allemande fait foi ; les versions anglaise, française et espagnole sont des traductions.
 
@@ -8,6 +8,7 @@ Cette politique décrit quelles données personnelles Logigator traite, dans que
 - [Fonctionnement du site](#fonctionnement-du-site)
 - [Votre compte](#votre-compte)
 - [Circuits et communauté](#circuits-et-communauté)
+- [Traduction des noms et des descriptions](#traduction-des-noms-et-des-descriptions)
 - [Cookies et stockage dans le navigateur](#cookies-et-stockage-dans-le-navigateur)
 - [Statistiques avec PostHog](#statistiques-avec-posthog)
 - [Rapports de bug](#rapports-de-bug)
@@ -61,6 +62,14 @@ Les circuits que vous enregistrez dans le cloud sont stockés sur nos serveurs, 
 Votre profil public affiche votre nom d’utilisateur, votre photo de profil, les informations de votre profil, votre date d’inscription, vos circuits publics et les circuits publics auxquels vous avez donné une étoile. Sur un circuit public, chacun peut voir qui lui a donné une étoile. Quand quelqu’un copie un circuit, la copie renvoie à l’original.
 
 La base juridique est l’exécution des conditions d’utilisation (art. 6, par. 1, point b du RGPD). Les données sont conservées jusqu’à ce que vous les supprimiez, ou votre compte.
+
+## Traduction des noms et des descriptions
+
+Le nom et la description des circuits visibles par **toute personne avec le lien** ou par **tout le monde** sont traduits automatiquement en anglais, en allemand, en français et en espagnol. Pour cela, notre serveur transmet le nom et la description à OpenRouter, Inc. (États-Unis), qui les transmet au fournisseur d’un modèle d’IA. Aucune donnée relative à votre compte n’est transmise. Les circuits visibles par **vous uniquement** ne sont jamais transmis.
+
+Nous enregistrons les traductions avec le circuit et les supprimons avec lui.
+
+La base juridique est notre intérêt légitime à rendre les circuits compréhensibles dans d’autres langues (art. 6, par. 1, point f du RGPD).
 
 ## Cookies et stockage dans le navigateur
 
@@ -128,6 +137,7 @@ Nous ne vendons aucune donnée et n’affichons aucune publicité. Seuls les pre
 | SMTP2GO                | Envoi des e-mails                          | Nouvelle-Zélande              |
 | Zoho Corporation B.V.  | Boîte de réception                         | Pays-Bas                      |
 | Google Ireland Limited | Connexion avec Google, YouTube             | Irlande                       |
+| OpenRouter, Inc.       | Traduction des noms et des descriptions    | États-Unis                    |
 
 La Commission européenne a constaté que la Nouvelle-Zélande assure un niveau de protection des données adéquat. Les transferts vers les États-Unis reposent sur le cadre de protection des données UE-États-Unis (Data Privacy Framework) lorsque le destinataire y est certifié, et sinon sur les clauses contractuelles types de la Commission européenne.
 

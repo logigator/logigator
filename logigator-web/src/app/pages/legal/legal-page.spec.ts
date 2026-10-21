@@ -49,7 +49,7 @@ describe('the legal pages', () => {
 
     expect(page.querySelector('h1')?.textContent).toContain('Privacy Policy');
     expect(page.textContent).toContain('Table of contents');
-    expect(page.querySelectorAll('lg-markdown a[href^="#"]').length).toBe(13);
+    expect(page.querySelectorAll('lg-markdown a[href^="#"]').length).toBe(14);
   });
 
   /**

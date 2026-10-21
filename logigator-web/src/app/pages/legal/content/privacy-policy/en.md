@@ -1,4 +1,4 @@
-Last updated: 18 October 2026
+Last updated: 21 October 2026
 
 This policy describes which personal data Logigator processes, for what purpose, on which legal basis and for how long. It applies to the website and the editor at logigator.com. The German version is binding; the English, French and Spanish versions are translations.
 
@@ -8,6 +8,7 @@ This policy describes which personal data Logigator processes, for what purpose,
 - [Running the website](#running-the-website)
 - [Your account](#your-account)
 - [Circuits and community](#circuits-and-community)
+- [Translating names and descriptions](#translating-names-and-descriptions)
 - [Cookies and browser storage](#cookies-and-browser-storage)
 - [Statistics with PostHog](#statistics-with-posthog)
 - [Bug reports](#bug-reports)
@@ -61,6 +62,14 @@ Circuits you save to the cloud are stored on our servers, together with their na
 Your public profile shows your username, your profile picture, your profile details, how long you have been a member, your public circuits and the public circuits you have starred. On a public circuit, anyone can see who has starred it. When someone copies a circuit, the copy links to the original.
 
 The legal basis is the performance of the terms of use (Art. 6(1)(b) GDPR). The data is kept until you delete it or your account.
+
+## Translating names and descriptions
+
+The names and descriptions of circuits visible to **anyone with the link** or to **everyone** are translated automatically into English, German, French and Spanish. For this, our server sends the name and description to OpenRouter, Inc. (USA), which passes them on to the provider of an AI model. No data about your account is sent. Circuits visible **only to you** are never sent.
+
+We store the translations with the circuit and delete them with it.
+
+The legal basis is our legitimate interest in making circuits understandable in other languages (Art. 6(1)(f) GDPR).
 
 ## Cookies and browser storage
 
@@ -128,6 +137,7 @@ We do not sell data and show no advertising. Only the service providers named he
 | SMTP2GO                | Sending emails                        | New Zealand         |
 | Zoho Corporation B.V.  | Mailbox                               | Netherlands         |
 | Google Ireland Limited | Signing in with Google, YouTube       | Ireland             |
+| OpenRouter, Inc.       | Translating names and descriptions    | USA                 |
 
 The European Commission has found that New Zealand ensures an adequate level of data protection. Transfers to the USA rely on the EU-US Data Privacy Framework where the recipient is certified under it, and otherwise on the European Commission's standard contractual clauses.
 
