@@ -139,7 +139,7 @@ Wir verkaufen keine Daten und zeigen keine Werbung. Daten erhalten nur die hier 
 | Google Ireland Limited | Anmeldung mit Google, YouTube            | Irland               |
 | OpenRouter, Inc.       | Übersetzung von Namen und Beschreibungen | USA                  |
 
-Für Neuseeland hat die EU-Kommission ein angemessenes Datenschutzniveau festgestellt. Übermittlungen in die USA stützen sich auf das EU-US Data Privacy Framework, soweit der Empfänger danach zertifiziert ist, und sonst auf die Standardvertragsklauseln der EU-Kommission.
+Für Neuseeland hat die EU-Kommission ein angemessenes Datenschutzniveau festgestellt. Übermittlungen in die USA stützen sich auf das EU-US Data Privacy Framework, soweit der Empfänger danach zertifiziert ist.
 
 Wir treffen keine automatisierten Entscheidungen über dich.
 

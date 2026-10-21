@@ -139,7 +139,7 @@ We do not sell data and show no advertising. Only the service providers named he
 | Google Ireland Limited | Signing in with Google, YouTube       | Ireland             |
 | OpenRouter, Inc.       | Translating names and descriptions    | USA                 |
 
-The European Commission has found that New Zealand ensures an adequate level of data protection. Transfers to the USA rely on the EU-US Data Privacy Framework where the recipient is certified under it, and otherwise on the European Commission's standard contractual clauses.
+The European Commission has found that New Zealand ensures an adequate level of data protection. Transfers to the USA rely on the EU-US Data Privacy Framework where the recipient is certified under it.
 
 We make no automated decisions about you.
 

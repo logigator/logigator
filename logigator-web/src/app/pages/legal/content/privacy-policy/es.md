@@ -139,7 +139,7 @@ No vendemos datos ni mostramos publicidad. Solo reciben datos los proveedores in
 | Google Ireland Limited | Inicio de sesión con Google, YouTube  | Irlanda                 |
 | OpenRouter, Inc.       | Traducción de nombres y descripciones | EE. UU.                 |
 
-La Comisión Europea ha constatado que Nueva Zelanda garantiza un nivel adecuado de protección de datos. Las transferencias a EE. UU. se basan en el Marco de Privacidad de Datos UE-EE. UU. (Data Privacy Framework) cuando el destinatario está certificado conforme a él y, en otro caso, en las cláusulas contractuales tipo de la Comisión Europea.
+La Comisión Europea ha constatado que Nueva Zelanda garantiza un nivel adecuado de protección de datos. Las transferencias a EE. UU. se basan en el Marco de Privacidad de Datos UE-EE. UU. (Data Privacy Framework) cuando el destinatario está certificado conforme a él.
 
 No tomamos decisiones automatizadas sobre ti.
 

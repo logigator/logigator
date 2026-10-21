@@ -139,7 +139,7 @@ Nous ne vendons aucune donnée et n’affichons aucune publicité. Seuls les pre
 | Google Ireland Limited | Connexion avec Google, YouTube             | Irlande                       |
 | OpenRouter, Inc.       | Traduction des noms et des descriptions    | États-Unis                    |
 
-La Commission européenne a constaté que la Nouvelle-Zélande assure un niveau de protection des données adéquat. Les transferts vers les États-Unis reposent sur le cadre de protection des données UE-États-Unis (Data Privacy Framework) lorsque le destinataire y est certifié, et sinon sur les clauses contractuelles types de la Commission européenne.
+La Commission européenne a constaté que la Nouvelle-Zélande assure un niveau de protection des données adéquat. Les transferts vers les États-Unis reposent sur le cadre de protection des données UE-États-Unis (Data Privacy Framework) lorsque le destinataire y est certifié.
 
 Nous ne prenons aucune décision automatisée vous concernant.
 
