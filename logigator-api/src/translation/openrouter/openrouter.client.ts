@@ -242,8 +242,10 @@ export class OpenRouterClient implements Translator {
         }
       );
       // Read inside the same guard: the timeout covers the body too, and a
-      // body cut off mid-way is the route failing rather than the reply.
-      body = await response.json().catch(() => undefined);
+      // body cut off mid-way is the route failing rather than the reply. A
+      // body that arrives whole but is not JSON, such as a proxy's error
+      // page, is left to the status to classify.
+      body = parseJson(await response.text());
     } catch (error) {
       return {
         result: {
@@ -363,6 +365,14 @@ function readCompletion(body: unknown): {
         }
       : null
   };
+}
+
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return undefined;
+  }
 }
 
 function stringOrNull(value: unknown): string | null {

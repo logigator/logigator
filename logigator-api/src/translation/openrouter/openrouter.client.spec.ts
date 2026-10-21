@@ -295,6 +295,29 @@ describe('OpenRouterClient.translate', () => {
     expect((await translator.translate(INPUT, 'doc-1')).kind).toBe('transient');
   });
 
+  it('reports a reply whose body the timeout cut off as a timeout', async () => {
+    // OpenRouter answers 200 at once and keeps the connection open while the
+    // model works, so a slow model runs into the timeout inside the body.
+    const timeout = new Error('timed out');
+    timeout.name = 'TimeoutError';
+    const stalled = new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(' '));
+          controller.error(timeout);
+        }
+      }),
+      { status: 200 }
+    );
+    const { client: translator } = client(fakeFetch(stalled).fetch);
+
+    const outcome = await translator.translate(INPUT, 'doc-1');
+    expect(outcome.kind).toBe('transient');
+    expect(outcome.kind === 'transient' && outcome.reason).toMatch(
+      /no answer within/
+    );
+  });
+
   it('counts a moderation 403 against the document', async () => {
     const { fetch } = fakeFetch(
       json(403, {
