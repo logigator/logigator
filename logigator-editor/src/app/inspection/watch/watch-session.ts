@@ -2,6 +2,7 @@ import { Point } from 'pixi.js';
 import { Component } from '../../components/component';
 import { ConnectionPoint } from '../../connection-points/connection-point';
 import { ComponentProviderService } from '../../components/component-provider.service';
+import { InspectionUnavailableError } from '../../components/component-inspection';
 import { KeyboardComponent } from '../../components/component-types/keyboard/keyboard.component';
 import { TerminalComponent } from '../../components/component-types/terminal/terminal.component';
 import { isUserInput } from '../../components/user-input';
@@ -69,7 +70,7 @@ export class WatchSession {
       );
       for (const component of components) component.destroy({ children: true });
       for (const wire of wires) wire.destroy();
-      throw new Error(
+      throw new InspectionUnavailableError(
         getStaticDI(TranslationService).translate('watch.circuitMismatch')
       );
     }

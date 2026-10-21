@@ -1,8 +1,19 @@
-import { effect, inject, Injectable, signal, untracked } from '@angular/core';
+import {
+  effect,
+  ErrorHandler,
+  inject,
+  Injectable,
+  signal,
+  untracked
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { Component } from '../components/component';
-import { InputRoute, StateRoute } from '../components/component-inspection';
+import {
+  InputRoute,
+  InspectionUnavailableError,
+  StateRoute
+} from '../components/component-inspection';
 import { LayoutService } from '../layout/layout.service';
 import { ToastService } from '../logging/toast.service';
 import { ProjectService } from '../project/project.service';
@@ -36,6 +47,7 @@ export class InspectionService {
   private readonly sheetPresenter = inject(SheetInspectionPresenter);
   private readonly analytics = inject(AnalyticsService);
   private readonly simulation = inject(SimulationService);
+  private readonly errorHandler = inject(ErrorHandler);
 
   private readonly _open = signal<readonly OpenInspection[]>([]);
   /** The open inspections, in opening order. */
@@ -101,12 +113,13 @@ export class InspectionService {
       });
     } catch (err) {
       // A watch can legitimately fail to open (the definition no longer
-      // matches the compiled board) — surface it instead of crashing the tap.
-      this.toastService.error(
-        err instanceof Error ? err.message : String(err),
-        'InspectionService',
-        err
-      );
+      // matches the compiled board), which is told; anything else is a bug
+      // and goes to the bug report. Neither breaks the tap stream.
+      if (err instanceof InspectionUnavailableError) {
+        this.toastService.error(err.message, 'InspectionService', err);
+      } else {
+        this.errorHandler.handleError(err);
+      }
       return;
     }
     const entry: OpenInspection = {

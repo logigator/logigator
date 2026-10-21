@@ -6,6 +6,7 @@ import {
   InputFrame,
   InputRoute,
   InspectionTitlePart,
+  InspectionUnavailableError,
   SlotOperation,
   StateRoute
 } from '../component-inspection';
@@ -300,10 +301,15 @@ export class SubCircuitWatch extends ComponentInspection {
       return;
     }
     const path = `${parent.path}/${bodyIndex}`;
-    this._levels.update((levels) => [
-      ...levels,
-      this._buildLevel(definition.name, path, definition.circuit!)
-    ]);
+    let level: WatchLevel;
+    try {
+      level = this._buildLevel(definition.name, path, definition.circuit!);
+    } catch (err) {
+      if (!(err instanceof InspectionUnavailableError)) throw err;
+      getStaticDI(ToastService).error(err.message, 'SubCircuitWatch', err);
+      return;
+    }
+    this._levels.update((levels) => [...levels, level]);
   }
 
   private _buildLevel(

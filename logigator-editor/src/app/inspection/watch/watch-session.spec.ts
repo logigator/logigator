@@ -25,6 +25,7 @@ import {
 } from '../../simulation/worker/simulation-worker.service';
 import { Wire } from '../../wires/wire';
 import { WireDirection } from '@logigator/core';
+import { InspectionUnavailableError } from '../../components/component-inspection';
 import { WatchSession } from './watch-session';
 
 /** Wire spanning the two given half-grid termination points (axis-aligned). */
@@ -323,7 +324,7 @@ describe('WatchSession', () => {
     };
 
     expect(() => new WatchSession(mutilated, info, board.linkCount)).toThrow(
-      /does not match/
+      InspectionUnavailableError
     );
   });
 });

@@ -65,9 +65,11 @@ holding it. The entry keeps the place, and `entryTitle` / `entryTitleParts`
 (`inspection-presenter.ts`) put it ahead of the inspection's own title, so a
 view opened from a watch reads _Outer › Inner › ROM_ in its window's title
 bar, the sheet's header and automation's `title`; a sheet tab keeps the short
-title. A factory that **throws** (a watch can legitimately
-fail to open when the definition no longer matches the compiled board) surfaces
-as an error toast instead of crashing the tap.
+title. A factory that **throws** never breaks the tap: an
+`InspectionUnavailableError` (a watch can legitimately fail to open when the
+definition no longer matches the compiled board) surfaces as an error toast
+with its message, anything else goes to the `ErrorHandler` and with it the bug
+report. Drilling into a nested level splits the same way.
 
 Desktop always uses windows; compact uses the sheet, except
 `compactPresentation: 'fullscreen'` entries (watches), which stay windows on

@@ -131,6 +131,17 @@ export interface StateRoute {
   watch(onRead: (offset: number, bytes: Uint8Array) => void): StateWatch | null;
 }
 
+/**
+ * Thrown by an inspection factory that cannot open for a reason the user is
+ * told, its message translated; anything else it throws is a bug.
+ */
+export class InspectionUnavailableError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'InspectionUnavailableError';
+  }
+}
+
 /** What an inspection is opened with, beside its component. */
 export interface InspectionContext {
   /** The route for the component's own presses, bound where it was opened. */

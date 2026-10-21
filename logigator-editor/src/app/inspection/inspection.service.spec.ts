@@ -1,10 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ApplicationRef, signal, Type, WritableSignal } from '@angular/core';
+import {
+  ApplicationRef,
+  ErrorHandler,
+  signal,
+  Type,
+  WritableSignal
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Component } from '../components/component';
-import { ComponentInspection } from '../components/component-inspection';
+import {
+  ComponentInspection,
+  InspectionUnavailableError
+} from '../components/component-inspection';
+import { ToastService } from '../logging/toast.service';
 import { LayoutService } from '../layout/layout.service';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
@@ -105,6 +115,47 @@ describe('InspectionService', () => {
     service.openFor(component);
     expect(service.open()).toHaveLength(1);
     expect(presenter.focused).toEqual([presenter.shown[0]]);
+  });
+
+  /** A component stand-in whose inspection factory throws `error`. */
+  function makeFailing(error: Error): Component {
+    return {
+      config: {
+        inspection: () => {
+          throw error;
+        }
+      }
+    } as unknown as Component;
+  }
+
+  it('tells the user why an inspection is unavailable, without reporting a bug', () => {
+    const toast = vi.spyOn(TestBed.inject(ToastService), 'error');
+    const handleError = vi.spyOn(TestBed.inject(ErrorHandler), 'handleError');
+
+    service.openFor(makeFailing(new InspectionUnavailableError('changed')));
+
+    expect(toast).toHaveBeenCalledWith(
+      'changed',
+      'InspectionService',
+      expect.any(InspectionUnavailableError)
+    );
+    expect(handleError).not.toHaveBeenCalled();
+    expect(service.open()).toHaveLength(0);
+  });
+
+  it('hands any other factory failure to the error handler', () => {
+    const toast = vi.spyOn(TestBed.inject(ToastService), 'error');
+    const handleError = vi
+      .spyOn(TestBed.inject(ErrorHandler), 'handleError')
+      .mockImplementation(() => undefined);
+    const bug = new TypeError('broken');
+
+    service.openFor(makeFailing(bug));
+
+    expect(handleError).toHaveBeenCalledWith(bug);
+    expect(toast).not.toHaveBeenCalled();
+    expect(service.open()).toHaveLength(0);
+    expect(presenter.shown).toHaveLength(0);
   });
 
   it('ignores components without an inspection factory', () => {
