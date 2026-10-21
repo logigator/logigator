@@ -124,7 +124,7 @@ export const CONSTRUCTED_CASES: EvaluationCase[] = [
     reference: {}
   },
   {
-    id: 'part-number',
+    id: 'part-number-with-word',
     kind: 'constructed',
     input: {
       name: '74HC595 Driver',
@@ -140,10 +140,19 @@ export const CONSTRUCTED_CASES: EvaluationCase[] = [
       hint: 'en'
     },
     language: 'en',
-    languages: { name: ['en', NOT_TRANSLATABLE], description: ['en'] },
-    expected: all({ name: 'keep', description: 'translate' }, 'en'),
+    languages: { name: ['en'], description: ['en'] },
+    expected: all({ name: 'translate', description: 'translate' }, 'en'),
     reference: {},
-    note: 'A part number with one English word: the title is kept.'
+    note: 'A part number with one ordinary word: the word is translated, the part number kept.'
+  },
+  {
+    id: 'part-number-only',
+    kind: 'constructed',
+    input: { name: '74HC595', description: '', hint: 'en' },
+    language: 'en',
+    languages: { name: [NOT_TRANSLATABLE], description: [NOT_TRANSLATABLE] },
+    expected: all({ name: 'keep', description: 'keep' }),
+    reference: {}
   },
   {
     id: 'same-word',
