@@ -26,7 +26,7 @@ import {
  * Global routing: `eu.openrouter.ai` keeps traffic in the EU only on Business
  * and Enterprise plans, so the region is not configurable.
  */
-export const OPENROUTER_BASE_URL = 'https://openrouter.ai';
+const OPENROUTER_BASE_URL = 'https://openrouter.ai';
 
 /** One call's ceiling. A slow reasoning model answers within it, a hung one does not. */
 const CALL_TIMEOUT_MS = 60_000;
@@ -96,7 +96,7 @@ export function buildCompletionRequest(
  * Every request's headers. The referer and the title are OpenRouter's app
  * attribution, which files the key's usage under Logigator.
  */
-export function openRouterHeaders(
+function openRouterHeaders(
   apiKey: string,
   publicUrl: string
 ): Record<string, string> {
