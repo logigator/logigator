@@ -57,7 +57,7 @@ export class ToolBarComponent {
   /** The current key binding shown in a button's tooltip. */
   protected shortcutBinding(
     action: ShortcutActionEnum
-  ): ShortcutBinding | null {
+  ): ShortcutBinding[] {
     return this.shortcutService.binding(action)();
   }
 

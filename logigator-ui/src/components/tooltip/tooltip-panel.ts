@@ -28,6 +28,6 @@ import { LgShortcut, LgShortcutBinding } from '../shortcut/shortcut';
 })
 export class LgTooltipPanel {
   readonly text = input('');
-  readonly shortcut = input<LgShortcutBinding | null>(null);
+  readonly shortcut = input<LgShortcutBinding>([]);
   readonly side = input<LgOverlaySide>('right');
 }

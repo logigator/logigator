@@ -54,13 +54,13 @@ export class ShortcutService implements OnDestroy {
 
   private readonly _bindings = new SignalMap<
     ShortcutActionEnum,
-    ShortcutBinding | null
+    ShortcutBinding[]
   >(
-    Object.entries(DEFAULT_SHORTCUTS) as [ShortcutActionEnum, ShortcutBinding][]
+    Object.entries(DEFAULT_SHORTCUTS) as [ShortcutActionEnum, ShortcutBinding[]][]
   );
 
   private readonly _bindingSignals: Readonly<
-    Record<ShortcutActionEnum, Signal<ShortcutBinding | null>>
+    Record<ShortcutActionEnum, Signal<ShortcutBinding[]>>
   >;
 
   public readonly isMac = isApplePlatform();
@@ -105,7 +105,7 @@ export class ShortcutService implements OnDestroy {
           return b !== undefined ? b : DEFAULT_SHORTCUTS[a];
         })
       ])
-    ) as Record<ShortcutActionEnum, Signal<ShortcutBinding | null>>;
+    ) as Record<ShortcutActionEnum, Signal<ShortcutBinding[]>>;
 
     this._loadFromStorage();
 
@@ -165,17 +165,19 @@ export class ShortcutService implements OnDestroy {
     // Track the reactive mirror so a template/computed read re-evaluates on
     // key changes; a non-reactive gesture poll ignores it.
     this._heldVersion();
-    const binding = this._bindingSignals[action]();
-    if (!binding) return false;
-    // A bare-modifier binding keeps its own flag false (it would display as
-    // "Alt + Alt"), so skip that flag; the held key already proves it.
-    const own = MODIFIER_FLAG_BY_KEY[binding.key];
-    return (
-      this._heldKeys.has(binding.key) &&
-      (own === 'ctrl' || this._heldCtrl === binding.ctrl) &&
-      (own === 'shift' || this._heldShift === binding.shift) &&
-      (own === 'alt' || this._heldAlt === binding.alt)
-    );
+    const bindings = this._bindingSignals[action]();
+    if (!bindings) return false;
+    return bindings.some((binding) => {
+      // A bare-modifier binding keeps its own flag false (it would display as
+      // "Alt + Alt"), so skip that flag; the held key already proves it.
+      const own = MODIFIER_FLAG_BY_KEY[binding.key];
+      return (
+        this._heldKeys.has(binding.key) &&
+        (own === 'ctrl' || this._heldCtrl === binding.ctrl) &&
+        (own === 'shift' || this._heldShift === binding.shift) &&
+        (own === 'alt' || this._heldAlt === binding.alt)
+      );
+    });
   }
 
   /**
@@ -198,7 +200,7 @@ export class ShortcutService implements OnDestroy {
   }
 
   /** Pre-built signal for one action's current binding; never allocates. */
-  public binding(action: ShortcutActionEnum): Signal<ShortcutBinding | null> {
+  public binding(action: ShortcutActionEnum): Signal<ShortcutBinding[]> {
     return this._bindingSignals[action];
   }
 
@@ -220,7 +222,7 @@ export class ShortcutService implements OnDestroy {
 
   public setBinding(
     action: ShortcutActionEnum,
-    binding: ShortcutBinding | null
+    binding: ShortcutBinding[]
   ): void {
     if (binding) {
       for (const [
@@ -232,7 +234,7 @@ export class ShortcutService implements OnDestroy {
           existingBinding &&
           this._bindingsEqual(existingBinding, binding)
         ) {
-          this._bindings.set(existingAction, null);
+          this._bindings.set(existingAction, []);
           const oldName = this.translation.translate(
             `shortcuts.actions.${existingAction}`
           );
@@ -380,17 +382,20 @@ export class ShortcutService implements OnDestroy {
     });
   }
 
-  private _matchesBinding(binding: ShortcutBinding, e: KeyboardEvent): boolean {
+  private _matchesBinding(bindings: ShortcutBinding[], e: KeyboardEvent): boolean {
     const ctrl = this.isMac ? e.ctrlKey || e.metaKey : e.ctrlKey;
-    // Skip the flag a bare-modifier binding's own key sets: pressing Alt
-    // reports altKey=true, but the binding stores alt=false to display "Alt".
-    const own = MODIFIER_FLAG_BY_KEY[binding.key];
-    return (
-      this._keysEqual(e.key, binding.key) &&
-      (own === 'ctrl' || ctrl === binding.ctrl) &&
-      (own === 'shift' || e.shiftKey === binding.shift) &&
-      (own === 'alt' || e.altKey === binding.alt)
-    );
+    return bindings.some(binding => {
+      // Skip the flag a bare-modifier binding's own key sets : pressing Alt
+    // reports altKey=true, but the
+       binding stores alt=false to display "Alt".
+      const own = MODIFIER_FLAG_BY_KEY[binding.key];
+      return (
+        this._keysEqual(e.key, binding.key) &&
+        (own === 'ctrl' || ctrl === binding.ctrl) &&
+        (own === 'shift' || e.shiftKey === binding.shift) &&
+        (own === 'alt' || e.altKey === binding.alt)
+      );
+    });
   }
 
   /**
@@ -405,7 +410,16 @@ export class ShortcutService implements OnDestroy {
     return a === b;
   }
 
-  private _bindingsEqual(a: ShortcutBinding, b: ShortcutBinding): boolean {
+  /** Same set of bindings, order-insensitive. */
+  private _bindingsEqual(a: ShortcutBinding[], b: ShortcutBinding[]): boolean {
+    return (
+      a.length === b.length &&
+      a.every((x) => b.some((y) => this._bindingEqual(x, y))) &&
+      b.every((y) => a.some((x) => this._bindingEqual(x, y)))
+    );
+  }
+
+  private _bindingEqual(a: ShortcutBinding, b: ShortcutBinding): boolean {
     return (
       this._keysEqual(a.key, b.key) &&
       a.ctrl === b.ctrl &&
@@ -427,10 +441,13 @@ export class ShortcutService implements OnDestroy {
     try {
       const raw = localStorage.getItem(this.STORAGE_KEY);
       if (!raw) return;
-      const parsed: Record<string, ShortcutBinding | null> = JSON.parse(raw);
+      const parsed: Record<string, ShortcutBinding | ShortcutBinding[] | null> = JSON.parse(raw);
       for (const [action, binding] of Object.entries(parsed)) {
         if ((Object.values(ShortcutActionEnum) as string[]).includes(action)) {
-          this._bindings.set(action as ShortcutActionEnum, binding);
+
+          // Migrates old bindings that only allow for one custom keybind into an array
+          if (binding) this._bindings.set(action as ShortcutActionEnum, Array.isArray(binding) ? binding : [binding])
+          else this._bindings.set(action as ShortcutActionEnum, [])
         }
       }
     } catch (err) {
@@ -444,7 +461,7 @@ export class ShortcutService implements OnDestroy {
   }
 
   private _saveToStorage(): void {
-    const obj: Record<string, ShortcutBinding | null> = {};
+    const obj: Record<string, ShortcutBinding[]> = {};
     for (const [action, binding] of this._bindings.entries()) {
       obj[action] = binding;
     }
