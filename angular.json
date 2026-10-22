@@ -58,7 +58,8 @@
               "earcut",
               "@xmldom/xmldom",
               "parse-svg-path"
-            ]
+            ],
+            "externalDependencies": ["marked-katex-extension"]
           },
           "configurations": {
             "production": {
