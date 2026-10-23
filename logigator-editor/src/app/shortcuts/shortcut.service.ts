@@ -225,30 +225,29 @@ export class ShortcutService implements OnDestroy {
     action: ShortcutActionEnum,
     bindings: ShortcutBinding[]
   ): void {
-    // Unassigning conflicts with nothing: every other unassigned action holds
-    // the same empty list.
-    if (bindings.length > 0) {
-      for (const [
-        existingAction,
-        existingBindings
-      ] of this._bindings.entries()) {
-        if (
-          existingAction !== action &&
-          this._bindingsEqual(existingBindings, bindings)
-        ) {
-          this._bindings.set(existingAction, []);
-          const oldName = this.translation.translate(
-            `shortcuts.actions.${existingAction}`
-          );
-          this.toastService.info(
-            this.translation.translate('shortcuts.toast.reassignedFrom', {
-              action: oldName
-            }),
-            'ShortcutService'
-          );
-          break;
-        }
+    // A conflict is one key combination, not a whole list: the other action
+    // loses just the combinations taken from it and keeps the rest.
+    const conflicts: [ShortcutActionEnum, ShortcutBinding[]][] = [];
+    for (const [otherAction, otherBindings] of this._bindings.entries()) {
+      if (otherAction === action) continue;
+      const kept = otherBindings.filter(
+        (other) => !bindings.some((b) => this._bindingEqual(other, b))
+      );
+      if (kept.length < otherBindings.length) {
+        conflicts.push([otherAction, kept]);
       }
+    }
+    for (const [otherAction, kept] of conflicts) {
+      this._bindings.set(otherAction, kept);
+      const oldName = this.translation.translate(
+        `shortcuts.actions.${otherAction}`
+      );
+      this.toastService.info(
+        this.translation.translate('shortcuts.toast.reassignedFrom', {
+          action: oldName
+        }),
+        'ShortcutService'
+      );
     }
     this._bindings.set(action, bindings);
     this._saveToStorage();
@@ -412,15 +411,6 @@ export class ShortcutService implements OnDestroy {
       return a.toLowerCase() === b.toLowerCase();
     }
     return a === b;
-  }
-
-  /** Same set of bindings, order-insensitive. */
-  private _bindingsEqual(a: ShortcutBinding[], b: ShortcutBinding[]): boolean {
-    return (
-      a.length === b.length &&
-      a.every((x) => b.some((y) => this._bindingEqual(x, y))) &&
-      b.every((y) => a.some((x) => this._bindingEqual(x, y)))
-    );
   }
 
   private _bindingEqual(a: ShortcutBinding, b: ShortcutBinding): boolean {
