@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { DialogService, ToastService } from '@logigator/ui';
 import { provideTransloco } from '@jsverse/transloco';
@@ -87,7 +87,7 @@ describe('ShortcutService', () => {
 
   it('should return default binding for each action', () => {
     for (const action of Object.values(ShortcutActionEnum)) {
-      expect(service.binding(action)()).toEqual(DEFAULT_SHORTCUTS[action]);
+      expect(service.bindings(action)()).toEqual(DEFAULT_SHORTCUTS[action]);
     }
   });
 
@@ -98,48 +98,116 @@ describe('ShortcutService', () => {
       shift: false,
       alt: false
     };
-    service.setBinding(ShortcutActionEnum.COPY, newBinding);
-    expect(service.binding(ShortcutActionEnum.COPY)()).toEqual(newBinding);
+    service.setBinding(ShortcutActionEnum.COPY, [newBinding]);
+    expect(service.bindings(ShortcutActionEnum.COPY)()).toEqual([newBinding]);
   });
 
   it('should silently unassign conflicting action on setBinding', () => {
-    const saveBinding = { ...DEFAULT_SHORTCUTS[ShortcutActionEnum.SAVE] };
+    const saveBinding = [...DEFAULT_SHORTCUTS[ShortcutActionEnum.SAVE]];
     service.setBinding(ShortcutActionEnum.COPY, saveBinding);
 
-    expect(service.binding(ShortcutActionEnum.SAVE)()).toBeNull();
-    expect(service.binding(ShortcutActionEnum.COPY)()).toEqual(saveBinding);
+    expect(service.bindings(ShortcutActionEnum.SAVE)()).toStrictEqual([]);
+    expect(service.bindings(ShortcutActionEnum.COPY)()).toEqual(saveBinding);
     expect(messageAdd).toHaveBeenCalledOnce();
   });
 
-  it('should reset a single binding to default', () => {
-    service.setBinding(ShortcutActionEnum.COPY, {
-      key: 'q',
-      ctrl: false,
-      shift: false,
-      alt: false
+  it('takes only the conflicting combination from an action with several', () => {
+    const [del, backspace] = DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE];
+    service.setBinding(ShortcutActionEnum.COPY, [backspace]);
+
+    expect(service.bindings(ShortcutActionEnum.DELETE)()).toEqual([del]);
+    expect(service.bindings(ShortcutActionEnum.COPY)()).toEqual([backspace]);
+    expect(messageAdd).toHaveBeenCalledOnce();
+  });
+
+  it('takes conflicting combinations from every action that holds one', () => {
+    const save = DEFAULT_SHORTCUTS[ShortcutActionEnum.SAVE][0];
+    const open = DEFAULT_SHORTCUTS[ShortcutActionEnum.OPEN][0];
+    service.setBinding(ShortcutActionEnum.COPY, [save, open]);
+
+    expect(service.bindings(ShortcutActionEnum.SAVE)()).toEqual([]);
+    expect(service.bindings(ShortcutActionEnum.OPEN)()).toEqual([]);
+    expect(messageAdd).toHaveBeenCalledTimes(2);
+  });
+
+  it('unassigns without a reassignment toast while another action is unassigned', () => {
+    service.setBinding(ShortcutActionEnum.SAVE, []);
+    service.setBinding(ShortcutActionEnum.COPY, []);
+
+    expect(service.bindings(ShortcutActionEnum.COPY)()).toEqual([]);
+    expect(messageAdd).not.toHaveBeenCalled();
+  });
+
+  describe('isDefault', () => {
+    const [del, backspace] = DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE];
+
+    it('holds for the defaults in any order', () => {
+      expect(service.isDefault(ShortcutActionEnum.DELETE)).toBe(true);
+      service.setBinding(ShortcutActionEnum.DELETE, [backspace, del]);
+      expect(service.isDefault(ShortcutActionEnum.DELETE)).toBe(true);
     });
+
+    it('fails for a subset of the defaults', () => {
+      service.setBinding(ShortcutActionEnum.DELETE, [del]);
+      expect(service.isDefault(ShortcutActionEnum.DELETE)).toBe(false);
+    });
+
+    it('fails for a superset of the defaults', () => {
+      service.setBinding(ShortcutActionEnum.DELETE, [
+        del,
+        backspace,
+        { key: 'x', ctrl: false, shift: false, alt: false }
+      ]);
+      expect(service.isDefault(ShortcutActionEnum.DELETE)).toBe(false);
+    });
+
+    it('fails once unassigned', () => {
+      service.setBinding(ShortcutActionEnum.DELETE, []);
+      expect(service.isDefault(ShortcutActionEnum.DELETE)).toBe(false);
+    });
+
+    it('holds for a re-recorded shifted default, whose key comes back uppercase', () => {
+      // Recording Ctrl+Shift+Z reports key 'Z'; the default stores 'z'.
+      service.setBinding(ShortcutActionEnum.REDO, [
+        { key: 'Z', ctrl: true, shift: true, alt: false }
+      ]);
+      expect(service.isDefault(ShortcutActionEnum.REDO)).toBe(true);
+    });
+  });
+
+  it('should reset a single binding to default', () => {
+    service.setBinding(ShortcutActionEnum.COPY, [
+      {
+        key: 'q',
+        ctrl: false,
+        shift: false,
+        alt: false
+      }
+    ]);
     service.resetBinding(ShortcutActionEnum.COPY);
-    expect(service.binding(ShortcutActionEnum.COPY)()).toEqual(
+    expect(service.bindings(ShortcutActionEnum.COPY)()).toEqual(
       DEFAULT_SHORTCUTS[ShortcutActionEnum.COPY]
     );
   });
 
   it('should reset all bindings to defaults', () => {
-    service.setBinding(ShortcutActionEnum.COPY, {
-      key: 'q',
-      ctrl: false,
-      shift: false,
-      alt: false
-    });
+    service.setBinding(ShortcutActionEnum.COPY, [
+      {
+        key: 'q',
+        ctrl: false,
+        shift: false,
+        alt: false
+      }
+    ]);
     service.resetAll();
     for (const action of Object.values(ShortcutActionEnum)) {
-      expect(service.binding(action)()).toEqual(DEFAULT_SHORTCUTS[action]);
+      expect(service.bindings(action)()).toEqual(DEFAULT_SHORTCUTS[action]);
     }
   });
 
   it('should emit from on() when matching key event fires', () =>
     new Promise<void>((resolve) => {
-      const undoDefault = DEFAULT_SHORTCUTS[ShortcutActionEnum.UNDO];
+      const undoDefault = DEFAULT_SHORTCUTS[ShortcutActionEnum.UNDO][0];
       service.on(ShortcutActionEnum.UNDO).subscribe(() => resolve());
       window.dispatchEvent(
         makeKeyEvent(undoDefault.key, { ctrlKey: undoDefault.ctrl })
@@ -160,11 +228,11 @@ describe('ShortcutService', () => {
     projectService.activeProject.mockReturnValue({ actionManager: { undo } });
     workMode.mode.mockReturnValue(WorkMode.SIMULATION);
 
-    const copyDefault = DEFAULT_SHORTCUTS[ShortcutActionEnum.COPY]!;
+    const copyDefault = DEFAULT_SHORTCUTS[ShortcutActionEnum.COPY][0]!;
     window.dispatchEvent(
       makeKeyEvent(copyDefault.key, { ctrlKey: copyDefault.ctrl })
     );
-    const undoDefault = DEFAULT_SHORTCUTS[ShortcutActionEnum.UNDO]!;
+    const undoDefault = DEFAULT_SHORTCUTS[ShortcutActionEnum.UNDO][0]!;
     window.dispatchEvent(
       makeKeyEvent(undoDefault.key, { ctrlKey: undoDefault.ctrl })
     );
@@ -204,12 +272,14 @@ describe('ShortcutService', () => {
   });
 
   it('isHeld follows a rebinding to a plain letter key', () => {
-    service.setBinding(ShortcutActionEnum.SELECT_SCISSOR, {
-      key: 'x',
-      ctrl: false,
-      shift: false,
-      alt: false
-    });
+    service.setBinding(ShortcutActionEnum.SELECT_SCISSOR, [
+      {
+        key: 'x',
+        ctrl: false,
+        shift: false,
+        alt: false
+      }
+    ]);
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x' }));
     expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(true);
@@ -246,8 +316,96 @@ describe('ShortcutService', () => {
       shift: false,
       alt: false
     };
-    service.setBinding(ShortcutActionEnum.COPY, newBinding);
+    service.setBinding(ShortcutActionEnum.COPY, [newBinding]);
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
-    expect(stored[ShortcutActionEnum.COPY]).toEqual(newBinding);
+    expect(stored[ShortcutActionEnum.COPY]).toEqual([newBinding]);
+  });
+
+  describe('loading the legacy single-binding storage format', () => {
+    let reloaded: ShortcutService | undefined;
+
+    afterEach(() => {
+      reloaded?.ngOnDestroy();
+      reloaded = undefined;
+    });
+
+    // Storage is read once, in the constructor: swap the injected instance for
+    // a fresh one built over the seeded storage.
+    function reloadFrom(stored: Record<string, unknown>): ShortcutService {
+      service.ngOnDestroy();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+      reloaded = TestBed.runInInjectionContext(() => new ShortcutService());
+      return reloaded;
+    }
+
+    // What the old _saveToStorage wrote: every action, one binding object each
+    // — the pre-array default being the first entry of today's default list.
+    function legacyStorage(): Record<string, ShortcutBinding | null> {
+      return Object.fromEntries(
+        Object.values(ShortcutActionEnum).map((a) => [
+          a,
+          DEFAULT_SHORTCUTS[a][0]
+        ])
+      );
+    }
+
+    it('loads a legacy unassigned (null) entry as no bindings', () => {
+      const shortcuts = reloadFrom({ [ShortcutActionEnum.COPY]: null });
+
+      expect(shortcuts.bindings(ShortcutActionEnum.COPY)()).toEqual([]);
+    });
+
+    it('keeps keyboard shortcuts working after loading a legacy null entry', () => {
+      const shortcuts = reloadFrom({ [ShortcutActionEnum.COPY]: null });
+      const undo = vi.fn();
+      shortcuts.on(ShortcutActionEnum.UNDO).subscribe(undo);
+
+      // An unbound key walks every action's bindings, COPY's included — a
+      // null in there throws and tears down the keydown subscription.
+      window.dispatchEvent(makeKeyEvent('q'));
+      const undoDefault = DEFAULT_SHORTCUTS[ShortcutActionEnum.UNDO][0]!;
+      window.dispatchEvent(
+        makeKeyEvent(undoDefault.key, { ctrlKey: undoDefault.ctrl })
+      );
+
+      expect(undo).toHaveBeenCalledOnce();
+    });
+
+    it('gives DELETE its current defaults when legacy storage holds the old default', () => {
+      // A user who once rebound Undo: the old save wrote every action, so
+      // DELETE sits there as the old single-key default.
+      const stored = legacyStorage();
+      stored[ShortcutActionEnum.UNDO] = {
+        key: 'u',
+        ctrl: true,
+        shift: false,
+        alt: false
+      };
+      const shortcuts = reloadFrom(stored);
+
+      expect(shortcuts.bindings(ShortcutActionEnum.DELETE)()).toEqual(
+        DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE]
+      );
+      // The deliberate customization survives the migration.
+      expect(shortcuts.bindings(ShortcutActionEnum.UNDO)()).toEqual([
+        stored[ShortcutActionEnum.UNDO]
+      ]);
+    });
+
+    it('deletes with Backspace after loading legacy storage', () => {
+      const projectService = TestBed.inject(ProjectService) as unknown as {
+        activeProject: ReturnType<typeof vi.fn>;
+      };
+      const clipboard = TestBed.inject(ClipboardService) as unknown as {
+        delete: ReturnType<typeof vi.fn>;
+      };
+      const project = {};
+      projectService.activeProject.mockReturnValue(project);
+      reloadFrom(legacyStorage());
+
+      window.dispatchEvent(makeKeyEvent('Backspace'));
+
+      expect(clipboard.delete).toHaveBeenCalledExactlyOnceWith(project);
+    });
   });
 });

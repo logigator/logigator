@@ -28,7 +28,8 @@ export class ShortcutEditComponent {
     inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly shortcutService = inject(ShortcutService);
 
-  public readonly binding = model.required<ShortcutBinding | null>();
+  /** Every binding of the action; recording a key replaces them with it. */
+  public readonly bindings = model.required<ShortcutBinding[]>();
 
   /**
    * Accept a bare modifier as the binding. Only hold-style actions want this:
@@ -79,7 +80,7 @@ export class ShortcutEditComponent {
       };
       const own = MODIFIER_FLAG_BY_KEY[e.key];
       if (own) binding[own] = false;
-      this.binding.set(binding);
+      this.bindings.set([binding]);
       this.stopRecording();
       return;
     }
@@ -87,12 +88,14 @@ export class ShortcutEditComponent {
       this.stopRecording();
       return;
     }
-    this.binding.set({
-      key: e.key,
-      ctrl: e.ctrlKey || e.metaKey,
-      shift: e.shiftKey,
-      alt: e.altKey
-    });
+    this.bindings.set([
+      {
+        key: e.key,
+        ctrl: e.ctrlKey || e.metaKey,
+        shift: e.shiftKey,
+        alt: e.altKey
+      }
+    ]);
     this.stopRecording();
   }
 

@@ -13,7 +13,7 @@ export function bindingLabel(
   action: ShortcutActionEnum
 ): Signal<string> {
   return computed(() => {
-    const binding = shortcuts.binding(action)();
-    return binding ? formatShortcutLabel(binding) : '–';
+    const bindings = shortcuts.bindings(action)();
+    return bindings.length > 0 ? formatShortcutLabel(bindings[0]) : '–';
   });
 }

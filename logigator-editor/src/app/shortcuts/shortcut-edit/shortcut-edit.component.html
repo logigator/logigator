@@ -1,6 +1,13 @@
 <div class="flex items-center gap-2" *appTranslate="let t">
   @if (!isRecording()) {
-    <lg-shortcut [binding]="binding()" />
+    @for (binding of bindings(); track $index) {
+      @if (!$first) {
+        <span class="text-xs text-muted">/</span>
+      }
+      <lg-shortcut [binding]="binding" />
+    } @empty {
+      <lg-shortcut [binding]="null" />
+    }
     <button
       lgButton
       icon="ph ph-pencil"
