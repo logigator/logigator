@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { DialogRef, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
 import { ShortcutService } from '../shortcut.service';
 import { ShortcutActionEnum } from '../shortcut-action.enum';
-import { ShortcutBinding, DEFAULT_SHORTCUTS } from '../shortcut-binding.model';
+import { ShortcutBinding } from '../shortcut-binding.model';
 import { ShortcutEditComponent } from '../shortcut-edit/shortcut-edit.component';
 import { TranslationKey } from '../../translation/translation-key.model';
 import { TranslateDirective } from '../../translation/translate.directive';
@@ -88,20 +88,7 @@ export class ShortcutManagerComponent {
   }
 
   protected isDefault(action: ShortcutActionEnum): boolean {
-    const currents = this.shortcutService.bindings(action)();
-    const defaults = DEFAULT_SHORTCUTS[action];
-    return (
-      currents.length === defaults.length &&
-      defaults.every((def) =>
-        currents.some(
-          (current) =>
-            current.key === def.key &&
-            current.ctrl === def.ctrl &&
-            current.shift === def.shift &&
-            current.alt === def.alt
-        )
-      )
-    );
+    return this.shortcutService.isDefault(action);
   }
 
   protected onBindingChange(

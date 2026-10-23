@@ -138,6 +138,43 @@ describe('ShortcutService', () => {
     expect(messageAdd).not.toHaveBeenCalled();
   });
 
+  describe('isDefault', () => {
+    const [del, backspace] = DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE];
+
+    it('holds for the defaults in any order', () => {
+      expect(service.isDefault(ShortcutActionEnum.DELETE)).toBe(true);
+      service.setBinding(ShortcutActionEnum.DELETE, [backspace, del]);
+      expect(service.isDefault(ShortcutActionEnum.DELETE)).toBe(true);
+    });
+
+    it('fails for a subset of the defaults', () => {
+      service.setBinding(ShortcutActionEnum.DELETE, [del]);
+      expect(service.isDefault(ShortcutActionEnum.DELETE)).toBe(false);
+    });
+
+    it('fails for a superset of the defaults', () => {
+      service.setBinding(ShortcutActionEnum.DELETE, [
+        del,
+        backspace,
+        { key: 'x', ctrl: false, shift: false, alt: false }
+      ]);
+      expect(service.isDefault(ShortcutActionEnum.DELETE)).toBe(false);
+    });
+
+    it('fails once unassigned', () => {
+      service.setBinding(ShortcutActionEnum.DELETE, []);
+      expect(service.isDefault(ShortcutActionEnum.DELETE)).toBe(false);
+    });
+
+    it('holds for a re-recorded shifted default, whose key comes back uppercase', () => {
+      // Recording Ctrl+Shift+Z reports key 'Z'; the default stores 'z'.
+      service.setBinding(ShortcutActionEnum.REDO, [
+        { key: 'Z', ctrl: true, shift: true, alt: false }
+      ]);
+      expect(service.isDefault(ShortcutActionEnum.REDO)).toBe(true);
+    });
+  });
+
   it('should reset a single binding to default', () => {
     service.setBinding(ShortcutActionEnum.COPY, [
       {
