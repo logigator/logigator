@@ -9,13 +9,13 @@ import { ShortcutEditComponent } from './shortcut-edit.component';
   imports: [ShortcutEditComponent],
   template: `
     <div role="dialog" class="manager">
-      <app-shortcut-edit [(binding)]="binding" />
+      <app-shortcut-edit [(bindings)]="bindings" />
     </div>
     <div role="dialog" class="stacked"><input /></div>
   `
 })
 class Host {
-  readonly binding = signal<ShortcutBinding | null>(null);
+  readonly bindings = signal<ShortcutBinding[]>([]);
 }
 
 describe('ShortcutEditComponent', () => {
@@ -41,15 +41,12 @@ describe('ShortcutEditComponent', () => {
   it('records nothing typed into a dialog stacked over it, and keeps recording', () => {
     const fixture = record();
     press(fixture.nativeElement.querySelector('.stacked input'), 'k');
-    expect(fixture.componentInstance.binding()).toBeNull();
+    expect(fixture.componentInstance.bindings()).toEqual([]);
 
     press(document.body, 'k');
-    expect(fixture.componentInstance.binding()).toEqual({
-      key: 'k',
-      ctrl: false,
-      shift: false,
-      alt: false
-    });
+    expect(fixture.componentInstance.bindings()).toEqual([
+      { key: 'k', ctrl: false, shift: false, alt: false }
+    ]);
     (fixture.nativeElement as HTMLElement).remove();
   });
 });

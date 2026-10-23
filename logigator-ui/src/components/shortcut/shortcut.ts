@@ -4,13 +4,13 @@ import { Component, computed, input } from '@angular/core';
  * A modifier+key combination for display. A structural subset of a consumer's
  * own shortcut binding, so such an object is assignable directly.
  */
-export type LgShortcutBinding = {
+export interface LgShortcutBinding {
   /** `KeyboardEvent.key` value, e.g. 'z', 'Escape', 'Delete'. */
   key: string;
   ctrl?: boolean;
   shift?: boolean;
   alt?: boolean;
-}[]
+}
 
 /** Display labels for `KeyboardEvent.key` values that read poorly verbatim. */
 const KEY_LABELS: Readonly<Record<string, string>> = {
@@ -44,22 +44,18 @@ export function formatShortcutKey(key: string): string {
   return KEY_LABELS[key] ?? (key.length === 1 ? key.toUpperCase() : key);
 }
 
-function shortcutParts(bindings: LgShortcutBinding, mac: boolean): string[] {
+function shortcutParts(binding: LgShortcutBinding, mac: boolean): string[] {
   const parts: string[] = [];
-  for (let i = 0; i < bindings.length; i++) {
-    if (i > 0) parts.push(" / ")
-    const binding = bindings[i];
-    if (mac) {
-      if (binding.alt) parts.push('⌥');
-      if (binding.shift) parts.push('⇧');
-      if (binding.ctrl) parts.push('⌘');
-    } else {
-      if (binding.ctrl) parts.push('Ctrl');
-      if (binding.shift) parts.push('Shift');
-      if (binding.alt) parts.push('Alt');
-    }
-    parts.push(formatShortcutKey(binding.key));
+  if (mac) {
+    if (binding.alt) parts.push('⌥');
+    if (binding.shift) parts.push('⇧');
+    if (binding.ctrl) parts.push('⌘');
+  } else {
+    if (binding.ctrl) parts.push('Ctrl');
+    if (binding.shift) parts.push('Shift');
+    if (binding.alt) parts.push('Alt');
   }
+  parts.push(formatShortcutKey(binding.key));
   return parts;
 }
 
@@ -112,7 +108,7 @@ const JOINER_TONE: Record<LgShortcutTone, string> = {
   `
 })
 export class LgShortcut {
-  readonly binding = input.required<LgShortcutBinding>();
+  readonly binding = input.required<LgShortcutBinding | null>();
   readonly tone = input<LgShortcutTone>('content');
   readonly mac = input(IS_MAC);
 

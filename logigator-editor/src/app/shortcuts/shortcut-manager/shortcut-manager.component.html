@@ -10,9 +10,9 @@
             <span class="text-sm">{{ t(`shortcuts.actions.${action}`) }}</span>
             <div class="flex items-center gap-1">
               <app-shortcut-edit
-                [binding]="shortcutService.binding(action)()"
+                [bindings]="shortcutService.bindings(action)()"
                 [allowModifierOnly]="allowsModifierOnly(action)"
-                (bindingChange)="onBindingChange(action, $event)"
+                (bindingsChange)="onBindingChange(action, $event)"
               />
               <button
                 lgButton
@@ -34,7 +34,7 @@
                 severity="secondary"
                 [text]="true"
                 size="sm"
-                [disabled]="!shortcutService.binding(action)()"
+                [disabled]="shortcutService.bindings(action)().length === 0"
                 [lgTooltip]="t('shortcuts.manager.unassign')"
                 [ariaLabel]="t('shortcuts.manager.unassign')"
                 tooltipPosition="bottom"

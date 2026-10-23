@@ -56,7 +56,10 @@ export class ShortcutService implements OnDestroy {
     ShortcutActionEnum,
     ShortcutBinding[]
   >(
-    Object.entries(DEFAULT_SHORTCUTS) as [ShortcutActionEnum, ShortcutBinding[]][]
+    Object.entries(DEFAULT_SHORTCUTS) as [
+      ShortcutActionEnum,
+      ShortcutBinding[]
+    ][]
   );
 
   private readonly _bindingSignals: Readonly<
@@ -118,8 +121,8 @@ export class ShortcutService implements OnDestroy {
         )
       )
       .subscribe((e) => {
-        for (const [action, binding] of this._bindings.entries()) {
-          if (binding && this._matchesBinding(binding, e)) {
+        for (const [action, bindings] of this._bindings.entries()) {
+          if (this._matchesBinding(bindings, e)) {
             e.preventDefault();
             this.loggingService.debug(
               'Shortcut action fired: ' + action,
@@ -165,9 +168,7 @@ export class ShortcutService implements OnDestroy {
     // Track the reactive mirror so a template/computed read re-evaluates on
     // key changes; a non-reactive gesture poll ignores it.
     this._heldVersion();
-    const bindings = this._bindingSignals[action]();
-    if (!bindings) return false;
-    return bindings.some((binding) => {
+    return this._bindingSignals[action]().some((binding) => {
       // A bare-modifier binding keeps its own flag false (it would display as
       // "Alt + Alt"), so skip that flag; the held key already proves it.
       const own = MODIFIER_FLAG_BY_KEY[binding.key];
@@ -199,8 +200,8 @@ export class ShortcutService implements OnDestroy {
     this._heldAlt = e.altKey;
   }
 
-  /** Pre-built signal for one action's current binding; never allocates. */
-  public binding(action: ShortcutActionEnum): Signal<ShortcutBinding[]> {
+  /** Pre-built signal for all of one action's bindings; never allocates. */
+  public bindings(action: ShortcutActionEnum): Signal<ShortcutBinding[]> {
     return this._bindingSignals[action];
   }
 
@@ -222,17 +223,18 @@ export class ShortcutService implements OnDestroy {
 
   public setBinding(
     action: ShortcutActionEnum,
-    binding: ShortcutBinding[]
+    bindings: ShortcutBinding[]
   ): void {
-    if (binding) {
+    // Unassigning conflicts with nothing: every other unassigned action holds
+    // the same empty list.
+    if (bindings.length > 0) {
       for (const [
         existingAction,
-        existingBinding
+        existingBindings
       ] of this._bindings.entries()) {
         if (
           existingAction !== action &&
-          existingBinding &&
-          this._bindingsEqual(existingBinding, binding)
+          this._bindingsEqual(existingBindings, bindings)
         ) {
           this._bindings.set(existingAction, []);
           const oldName = this.translation.translate(
@@ -248,7 +250,7 @@ export class ShortcutService implements OnDestroy {
         }
       }
     }
-    this._bindings.set(action, binding);
+    this._bindings.set(action, bindings);
     this._saveToStorage();
   }
 
@@ -382,12 +384,14 @@ export class ShortcutService implements OnDestroy {
     });
   }
 
-  private _matchesBinding(bindings: ShortcutBinding[], e: KeyboardEvent): boolean {
+  private _matchesBinding(
+    bindings: ShortcutBinding[],
+    e: KeyboardEvent
+  ): boolean {
     const ctrl = this.isMac ? e.ctrlKey || e.metaKey : e.ctrlKey;
-    return bindings.some(binding => {
-      // Skip the flag a bare-modifier binding's own key sets : pressing Alt
-    // reports altKey=true, but the
-       binding stores alt=false to display "Alt".
+    return bindings.some((binding) => {
+      // Skip the flag a bare-modifier binding's own key sets: pressing Alt
+      // reports altKey=true, but the binding stores alt=false to display "Alt".
       const own = MODIFIER_FLAG_BY_KEY[binding.key];
       return (
         this._keysEqual(e.key, binding.key) &&
@@ -441,13 +445,17 @@ export class ShortcutService implements OnDestroy {
     try {
       const raw = localStorage.getItem(this.STORAGE_KEY);
       if (!raw) return;
-      const parsed: Record<string, ShortcutBinding | ShortcutBinding[] | null> = JSON.parse(raw);
+      const parsed: Record<string, ShortcutBinding | ShortcutBinding[] | null> =
+        JSON.parse(raw);
       for (const [action, binding] of Object.entries(parsed)) {
         if ((Object.values(ShortcutActionEnum) as string[]).includes(action)) {
-
           // Migrates old bindings that only allow for one custom keybind into an array
-          if (binding) this._bindings.set(action as ShortcutActionEnum, Array.isArray(binding) ? binding : [binding])
-          else this._bindings.set(action as ShortcutActionEnum, [])
+          if (binding)
+            this._bindings.set(
+              action as ShortcutActionEnum,
+              Array.isArray(binding) ? binding : [binding]
+            );
+          else this._bindings.set(action as ShortcutActionEnum, []);
         }
       }
     } catch (err) {

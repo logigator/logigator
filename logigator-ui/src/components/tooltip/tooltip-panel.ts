@@ -1,8 +1,6 @@
 import { Component, input } from '@angular/core';
-import { LgCaret } from '../../internal/caret';
+import { LgCaret, LgOverlaySide, LgShortcut, LgShortcutBinding } from '@logigator/ui';
 import { LgFadeIn } from '../../internal/fade-in';
-import { LgOverlaySide } from '../../internal/overlay';
-import { LgShortcut, LgShortcutBinding } from '../shortcut/shortcut';
 
 /**
  * The tooltip bubble inside the overlay: a bordered content surface in light
@@ -28,6 +26,6 @@ import { LgShortcut, LgShortcutBinding } from '../shortcut/shortcut';
 })
 export class LgTooltipPanel {
   readonly text = input('');
-  readonly shortcut = input<LgShortcutBinding>([]);
+  readonly shortcut = input<LgShortcutBinding | null>(null);
   readonly side = input<LgOverlaySide>('right');
 }
