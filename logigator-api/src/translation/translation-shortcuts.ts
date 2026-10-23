@@ -1,5 +1,5 @@
+import { NOT_TRANSLATABLE } from '@logigator/contract';
 import { normalizeAuthoredText } from '@logigator/core';
-import { NOT_TRANSLATABLE } from './translation-reply';
 
 /**
  * What a field needs before a document can be marked done:

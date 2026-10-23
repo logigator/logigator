@@ -403,6 +403,10 @@ describe('document texts in other languages', () => {
         (await putText(project.id, 'it', { name: 'Contatore' })).statusCode
       ).toBe(404);
       expect((await putText(project.id, 'de', {})).statusCode).toBe(422);
+      // Blank is not a version: readers would be shown it for the original.
+      expect(
+        (await putText(project.id, 'de', { description: '  ' })).statusCode
+      ).toBe(422);
       expect(
         await api.db
           .select()

@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import type { ProjectSummary } from '@logigator/contract';
 import { projectTexts, projects } from '../src/database/schema';
@@ -10,6 +10,7 @@ import {
 import {
   claimPending,
   releaseClaim,
+  renewForCall,
   settleTranslation
 } from '../src/translation/translation-queries';
 import type {
@@ -454,6 +455,78 @@ describe('the translation worker', () => {
     expect(fake.callsFor(almost.id)).toHaveLength(1);
   });
 
+  it('translates what its authors uncover once it was settled by them', async () => {
+    const project = await createProject(ada, { name: 'Half Adder' });
+    const putVersion = (lang: string, payload: Record<string, string>) =>
+      api.inject({
+        method: 'PUT',
+        url: `/api/projects/${project.id}/texts/${lang}`,
+        headers: ada.headers(),
+        payload
+      });
+    for (const lang of ['en', 'de', 'fr', 'es']) {
+      const texts = { name: `Adder ${lang}`, description: `Adds (${lang}).` };
+      expect((await putVersion(lang, texts)).statusCode).toBe(200);
+    }
+    await worker.tick();
+    expect(fake.callsFor(project.id)).toEqual([]);
+
+    // Rewritten whole, every language still covered: settled again, no call.
+    await putVersion('fr', { name: 'Demi', description: 'Additionne.' });
+    expect((await row(project.id)).translatedDigest).toBeNull();
+    await worker.tick();
+    expect(fake.callsFor(project.id)).toEqual([]);
+    expect((await row(project.id)).translatedDigest).not.toBeNull();
+
+    const removed = await api.inject({
+      method: 'DELETE',
+      url: `/api/projects/${project.id}/texts/de`,
+      headers: ada.headers()
+    });
+    expect(removed.statusCode).toBe(200);
+    await worker.tick();
+
+    expect(fake.callsFor(project.id)).toHaveLength(1);
+    expect((await detail(project.link, 'de')).json()).toMatchObject({
+      description: 'Adds three bits.',
+      textLanguage: { description: 'en' },
+      machineTranslation: true
+    });
+  });
+
+  it('renews a batch member’s lease when its call starts', async () => {
+    const project = await createProject(ada, { name: 'Barrel Shifter' });
+    const claimed = await claimPending(api.db, projects, {
+      debounceSeconds: 0,
+      batch: 100
+    });
+    const others = claimed.filter((claim) => claim.id !== project.id);
+    for (const claim of others) await releaseClaim(api.db, projects, claim);
+    const claim = claimed.find((each) => each.id === project.id)!;
+
+    // The batch before it took the whole lease.
+    const aged = await api.db.execute<{ claimed_at: string }>(sql`
+      UPDATE projects
+         SET translation_claimed_at = translation_claimed_at - interval '${sql.raw(String(TRANSLATION_LEASE_MINUTES))} minutes 1 second'
+       WHERE id = ${project.id}
+      RETURNING translation_claimed_at::text AS claimed_at
+    `);
+    const renewed = await renewForCall(api.db, projects, {
+      ...claim,
+      claimedAt: aged.rows[0].claimed_at
+    });
+    expect(renewed).not.toBeNull();
+
+    // Another instance's claim passes it by while its call is in flight.
+    const elsewhere = await claimPending(api.db, projects, {
+      debounceSeconds: 0,
+      batch: 100
+    });
+    for (const each of elsewhere) await releaseClaim(api.db, projects, each);
+    expect(elsewhere.map((each) => each.id)).not.toContain(project.id);
+    await releaseClaim(api.db, projects, renewed!);
+  });
+
   it('pauses on a spent budget until the key has budget again', async () => {
     const project = await createProject(ada, { name: 'ALU' });
     const behind = await createProject(ada, { name: 'Register File' });
@@ -509,34 +582,43 @@ describe('the translation worker', () => {
     expect(fake.callsFor(project.id)).toHaveLength(1);
   });
 
-  it('retries one call an hour while the configuration is broken', async () => {
-    const broken = await createProject(ada, { name: 'Comparator' });
+  it('retries one call an hour while the configuration is broken, on the next document', async () => {
+    const refused = await createProject(ada, { name: 'Comparator' });
     const behind = await createProject(ada, { name: 'Encoder' });
+    const last = await createProject(ada, { name: 'Priority Encoder' });
     const configuration: Answer = () => ({
       kind: 'system',
       pause: 'configuration',
-      reason: 'OpenRouter answered 401',
+      reason: 'OpenRouter answered 400',
       calls: [],
       rejections: []
     });
-    fake.answer(broken.id, configuration, configuration);
+    fake.answer(refused.id, configuration);
+    fake.answer(behind.id, configuration);
 
     await worker.tick();
     worker.advance(59 * 60_000);
     await worker.tick();
 
-    expect(fake.callsFor(broken.id)).toHaveLength(1);
+    expect(fake.callsFor(refused.id)).toHaveLength(1);
     expect(fake.callsFor(behind.id)).toEqual([]);
 
     worker.advance(60_000);
     await worker.tick();
-    expect(fake.callsFor(broken.id)).toHaveLength(2);
-    expect(fake.callsFor(behind.id)).toEqual([]);
+    expect(fake.callsFor(behind.id)).toHaveLength(1);
+    expect(fake.callsFor(last.id)).toEqual([]);
 
+    // A request refused for itself does not hold up the queue.
     worker.advance(60 * 60_000);
     await worker.tick();
-    expect(fake.callsFor(broken.id)).toHaveLength(3);
+    expect(fake.callsFor(last.id)).toHaveLength(1);
+    expect(fake.callsFor(refused.id)).toHaveLength(1);
     expect(fake.callsFor(behind.id)).toHaveLength(1);
+    for (const id of [refused.id, behind.id]) {
+      const held = await row(id);
+      expect(held.translationAttempts).toBe(0);
+      expect(held.translationClaimedAt!.getTime()).toBeGreaterThan(Date.now());
+    }
   });
 
   // Last in this application: a refusal turns the check off for its lifetime.

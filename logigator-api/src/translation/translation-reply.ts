@@ -1,5 +1,5 @@
 import * as z from 'zod';
-import { documentNameSchema } from '@logigator/contract';
+import { documentNameSchema, NOT_TRANSLATABLE } from '@logigator/contract';
 import { normalizeAuthoredText } from '@logigator/core';
 import { type Locale, LOCALES } from '../common/locale';
 import { checkTranslatedDescription } from './translation-check';
@@ -9,9 +9,6 @@ import type {
   TranslatedText,
   TranslationInput
 } from './translator';
-
-/** The mark for a field with nothing to translate (ISO 639-2, "no linguistic content"). */
-export const NOT_TRANSLATABLE = 'zxx';
 
 const perLanguage = <S extends z.ZodType>(entry: S) =>
   Object.fromEntries(LOCALES.map((locale) => [locale, entry])) as Record<

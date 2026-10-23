@@ -138,6 +138,7 @@ export {
   type UpdateComponentRequest
 } from './document/component.contract';
 export {
+  NOT_TRANSLATABLE,
   documentTextFields,
   documentTextsResponseSchema,
   documentTextVersionSchema,

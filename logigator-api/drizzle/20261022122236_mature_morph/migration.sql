@@ -1,0 +1,4 @@
+DROP INDEX "components_translation_pending_idx";--> statement-breakpoint
+CREATE INDEX "components_translation_pending_idx" ON "components" ("last_edited_at") WHERE "translated_digest" IS DISTINCT FROM "text_digest" AND "visibility" <> 'private' AND NOT ("translation_attempt_digest" = "text_digest" AND "translation_attempts" >= 3);--> statement-breakpoint
+DROP INDEX "projects_translation_pending_idx";--> statement-breakpoint
+CREATE INDEX "projects_translation_pending_idx" ON "projects" ("last_edited_at") WHERE "translated_digest" IS DISTINCT FROM "text_digest" AND "visibility" <> 'private' AND NOT ("translation_attempt_digest" = "text_digest" AND "translation_attempts" >= 3);

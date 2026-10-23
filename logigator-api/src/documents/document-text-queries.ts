@@ -44,23 +44,25 @@ function outer(column: Column): SQL {
 }
 
 /**
- * The join condition that puts the author's version in `language` beside each
- * document row. A left join: most documents have none, and the row is still
- * read.
+ * The join condition that puts the text of one origin in `language` beside
+ * each document row. A left join: most documents have none, and the row is
+ * still read. A machine row is joined whatever text it was written for; the
+ * resolution compares its digest.
  */
-export function humanTextOn(
-  human: {
+export function textOn(
+  text: {
     documentId: Column;
     language: Column;
     origin: Column;
   },
   documentId: Column,
-  language: LanguageId
+  language: LanguageId,
+  origin: 'human' | 'machine'
 ): SQL | undefined {
   return and(
-    eq(human.documentId, documentId),
-    eq(human.language, language),
-    eq(human.origin, 'human')
+    eq(text.documentId, documentId),
+    eq(text.language, language),
+    eq(text.origin, origin)
   );
 }
 
@@ -149,6 +151,15 @@ export async function humanVersionsOf(
 }
 
 /**
+ * Whether the document is marked done for its current text because its authors
+ * wrote it in every site language: a field the model looked at always has a
+ * detected language, so a current mark with a field without one was made
+ * without the model, and holds no machine rows.
+ */
+const SETTLED_BY_AUTHORS = sql`translated_digest = text_digest
+  AND (name_language IS NULL OR description_language IS NULL)`;
+
+/**
  * Writes the author's version in one language, replacing any before it whole.
  * Returns whether a row was written: nothing is when the document is not the
  * owner's or does not exist.
@@ -157,6 +168,11 @@ export async function humanVersionsOf(
  * holds at the moment of the write: read a statement earlier, an edit landing
  * between the two would leave a fresh version marked as written for the older
  * text, or a stale one marked as current.
+ *
+ * A document its authors settled is made pending again by the same statement:
+ * a version that leaves a field out uncovers that field in this language, and
+ * the worker settles it again without a call while every language is still
+ * covered.
  *
  * Neither `version` nor `last_edited_at` moves. The version is not snapshot
  * content, and the edit time is when the original last changed.
@@ -170,18 +186,24 @@ export async function putHumanText(
   body: PutDocumentTextRequest
 ): Promise<boolean> {
   const result = await db.execute<{ document_id: string }>(sql`
-    INSERT INTO ${textTableOf(table)}
-           (document_id, language, origin, name, description, source_digest)
-    SELECT ${table.id}, ${language}, 'human'::document_text_origin,
-           ${body.name ?? null}, ${body.description ?? null}, ${table.textDigest}
-      FROM ${table}
-     WHERE ${table.id} = ${id} AND ${table.userId} = ${ownerId}
-    ON CONFLICT (document_id, language, origin) DO UPDATE
-       SET name = excluded.name,
-           description = excluded.description,
-           source_digest = excluded.source_digest,
-           created_at = now()
-    RETURNING document_id
+    WITH written AS (
+      INSERT INTO ${textTableOf(table)}
+             (document_id, language, origin, name, description, source_digest)
+      SELECT ${table.id}, ${language}, 'human'::document_text_origin,
+             ${body.name ?? null}, ${body.description ?? null}, ${table.textDigest}
+        FROM ${table}
+       WHERE ${table.id} = ${id} AND ${table.userId} = ${ownerId}
+      ON CONFLICT (document_id, language, origin) DO UPDATE
+         SET name = excluded.name,
+             description = excluded.description,
+             source_digest = excluded.source_digest,
+             created_at = now()
+      RETURNING document_id
+    ), reopened AS (
+      UPDATE ${table} SET translated_digest = NULL
+       WHERE id IN (SELECT document_id FROM written) AND ${SETTLED_BY_AUTHORS}
+    )
+    SELECT document_id FROM written
   `);
   return result.rows.length > 0;
 }
@@ -189,7 +211,10 @@ export async function putHumanText(
 /**
  * Removes the author's version in one language. Ownership is in the statement,
  * as it is for every owner write. A machine row of the same language stays, so
- * readers fall back to the original with its button and no new call.
+ * readers fall back to the original with its button and no new call. A
+ * document its authors settled has no machine rows, so it is made pending
+ * again by the same statement, and the worker translates what is now
+ * uncovered.
  */
 export async function deleteHumanText(
   db: Queryable,
@@ -200,13 +225,18 @@ export async function deleteHumanText(
 ): Promise<void> {
   const texts = textTableOf(table);
   await db.execute(sql`
-    DELETE FROM ${texts}
-     USING ${table}
-     WHERE ${texts.documentId} = ${table.id}
-       AND ${table.id} = ${id}
-       AND ${table.userId} = ${ownerId}
-       AND ${texts.language} = ${language}
-       AND ${texts.origin} = 'human'
+    WITH removed AS (
+      DELETE FROM ${texts}
+       USING ${table}
+       WHERE ${texts.documentId} = ${table.id}
+         AND ${table.id} = ${id}
+         AND ${table.userId} = ${ownerId}
+         AND ${texts.language} = ${language}
+         AND ${texts.origin} = 'human'
+      RETURNING ${texts.documentId}
+    )
+    UPDATE ${table} SET translated_digest = NULL
+     WHERE id IN (SELECT document_id FROM removed) AND ${SETTLED_BY_AUTHORS}
   `);
 }
 

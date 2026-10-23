@@ -32,8 +32,15 @@ export const textLanguageQuerySchema = z.object({
 export type TextLanguageQuery = z.infer<typeof textLanguageQuerySchema>;
 
 /**
- * A detected language: an ISO 639-1 code, or `zxx` for a text with nothing to
- * translate. Not limited to the site's languages: an Italian original is `it`.
+ * The detected language of a text with nothing to translate (ISO 639-2, "no
+ * linguistic content"). A language tag in name only: nothing is read or
+ * pronounced as being in it.
+ */
+export const NOT_TRANSLATABLE = 'zxx';
+
+/**
+ * A detected language: an ISO 639-1 code, or {@link NOT_TRANSLATABLE} for a
+ * text with nothing to translate. Not limited to the site's languages: an Italian original is `it`.
  * Null while the current text has not been looked at.
  */
 const detectedLanguageSchema = z.string().nullable();
@@ -96,12 +103,18 @@ export type DocumentTextsResponse = z.infer<typeof documentTextsResponseSchema>;
 /**
  * Writing the author's version in one language. It replaces the version
  * whole: a field left out has no text in that language, and readers get the
- * original for it.
+ * original for it. An empty description is refused rather than stored: it
+ * would be shown in place of the original, and leaving the field out is how a
+ * version says it has none.
  */
 export const putDocumentTextRequestSchema = requireSomeField(
   z.object({
     name: documentNameSchema.optional(),
-    description: documentDescriptionSchema.optional()
+    description: documentDescriptionSchema
+      .refine((description) => description !== '', {
+        message: 'must not be empty; leave the field out instead'
+      })
+      .optional()
   })
 );
 

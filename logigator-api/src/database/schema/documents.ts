@@ -161,17 +161,27 @@ function circuitColumns() {
   };
 }
 
+/** Failures of one text after which it waits for its author to change it. */
+export const MAX_TRANSLATION_ATTEMPTS = 3;
+
 /**
  * What the translation worker scans: pending rows that may leave the
  * database, oldest edit first. Private documents are never sent to a
- * translator, so they are outside the index as well as the claim.
+ * translator, and a parked text is not taken until it is edited, so both are
+ * outside the index as well as the claim; otherwise every claim would step
+ * over every parked row before it reached one it may take.
+ *
+ * The attempt limit is written into the predicate, so changing
+ * {@link MAX_TRANSLATION_ATTEMPTS} takes a migration of the two indexes.
  */
 function translationPendingWhere(t: {
   translatedDigest: AnyPgColumn;
   textDigest: AnyPgColumn;
   visibility: AnyPgColumn;
+  translationAttemptDigest: AnyPgColumn;
+  translationAttempts: AnyPgColumn;
 }) {
-  return sql`${t.translatedDigest} IS DISTINCT FROM ${t.textDigest} AND ${t.visibility} <> 'private'`;
+  return sql`${t.translatedDigest} IS DISTINCT FROM ${t.textDigest} AND ${t.visibility} <> 'private' AND NOT (${t.translationAttemptDigest} = ${t.textDigest} AND ${t.translationAttempts} >= ${sql.raw(String(MAX_TRANSLATION_ATTEMPTS))})`;
 }
 
 /** A board: a circuit that is opened and simulated, never embedded in another. */

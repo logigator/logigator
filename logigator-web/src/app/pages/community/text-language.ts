@@ -1,16 +1,11 @@
-/**
- * The API's mark for a text with nothing to translate (ISO 639-2 "no
- * linguistic content"). A language tag in name only: nothing should be read
- * or pronounced as being in it.
- */
-const NO_LANGUAGE = 'zxx';
+import { NOT_TRANSLATABLE } from '@logigator/contract';
 
 /**
  * A detected language that names a real one: neither unknown yet (`null`) nor
  * the not-translatable mark. Not limited to the site's languages.
  */
 export function realLanguage(language: string | null): string | null {
-  return language && language !== NO_LANGUAGE ? language : null;
+  return language && language !== NOT_TRANSLATABLE ? language : null;
 }
 
 /**

@@ -1,5 +1,6 @@
-import { sql, type SQL } from 'drizzle-orm';
+import { getTableName, sql, type SQL } from 'drizzle-orm';
 import type { Database, Queryable } from '../database/database.module';
+import { MAX_TRANSLATION_ATTEMPTS } from '../database/schema';
 import { LOCALES, type Locale } from '../common/locale';
 import type { CircuitTable } from '../documents/circuit-queries';
 import { textTableOf } from '../documents/document-text-queries';
@@ -16,10 +17,14 @@ import type { TranslatedText } from './translator';
  * then no guard on it would ever match.
  */
 
-/** Failures of one text after which it waits for its author to change it. */
-export const MAX_TRANSLATION_ATTEMPTS = 3;
-
 const LEASE = sql.raw(`interval '${TRANSLATION_LEASE_MINUTES} minutes'`);
+
+/**
+ * Written into the claim as a literal: the planner uses a partial index only
+ * where it can prove the query's condition implies the index's, and a bound
+ * parameter proves nothing.
+ */
+const MAX_ATTEMPTS = sql.raw(String(MAX_TRANSLATION_ATTEMPTS));
 
 /** One document the worker holds, with what it needs to translate it. */
 export interface ClaimedDocument {
@@ -29,6 +34,11 @@ export interface ClaimedDocument {
   description: string;
   textDigest: string;
   textLanguageHint: string | null;
+  /**
+   * Per field, whether its author has written it in every site language at
+   * the claim, which is when the document might be settled without the model.
+   */
+  authoredEverywhere: { name: boolean; description: boolean };
   /** The claim's own timestamp, as Postgres wrote it. */
   claimedAt: string;
 }
@@ -40,6 +50,8 @@ interface ClaimedRow extends Record<string, unknown> {
   description: string;
   text_digest: string;
   text_language_hint: string | null;
+  name_authored: boolean;
+  description_authored: boolean;
   claimed_at: string;
 }
 
@@ -58,6 +70,7 @@ export async function claimPending(
   table: CircuitTable,
   options: { debounceSeconds: number; batch: number }
 ): Promise<ClaimedDocument[]> {
+  const documentId = sql`${sql.identifier(getTableName(table))}.id`;
   const result = await db.execute<ClaimedRow>(sql`
     UPDATE ${table} SET translation_claimed_at = now()
      WHERE id IN (
@@ -67,11 +80,13 @@ export async function claimPending(
           AND last_edited_at < now() - make_interval(secs => ${options.debounceSeconds})
           AND (translation_claimed_at IS NULL OR translation_claimed_at < now() - ${LEASE})
           AND NOT (translation_attempt_digest = text_digest
-                   AND translation_attempts >= ${MAX_TRANSLATION_ATTEMPTS})
+                   AND translation_attempts >= ${MAX_ATTEMPTS})
         ORDER BY last_edited_at
         LIMIT ${options.batch}
         FOR UPDATE SKIP LOCKED)
     RETURNING id, user_id, name, description, text_digest, text_language_hint,
+              ${authoredInEveryLocale(table, documentId, 'name')} AS name_authored,
+              ${authoredInEveryLocale(table, documentId, 'description')} AS description_authored,
               translation_claimed_at::text AS claimed_at
   `);
   return result.rows.map((row) => ({
@@ -81,29 +96,39 @@ export async function claimPending(
     description: row.description,
     textDigest: row.text_digest,
     textLanguageHint: row.text_language_hint,
+    authoredEverywhere: {
+      name: row.name_authored,
+      description: row.description_authored
+    },
     claimedAt: row.claimed_at
   }));
 }
 
 /**
- * Whether the claimed text may still be sent: the document is not private, its
- * text is the one claimed, and the claim is still this worker's. Asked right
- * before the call, because a batch is translated one document after another
- * and a document can be made private while those before it are in flight.
+ * Renews the claim right before its call, if the text may still be sent: the
+ * document is not private, its text is the one claimed, and the claim is still
+ * this worker's. Returns the renewed claim, or null when it may not be sent.
+ *
+ * A batch is translated one document after another, so a document can be made
+ * private while those before it are in flight, and the lease the batch was
+ * claimed with can run short. Renewed here, each document's lease covers its
+ * own calls from their start, however long the batch before it took.
  */
-export async function stillSendable(
+export async function renewForCall(
   db: Database,
   table: CircuitTable,
   claim: ClaimedDocument
-): Promise<boolean> {
-  const result = await db.execute(sql`
-    SELECT 1 FROM ${table}
+): Promise<ClaimedDocument | null> {
+  const result = await db.execute<{ claimed_at: string }>(sql`
+    UPDATE ${table} SET translation_claimed_at = now()
      WHERE id = ${claim.id}
        AND visibility <> 'private'
        AND text_digest = ${claim.textDigest}
        AND translation_claimed_at = ${claim.claimedAt}::timestamptz
+    RETURNING translation_claimed_at::text AS claimed_at
   `);
-  return result.rows.length > 0;
+  const [renewed] = result.rows;
+  return renewed ? { ...claim, claimedAt: renewed.claimed_at } : null;
 }
 
 /**
@@ -196,16 +221,10 @@ export async function settleTranslation(
   result: TranslationResult,
   requireHuman: readonly ('name' | 'description')[] = []
 ): Promise<boolean> {
-  const texts = textTableOf(table);
   return db.transaction(async (tx) => {
     const humanGuards = requireHuman.map(
-      (field) => sql`AND (
-        SELECT count(*) FROM ${texts} human
-         WHERE human.document_id = ${claim.id}
-           AND human.origin = 'human'
-           AND human.${sql.identifier(field)} IS NOT NULL
-           AND human.language IN (${localeList()})
-      ) = ${LOCALES.length}`
+      (field) =>
+        sql`AND ${authoredInEveryLocale(table, sql`${claim.id}`, field)}`
     );
 
     const settled = await tx.execute(sql`
@@ -250,6 +269,21 @@ async function replaceMachineTexts(
            (document_id, language, origin, name, description, source_digest, model)
     VALUES ${sql.join(rows, sql`, `)}
   `);
+}
+
+/** Whether the author has written `field` of the document in every site language. */
+function authoredInEveryLocale(
+  table: CircuitTable,
+  documentId: SQL,
+  field: 'name' | 'description'
+): SQL<boolean> {
+  return sql<boolean>`(
+    SELECT count(*) FROM ${textTableOf(table)} human
+     WHERE human.document_id = ${documentId}
+       AND human.origin = 'human'
+       AND human.${sql.identifier(field)} IS NOT NULL
+       AND human.language IN (${localeList()})
+  ) = ${LOCALES.length}`;
 }
 
 function localeList(): SQL {

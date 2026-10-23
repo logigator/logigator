@@ -1,3 +1,4 @@
+import { NOT_TRANSLATABLE } from '@logigator/contract';
 import type { LanguageId } from '@logigator/core';
 
 /**
@@ -9,9 +10,6 @@ import type { LanguageId } from '@logigator/core';
  * The two fields are resolved independently: a neutral name and a German
  * description are one document.
  */
-
-/** The detected language that marks a text with nothing to translate. */
-export const NOT_TRANSLATABLE = 'zxx';
 
 export type TextField = 'name' | 'description';
 

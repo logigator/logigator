@@ -6,9 +6,14 @@ import {
   type OnApplicationBootstrap
 } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
+import { NOT_TRANSLATABLE } from '@logigator/contract';
 import { ENV, type Env } from '../config/env';
 import { DB, type Database } from '../database/database.module';
-import { components, projects } from '../database/schema';
+import {
+  components,
+  MAX_TRANSLATION_ATTEMPTS,
+  projects
+} from '../database/schema';
 import type { CircuitTable } from '../documents/circuit-queries';
 import { RedisService } from '../redis/redis.service';
 import {
@@ -20,13 +25,11 @@ import {
   claimPending,
   type ClaimedDocument,
   holdClaimUntil,
-  MAX_TRANSLATION_ATTEMPTS,
   recordFailure,
   releaseClaim,
-  settleTranslation,
-  stillSendable
+  renewForCall,
+  settleTranslation
 } from './translation-queries';
-import { NOT_TRANSLATABLE } from './translation-reply';
 import { documentShortcut } from './translation-shortcuts';
 import {
   type TranslationFailure,
@@ -56,6 +59,15 @@ const BUDGET_RECHECK_MS = 30 * 60_000;
  * fixes the key or the preset.
  */
 const CONFIGURATION_RETRY_MS = 60 * 60_000;
+/**
+ * How long the document a configuration failure was met on is held out of the
+ * queue. The status cannot tell a broken key or preset from a provider that
+ * refuses this one request, so the hourly retry goes to the next document
+ * instead: a document refused for itself never stands at the head of the
+ * queue, and while the configuration stays broken each held one comes back a
+ * day later.
+ */
+const CONFIGURATION_HOLD_MS = 24 * 60 * 60_000;
 /** The longest a run of transient failures backs the loop off by. */
 const MAX_BACKOFF_MS = 15 * 60_000;
 /** The longest a server's `Retry-After` is believed for. */
@@ -87,8 +99,10 @@ interface Pause {
  * failure counts against that text, which is parked after
  * {@link MAX_TRANSLATION_ATTEMPTS}. A transient one backs the loop off and
  * counts nothing. A system one pauses the loop until the budget allows again
- * or the configuration is fixed. Whatever the batch still held when the loop
- * stops is released, so another tick or another instance takes it up.
+ * or the configuration is fixed, and holds the document of a configuration
+ * failure for a day without counting it. Whatever the batch still held when
+ * the loop stops is released, so another tick or another instance takes it
+ * up.
  */
 @Injectable()
 export class TranslationWorker
@@ -251,15 +265,16 @@ export class TranslationWorker
 
   private async process(
     table: CircuitTable,
-    claim: ClaimedDocument,
+    claimed: ClaimedDocument,
     overLimit: Set<string>
   ): Promise<void> {
-    if (await this.settleWithoutModel(table, claim)) return;
+    if (await this.settleWithoutModel(table, claimed)) return;
 
-    if (!(await stillSendable(this.db, table, claim))) {
+    const claim = await renewForCall(this.db, table, claimed);
+    if (claim === null) {
       // Made private or edited since the claim: the first may not be sent,
       // and the second's result would be discarded.
-      await releaseClaim(this.db, table, claim);
+      await releaseClaim(this.db, table, claimed);
       return;
     }
 
@@ -326,6 +341,12 @@ export class TranslationWorker
     const requireHuman = (['name', 'description'] as const).filter(
       (field) => shortcut[field] === 'human'
     );
+    // Not covered at the claim: the guard below would refuse, so it is not
+    // asked. Covered, it is asked anyway, since a version may have been
+    // removed since.
+    if (requireHuman.some((field) => !claim.authoredEverywhere[field])) {
+      return false;
+    }
     // Null for a field its authors settled: there is no original language a
     // reader is ever shown it in.
     const settled = await settleTranslation(
@@ -387,7 +408,16 @@ export class TranslationWorker
         this.backOff(failure.retryAfterSeconds);
         return;
       case 'system':
-        await releaseClaim(this.db, table, claim);
+        if (failure.pause === 'configuration') {
+          await holdClaimUntil(
+            this.db,
+            table,
+            claim,
+            leaseRunningOutAt(this.clock.now() + CONFIGURATION_HOLD_MS)
+          );
+        } else {
+          await releaseClaim(this.db, table, claim);
+        }
         this.pauseFor(failure);
         return;
     }

@@ -50,10 +50,7 @@ import {
   toComponentSummary,
   toProjectSummary
 } from '../documents/circuit-responses';
-import {
-  humanTextOn,
-  machineTextFor
-} from '../documents/document-text-queries';
+import { machineTextFor, textOn } from '../documents/document-text-queries';
 import {
   resolveTexts,
   type OriginalTexts,
@@ -298,10 +295,13 @@ export class CommunityService {
         machineDescription: projectMachine.description
       })
       .from(projects)
-      .leftJoin(projectHuman, humanTextOn(projectHuman, projects.id, language))
+      .leftJoin(
+        projectHuman,
+        textOn(projectHuman, projects.id, language, 'human')
+      )
       .leftJoin(
         projectMachine,
-        machineTextOn(projectMachine, projects.id, language)
+        textOn(projectMachine, projects.id, language, 'machine')
       )
       .where(and(linkResolvesFor(projects, callerId), eq(projects.link, link)))
       .limit(1);
@@ -325,11 +325,11 @@ export class CommunityService {
       .from(components)
       .leftJoin(
         componentHuman,
-        humanTextOn(componentHuman, components.id, language)
+        textOn(componentHuman, components.id, language, 'human')
       )
       .leftJoin(
         componentMachine,
-        machineTextOn(componentMachine, components.id, language)
+        textOn(componentMachine, components.id, language, 'machine')
       )
       .where(
         and(linkResolvesFor(components, callerId), eq(components.link, link))
@@ -530,7 +530,7 @@ export class CommunityService {
         .innerJoin(users, eq(users.id, projects.userId))
         .leftJoin(
           projectHuman,
-          humanTextOn(projectHuman, projects.id, query.lang)
+          textOn(projectHuman, projects.id, query.lang, 'human')
         )
         .where(where)
         .orderBy(...order)
@@ -568,7 +568,7 @@ export class CommunityService {
       .innerJoin(users, eq(users.id, components.userId))
       .leftJoin(
         componentHuman,
-        humanTextOn(componentHuman, components.id, query.lang)
+        textOn(componentHuman, components.id, query.lang, 'human')
       )
       .where(where)
       .orderBy(...order)
@@ -841,22 +841,6 @@ function originalColumns(table: typeof projects | typeof components) {
     nameLanguage: table.nameLanguage,
     descriptionLanguage: table.descriptionLanguage
   };
-}
-
-/**
- * The machine row of the reader's language, whatever text it was written for:
- * the resolution compares its digest, as it does for the flag.
- */
-function machineTextOn(
-  machine: typeof projectMachine | typeof componentMachine,
-  documentId: Column,
-  language: LanguageId
-): SQL | undefined {
-  return and(
-    eq(machine.documentId, documentId),
-    eq(machine.language, language),
-    eq(machine.origin, 'machine')
-  );
 }
 
 /**

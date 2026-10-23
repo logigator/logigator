@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { NOT_TRANSLATABLE } from '@logigator/contract';
 import {
-  NOT_TRANSLATABLE,
   resolveTexts,
   type MachineTexts,
   type OriginalTexts
