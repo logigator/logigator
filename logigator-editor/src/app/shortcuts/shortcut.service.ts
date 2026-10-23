@@ -253,6 +253,19 @@ export class ShortcutService implements OnDestroy {
     this._saveToStorage();
   }
 
+  /**
+   * Whether `action` holds exactly its default combinations, in any order:
+   * a subset or superset is a customization.
+   */
+  public isDefault(action: ShortcutActionEnum): boolean {
+    const current = this._bindingSignals[action]();
+    const defaults = DEFAULT_SHORTCUTS[action];
+    return (
+      current.every((c) => defaults.some((d) => this._bindingEqual(c, d))) &&
+      defaults.every((d) => current.some((c) => this._bindingEqual(c, d)))
+    );
+  }
+
   public resetBinding(action: ShortcutActionEnum): void {
     this._bindings.set(action, DEFAULT_SHORTCUTS[action]);
     this._saveToStorage();
