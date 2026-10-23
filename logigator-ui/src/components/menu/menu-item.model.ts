@@ -39,7 +39,7 @@ export interface MenuItem {
    * The item's key binding. The Menubar's default rows render it as
    * {@link LgShortcut} chips; a custom `#item` template reads it itself.
    */
-  shortcut?: LgShortcutBinding;
+  shortcut?: LgShortcutBinding | null;
   expanded?: boolean;
 }
 

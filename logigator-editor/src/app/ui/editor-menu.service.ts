@@ -96,7 +96,9 @@ export class EditorMenuService {
             label: this.translation.translate(
               'titleBar.menuBar.edit.items.undo.label'
             ),
-            shortcut: this.shortcutService.binding(ShortcutActionEnum.UNDO)(),
+            shortcut: this.shortcutService.bindings(
+              ShortcutActionEnum.UNDO
+            )()[0],
             command: () =>
               this.projectService.mainProject()?.actionManager.undo()
           },
@@ -104,7 +106,9 @@ export class EditorMenuService {
             label: this.translation.translate(
               'titleBar.menuBar.edit.items.redo.label'
             ),
-            shortcut: this.shortcutService.binding(ShortcutActionEnum.REDO)(),
+            shortcut: this.shortcutService.bindings(
+              ShortcutActionEnum.REDO
+            )()[0],
             command: () =>
               this.projectService.mainProject()?.actionManager.redo()
           },
@@ -115,21 +119,27 @@ export class EditorMenuService {
             label: this.translation.translate(
               'titleBar.menuBar.edit.items.cut.label'
             ),
-            shortcut: this.shortcutService.binding(ShortcutActionEnum.CUT)(),
+            shortcut: this.shortcutService.bindings(
+              ShortcutActionEnum.CUT
+            )()[0],
             command: () => this.cut()
           },
           {
             label: this.translation.translate(
               'titleBar.menuBar.edit.items.copy.label'
             ),
-            shortcut: this.shortcutService.binding(ShortcutActionEnum.COPY)(),
+            shortcut: this.shortcutService.bindings(
+              ShortcutActionEnum.COPY
+            )()[0],
             command: () => this.copy()
           },
           {
             label: this.translation.translate(
               'titleBar.menuBar.edit.items.paste.label'
             ),
-            shortcut: this.shortcutService.binding(ShortcutActionEnum.PASTE)(),
+            shortcut: this.shortcutService.bindings(
+              ShortcutActionEnum.PASTE
+            )()[0],
             command: () => this.paste()
           },
           {
@@ -139,7 +149,9 @@ export class EditorMenuService {
             label: this.translation.translate(
               'titleBar.menuBar.edit.items.delete.label'
             ),
-            shortcut: this.shortcutService.binding(ShortcutActionEnum.DELETE)(),
+            shortcut: this.shortcutService.bindings(
+              ShortcutActionEnum.DELETE
+            )()[0],
             command: () => this.delete()
           },
           {
@@ -162,27 +174,27 @@ export class EditorMenuService {
             label: this.translation.translate(
               'titleBar.menuBar.view.items.zoomOut.label'
             ),
-            shortcut: this.shortcutService.binding(
+            shortcut: this.shortcutService.bindings(
               ShortcutActionEnum.ZOOM_OUT
-            )(),
+            )()[0],
             command: () => this.projectService.mainProject()?.viewport.zoomOut()
           },
           {
             label: this.translation.translate(
               'titleBar.menuBar.view.items.zoomIn.label'
             ),
-            shortcut: this.shortcutService.binding(
+            shortcut: this.shortcutService.bindings(
               ShortcutActionEnum.ZOOM_IN
-            )(),
+            )()[0],
             command: () => this.projectService.mainProject()?.viewport.zoomIn()
           },
           {
             label: this.translation.translate(
               'titleBar.menuBar.view.items.zoom100.label'
             ),
-            shortcut: this.shortcutService.binding(
+            shortcut: this.shortcutService.bindings(
               ShortcutActionEnum.ZOOM_100
-            )(),
+            )()[0],
             command: () => this.projectService.mainProject()?.viewport.zoom100()
           }
         ]
@@ -254,9 +266,9 @@ export class EditorMenuService {
         'titleBar.menuBar.file.items.newComponent.label'
       ),
       icon: 'ph ph-circuitry',
-      shortcut: this.shortcutService.binding(
+      shortcut: this.shortcutService.bindings(
         ShortcutActionEnum.NEW_COMPONENT
-      )(),
+      )()[0],
       command: () => this.newComponent()
     };
   }
@@ -267,7 +279,7 @@ export class EditorMenuService {
         'titleBar.menuBar.file.items.open.label'
       ),
       icon: 'ph ph-folder-open',
-      shortcut: this.shortcutService.binding(ShortcutActionEnum.OPEN)(),
+      shortcut: this.shortcutService.bindings(ShortcutActionEnum.OPEN)()[0],
       command: () => this.openProject()
     };
   }
@@ -289,7 +301,7 @@ export class EditorMenuService {
           'titleBar.menuBar.file.items.save.label'
         ),
         icon: 'ph ph-floppy-disk',
-        shortcut: this.shortcutService.binding(ShortcutActionEnum.SAVE)(),
+        shortcut: this.shortcutService.bindings(ShortcutActionEnum.SAVE)()[0],
         command: () => this.saveProject()
       }
     ];

@@ -29,7 +29,9 @@ import { TranslateDirective } from '../../translation/translate.directive';
           rounded
           [text]="!toggle.isActive()"
           [lgTooltip]="t(toggle.labelKey)"
-          [tooltipShortcut]="shortcutService.binding(toggle.shortcut)()"
+          [tooltipShortcut]="
+            shortcutService.bindings(toggle.shortcut)()[0] ?? null
+          "
           tooltipPosition="bottom"
           [ariaLabel]="t(toggle.labelKey)"
           (onClick)="toggle.toggle()"

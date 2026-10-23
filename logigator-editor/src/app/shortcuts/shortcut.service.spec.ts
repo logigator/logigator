@@ -87,7 +87,7 @@ describe('ShortcutService', () => {
 
   it('should return default binding for each action', () => {
     for (const action of Object.values(ShortcutActionEnum)) {
-      expect(service.binding(action)()).toEqual(DEFAULT_SHORTCUTS[action]);
+      expect(service.bindings(action)()).toEqual(DEFAULT_SHORTCUTS[action]);
     }
   });
 
@@ -99,41 +99,53 @@ describe('ShortcutService', () => {
       alt: false
     };
     service.setBinding(ShortcutActionEnum.COPY, [newBinding]);
-    expect(service.binding(ShortcutActionEnum.COPY)()).toEqual([newBinding]);
+    expect(service.bindings(ShortcutActionEnum.COPY)()).toEqual([newBinding]);
   });
 
   it('should silently unassign conflicting action on setBinding', () => {
     const saveBinding = [...DEFAULT_SHORTCUTS[ShortcutActionEnum.SAVE]];
     service.setBinding(ShortcutActionEnum.COPY, saveBinding);
 
-    expect(service.binding(ShortcutActionEnum.SAVE)()).toStrictEqual([]);
-    expect(service.binding(ShortcutActionEnum.COPY)()).toEqual(saveBinding);
+    expect(service.bindings(ShortcutActionEnum.SAVE)()).toStrictEqual([]);
+    expect(service.bindings(ShortcutActionEnum.COPY)()).toEqual(saveBinding);
     expect(messageAdd).toHaveBeenCalledOnce();
   });
 
+  it('unassigns without a reassignment toast while another action is unassigned', () => {
+    service.setBinding(ShortcutActionEnum.SAVE, []);
+    service.setBinding(ShortcutActionEnum.COPY, []);
+
+    expect(service.bindings(ShortcutActionEnum.COPY)()).toEqual([]);
+    expect(messageAdd).not.toHaveBeenCalled();
+  });
+
   it('should reset a single binding to default', () => {
-    service.setBinding(ShortcutActionEnum.COPY, [{
-      key: 'q',
-      ctrl: false,
-      shift: false,
-      alt: false
-    }]);
+    service.setBinding(ShortcutActionEnum.COPY, [
+      {
+        key: 'q',
+        ctrl: false,
+        shift: false,
+        alt: false
+      }
+    ]);
     service.resetBinding(ShortcutActionEnum.COPY);
-    expect(service.binding(ShortcutActionEnum.COPY)()).toEqual(
+    expect(service.bindings(ShortcutActionEnum.COPY)()).toEqual(
       DEFAULT_SHORTCUTS[ShortcutActionEnum.COPY]
     );
   });
 
   it('should reset all bindings to defaults', () => {
-    service.setBinding(ShortcutActionEnum.COPY, [{
-      key: 'q',
-      ctrl: false,
-      shift: false,
-      alt: false
-    }]);
+    service.setBinding(ShortcutActionEnum.COPY, [
+      {
+        key: 'q',
+        ctrl: false,
+        shift: false,
+        alt: false
+      }
+    ]);
     service.resetAll();
     for (const action of Object.values(ShortcutActionEnum)) {
-      expect(service.binding(action)()).toEqual(DEFAULT_SHORTCUTS[action]);
+      expect(service.bindings(action)()).toEqual(DEFAULT_SHORTCUTS[action]);
     }
   });
 
@@ -204,12 +216,14 @@ describe('ShortcutService', () => {
   });
 
   it('isHeld follows a rebinding to a plain letter key', () => {
-    service.setBinding(ShortcutActionEnum.SELECT_SCISSOR, [{
-      key: 'x',
-      ctrl: false,
-      shift: false,
-      alt: false
-    }]);
+    service.setBinding(ShortcutActionEnum.SELECT_SCISSOR, [
+      {
+        key: 'x',
+        ctrl: false,
+        shift: false,
+        alt: false
+      }
+    ]);
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x' }));
     expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(true);
@@ -282,7 +296,7 @@ describe('ShortcutService', () => {
     it('loads a legacy unassigned (null) entry as no bindings', () => {
       const shortcuts = reloadFrom({ [ShortcutActionEnum.COPY]: null });
 
-      expect(shortcuts.binding(ShortcutActionEnum.COPY)()).toEqual([]);
+      expect(shortcuts.bindings(ShortcutActionEnum.COPY)()).toEqual([]);
     });
 
     it('keeps keyboard shortcuts working after loading a legacy null entry', () => {
@@ -313,11 +327,11 @@ describe('ShortcutService', () => {
       };
       const shortcuts = reloadFrom(stored);
 
-      expect(shortcuts.binding(ShortcutActionEnum.DELETE)()).toEqual(
+      expect(shortcuts.bindings(ShortcutActionEnum.DELETE)()).toEqual(
         DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE]
       );
       // The deliberate customization survives the migration.
-      expect(shortcuts.binding(ShortcutActionEnum.UNDO)()).toEqual([
+      expect(shortcuts.bindings(ShortcutActionEnum.UNDO)()).toEqual([
         stored[ShortcutActionEnum.UNDO]
       ]);
     });

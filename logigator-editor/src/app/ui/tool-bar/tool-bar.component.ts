@@ -54,11 +54,11 @@ export class ToolBarComponent {
     this.workModeService
   );
 
-  /** The current key binding shown in a button's tooltip. */
+  /** The key binding shown in a button's tooltip: the action's first one. */
   protected shortcutBinding(
     action: ShortcutActionEnum
-  ): ShortcutBinding[] {
-    return this.shortcutService.binding(action)();
+  ): ShortcutBinding | null {
+    return this.shortcutService.bindings(action)()[0] ?? null;
   }
 
   // Swaps the bar between the editing tool set and the simulation controls.

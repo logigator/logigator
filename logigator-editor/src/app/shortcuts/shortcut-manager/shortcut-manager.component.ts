@@ -88,25 +88,27 @@ export class ShortcutManagerComponent {
   }
 
   protected isDefault(action: ShortcutActionEnum): boolean {
-    const currents = this.shortcutService.binding(action)();
-    if (!currents) return false;
+    const currents = this.shortcutService.bindings(action)();
     const defaults = DEFAULT_SHORTCUTS[action];
-    return defaults.some((def) =>
-      currents.some(
-        (current) =>
-          current.key === def.key &&
-          current.ctrl === def.ctrl &&
-          current.shift === def.shift &&
-          current.alt === def.alt
+    return (
+      currents.length === defaults.length &&
+      defaults.every((def) =>
+        currents.some(
+          (current) =>
+            current.key === def.key &&
+            current.ctrl === def.ctrl &&
+            current.shift === def.shift &&
+            current.alt === def.alt
+        )
       )
     );
   }
 
   protected onBindingChange(
     action: ShortcutActionEnum,
-    binding: ShortcutBinding[]
+    bindings: ShortcutBinding[]
   ): void {
-    this.shortcutService.setBinding(action, binding);
+    this.shortcutService.setBinding(action, bindings);
   }
 
   protected resetAll(): void {
