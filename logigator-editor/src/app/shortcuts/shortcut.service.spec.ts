@@ -111,6 +111,25 @@ describe('ShortcutService', () => {
     expect(messageAdd).toHaveBeenCalledOnce();
   });
 
+  it('takes only the conflicting combination from an action with several', () => {
+    const [del, backspace] = DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE];
+    service.setBinding(ShortcutActionEnum.COPY, [backspace]);
+
+    expect(service.bindings(ShortcutActionEnum.DELETE)()).toEqual([del]);
+    expect(service.bindings(ShortcutActionEnum.COPY)()).toEqual([backspace]);
+    expect(messageAdd).toHaveBeenCalledOnce();
+  });
+
+  it('takes conflicting combinations from every action that holds one', () => {
+    const save = DEFAULT_SHORTCUTS[ShortcutActionEnum.SAVE][0];
+    const open = DEFAULT_SHORTCUTS[ShortcutActionEnum.OPEN][0];
+    service.setBinding(ShortcutActionEnum.COPY, [save, open]);
+
+    expect(service.bindings(ShortcutActionEnum.SAVE)()).toEqual([]);
+    expect(service.bindings(ShortcutActionEnum.OPEN)()).toEqual([]);
+    expect(messageAdd).toHaveBeenCalledTimes(2);
+  });
+
   it('unassigns without a reassignment toast while another action is unassigned', () => {
     service.setBinding(ShortcutActionEnum.SAVE, []);
     service.setBinding(ShortcutActionEnum.COPY, []);
