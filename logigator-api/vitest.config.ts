@@ -16,6 +16,8 @@ export default defineConfig({
     include: ['src/**/*.spec.ts'],
     environment: 'node'
   },
+  // The build constants rspack.config.mjs defines, unstamped as in a dev build.
+  define: { GIT_COMMIT: "''", BUILD_DATE: "''" },
   resolve: {
     alias: {
       '@logigator/core': fileURLToPath(

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { CURRENT_FILE_VERSION } from '@logigator/core';
 import { metaResponseSchema } from '@logigator/contract';
+import { version } from '../../../package.json';
 import { ENV, type Env, loadEnv } from '../config/env';
 import { MetaController } from './meta.controller';
 import { MetaService } from './meta.service';
@@ -18,12 +19,13 @@ async function controllerFor(env: Env): Promise<MetaController> {
 }
 
 describe('MetaController', () => {
-  it('reports the format version the shared core defines', async () => {
+  it('reports the format version the shared core defines and the product version', async () => {
     const controller = await controllerFor(loadEnv({}));
 
     expect(metaResponseSchema.parse(controller.getMeta())).toEqual({
       formatVersion: CURRENT_FILE_VERSION,
-      authProviders: ['local']
+      authProviders: ['local'],
+      build: { version, commit: null, date: null }
     });
   });
 

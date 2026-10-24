@@ -67,6 +67,11 @@ RUN yarn ng build logigator-web \
 
 FROM workspace AS api-build
 COPY ["./logigator-api", "./logigator-api/"]
+
+# Reach the build as environment variables, which rspack.config.mjs defines
+# into the bundle for `GET /api/meta`.
+ARG GIT_COMMIT=""
+ARG BUILD_DATE=""
 RUN yarn build:api
 
 # ======================================================================================= #

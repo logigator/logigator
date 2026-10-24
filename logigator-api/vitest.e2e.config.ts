@@ -26,6 +26,8 @@ export default defineConfig({
     testTimeout: 30_000,
     hookTimeout: 60_000
   },
+  // The build constants rspack.config.mjs defines, unstamped as in a dev build.
+  define: { GIT_COMMIT: "''", BUILD_DATE: "''" },
   resolve: {
     alias: {
       '@logigator/core': fileURLToPath(

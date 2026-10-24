@@ -7,7 +7,7 @@ import { readdir, rm } from 'node:fs/promises';
 import { builtinModules } from 'node:module';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CopyRspackPlugin } from '@rspack/core';
+import { CopyRspackPlugin, DefinePlugin } from '@rspack/core';
 import nodeExternals from 'webpack-node-externals';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
@@ -84,6 +84,7 @@ export default {
     ]
   },
   plugins: [
+    stampBuild(),
     emitModuleTypeMarker,
     copyMigrations(),
     pruneStaleMigrations,
@@ -108,6 +109,18 @@ function externalBuiltins({ request }, callback) {
   return builtinModules.includes(bare)
     ? callback(null, `module ${request}`)
     : callback();
+}
+
+/**
+ * Stamps the commit and build time `GET /api/meta` reports, from the
+ * environment the release image's build arguments set. Every other build
+ * leaves them empty.
+ */
+function stampBuild() {
+  return new DefinePlugin({
+    GIT_COMMIT: JSON.stringify(process.env['GIT_COMMIT'] ?? ''),
+    BUILD_DATE: JSON.stringify(process.env['BUILD_DATE'] ?? '')
+  });
 }
 
 /**

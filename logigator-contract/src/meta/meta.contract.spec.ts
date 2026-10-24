@@ -4,7 +4,8 @@ import { metaResponseSchema } from './meta.contract';
 
 const response = {
   formatVersion: CURRENT_FILE_VERSION,
-  authProviders: ['local' as const]
+  authProviders: ['local' as const],
+  build: { version: '2.2.0', commit: null, date: null }
 };
 
 describe('metaResponseSchema', () => {
@@ -26,6 +27,15 @@ describe('metaResponseSchema', () => {
   it('rejects a non-integer format version', () => {
     expect(
       metaResponseSchema.safeParse({ ...response, formatVersion: 1.5 }).success
+    ).toBe(false);
+  });
+
+  it('rejects a build date that is not an ISO timestamp', () => {
+    expect(
+      metaResponseSchema.safeParse({
+        ...response,
+        build: { ...response.build, date: 'yesterday' }
+      }).success
     ).toBe(false);
   });
 
