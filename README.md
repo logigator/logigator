@@ -1,57 +1,75 @@
-# Logigator
+<p align="center">
+  <a href="https://logigator.com">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="logigator-web/src/assets/logo-on-dark.svg" />
+      <img src="logigator-web/src/assets/logo-on-light.svg" alt="Logigator" width="420" />
+    </picture>
+  </a>
+</p>
 
-**Build, simulate, and manage complex logic circuits — [logigator.com](https://logigator.com)**
+<p align="center">
+  <strong>Build, simulate and share logic circuits, right in your browser.</strong><br />
+  From your first AND gate to a CPU you designed yourself.
+</p>
 
-[![CI logigator-editor](https://github.com/logigator/logigator/workflows/CI%20logigator-editor/badge.svg)](https://github.com/logigator/logigator/actions?query=workflow%3A%22CI+logigator-editor%22)
-[![CI logigator-api](https://github.com/logigator/logigator/workflows/CI%20logigator-api/badge.svg)](https://github.com/logigator/logigator/actions?query=workflow%3A%22CI+logigator-api%22)
-[![CI format](https://github.com/logigator/logigator/workflows/CI%20format/badge.svg)](https://github.com/logigator/logigator/actions?query=workflow%3A%22CI+format%22)
+<p align="center">
+  <a href="https://logigator.com"><strong>Open Logigator</strong></a> ·
+  <a href="https://logigator.com/en/docs">Documentation</a> ·
+  <a href="CHANGELOG.md">Changelog</a>
+</p>
 
-Logigator is a browser-based logic circuit editor and simulator. Users can place gates and wires on a canvas, wire them together, run a simulation, and save/share their projects. The editor renders entirely on a PixiJS canvas; the backend persists projects and components as JSON and exposes a REST API consumed by the SPA.
+<p align="center">
+  <a href="https://github.com/logigator/logigator/actions?query=workflow%3A%22CI+logigator-editor%22"><img src="https://github.com/logigator/logigator/workflows/CI%20logigator-editor/badge.svg" alt="CI editor" /></a>
+  <a href="https://github.com/logigator/logigator/actions?query=workflow%3A%22CI+logigator-web%22"><img src="https://github.com/logigator/logigator/workflows/CI%20logigator-web/badge.svg" alt="CI web" /></a>
+  <a href="https://github.com/logigator/logigator/actions?query=workflow%3A%22CI+logigator-api%22"><img src="https://github.com/logigator/logigator/workflows/CI%20logigator-api/badge.svg" alt="CI API" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-blue" alt="License: AGPL-3.0" /></a>
+</p>
 
----
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/readme/hero-dark.webp" />
+    <img src=".github/readme/hero-light.webp" alt="A running Logigator circuit: JK flip-flops driving three LED matrices" width="1024" />
+  </picture>
+</p>
 
-## Table of Contents
+## What is Logigator?
 
-- [Repository layout](#repository-layout)
-- [Prerequisites](#prerequisites)
-- [Local setup](#local-setup)
-- [Configuration](#configuration)
-- [Development workflow](#development-workflow)
-- [Testing](#testing)
-- [Production stack](#production-stack)
-- [Architecture overview](#architecture-overview)
-- [Contributing](#contributing)
-- [License](#license)
+Logigator is a digital logic editor and simulator that runs in the browser. Place gates on an
+endless board, draw wires between them, press **Start simulation** and watch the signals flow.
+Nothing to install, no account needed to start, and it works on a phone or tablet as well as on a
+desktop.
 
----
+It's made for students learning how a computer works from the gate up, for teachers who want
+circuits their class can open with one link, and for anyone who enjoys building things out of
+ones and zeros.
 
-## Repository layout
+## Highlights
 
-The repo root is a **Yarn 4 + Angular CLI workspace** (managed via Corepack), and every package is a member:
+- **A fast, smooth editor.** Pan and zoom freely, select, rotate, copy and paste whole sections,
+  undo anything. Large boards stay smooth because the canvas renders on the GPU.
+- **Real simulation, at real speed.** The circuit is compiled and run by a WebAssembly engine in a
+  background thread: step frame by frame, pick a speed of up to 10 MHz, or run as fast as your
+  machine allows. Wires carrying conflicting signals light up orange the moment it happens.
+- **Your own components.** Turn any circuit into a reusable component with its own ports, nest
+  components inside components, and look inside a running one to see what it's doing.
+- **Things to play with.** Switches, buttons, clocks and random numbers on the way in; LEDs, LED
+  matrices, seven-segment displays and a terminal on the way out. Type on a keyboard component, or
+  play your circuit with an on-screen controller or a real gamepad.
+- **Memory you can see.** ROM and RAM with a hex editor, and a live view of RAM that follows the
+  address being read.
+- **Save, share, discover.** Keep projects in your browser, in a file or in the cloud. Share a link
+  that opens straight into the circuit, or publish it to the community, where others can star it
+  and save their own copy.
+- **Help built in.** A hands-on tutorial, tips when you need them, a full reference for every
+  component, and the whole interface in English, German, French and Spanish.
 
-| Package               | Workspace member | Description                                                                                                                         | Stack                                             |
-| --------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `logigator-editor/`   | ✅               | Active canvas editor (**current focus**)                                                                                            | Angular 22, PixiJS 8, Tailwind 4, `@logigator/ui` |
-| `logigator-ui/`       | ✅               | `@logigator/ui` — in-house component library (replaces PrimeNG)                                                                     | Angular 22, Angular CDK                           |
-| `logigator-core/`     | ✅               | `@logigator/core` — rendering-free circuit code (file format, model, catalog) shared by the editor, the API and migration tooling   | Plain TypeScript, zero runtime dependencies       |
-| `logigator-contract/` | ✅               | `@logigator/contract` — the API surface as zod schemas, imported by the server for validation and by its clients for typed requests | TypeScript, zod                                   |
-| `logigator-api/`      | ✅               | API-only backend                                                                                                                    | NestJS on Fastify, PostgreSQL + Drizzle           |
-| `logigator-web/`      | ✅               | Website, server-rendered per request                                                                                                | Angular 22, `@angular/ssr`, `@logigator/ui`       |
-| `logigator-docs/`     | ✅               | `@logigator/docs` — the documentation pages, their screenshots and the changelog parser, shared by the editor and the website       | Plain TypeScript, no dependencies                 |
+Try it at **[logigator.com](https://logigator.com)**, or start from one of the examples there:
+adders, counters, flip-flops, a traffic light, a dice and more.
 
-**The three libraries are never built.** Every consumer — the editor, the API, and the test runners — compiles their TypeScript source through workspace path mapping, and each application's bundler inlines what it uses. So there is no build ordering, no `dist/` to go stale, and none of them is a `package.json` dependency of its consumers. Commands run inside Docker containers — do not run `yarn` directly on the host.
+## Running it locally
 
----
-
-## Prerequisites
-
-- [Docker](https://docs.docker.com/engine/install/) with the Compose plugin
-
-That is the only host-level dependency. Node, Yarn, and all other tooling run inside the containers.
-
----
-
-## Local setup
+The development stack runs entirely in Docker, so the only thing you need on your machine is
+[Docker](https://docs.docker.com/engine/install/) with the Compose plugin.
 
 **1. Clone the repository**
 
@@ -60,218 +78,106 @@ git clone https://github.com/logigator/logigator.git
 cd logigator
 ```
 
-**2. Add the development hostname**
+**2. Point `logigator.test` at your machine**
 
-Append to `/etc/hosts` (Linux/macOS) or `C:\Windows\System32\drivers\etc\hosts` (Windows):
+Add this line to `/etc/hosts` (Linux and macOS) or `C:\Windows\System32\drivers\etc\hosts`
+(Windows):
 
 ```
 127.0.0.1 logigator.test
 ```
 
-**3. Start all services**
+**3. Start the stack**
 
 ```sh
 docker compose up
 ```
 
-The stack starts a Caddy reverse proxy on ports 80/443 with automatic self-signed certificates for local development. Open `https://logigator.test` in your browser.
+The first start installs the dependencies and takes a few minutes. Then open
+**<https://logigator.test>**:
 
-**Services started by `docker compose up`:**
+| Address                          | What you get                               |
+| -------------------------------- | ------------------------------------------ |
+| `https://logigator.test/`        | The website: community, docs, your account |
+| `https://logigator.test/editor/` | The editor                                 |
+| `https://logigator.test/api/`    | The API                                    |
 
-| Service    | Purpose                                      | Exposed port          |
-| ---------- | -------------------------------------------- | --------------------- |
-| `proxy`    | Caddy HTTPS reverse proxy                    | 80, 443               |
-| `deps`     | One-shot `yarn install` for the workspace    | —                     |
-| `editor`   | Editor dev server (HMR)                      | — (proxied)           |
-| `web`      | Website dev server, server-rendered          | — (proxied)           |
-| `api`      | API in watch mode, migrated before it starts | 3001 (localhost only) |
-| `postgres` | PostgreSQL                                   | 5432 (localhost only) |
-| `redis`    | Sessions and cache                           | 6379 (localhost only) |
-
----
-
-## Configuration
-
-The API is configured by environment variables alone — see `logigator-api/.env.example`. Every variable has a default that suits the dev stack, and the whole set is validated at startup; copy the file to `logigator-api/.env` to override any of them. The editor and the website need no configuration.
-
----
-
-## Development workflow
-
-All `yarn` commands are run via `docker compose exec`:
+The certificate comes from Caddy's local certificate authority, so your browser warns about it the
+first time. Accept the warning, or trust the CA once to get rid of it for good:
 
 ```sh
-# Run a command in the editor container
+docker compose cp proxy:/data/caddy/pki/authorities/local/root.crt ./caddy-root.crt
+# then import caddy-root.crt into your system or browser trust store
+```
+
+Every app reloads as you edit its source, and the API restarts on its own.
+
+**Good to know**
+
+- **Accounts work without a mail server.** In development, mails aren't sent; the API prints them
+  to its log, confirmation link included (`docker compose logs -f api`).
+- **Load the example circuits** into your local community:
+
+  ```sh
+  docker compose exec api yarn workspace logigator-api run db:seed-examples
+  ```
+
+- **Configuration is optional.** Every API setting has a default that suits the dev stack. To change
+  one, copy `logigator-api/.env.example` to `logigator-api/.env` and edit it.
+- **Your data lives in `data/`**: the Postgres database and uploaded files. Delete the folder for a
+  fresh start.
+- Postgres (`localhost:5432`, user, password and database `logigator`) and Redis
+  (`localhost:6379`) are published on localhost, so you can connect your own tools.
+
+## Working on the code
+
+Logigator is one Yarn workspace. Run commands inside a container, from the repository root:
+
+```sh
 docker compose exec editor yarn <command>
 ```
 
-### Workspace (editor, UI library, shared packages, API)
+| Command                                 | What it does                                          |
+| --------------------------------------- | ----------------------------------------------------- |
+| `yarn test`                             | Every package's tests                                 |
+| `yarn test:editor` (or `:web`, `:api`…) | One package's tests                                   |
+| `yarn lint` / `yarn lint:fix`           | ESLint over everything                                |
+| `yarn typecheck`                        | TypeScript over the packages without an Angular build |
+| `yarn format` / `yarn format:fix`       | Prettier over the whole repository                    |
+| `yarn build`                            | Production builds of the editor, website and API      |
 
-The `editor` and `api` containers both mount the whole workspace root, so these root Yarn scripts run inside either:
+A bare command runs for every package; `<command>:<package>` runs for one.
 
-| Command                                                                     | What it does                                                                  |
-| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `yarn start:editor`                                                         | Angular dev server with HMR (`start:editor:prod` for the production config)   |
-| `yarn start:api`                                                            | API in watch mode, restarting on core/contract edits too, on `127.0.0.1:3001` |
-| `yarn build`                                                                | Both applications: editor production build + API bundle                       |
-| `yarn build:editor`                                                         | Editor production build into `dist/logigator-editor/`                         |
-| `yarn build:api`                                                            | Rspack bundle into `dist/logigator-api/`                                      |
-| `yarn test`                                                                 | Every package's suite, single run each                                        |
-| `yarn test:editor` / `test:ui` / `test:core` / `test:contract` / `test:api` | One package's Vitest suite                                                    |
-| `yarn typecheck`                                                            | `tsc` over each shared package and the API, specs included                    |
-| `yarn lint`                                                                 | ESLint across every workspace member (`lint:fix` writes the fixes)            |
-| `yarn format` / `format:fix`                                                | Prettier over the whole repo                                                  |
+### How it fits together
 
-A **bare verb runs it for every package that has it**, and `<verb>:<package>` runs it for one (`test:*` is always a single run) — there is no `:all` suffix and no bare shorthand for a single package. Not every package has every verb: only the two applications build, and `typecheck` covers the three packages where `tsc` is the only type gate, the Angular projects being type-checked by their own build and test targets. `@logigator/ui` has no build script at all, since every consumer compiles its source.
+| Folder                | What it is                                                                 |
+| --------------------- | -------------------------------------------------------------------------- |
+| `logigator-editor/`   | The editor: Angular with a PixiJS canvas and a WebAssembly simulator       |
+| `logigator-web/`      | The website, server-rendered with Angular SSR                              |
+| `logigator-api/`      | The API: NestJS on Fastify, PostgreSQL through Drizzle, Redis for sessions |
+| `logigator-ui/`       | `@logigator/ui`, the component library both apps are built from            |
+| `logigator-core/`     | `@logigator/core`, the circuit model and file format, shared by every app  |
+| `logigator-contract/` | `@logigator/contract`, the API's requests and responses as zod schemas     |
+| `logigator-docs/`     | `@logigator/docs`, the user documentation in four languages                |
 
-The shared packages are type-checked with **no consumer in the program and no path mappings**, which is what catches an Angular, PixiJS or sibling-package import leaking into shared code — a relative escape fails on `rootDir` too. Their ESLint configs fence the same imports by name.
+The four libraries are never built on their own: each app compiles their source directly, so a
+change to shared code shows up everywhere at once. In development and production alike, one Caddy
+server puts the website at the root, the editor under `/editor` and the API under `/api`.
 
-Run a single test file:
-
-```sh
-docker compose exec editor yarn test:editor --include='**/quad-tree-container.spec.ts'
-```
-
----
-
-## Testing
-
-Tests use **Vitest** via Angular's `@angular/build:unit-test` builder. Spec files sit next to their source files (e.g., `quad-tree-container.spec.ts` beside `quad-tree-container.ts`).
-
-- Angular component specs use `TestBed`.
-- Pure-logic specs (rendering math, grid utilities, action system) do not.
-
-Shared test helpers in `logigator-editor/src/testing/`:
-
-- `fake-browser-stores.ts` — in-memory IndexedDB stand-ins
-- `factories.ts` — circuit-element and pointer-event stubs
-- `action-mocks.ts` — mocked `Action` with named `do`/`undo` spies
-- `vitest-helpers.ts` — asymmetric matchers and generator helpers
-
-Run the full suite:
-
-```sh
-docker compose exec editor yarn test
-```
-
----
-
-## Production stack
-
-`docker-compose.production.yaml` is the production stack: the website, the API and the editor behind one Caddy origin (`Caddyfile.production`), built from the `web`, `api` and `proxy` targets of the `Dockerfile`. Cloudflare is the edge. On the server it reaches the stack through a Cloudflare Tunnel, so nothing publishes a port; locally, an `edge` Caddy stands in for it and terminates TLS for `logigator.test` with the same `tls internal` certificate the dev stack uses.
-
-The profile picks the edge, and the API's secrets come from the same `.env` next to the compose file:
-
-```sh
-# .env — a local staging run
-COMPOSE_PROFILES=local
-SESSION_SECRET=<32+ characters>
-
-# .env — the server, in addition
-COMPOSE_PROFILES=tunnel
-LOGIGATOR_VERSION=<release, e.g. 2.3.0>
-SITE_HOST=logigator.com
-POSTGRES_PASSWORD=<…>
-CLOUDFLARE_TUNNEL_TOKEN=<…>
-```
-
-Locally, the stack builds its images from the working tree:
-
-```sh
-docker compose -f docker-compose.production.yaml up -d --build
-```
-
-On the server, it runs the images the release workflow publishes for each `v*` tag (`ghcr.io/logigator/logigator-web`, `-api` and `-proxy`):
-
-```sh
-docker compose -f docker-compose.production.yaml pull
-docker compose -f docker-compose.production.yaml up -d --no-build
-```
-
-The tunnel's public hostname points at `http://proxy:8080` in the Cloudflare dashboard. Every `up` migrates the database and seeds the examples before the API starts.
-
-**Services started by the production stack:**
-
-| Service    | Purpose                                               | Exposed port             |
-| ---------- | ----------------------------------------------------- | ------------------------ |
-| `tunnel`   | `cloudflared`, Cloudflare's way in (profile `tunnel`) | — (dials out)            |
-| `edge`     | Caddy HTTPS in place of Cloudflare (profile `local`)  | 80, 443 (localhost only) |
-| `proxy`    | Caddy origin: routing, the editor bundle, `/files`    | — (internal)             |
-| `web`      | Website (SSR)                                         | — (proxied)              |
-| `api`      | API                                                   | — (proxied)              |
-| `migrate`  | One-shot: migrations and example seed                 | —                        |
-| `postgres` | PostgreSQL                                            | — (internal)             |
-| `redis`    | Sessions and cache                                    | — (internal)             |
-
-Both compose files sit in the repo root and therefore share the Compose project name `logigator`, which has two consequences:
-
-- **The two stacks cannot run at the same time.** `proxy`, `web`, `api`, `postgres`, and `redis` are service names in both, so starting one recreates those containers from the other's definitions. Bring the dev stack down first. Compose also warns about orphan containers left by the other stack — expected, and do not pass `--remove-orphans`, which deletes them.
-- **The `caddy_data` volume is shared, deliberately.** The internal CA stores its local root there, so both stacks serve certificates from the CA the browser already trusts. Isolating the stack under its own project name would mint a second CA and trigger a new trust warning.
-
----
-
-## Architecture overview
-
-### Editor (`logigator-editor`)
-
-The editor is an **Angular 22 SPA** where the circuit canvas is a **PixiJS 8** scene. Angular manages the UI shell (toolbar, panels, dialogs); PixiJS owns all circuit rendering.
-
-Key layers in `src/app/`:
-
-- **`components/`** — Circuit element model. Each gate/component extends `Component` (a PixiJS `Container` subclass); port/bounds math lives in the pure, unit-tested `component-geometry.ts`. `ComponentProviderService` acts as the registry and factory. Gate implementations live in `component-types/`; side-panel form controls in `component-options/`.
-- **`project/`** — `Project` (extends PixiJS `Container`) is the root of the circuit state, exposing `viewport` (pan/zoom/camera) and `topology` (wire invariants). `ProjectService` tracks the loaded/active projects.
-- **`persistence/`** — Load/save dispatch, file import/export, and cloud promotion. The server API transports the legacy positional format; local files use a native, versioned format with a migration chain.
-- **`wires/`** — Wire model and rendering, separate from component objects.
-- **`connection-points/`** — Derived visual junction dots (not persisted or selectable).
-- **`rendering/`** — PixiJS scene management: the single lease-counted renderer, `QuadTreeContainer` for spatial indexing, `FloatingLayer` for transient objects (drag ghosts, previews), `GraphicsProviderService` for shared texture/graphics caching, plus the DOM input layer (`PointerController` + `WorkModeRouter` + per-tool sessions).
-- **`clipboard/`** — Copy/cut/paste/delete, with paste opening an interactive placement session.
-- **`actions/`** — Command-pattern undo/redo via `ActionManager`. Every user operation is an `Action` subclass.
-- **`work-mode/`** — Interaction FSM (select, place, delete, wire-routing, simulation modes).
-- **`simulation/`** — Compiles the circuit into a board, runs it on a WebAssembly engine in a Web Worker, and lights up powered wires/ports on the canvas.
-- **`inspection/`** — Live component inspection during simulation (ROM data inspector, interactive custom-component watches).
-- **`documentation/`** — In-editor help pages (per-locale markdown, deep-linked from menus and hints).
-- **`ui/`** — Angular component wrappers around the canvas and sidebar panels.
-
-**Coordinate system:** `Project._gridSpace` has `scale = gridSize`, so all circuit objects use **grid units as their native PixiJS `position`** — no manual pixel↔grid conversion at the model layer. Visual children live inside a per-component `_visualSpace` container with `scale = 1/gridSize`, keeping pixel-authored geometry correct.
-
-**Simulation** runs the external `@logigator/sim` WASM engine inside a Web Worker. The active circuit is compiled into a board (nets, units, link ids), the engine free-runs in the worker, and the main thread pulls per-frame state snapshots to repaint powered wires/ports. See `simulation.md`.
-
-Detailed technical docs for each subsystem are in `logigator-editor/docs/`:
-`actions-system.md`, `component-system.md`, `component-options.md`, `connection-points.md`, `custom-components.md`, `dependencies-and-promotion.md`, `inspection.md`, `persistence.md`, `project.md`, `rendering.md`, `simulation.md`, `ui.md`, `wires.md`, `work-mode.md`.
-
-### UI library (`logigator-ui`)
-
-`@logigator/ui` is an in-house **Angular 22 + Angular CDK** component library. Each component lives in its own folder under `logigator-ui/src/` (`button/`, `dialog/`, `select/`, `menu/`, …) and is re-exported from `public-api.ts`. Imperative services — `DialogService` (dynamic dialogs), `ConfirmationService`, and `ToastService` (toasts) — sit alongside the declarative components, with shared overlay/focus plumbing in `internal/` and design tokens in `tokens/`.
-
-Theming is **colors-only** via `--lg-*` CSS variables: `styles/theme.css` defines them and `styles/theme.tw.css` maps them into Tailwind's `@theme`. The editor imports the library straight from TypeScript source through workspace path mapping (`@logigator/ui` → `logigator-ui/src/public-api.ts`), so it is _not_ a `package.json` dependency of the editor and changes are picked up with no build step.
-
-### Shared packages (`logigator-core`, `logigator-contract`)
-
-`@logigator/core` holds the rendering-free half of the circuit code — the versioned native file format, its migration chain, the codecs, and the component catalog — so the editor, the API and the migration tooling agree on one implementation instead of three. Its boundary rule is **data to data**: turning live PixiJS objects into documents (and back) stays in the editor. It has zero runtime dependencies and no framework or renderer imports, enforced by an ESLint import fence plus a standalone `tsc` run that sees no consumer.
-
-`@logigator/contract` describes the API surface as zod schemas. The server validates incoming requests with them; clients infer their request/response types from the same source, so a contract change fails at type-check time with no codegen step. It may import core, never the server.
-
-Both are consumed from source through workspace path mapping (`@logigator/core` → `logigator-core/src/public-api.ts`), exactly like `@logigator/ui`. Editing a core source file therefore reaches every consumer with no build step: the editor's dev server rebuilds, and `yarn start:api` restarts the API in well under a second.
-
-### API (`logigator-api`)
-
-**NestJS on the Fastify adapter** — API only: no server-side rendering, no asset pipeline. Configuration comes from environment variables validated by a zod schema at bootstrap (`src/config/env.ts`), so a misconfigured deployment fails at startup rather than on the first request that needs a value. `GET /api/meta` reports the circuit-file format version the server accepts, taken from `@logigator/core`.
-
-The build is **Rspack** (`rspack.config.mjs`, following [Rspack's NestJS guide](https://rspack.rs/guide/tech/nestjs)) into `dist/logigator-api/`, which is what lets the API compile the shared packages from source like every other consumer. NestJS 12 replaces its webpack builder with Rspack, so this is the direction upstream is taking; when v12 lands its CLI builder may replace this config.
-
-Details worth knowing: `builtin:swc-loader` runs with `legacyDecorator` + `decoratorMetadata` because Nest resolves constructor dependencies from `design:paramtypes`; `tsconfig.json` owns the workspace aliases and the bundler reads them from there, so the two cannot drift; dependencies stay external except the workspace packages, which must be allowlisted past `webpack-node-externals` (Yarn symlinks them into `node_modules`); and minification stays off, since a long-running server gains nothing and Nest reflects on class names.
-
----
+To go deeper, [`CLAUDE.md`](CLAUDE.md) maps the repository and the rules that span it, and
+[`logigator-editor/docs/`](logigator-editor/docs) explains each part of the editor.
 
 ## Contributing
 
-1. Fork the repository and create a feature branch.
-2. Keep changes scoped to a single package where possible.
-3. Run `yarn lint`, `yarn typecheck` and `yarn test` before opening a PR.
-4. Open a pull request against `master`.
+Bug reports, ideas and pull requests are welcome.
 
----
+1. Fork the repository and create a branch off `master`.
+2. Keep a change to one concern, and add tests for behavior you change.
+3. Run `yarn lint`, `yarn typecheck` and `yarn test` before opening a pull request.
+4. For a change users will notice, add an entry under `## [Unreleased]` in
+   [`CHANGELOG.md`](CHANGELOG.md) and its translations in [`changelog/`](changelog).
 
 ## License
 
-This project is licensed under the **GNU Affero General Public License v3.0** — see the [LICENSE](LICENSE) file for details.
+Logigator is free software under the
+[GNU Affero General Public License v3.0](LICENSE).
