@@ -3,9 +3,9 @@ import { ENV, type Env } from '../config/env';
 import { REDIS, type RedisClient } from './redis.client';
 
 /**
- * Redis access, namespaced. Every key goes through {@link key}, because
- * development shares one Redis instance with the legacy backend and an
- * unprefixed `sess:<id>` would be ambiguous between the two. The helpers cover
+ * Redis access, namespaced. Every key goes through {@link key}, so the API can
+ * share a Redis instance with another application whose unprefixed `sess:<id>`
+ * would otherwise be ambiguous with its own. The helpers cover
  * the shapes the API uses; anything else reaches for {@link client} directly.
  */
 @Injectable()

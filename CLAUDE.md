@@ -8,7 +8,7 @@ file's comments; read them before changing it.
 The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (corepack). Seven members:
 
 - `logigator-editor/` — Angular 22 editor (PixiJS 8, Tailwind 4), current focus
-- `logigator-web/` — Angular 22 website, server-rendered (`@angular/ssr`), replacing the legacy pages
+- `logigator-web/` — Angular 22 website, server-rendered (`@angular/ssr`)
 - `logigator-ui/` — `@logigator/ui`, in-house Angular component library
 - `logigator-core/` — `@logigator/core`, rendering-free circuit code and origin-wide contracts; zero
   runtime dependencies
@@ -25,10 +25,6 @@ No `dist/`, no `exports`, no build ordering.
 rest run on plain Yarn scripts. Each package has one primary tsconfig, `tsconfig.spec.json`,
 `eslint.config.mjs` and `vitest.config.ts`. Only the three applications produce an artifact, in the
 root `dist/<project>/`.
-
-Two deprecated packages stay **independent** (own `yarn.lock`/`.yarnrc.yml`, not workspace
-members): `logigator-backend/` (Express/TypeORM/Handlebars, still serving everything outside `/api`)
-and `logigator-editor-legacy/` (Angular 17 editor).
 
 **The changelog** is `CHANGELOG.md` (English) plus `changelog/<lang>.md`, in Keep a Changelog 1.1
 format, imported by the apps as `@logigator/changelog/<lang>.md`. Entries collect under
@@ -49,19 +45,18 @@ composes the site's PNG `og:image`. Its `yarn typecheck` is not run by CI. See i
 
 ## Dev Environment
 
-Legacy backend config files are created from `.example` files in `logigator-backend/config/`.
 `logigator-api` needs env vars only, all defaulted (`logigator-api/.env.example`).
 
-The dev compose stack runs MySQL (legacy backend), **Postgres** (`logigator-api`) and one shared
-Redis, published on localhost: `postgresql://logigator:logigator@localhost:5432/logigator` and
-`redis://localhost:6379`. `data/` holds both data directories and is ignored.
+The dev compose stack runs **Postgres** and Redis, published on localhost:
+`postgresql://logigator:logigator@localhost:5432/logigator` and `redis://localhost:6379`. `data/`
+holds the database and the API's storage volume and is ignored.
 
 The compose `api` service **applies migrations before it starts**; a migration generated while the
 stack runs lands on `docker compose restart api`. There are no down migrations, so a database ahead
 of the branch needs `DATABASE_MIGRATION_CHECK=false` or a drop and re-migrate.
 
-Caddy serves **`logigator-web` at the origin root** and the editor under `/editor`; the legacy
-backend is off the dev origin.
+Caddy serves **`logigator-web` at the origin root**, the editor under `/editor` and the API under
+`/api`.
 
 ## Commands
 
@@ -94,9 +89,6 @@ the seed account, idempotent; `--previews` re-uploads previews).
 
 `@logigator/ui` has no build script; its ng-packagr target in `angular.json` must stay, because the
 unit-test builder reads its build options from it.
-
-Legacy backend, from `logigator-backend/`: `yarn build`, `yarn lint:backend`, `yarn migration:run`,
-`yarn migration:generate -- -n Name`.
 
 ## Architecture
 
@@ -276,11 +268,6 @@ liveness probe; `GET /api/health/ready` checks Postgres and Redis. `src/` layers
   allowlist; `sharp` stays external; `output.clean` stays off (the watcher loses `main.js`).
 - `fastify` is pinned to `@nestjs/platform-fastify`'s exact version, and Drizzle to an exact `1.0.0-rc`.
 
-### Legacy backend (logigator-backend)
-
-Express + routing-controllers + TypeDI + TypeORM (MySQL) + Passport + Handlebars. Answers everything
-outside `/api` until the Phase 6 cutover. Docs in `logigator-backend/docs/`. Frozen: don't change it.
-
 ## Releasing
 
 The product version is the root `package.json`'s (every member stays `0.0.0`); the editor and the
@@ -288,7 +275,8 @@ site read it into `environment.version`. A release commit bumps it and turns
 `## [Unreleased]` into `## [<version>] - <date>` in all four changelog files (plus the compare
 links in `CHANGELOG.md`). Pushing the `v<version>` tag runs `release.yaml`:
 `.github/scripts/release-notes.mjs` refuses a tag that disagrees with the version or the
-changelogs, the image is pushed, then the GitHub Release is created with the English notes.
+changelogs, the `web`, `api` and `proxy` images are pushed, then the GitHub Release is created
+with the English notes.
 
 ## Testing
 

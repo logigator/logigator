@@ -48,43 +48,8 @@
 **/chrome-profiler-events*.json
 **/speed-measure-plugin*.json
 
-# BACKEND
-# compiled output
-/logigator-backend/dist
-
-# configs
-/logigator-backend/config/*.json
-/logigator-backend/tools/*/*.json
-!/logigator-backend/config/*.json.example
-
-# persited resources
-/logigator-backend/resources/public/persisted/*
-!/logigator-backend/resources/public/persisted/.gitkeep
-/logigator-backend/resources/public/preview/*
-!/logigator-backend/resources/public/preview/**/.gitkeep
-/logigator-backend/resources/public/profile/*
-!/logigator-backend/resources/public/profile/.gitkeep
-/logigator-backend/resources/private/projects/*
-!/logigator-backend/resources/private/projects/.gitkeep
-/logigator-backend/resources/private/components/*
-!/logigator-backend/resources/private/components/.gitkeep
-
-# EDITOR (workspace member — build output lands in the root dist/)
+# Build output (every application's lands in the root dist/)
 # `**/dist` also covers the shared packages, which are rebuilt inside the image.
 **/dist
 /out-tsc
 /.angular/cache
-
-# LEGACY EDITOR
-# compiled output
-/logigator-editor-legacy/dist
-/logigator-editor-legacy/tmp
-/logigator-editor-legacy/out-tsc
-# Only exists if Bazel was run
-/logigator-editor-legacy/bazel-out
-/logigator-editor-legacy/custom-build-scripts/dist
-/logigator-editor-legacy/release
-
-# dependencies
-/logigator-editor-legacy/src/assets/wasm/*
-!/logigator-editor-legacy/src/assets/wasm/.gitkeep

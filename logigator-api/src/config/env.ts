@@ -58,8 +58,8 @@ const variables = z.object({
 
   REDIS_URL: z.string().min(1).default('redis://redis:6379'),
   /**
-   * Namespace for every key this API writes. Development shares one Redis with
-   * the legacy backend, and a session id is a session id in both.
+   * Namespace for every key this API writes, so a Redis instance it shares with
+   * another application never confuses the two's keys.
    */
   REDIS_KEY_PREFIX: z.string().min(1).default('lg:'),
 

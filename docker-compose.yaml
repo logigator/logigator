@@ -13,21 +13,6 @@ services:
       - 127.0.0.1:80:80
       - 127.0.0.1:443:443
 
-  backend:
-    image: node:24
-    networks:
-      - net
-    depends_on:
-      - mysql
-      - redis
-    volumes:
-      - ./logigator-backend/:/app
-    working_dir: /app
-    command: "sh -c 'corepack enable && yarn && exec yarn start'"
-    environment:
-      - DEBUG=express:*
-      - DEBUG_COLORS=on
-
   deps:
     image: node:24
     networks:
@@ -85,32 +70,6 @@ services:
       - path: ./logigator-api/.env
         required: false
     command: "sh -c 'corepack enable && yarn workspace logigator-api run db:migrate && exec yarn start:api'"
-
-  editor-legacy:
-    image: node:20
-    networks:
-      - net
-    volumes:
-      - ./logigator-editor-legacy/:/app
-    working_dir: /app
-    command: "sh -c 'corepack enable && yarn && exec yarn start'"
-
-  mysql:
-    image: mysql:8.3
-    networks:
-      - net
-    ports:
-      - 127.0.0.1:3306:3306
-    volumes:
-      - ./data/db:/var/lib/mysql
-    cap_add:
-      - SYS_NICE
-    command: --default-authentication-plugin=mysql_native_password
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=logigator
-      - MYSQL_USER=logigator
-      - MYSQL_PASSWORD=logigator
 
   postgres:
     image: postgres:18-alpine

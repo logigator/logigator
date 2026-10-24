@@ -9,8 +9,7 @@ import { CookieService } from './cookie.service';
 
 /**
  * The user's language and theme, in the `preferences` cookie every page on the
- * origin shares, so a choice made here is the one the editor opens with — and,
- * until the cutover, the one the legacy backend's pages read.
+ * origin shares, so a choice made here is the one the editor opens with.
  *
  * Values are validated by their consumers, not here: the cookie is
  * client-writable and the language and theme sets need not match across the

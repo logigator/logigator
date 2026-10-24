@@ -63,8 +63,8 @@ jobs:
           node-version: '24.x'
           package-manager-cache: false
 
-      # The API is a member of the root Yarn workspace (unlike the legacy
-      # backend, which keeps its own lockfile), so the install runs at the root.
+      # The API is a member of the root Yarn workspace, so the install runs at
+      # the root.
       - name: Install Dependencies
         uses: ./.github/actions/yarn-install
         with:

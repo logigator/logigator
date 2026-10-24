@@ -25,9 +25,9 @@ describe('the asset layout', () => {
   });
 
   /**
-   * One root for the whole volume, not one prefix per area: the legacy backend
-   * answers `/profile/…` and `/preview/…` from its own disk on the same origin
-   * until cutover, and a handler on those prefixes would swallow its requests.
+   * One root for the whole volume, not one prefix per area: the origin serves
+   * it with a single static rule, and no area claims an address the website
+   * might answer.
    */
   it('serves every area under one url root', () => {
     expect(assetUrl('profile', id, '64.webp')).toMatch(/^\/files\//);

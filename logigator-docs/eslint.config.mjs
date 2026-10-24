@@ -45,8 +45,7 @@ export default defineConfig([
                 '**/logigator-core/**',
                 '**/logigator-contract/**',
                 '**/logigator-api/**',
-                '**/logigator-web/**',
-                '**/logigator-backend/**'
+                '**/logigator-web/**'
               ],
               message:
                 'the documentation member holds content and pure data, and imports nothing from outside the package.'

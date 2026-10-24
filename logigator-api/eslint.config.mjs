@@ -38,8 +38,7 @@ export default defineConfig([
                 '@logigator/ui',
                 '@logigator/ui/*',
                 '**/logigator-editor/**',
-                '**/logigator-ui/**',
-                '**/logigator-backend/**'
+                '**/logigator-ui/**'
               ],
               message:
                 'the API shares code with the editor only through @logigator/core and @logigator/contract.'

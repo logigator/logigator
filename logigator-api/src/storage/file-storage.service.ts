@@ -28,9 +28,8 @@ export function assetPath(area: StorageArea, id: string): string {
 
 /**
  * URL root the storage volume is served under: one root rather than one prefix
- * per area, because the legacy backend answers `/profile/…` and `/preview/…`
- * from its own disk on the same origin until cutover, and a static handler
- * matching `/profile/*` would swallow those requests.
+ * per area, so the origin serves the whole volume with a single static rule
+ * and no area claims an address the website might answer.
  */
 export const STORAGE_URL_PREFIX = '/files';
 

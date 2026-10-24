@@ -1,7 +1,7 @@
 name: 'Release'
 
 # A `v*` tag is the whole release: its notes are checked and taken from the
-# changelog, the image is pushed, and only then is the GitHub Release created.
+# changelog, the images are pushed, and only then is the GitHub Release created.
 # All of it stays in one workflow because a Release created with GITHUB_TOKEN
 # starts no other workflow.
 on:
@@ -36,8 +36,10 @@ jobs:
           name: release-notes
           path: release-notes.md
 
-  build-and-push-image:
-    name: Build and push Docker image
+  # One image per runtime target of the Dockerfile. The builds run in one job,
+  # one after another, so each reuses the workspace install the first one built.
+  build-and-push-images:
+    name: Build and push Docker images
     needs: release-notes
     runs-on: ubuntu-latest
     permissions:
@@ -66,33 +68,90 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata
+      - name: Extract metadata (web)
         uses: docker/metadata-action@v5
-        id: meta
+        id: meta-web
         with:
           images: |
-            ghcr.io/${{ github.repository }}
+            ghcr.io/${{ github.repository }}-web
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+          labels: |
+            org.opencontainers.image.title=logigator-web
 
-      - name: Build and push
+      - name: Build and push (web)
         uses: docker/build-push-action@v6
         with:
           context: .
+          target: web
           push: true
           platforms: linux/amd64
           build-args: |
             GIT_COMMIT=${{ steps.buildmeta.outputs.commit }}
             BUILD_DATE=${{ steps.buildmeta.outputs.date }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          annotations: ${{ steps.meta.outputs.annotations }}
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
+          annotations: ${{ steps.meta-web.outputs.annotations }}
+
+      - name: Extract metadata (api)
+        uses: docker/metadata-action@v5
+        id: meta-api
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}-api
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+          labels: |
+            org.opencontainers.image.title=logigator-api
+
+      - name: Build and push (api)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: api
+          push: true
+          platforms: linux/amd64
+          build-args: |
+            GIT_COMMIT=${{ steps.buildmeta.outputs.commit }}
+            BUILD_DATE=${{ steps.buildmeta.outputs.date }}
+          tags: ${{ steps.meta-api.outputs.tags }}
+          labels: ${{ steps.meta-api.outputs.labels }}
+          annotations: ${{ steps.meta-api.outputs.annotations }}
+
+      - name: Extract metadata (proxy)
+        uses: docker/metadata-action@v5
+        id: meta-proxy
+        with:
+          images: |
+            ghcr.io/${{ github.repository }}-proxy
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+          labels: |
+            org.opencontainers.image.title=logigator-proxy
+
+      - name: Build and push (proxy)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: proxy
+          push: true
+          platforms: linux/amd64
+          build-args: |
+            GIT_COMMIT=${{ steps.buildmeta.outputs.commit }}
+            BUILD_DATE=${{ steps.buildmeta.outputs.date }}
+          tags: ${{ steps.meta-proxy.outputs.tags }}
+          labels: ${{ steps.meta-proxy.outputs.labels }}
+          annotations: ${{ steps.meta-proxy.outputs.annotations }}
 
   github-release:
     name: Publish the GitHub Release
-    needs: build-and-push-image
+    needs: build-and-push-images
     runs-on: ubuntu-latest
     permissions:
       contents: write

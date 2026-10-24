@@ -5,9 +5,7 @@ logigator.test {
 	# encoding is left alone, so an upstream compressing its own output keeps it.
 	encode zstd gzip
 
-	# The new API. Everything else still reaches the legacy backend, which serves
-	# its own pages until the cutover — but `/api` is the editor's, and the editor
-	# now speaks the native document format only this one answers in.
+	# The API, for the editor and the website alike.
 	@api path /api /api/*
 	handle @api {
 		reverse_proxy api:3000
@@ -24,18 +22,10 @@ logigator.test {
 		reverse_proxy editor:4200
 	}
 
-	@editorLegacy path /legacy-editor /legacy-editor/*
-	handle @editorLegacy {
-		reverse_proxy editor-legacy:8202
-	}
-
 	# The API's storage volume: avatars and circuit previews. Every file under it
 	# is written once under a name nothing reuses — replacing an asset means a new
 	# directory and a new pointer — so the URLs are safe to cache forever, and
 	# serving them here keeps a static read off the application entirely.
-	#
-	# One root of its own rather than `/profile` and `/preview`, which the legacy
-	# backend still answers from its own disk while both stacks share this origin.
 	@storage path /files/*
 	handle @storage {
 		root * /srv
@@ -44,10 +34,8 @@ logigator.test {
 		header Cache-Control "public, max-age=31536000, immutable"
 	}
 
-	# The website, at the origin root. It owns everything the legacy backend's
-	# pages used to answer — including the icons the editor links to by absolute
-	# path — so from here on the legacy backend is off the dev origin entirely,
-	# which is what the cutover will do to it in production.
+	# The website, at the origin root, including the icons the editor links to by
+	# absolute path.
 	handle {
 		reverse_proxy web:4200
 	}

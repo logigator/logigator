@@ -60,8 +60,7 @@ export default defineConfig([
                 'pixi.js',
                 'pixi.js/*',
                 '**/logigator-editor/**',
-                '**/logigator-api/**',
-                '**/logigator-backend/**'
+                '**/logigator-api/**'
               ],
               message:
                 'the site shares code with the other apps only through @logigator/ui, @logigator/core and @logigator/contract.'

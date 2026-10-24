@@ -57,8 +57,7 @@ export default defineConfig([
                 '**/logigator-editor/**',
                 '**/logigator-ui/**',
                 '**/logigator-api/**',
-                '**/logigator-web/**',
-                '**/logigator-backend/**'
+                '**/logigator-web/**'
               ],
               message:
                 'the contract describes the API surface for every client: zod and @logigator/core only, no framework, renderer or server imports.'

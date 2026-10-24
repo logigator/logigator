@@ -13,9 +13,9 @@ import { environment } from '../../environments/environment';
 import { TranslationService } from '../translation/translation.service';
 
 /**
- * Distinguishes this surface from the two editors sharing the PostHog project,
+ * Distinguishes this surface from the editor sharing the PostHog project,
  * whose `$pageview` and `$autocapture` events are otherwise identical. Kept in
- * sync with the editor's `APP_ID` and the legacy editor's `before_send` hook.
+ * sync with the editor's `APP_ID`.
  */
 const APP_ID = 'website';
 

@@ -27,8 +27,7 @@ export const ANALYTICS_SOURCES = new InjectionToken<readonly (() => void)[]>(
 /**
  * Distinguishes this app from the other surfaces sharing the PostHog project,
  * whose `$pageview`/`$autocapture` events are otherwise identical. Kept in sync
- * with the `before_send` hooks in the backend's `default.hbs` and the legacy
- * editor's `index.html`.
+ * with the website's `APP_ID`.
  */
 const APP_ID = 'editor-v2';
 

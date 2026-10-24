@@ -46,8 +46,7 @@ export default defineConfig([
                 '**/logigator-ui/**',
                 '**/logigator-contract/**',
                 '**/logigator-api/**',
-                '**/logigator-web/**',
-                '**/logigator-backend/**'
+                '**/logigator-web/**'
               ],
               message:
                 'core stays dependency-, framework- and renderer-free, and imports nothing from outside the package. Pass data in instead.'
