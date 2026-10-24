@@ -232,8 +232,8 @@ const en: Readonly<Record<string, DocImage>> = {
   },
   './images/component-palette.webp': {
     url: componentPaletteEn,
-    width: 638,
-    height: 3398
+    width: 2408,
+    height: 1300
   },
   './images/component-pulse-button.webp': {
     url: componentPulseButtonEn,
@@ -396,8 +396,8 @@ const de: Readonly<Record<string, DocImage>> = {
   },
   './images/component-palette.webp': {
     url: componentPaletteDe,
-    width: 638,
-    height: 3334
+    width: 2408,
+    height: 1300
   },
   './images/component-settings.webp': {
     url: componentSettingsDe,
@@ -488,8 +488,8 @@ const fr: Readonly<Record<string, DocImage>> = {
   },
   './images/component-palette.webp': {
     url: componentPaletteFr,
-    width: 638,
-    height: 3494
+    width: 2408,
+    height: 1300
   },
   './images/component-settings.webp': {
     url: componentSettingsFr,
@@ -580,8 +580,8 @@ const es: Readonly<Record<string, DocImage>> = {
   },
   './images/component-palette.webp': {
     url: componentPaletteEs,
-    width: 638,
-    height: 3494
+    width: 2408,
+    height: 1332
   },
   './images/component-settings.webp': {
     url: componentSettingsEs,

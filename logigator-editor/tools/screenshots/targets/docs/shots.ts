@@ -617,16 +617,50 @@ export const SHOTS: Shot[] = [
   // -- Custom components ----------------------------------------------------
   {
     name: 'component-palette',
-    // Tall enough for the whole palette: it is one scrolling column, and a
-    // clip only captures what is laid out on screen. French and Spanish run
-    // longest, at about 1750 px below the bars.
-    context: { viewport: { width: 1280, height: 2000 } },
     async run(ed) {
       // A loaded file carries its customs as embedded copies; restoring one
       // fills "User Components".
       await ed.load('custom-example');
       await ed.openCustomForEdit();
       await ed.openMainTab();
+      // The palette is one column five times as tall as it is wide, which the
+      // page can only show as a sliver under its image height cap. Set in
+      // columns of the side bar's own width, a category never split across
+      // two, it is wide rather than tall, which the page shows larger.
+      const columns = 4;
+      const gap = 32;
+      const accordion = ed.page.locator('app-component-list lg-accordion');
+      const width = await accordion.evaluate(
+        (element) => element.getBoundingClientRect().width
+      );
+      await ed.page.addStyleTag({
+        content: `
+          aside:has(> app-side-bar) { width: max-content !important }
+          app-component-list lg-accordion {
+            width: ${columns * width + (columns - 1) * gap}px;
+            columns: ${columns};
+            column-gap: ${gap}px;
+          }
+          app-component-list lg-accordion-panel { break-inside: avoid }
+        `
+      });
+      // The divider under each category separates it from the next one; the
+      // last in a column has none below it.
+      await accordion.evaluate((element) => {
+        const panels = Array.from(
+          element.querySelectorAll<HTMLElement>('lg-accordion-panel')
+        );
+        // Measured before any is changed, so no removal moves the rest.
+        const lefts = panels.map((panel) => panel.getBoundingClientRect().left);
+        for (const [i, panel] of panels.entries()) {
+          if (i + 1 < panels.length && lefts[i + 1] !== lefts[i]) {
+            panel.style.borderBottomWidth = '0';
+          }
+        }
+      });
+      // The widened side bar leaves the board a sliver, and the minimap
+      // docked in its corner overhangs the palette.
+      await ed.hideOverlays();
       await ed.parkPointer();
       // The side-bar host is a window-filling scroll container; its single
       // child is the palette.
