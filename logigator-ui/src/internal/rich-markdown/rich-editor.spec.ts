@@ -58,16 +58,29 @@ async function richHtml(markdown: string): Promise<string> {
  * A heading is named by the level that was **written**, not by its tag: the
  * page's renderer moves a member's headings two levels down so a description
  * cannot put an `h1` on somebody else's page, and the editor's numbers them
- * from one. `data-level` is what both emit and what the stylesheet sizes
- * them by, so it is what the two have to agree about.
+ * from one. The written level is what the stylesheet sizes them by, so it
+ * is what the two have to agree about: the editor carries it as `data-level`,
+ * the page as its tag less two.
  */
-function blocks(html: string): string[] {
+function blocks(
+  html: string,
+  writtenLevel: (element: Element) => string | null
+): string[] {
   const holder = document.createElement('div');
   holder.innerHTML = html;
   return Array.from(holder.children).map((element) => {
-    const level = element.getAttribute('data-level');
+    const level = writtenLevel(element);
     return level ? `heading:${level}` : element.tagName.toLowerCase();
   });
+}
+
+function richLevel(element: Element): string | null {
+  return element.getAttribute('data-level');
+}
+
+function pageLevel(element: Element): string | null {
+  const match = /^H([3-6])$/.exec(element.tagName);
+  return match ? String(Number(match[1]) - 2) : null;
 }
 
 /** The inline markup inside the first paragraph, in order. */
@@ -89,7 +102,9 @@ describe('the rich editor against the page', () => {
    */
   it('builds the same blocks the page builds', async () => {
     const rich = await richHtml(SAMPLE);
-    expect(blocks(rich)).toEqual(blocks(renderUserMarkdown(SAMPLE)));
+    expect(blocks(rich, richLevel)).toEqual(
+      blocks(renderUserMarkdown(SAMPLE), pageLevel)
+    );
   });
 
   it('builds the same inline markup the page builds', async () => {

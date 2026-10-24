@@ -195,10 +195,10 @@ export async function createRichEditor(
         ...STRINGIFY_OPTIONS
       }));
       // The level that was written, as an attribute, because that is what the
-      // shared stylesheet sizes a member's headings by: the page's renderer
-      // moves the tags two levels down so a description cannot put an `h1` on
-      // somebody else's page, and this one numbers them from one — so the tag
-      // is no longer the thing the two have in common.
+      // shared stylesheet sizes a member's headings by here: the page's
+      // renderer moves the tags two levels down so a description cannot put
+      // an `h1` on somebody else's page, and this one numbers them from one —
+      // so the tag is not the thing the two have in common.
       ctx.set(headingAttr.key, (node) => ({
         'data-level': String(node.attrs['level'])
       }));

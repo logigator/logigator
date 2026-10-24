@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { SecurityContext } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { DomSanitizer } from '@angular/platform-browser';
 import {
   isAllowedImageDestination,
   isAllowedLinkDestination,
@@ -50,7 +53,7 @@ describe('renderUserMarkdown', () => {
     const html = renderUserMarkdown(
       '# Adder\n\nA **four-bit** adder with *carry*.\n\n- one\n- two\n\n`code()`'
     );
-    expect(html).toContain('<h3 data-level="1">Adder</h3>');
+    expect(html).toContain('<h3>Adder</h3>');
     expect(html).toContain('<strong>four-bit</strong>');
     expect(html).toContain('<em>carry</em>');
     expect(html).toContain('<li>one</li>');
@@ -65,16 +68,16 @@ describe('renderUserMarkdown', () => {
     // found the member's words where the site's structure should be.
     const html = renderUserMarkdown('# one\n\n## two\n\n### three');
     expect(html).not.toMatch(/<h[12][\s>]/);
-    expect(html).toContain('<h3 data-level="1">one</h3>');
-    expect(html).toContain('<h4 data-level="2">two</h4>');
-    expect(html).toContain('<h5 data-level="3">three</h5>');
+    expect(html).toContain('<h3>one</h3>');
+    expect(html).toContain('<h4>two</h4>');
+    expect(html).toContain('<h5>three</h5>');
   });
 
   it('runs out of levels rather than out of tags', () => {
     // Two levels down puts the deepest of them past `h6`, which is not a tag.
     const html = renderUserMarkdown('##### five\n\n###### six');
-    expect(html).toContain('<h6 data-level="5">five</h6>');
-    expect(html).toContain('<h6 data-level="6">six</h6>');
+    expect(html).toContain('<h6>five</h6>');
+    expect(html).toContain('<h6>six</h6>');
   });
 
   it('shows raw HTML as text rather than dropping it', () => {
@@ -209,6 +212,34 @@ describe('renderUserMarkdown', () => {
     // Every one of these fields was a textarea whose newlines were shown as
     // newlines; without this the paragraphs already written would collapse.
     expect(renderUserMarkdown('one\ntwo')).toContain('<br>');
+  });
+
+  it('emits nothing the sanitizer strips', () => {
+    // The output is bound through `[innerHTML]`. Whatever the sanitizer
+    // removes never reaches the stylesheet, and each binding it touches logs
+    // a warning, once per description on a listing page.
+    const html = renderUserMarkdown(
+      [
+        '# one',
+        '## two',
+        '### three',
+        '###### six',
+        'Text with **bold**, _italic_, ~~struck~~, `code` and a [link](https://example.com).',
+        '![alt](/files/a/b.webp)',
+        '- [ ] todo\n- [x] done',
+        '1. first\n2. second',
+        '> quoted',
+        '```js\nlet a = 1;\n```',
+        '---',
+        '| Left | Centre | Right |\n| :--- | :---: | ---: |\n| 1 | 2 | 3 |',
+        'The <clock> input.'
+      ].join('\n\n')
+    );
+    const sanitized = TestBed.inject(DomSanitizer).sanitize(
+      SecurityContext.HTML,
+      html
+    );
+    expect(parse(sanitized ?? '').innerHTML).toBe(parse(html).innerHTML);
   });
 });
 

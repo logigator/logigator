@@ -130,8 +130,7 @@ const userMarked = new Marked({
     },
 
     /**
-     * A heading, two levels down from the one that was written, and carrying
-     * the level that *was* written as an attribute.
+     * A heading, two levels down from the one that was written.
      *
      * A description and a bio are fragments quoted inside somebody else's
      * page, and a `#` in one is not that page's first-level heading. Left
@@ -141,16 +140,14 @@ const userMarked = new Marked({
      * Two levels down puts the deepest of them at `h6` and leaves `h1` and
      * `h2` to the page.
      *
-     * `data-level` is what the stylesheet sizes them by, because the tag no
-     * longer says which one an author asked for — and because the editor's
-     * own renderer numbers its headings from one and has to agree with this
-     * one about how they look.
+     * The tag is all that records the written level. A `data-level` beside
+     * it would not survive: Angular's sanitizer allows no `data-*` attribute,
+     * so the stylesheet reads this renderer's levels from the tag instead.
      */
     heading({ tokens, depth }: Tokens.Heading): string {
-      const written = Math.min(Math.max(depth, 1), 6);
-      const level = Math.min(written + 2, 6);
+      const level = Math.min(Math.max(depth, 1) + 2, 6);
       const text = this.parser.parseInline(tokens);
-      return `<h${level} data-level="${written}">${text}</h${level}>\n`;
+      return `<h${level}>${text}</h${level}>\n`;
     },
 
     /**

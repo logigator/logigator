@@ -211,9 +211,14 @@ export const LG_PROSE_STYLES = `
  *
  * So the ceiling is the page's own section heading, and nothing an author
  * writes may reach it. Levels stay apart by weight and spacing instead of by
- * size, sized from `data-level` because the page's renderer has moved the tags
- * two levels down and the editor's has not — both emit the level that was
- * *written*, which is the thing that has to look the same in both.
+ * size, by the level that was *written*, which is the thing that has to look
+ * the same in both renderers. The editor's numbers its tags from one and
+ * carries the written level as `data-level`. The page's moves its tags two
+ * levels down and carries nothing else, because Angular's sanitizer drops
+ * every `data-*` attribute from the `[innerHTML]` it is bound through. So a
+ * page heading's written level is its tag less two, matched only inside the
+ * wrapper that binding fills. Only the first two levels are set apart, so the
+ * levels that share `h6` never need telling apart.
  *
  * The body is muted for the same reason the site's own captions are not:
  * structure is the page's voice, quoted prose is somebody else's. A heading
@@ -245,13 +250,15 @@ export const LG_USER_PROSE_STYLES = `
     border-bottom: none;
   }
 
-  .lg-prose[data-user-content] [data-level='1'] {
+  .lg-prose[data-user-content] [data-level='1'],
+  .lg-prose[data-user-content] > [data-user-content] h3 {
     font-size: 1.05em;
     font-weight: 700;
     color: var(--lg-text-hover);
   }
 
-  .lg-prose[data-user-content] [data-level='2'] {
+  .lg-prose[data-user-content] [data-level='2'],
+  .lg-prose[data-user-content] > [data-user-content] h4 {
     font-weight: 700;
   }
 
