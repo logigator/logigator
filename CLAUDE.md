@@ -274,9 +274,10 @@ The product version is the root `package.json`'s (every member stays `0.0.0`); t
 site read it into `environment.version`. A release commit bumps it and turns
 `## [Unreleased]` into `## [<version>] - <date>` in all four changelog files (plus the compare
 links in `CHANGELOG.md`). Pushing the `v<version>` tag runs `release.yaml`:
-`.github/scripts/release-notes.mjs` refuses a tag that disagrees with the version or the
-changelogs, the `web`, `api` and `proxy` images are pushed, then the GitHub Release is created
-with the English notes.
+its first job waits for the tagged commit's CI and refuses it unless every workflow run passed (push
+the commit to a branch first), `.github/scripts/release-notes.mjs` refuses a tag that
+disagrees with the version or the changelogs, the `web`, `api` and `proxy` images are pushed, then
+the GitHub Release is created with the English notes.
 
 ## Testing
 

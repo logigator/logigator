@@ -1,7 +1,8 @@
 name: 'Release'
 
-# A `v*` tag is the whole release: its notes are checked and taken from the
-# changelog, the images are pushed, and only then is the GitHub Release created.
+# A `v*` tag is the whole release: its commit's CI is checked, its notes are
+# checked and taken from the changelog, the images are pushed, and only then is
+# the GitHub Release created.
 # All of it stays in one workflow because a Release created with GITHUB_TOKEN
 # starts no other workflow.
 on:
@@ -9,7 +10,44 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: read
+
 jobs:
+  # Every workflow run on the tagged commit, apart from this one, has to finish
+  # with success. One still running is waited for, so a tag pushed right behind
+  # its commit is not refused for being early; a package workflow that skipped
+  # its job for the commit's paths still ends as a success.
+  ci-status:
+    name: Check that CI passed on the commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+    steps:
+      - name: Wait for CI and check its result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          runs() {
+            gh run list --commit "$GITHUB_SHA" --limit 100 \
+              --json databaseId,workflowName,status,conclusion \
+              --jq "[.[] | select(.databaseId != $GITHUB_RUN_ID)]"
+          }
+          if [[ $(runs | jq length) -eq 0 ]]; then
+            echo "::error::No CI ran on $GITHUB_SHA; push it to a branch before tagging it"
+            exit 1
+          fi
+          for id in $(runs | jq -r '.[] | select(.status != "completed") | .databaseId'); do
+            gh run watch "$id" --interval 30 > /dev/null
+          done
+          failed=$(runs | jq -r '.[] | select(.conclusion != "success") | .workflowName')
+          if [[ -n $failed ]]; then
+            echo "::error::CI did not pass on $GITHUB_SHA: $failed"
+            exit 1
+          fi
+
   release-notes:
     name: Check the version and take the release notes
     runs-on: ubuntu-latest
@@ -40,7 +78,9 @@ jobs:
   # one after another, so each reuses the workspace install the first one built.
   build-and-push-images:
     name: Build and push Docker images
-    needs: release-notes
+    needs:
+      - ci-status
+      - release-notes
     runs-on: ubuntu-latest
     permissions:
       contents: read
