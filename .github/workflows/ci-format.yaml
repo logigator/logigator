@@ -11,6 +11,9 @@ on:
       - 'master'
       - 'development'
 
+permissions:
+  contents: read
+
 jobs:
   ci:
     name: 'CI format'

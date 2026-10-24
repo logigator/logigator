@@ -6,21 +6,28 @@ on:
       - 'master'
       - 'development'
 
+permissions:
+  contents: read
+
 jobs:
   pre_job:
     runs-on: ubuntu-latest
+    # What skip-duplicate-actions needs to read runs and cancel outdated ones.
+    permissions:
+      actions: write
+      contents: read
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
       - id: skip_check
-        uses: fkirc/skip-duplicate-actions@v5
+        uses: fkirc/skip-duplicate-actions@b974a9395958c231af965b70070979a577efa578 # v5.3.2
         with:
           concurrent_skipping: 'never'
           cancel_others: 'true'
           skip_after_successful_duplicate: 'true'
           # The API bundles @logigator/core and @logigator/contract from source,
           # so a change to either has to run this workflow too.
-          paths: '["logigator-api/**", "logigator-core/**", "logigator-contract/**", "package.json", "yarn.lock", ".yarnrc.yml", "tsconfig.json", "eslint.config.mjs"]'
+          paths: '["logigator-api/**", "logigator-core/**", "logigator-contract/**", "package.json", "yarn.lock", ".yarnrc.yml", "tsconfig.json", "eslint.config.mjs", ".github/workflows/ci-logigator-api.yaml", ".github/actions/yarn-install/**"]'
 
   ci:
     name: 'CI logigator-api'
