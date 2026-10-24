@@ -23,7 +23,12 @@ COPY ["./logigator-editor/packages/router-stub", "./logigator-editor/packages/ro
 # pixi.js resolves through a local patch (see logigator-editor/docs/rendering.md),
 # which the lockfile names by path.
 COPY ["./.yarn/patches", "./.yarn/patches/"]
-RUN yarn install --immutable --inline-builds
+# Yarn's download cache is a cache mount rather than part of the layer: a
+# release bumps the root manifest's version, which reruns this step every time,
+# and the mount keeps the archives it would otherwise fetch again. Both install
+# steps share it, one at a time.
+RUN --mount=type=cache,id=yarn-cache,target=/app/.yarn/cache,sharing=locked \
+	yarn install --immutable --inline-builds
 
 COPY ["./angular.json", "./tsconfig.json", "./"]
 COPY ["./logigator-ui", "./logigator-ui/"]
@@ -115,7 +120,8 @@ COPY ["./logigator-editor/package.json", "./logigator-editor/"]
 COPY ["./logigator-web/package.json", "./logigator-web/"]
 COPY ["./logigator-editor/packages/router-stub", "./logigator-editor/packages/router-stub/"]
 COPY ["./.yarn/patches", "./.yarn/patches/"]
-RUN yarn workspaces focus logigator-api --production && rm -rf .yarn/cache
+RUN --mount=type=cache,id=yarn-cache,target=/app/.yarn/cache,sharing=locked \
+	yarn workspaces focus logigator-api --production
 
 COPY --from=api-build ["/app/dist/logigator-api", "./dist/logigator-api"]
 
