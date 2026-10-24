@@ -1,0 +1,104 @@
+name: 'CI images'
+
+# Builds the production images, which no package workflow does: the Dockerfile's
+# stages, its installs and what each stage copies. Where the stack's own wiring
+# changed, it then runs them as the production compose file does, behind the
+# local edge, and asks each application for a page through it.
+on:
+  pull_request:
+  push:
+    branches:
+      - 'master'
+      - 'development'
+
+permissions:
+  contents: read
+
+jobs:
+  pre_job:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    outputs:
+      skip_build: ${{ steps.build.outputs.should_skip }}
+      skip_stack: ${{ steps.stack.outputs.should_skip }}
+    steps:
+      # Two checks rather than one `paths_filter`, which the action's own
+      # documentation advises against relying on.
+      - id: build
+        uses: fkirc/skip-duplicate-actions@b974a9395958c231af965b70070979a577efa578 # v5.3.2
+        with:
+          concurrent_skipping: 'never'
+          cancel_others: 'true'
+          skip_after_successful_duplicate: 'true'
+          paths: '["Dockerfile", ".dockerignore", "Caddyfile.production", "docker-compose.production.yaml", "package.json", "logigator-*/package.json", "yarn.lock", ".yarnrc.yml", ".yarn/patches/**", "logigator-editor/packages/router-stub/**", "angular.json", "tsconfig.json", ".github/workflows/ci-images.yaml"]'
+
+      # Starting the stack catches what a build cannot — the forwarding
+      # headers, the migration step, the editor's routes — and only these
+      # files decide those.
+      - id: stack
+        uses: fkirc/skip-duplicate-actions@b974a9395958c231af965b70070979a577efa578 # v5.3.2
+        with:
+          concurrent_skipping: 'never'
+          skip_after_successful_duplicate: 'true'
+          paths: '["Dockerfile", "Caddyfile.production", "docker-compose.production.yaml", ".github/workflows/ci-images.yaml"]'
+
+  ci:
+    name: 'CI images'
+    needs: pre_job
+    if: ${{ needs.pre_job.outputs.skip_build != 'true' }}
+    runs-on: 'ubuntu-latest'
+    env:
+      COMPOSE_FILE: docker-compose.production.yaml
+      COMPOSE_PROFILES: local
+      SESSION_SECRET: ci-session-secret-of-at-least-32-characters
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v5
+
+      - name: 'Build'
+        shell: bash
+        run: docker compose build
+
+      - name: 'Start the stack'
+        if: ${{ needs.pre_job.outputs.skip_stack != 'true' }}
+        shell: bash
+        run: docker compose up --detach
+
+      # Every request goes through the edge on 443, as a browser's would. The
+      # API is ready once it has migrated, seeded the examples and reached
+      # Postgres and Redis, which is the slowest part of the stack to come up.
+      - name: 'Smoke test'
+        if: ${{ needs.pre_job.outputs.skip_stack != 'true' }}
+        shell: bash
+        run: |
+          site=https://logigator.test
+          fetch() {
+            curl --silent --show-error --fail --insecure \
+              --resolve logigator.test:443:127.0.0.1 "$@"
+          }
+          expect_page() {
+            local body
+            body=$(fetch "$1")
+            if [[ $body != *"$2"* ]]; then
+              echo "::error::$1 does not contain $2"
+              exit 1
+            fi
+          }
+
+          fetch --retry 90 --retry-delay 2 --retry-all-errors \
+            --output /dev/null "$site/api/health/ready"
+
+          # Rendered on the server, through the API.
+          expect_page "$site/en" 'ng-server-context="ssr"'
+          # The origin the site derives from the forwarded host and scheme.
+          expect_page "$site/robots.txt" "Sitemap: $site/sitemap.xml"
+          # The editor's shell, at its address and at one of its routes.
+          expect_page "$site/editor" '<base href="/editor/">'
+          expect_page "$site/editor/project/smoke-test" '<base href="/editor/">'
+
+      - name: 'Stack logs'
+        if: ${{ failure() && needs.pre_job.outputs.skip_stack != 'true' }}
+        shell: bash
+        run: docker compose logs --no-color
