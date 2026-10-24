@@ -48,16 +48,14 @@ describe('LgList', () => {
     const items = (f.nativeElement as HTMLElement).querySelectorAll(
       'lg-list-item'
     );
-    // Shorthand renders the glyph from the input.
     expect(items[0].querySelector('i.ph-file')).not.toBeNull();
     // The template slot takes precedence over the shorthand.
     expect(items[1].querySelector('i.ph-circuitry')).not.toBeNull();
     expect(items[1].querySelector('i.ph-file')).toBeNull();
   });
 
-  // Each row decides its subtitle with a per-item `@if`, so the template lives
-  // in a conditionally-created view. Rows that provide it must render it; rows
-  // that don't must stay single-line.
+  // A per-item `@if` puts the subtitle template in a conditionally-created
+  // view.
   it('resolves per-row subtitle slots wrapped in @if', () => {
     @Component({
       imports: [LgList, LgListItem],

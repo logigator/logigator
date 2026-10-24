@@ -4,10 +4,18 @@ import { LgButton, LgDialog, LgTextarea } from '@logigator/ui';
 import type { ComponentOptionInput } from '../../component-option';
 import type { TextAreaComponentOption } from './text-area.component-option';
 import { TranslateDirective } from '../../../translation/translate.directive';
+import { DialogOptionButtonComponent } from '../dialog-option-button/dialog-option-button.component';
 
 @Component({
   selector: 'app-text-area-option-input',
-  imports: [FormsModule, LgButton, LgDialog, LgTextarea, TranslateDirective],
+  imports: [
+    FormsModule,
+    LgButton,
+    LgDialog,
+    LgTextarea,
+    TranslateDirective,
+    DialogOptionButtonComponent
+  ],
   templateUrl: './text-area-option-input.component.html'
 })
 export class TextAreaOptionInputComponent implements ComponentOptionInput<string> {

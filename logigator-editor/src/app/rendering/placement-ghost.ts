@@ -1,4 +1,4 @@
-import { Container, PointData } from 'pixi.js';
+import { Container, Point, PointData } from 'pixi.js';
 import { NO_EXCLUDED_IDS, Project } from '../project/project';
 import { Component } from '../components/component';
 import { ComponentConfig } from '../components/component-config.model';
@@ -7,28 +7,30 @@ import { ConnectionPoint } from '../connection-points/connection-point';
 import { applyInvalidTint } from './invalid-tint';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { getStaticDI } from '../utils/get-di';
-import { Direction } from '../utils/direction';
+import { Direction } from '@logigator/core';
 
 /**
- * A single-component placement preview living in the floating layer's drag
- * layer: a fresh instance built from a config, wearing the selection look,
- * tinted with the theme's invalid color whenever the spot it sits on
- * collides. Shared by the hover preview (the ghost under the cursor before
- * any press) and the `ComponentPlacementSession` (the same ghost while the
- * placing press is held), so the press-down handoff is seamless.
+ * A single-component placement preview in the floating layer's drag layer: a
+ * fresh instance from a config, wearing the selection look and the invalid
+ * tint whenever its spot collides. The hover preview and the
+ * `ComponentPlacementSession` share it, so the press-down handoff is seamless.
  *
- * Zoom is handled by the host: the drag layer fans `applyScale` out to its
- * children on every zoom change.
+ * The ghost follows a cursor rather than a position: the body's centre sits
+ * under the pointer, snapped so the component's position stays on the grid.
+ *
+ * Zoom is the host's: the drag layer fans `applyScale` out to its children.
  */
 export class PlacementGhost {
   private readonly _component: Component;
   private _hasCollision = false;
+  // The last cursor the ghost was centred on, so a turn can re-centre.
+  private readonly _cursor = new Point();
 
   constructor(
     private readonly project: Project,
     parent: Container<Component | Wire | ConnectionPoint>,
     config: ComponentConfig,
-    startPos: PointData
+    cursor: PointData
   ) {
     const options = Object.fromEntries(
       Object.entries(config.options).map(([key, opt]) => [key, opt.clone()])
@@ -44,14 +46,13 @@ export class PlacementGhost {
     if (direction !== Direction.E) {
       this._component.direction = direction;
     }
-    // The ghost wears the selection look (theme-keyed tint).
     this._component.selected = true;
     this._component.applyScale(project.scale.x);
     parent.addChild(this._component);
-    this.moveTo(startPos);
+    this.moveTo(cursor);
   }
 
-  /** The ghost instance itself — the component a commit would add. */
+  /** The component a commit would add. */
   public get component(): Component {
     return this._component;
   }
@@ -70,12 +71,13 @@ export class PlacementGhost {
   /**
    * Turns the ghost to `direction` — the sticky placement direction its owner
    * just wrote (the settings panel's row, or a rotate request). A turn
-   * resizes the body, so the collision tint is re-derived.
+   * reshapes the body, so the ghost re-centres on the cursor, which also
+   * re-derives the collision tint.
    */
   public setDirection(direction: Direction): void {
     if (this._component.direction === direction) return;
     this._component.direction = direction;
-    this._updateCollision();
+    this.moveTo(this._cursor);
     // A turn is a visual change with no pointer move behind it (the rotate
     // shortcut), so it asks for its own frame rather than waiting for one.
     this.project.triggerTicker('single');
@@ -85,9 +87,19 @@ export class PlacementGhost {
     return this._hasCollision;
   }
 
-  /** Moves the ghost to a grid position and re-derives its collision tint. */
-  public moveTo(gridPos: PointData): void {
-    this._component.position.copyFrom(gridPos);
+  /**
+   * Centres the ghost's body on a grid-space cursor, snapped to the nearest
+   * grid position, and re-derives its collision tint.
+   */
+  public moveTo(cursor: PointData): void {
+    this._cursor.copyFrom(cursor);
+    const position = this._component.position;
+    const body = this._component.bodyGridBounds;
+    // The body's centre relative to the position depends on the direction.
+    position.set(
+      Math.round(cursor.x - (body.x - position.x) - body.width / 2),
+      Math.round(cursor.y - (body.y - position.y) - body.height / 2)
+    );
     this._updateCollision();
   }
 

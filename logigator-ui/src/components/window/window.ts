@@ -15,6 +15,7 @@ import { WindowRect, WindowSize } from './window-config';
 import { WindowRef } from './window-ref';
 import { OpenWindow } from './window.service';
 import { LgButton } from '../button/button';
+import { LgTooltip } from '../tooltip/tooltip';
 import { lgLabel } from '../../tokens/labels';
 
 interface Rect {
@@ -55,22 +56,18 @@ const CASCADE_STEP = 28;
 const CASCADE_WRAP = 8;
 
 /**
- * The chrome of one floating window: title bar (drag-to-move, close button),
- * eight edge/corner resize zones, and the dynamically-created content
- * component. Move and resize run on captured pointer events, clamped to the
- * outlet's bounds — an unmeasured 0×0 bounds (e.g. before first paint) leaves
- * the window unclamped rather than collapsing it. Pressing the window raises
- * it; Escape closes it when `closable`.
+ * The chrome of one floating window: title bar, eight edge/corner resize
+ * zones, and the dynamically-created content component. Move and resize run
+ * on captured pointer events, clamped to the outlet's bounds; an unmeasured
+ * 0×0 bounds leaves the window unclamped rather than collapsing it.
  *
- * In `fullscreen` mode (set per outlet) the window fills the outlet instead:
- * no positioning, dragging, resizing, or window chrome — the title bar shows
- * a back button in place of the close ✕. Windows still stack by z-index, so
- * with several open only the topmost is visible and back reveals the one
- * beneath.
+ * In `fullscreen` mode the window fills the outlet instead: no positioning,
+ * dragging, resizing or chrome, and a back button in place of the close ✕.
+ * Windows still stack by z-index, so back reveals the one beneath.
  *
- * The content is created in `ngAfterViewInit` — after `open()` has returned —
- * with `inputValues` applied before its first change detection, and can inject
- * {@link WindowRef} to close itself (mirroring the DynamicDialog container).
+ * The content is created in `ngAfterViewInit`, after `open()` has returned,
+ * with `inputValues` applied before its first change detection; it can inject
+ * {@link WindowRef} to close itself.
  */
 @Component({
   selector: 'lg-window',
@@ -96,7 +93,7 @@ const CASCADE_WRAP = 8;
     '(pointercancel)': 'endDrag($event)',
     '(keydown.escape)': 'onEscape($event)'
   },
-  imports: [LgButton],
+  imports: [LgButton, LgTooltip],
   template: `
     <div
       class="flex shrink-0 touch-none items-center gap-2 border-b border-border px-3 py-1.5 select-none"
@@ -106,13 +103,14 @@ const CASCADE_WRAP = 8;
       @if (fullscreen() && closable()) {
         <!-- ariaLabel input, not a static attribute: the label has to reach the
              inner <button>, which is the node AT sees. -->
-        <lg-button
+        <button
+          lgButton
           [ariaLabel]="backLabel()"
           icon="ph ph-arrow-left"
           severity="none"
           size="sm"
           (click)="entry().ref.close()"
-        ></lg-button>
+        ></button>
       }
       @if (titleParts(); as parts) {
         <h2
@@ -142,14 +140,27 @@ const CASCADE_WRAP = 8;
           {{ title() }}
         </h2>
       }
+      @if (help(); as action) {
+        <button
+          lgButton
+          [ariaLabel]="action.label"
+          [lgTooltip]="action.label"
+          tooltipPosition="bottom"
+          icon="ph ph-question"
+          severity="none"
+          size="sm"
+          (click)="action.command()"
+        ></button>
+      }
       @if (closable() && !fullscreen()) {
-        <lg-button
+        <button
+          lgButton
           [ariaLabel]="closeLabel()"
           icon="ph ph-x"
           severity="none"
           size="sm"
           (click)="entry().ref.close()"
-        ></lg-button>
+        ></button>
       }
     </div>
     <div class="min-h-0 grow overflow-auto" [class]="bodyClass()">
@@ -199,9 +210,9 @@ export class LgWindow implements AfterViewInit {
   readonly bounds = input.required<WindowSize>();
   /** Fill the outlet as a takeover instead of floating (set per outlet). */
   readonly fullscreen = input(false);
-  /** ARIA label for the close button — pass a localized string. */
+  /** ARIA label for the close button; localize it. */
   readonly closeLabel = input(lgLabel('close'));
-  /** ARIA label for the fullscreen back button — pass a localized string. */
+  /** ARIA label for the fullscreen back button; localize it. */
   readonly backLabel = input(lgLabel('back'));
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -219,6 +230,11 @@ export class LgWindow implements AfterViewInit {
   protected readonly titleParts = computed(() => {
     const parts = this.entry().config.titleParts?.();
     return parts && parts.length > 0 ? parts : null;
+  });
+
+  protected readonly help = computed(() => {
+    const help = this.entry().config.help;
+    return (isSignal(help) ? help() : help) ?? null;
   });
 
   protected readonly closable = computed(
@@ -240,7 +256,7 @@ export class LgWindow implements AfterViewInit {
     return { ...position, ...size };
   });
 
-  /** The rendered rect — the dragged (or initial) rect, kept inside bounds. */
+  /** The dragged (or initial) rect, kept inside bounds. */
   protected readonly rect = computed<Rect>(() =>
     this.clampRect(this.draggedRect() ?? this.initialRect())
   );
@@ -276,7 +292,7 @@ export class LgWindow implements AfterViewInit {
     });
   }
 
-  /** The rendered box in viewport CSS px — what {@link WindowRef.bounds} reads. */
+  /** The rendered box in viewport CSS px. */
   private viewportRect(): WindowRect {
     const box = this.host.nativeElement.getBoundingClientRect();
     return { x: box.x, y: box.y, width: box.width, height: box.height };
@@ -284,10 +300,9 @@ export class LgWindow implements AfterViewInit {
 
   /**
    * Places the window at a viewport-relative box, clamped to the outlet like a
-   * drag. The rect the component holds is outlet-relative, so the outlet's
-   * origin is derived from the host's own measured position rather than from
-   * the outlet element. Returns the box actually taken — computed, not
-   * re-measured, since the DOM has not been written yet.
+   * drag. The rect held here is outlet-relative, so the outlet origin comes
+   * from the host's own measured position. Returns the box actually taken,
+   * computed rather than re-measured: the DOM has not been written yet.
    */
   private placeAt(patch: Partial<WindowRect>): WindowRect | null {
     if (this.fullscreen()) {
@@ -312,7 +327,7 @@ export class LgWindow implements AfterViewInit {
     return { ...next, x: next.x + origin.x, y: next.y + origin.y };
   }
 
-  /** Raise the window and move keyboard focus into it (for Escape-to-close). */
+  /** Raise the window and move focus into it, so Escape reaches it. */
   protected raise(): void {
     this.entry().ref.focus();
     if (!this.host.nativeElement.contains(document.activeElement)) {

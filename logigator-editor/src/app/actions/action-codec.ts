@@ -22,33 +22,30 @@ import { LoggingService } from '../logging/logging.service';
 import { getStaticDI } from '../utils/get-di';
 
 /**
- * Reconstructs an {@link Action} from its `Action.serialize()` output — the read
- * side of the debug Project Dump format. The discriminated `type` maps back to a
- * concrete action; `ReorderPlugsAction`/`UpdateInstanceAction` collapse to a
- * plain {@link ActionContainer} (their behaviour is pure child delegation).
+ * Reconstructs an {@link Action} from its `serialize()` output.
+ * `ReorderPlugsAction`/`UpdateInstanceAction` collapse to a plain
+ * {@link ActionContainer}, since their behaviour is pure child delegation.
  */
 export function deserializeAction(dto: SerializedAction): Action {
   switch (dto.type) {
     case 'addComponents':
-      return new AddComponentsAction(...dto.components);
+      return new AddComponentsAction(dto.components);
     case 'removeComponents':
-      return new RemoveComponentsAction(...dto.components);
+      return new RemoveComponentsAction(dto.components);
     case 'addWires':
-      return new AddWiresAction(...dto.wires);
+      return new AddWiresAction(dto.wires);
     case 'removeWires':
-      return new RemoveWiresAction(...dto.wires);
+      return new RemoveWiresAction(dto.wires);
     case 'moveComponents':
-      return new MoveComponentsAction(...deserializeMoveEntries(dto.entries));
+      return new MoveComponentsAction(deserializeMoveEntries(dto.entries));
     case 'moveWires':
-      return new MoveWiresAction(...deserializeMoveEntries(dto.entries));
+      return new MoveWiresAction(deserializeMoveEntries(dto.entries));
     case 'rotateComponents':
       return new RotateComponentsAction(
-        ...deserializeRotateComponentEntries(dto.entries)
+        deserializeRotateComponentEntries(dto.entries)
       );
     case 'rotateWires':
-      return new RotateWiresAction(
-        ...deserializeRotateWireEntries(dto.entries)
-      );
+      return new RotateWiresAction(deserializeRotateWireEntries(dto.entries));
     case 'changeOption':
       return new ChangeOptionAction(
         dto.componentId,
@@ -64,11 +61,10 @@ export function deserializeAction(dto: SerializedAction): Action {
         dto.negated
       );
     case 'container':
-      return new ActionContainer(...dto.actions.map(deserializeAction));
+      return new ActionContainer(dto.actions.map(deserializeAction));
     default:
-      // Unknown/future type from a malformed or newer dump: fail at parse time
-      // rather than leaking `undefined` into the restored stack (which would
-      // crash on the next undo/redo).
+      // Fail at parse time rather than leak `undefined` into the restored
+      // stack, which would crash on the next undo/redo.
       getStaticDI(LoggingService).warn(
         `unknown serialized action type: ${(dto as { type?: string }).type}`,
         'ActionCodec'

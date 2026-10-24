@@ -13,11 +13,14 @@
     "@angular/common": "^22.0.0",
     "@angular/core": "^22.0.0",
     "@angular/forms": "^22.0.0",
+    "@milkdown/kit": "^7.22.1",
     "marked": "^18.0.0",
     "ngx-markdown": "^22.0.0",
     "rxjs": "^6.5.3 || ^7.4.0"
   },
   "dependencies": {
+    "katex": "^0.16.0",
+    "marked-katex-extension": "^5.0.0",
     "tslib": "^2.8.1"
   },
   "devDependencies": {

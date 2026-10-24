@@ -5,9 +5,10 @@ import {
   GETTING_STARTED_TUTORIAL,
   OnboardingService
 } from './onboarding.service';
+import { EditorSettingsService } from '../settings/editor-settings.service';
 
 const KEYS = [
-  'logigator.onboarding.tips-enabled',
+  'logigator.settings',
   'logigator.onboarding.completed-tutorials',
   'logigator.onboarding.seen-hints',
   'logigator.onboarding.nudge-dismissed'
@@ -25,15 +26,6 @@ describe('OnboardingService', () => {
 
   afterEach(() => {
     for (const key of KEYS) localStorage.removeItem(key);
-  });
-
-  it('defaults tips to enabled and persists the flag across instances', () => {
-    const service = makeService();
-    expect(service.tipsEnabled()).toBe(true);
-
-    service.setTipsEnabled(false);
-    TestBed.resetTestingModule();
-    expect(makeService().tipsEnabled()).toBe(false);
   });
 
   it('remembers completed tutorials and seen hints across instances', () => {
@@ -60,7 +52,8 @@ describe('OnboardingService', () => {
   it('turning tips off ends a running tutorial but keeps it resumable', () => {
     const service = makeService();
     service.startTutorial(GETTING_STARTED_TUTORIAL);
-    service.setTipsEnabled(false);
+    TestBed.inject(EditorSettingsService).onboardingTips.set(false);
+    TestBed.tick();
 
     expect(service.activeTutorial()).toBeNull();
     expect(service.hasCompletedTutorial(GETTING_STARTED_TUTORIAL)).toBe(false);
@@ -71,7 +64,7 @@ describe('OnboardingService', () => {
     service.startTutorial(GETTING_STARTED_TUTORIAL);
     service.endTutorial(true);
     service.markHintSeen('eraser');
-    service.setTipsEnabled(false);
+    service.disableAllTips();
 
     service.showTipsAgain();
 

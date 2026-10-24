@@ -84,6 +84,28 @@ describe('ToastService', () => {
     });
   });
 
+  describe('errorWithAction', () => {
+    it('keeps the offer up until it is closed', () => {
+      const action = { label: 'Learn more', handler: () => {} };
+      service.errorWithAction('err-msg', 'MyContext', action);
+      expect(messageService.add).toHaveBeenCalledWith(
+        expect.objectContaining({ severity: 'danger', life: 0, action })
+      );
+    });
+
+    it('logs and reports like a plain error', () => {
+      service.errorWithAction('err-msg', 'MyContext', {
+        label: 'Learn more',
+        handler: () => {}
+      });
+      expect(logging.error).toHaveBeenCalledWith('err-msg', 'MyContext');
+      expect(analytics.capture).toHaveBeenCalledWith(
+        AnalyticsEvent.ErrorShown,
+        { context: 'MyContext', message: 'err-msg', cause: undefined }
+      );
+    });
+  });
+
   describe('warn', () => {
     it('shows a warning toast with translated summary', () => {
       service.warn('warn-msg', 'MyContext');

@@ -1,6 +1,6 @@
 import { Environment } from './environment.model';
 import { LogLevel } from '../app/logging/log-level.enum';
-import { version } from '../../package.json';
+import { version } from '../../../package.json';
 
 export const environment: Environment = {
   version,

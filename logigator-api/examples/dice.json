@@ -1,0 +1,76 @@
+{
+  "version": 2,
+  "name": "Dice",
+  "components": [
+    {
+      "type": 2,
+      "x": [45],
+      "y": [23],
+      "dir": [1],
+      "opt": {
+        "numInputs": [2]
+      }
+    },
+    {
+      "type": 3,
+      "x": [29],
+      "y": [18],
+      "opt": {
+        "numInputs": [2]
+      }
+    },
+    {
+      "type": 6,
+      "x": [33],
+      "y": [18],
+      "opt": {
+        "mode": ["square"],
+        "speed": [1]
+      },
+      "negIn": [[1], [[0]]]
+    },
+    {
+      "type": 7,
+      "x": [20],
+      "y": [18],
+      "opt": {
+        "fontSize": [12],
+        "text": ["Roll"]
+      }
+    },
+    {
+      "type": 12,
+      "x": [46],
+      "y": [18],
+      "opt": {
+        "wordSize": [3],
+        "addressSize": [3],
+        "data": ["0VgD"]
+      }
+    },
+    {
+      "type": 16,
+      "x": [39],
+      "y": [18],
+      "opt": {
+        "numOutputs": [3]
+      }
+    },
+    {
+      "type": 203,
+      "x": [53],
+      "y": [18],
+      "opt": {
+        "numInputs": [3],
+        "base": [0]
+      }
+    },
+    {
+      "type": 205,
+      "x": [24],
+      "y": [18]
+    }
+  ],
+  "wires": "28,18:w3;4,0:w1;6,0:w2;7,0:w3;7,0:w3;-7,1:w1w2;7,0:w3;-7,1:w2w1;7,0:w3;-9,2:n2;1,0:n3;0,3:s1w17n7e1",
+  "definitions": []
+}

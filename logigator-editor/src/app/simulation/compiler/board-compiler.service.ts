@@ -2,22 +2,29 @@ import { inject, Injectable } from '@angular/core';
 import { TranslationService } from '../../translation/translation.service';
 import { LoggingService } from '../../logging/logging.service';
 import { Component } from '../../components/component';
+import { isUserInput } from '../../components/user-input';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import { CustomComponentDefinition } from '../../components/custom/custom-component-definition.model';
 import {
   BuiltInComponentType,
-  CUSTOM_TYPE_ID_BASE
-} from '../../components/component-type.enum';
+  CUSTOM_TYPE_ID_BASE,
+  CustomComponentDefinition
+} from '@logigator/core';
 import { instantiateBody } from '../../persistence/circuit-builder';
-import { encodeRomOps } from '../../components/component-types/rom/rom-data.codec';
-import { ledMatrixShape } from '../../components/component-types/led-matrix/led-matrix.config';
+import { encodeRomData } from '../../components/component-types/rom/rom-data.codec';
+import { ledMatrixShape } from '@logigator/core';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
 import {
   BoardComponentDescriptor,
+  BoardComponentParams,
+  ClockMode,
   CompiledBoard,
+  RamRead,
+  ENGINE_RECORDER_TYPE,
+  ENGINE_USER_INPUT_TYPE,
   LinkRenderTargets,
+  TERMINAL_RECORD_CAPACITY,
   TOP_LEVEL_PATH
 } from './compiled-board.model';
 import { CompileDiagnostic } from './compile-error';
@@ -29,7 +36,6 @@ import {
   WatchTemplateTables
 } from './watch-index';
 
-/** Component types emitted as simulator units, recognized by type id. */
 const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.NOT,
   BuiltInComponentType.AND,
@@ -48,57 +54,67 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.ENCODER,
   BuiltInComponentType.MUX,
   BuiltInComponentType.DEMUX,
-  BuiltInComponentType.BUTTON,
-  BuiltInComponentType.SWITCH,
-  BuiltInComponentType.ROM
+  BuiltInComponentType.ROM,
+  BuiltInComponentType.TERMINAL
 ]);
 
 /**
- * The simulator's UserInput type id. The editor's BUTTON and SWITCH are both
- * UserInputs to the engine and must emit this exact type — the engine rejects
- * any other id. Button vs. switch behaviour is a `Pulse`/`Cont` distinction
- * made at `triggerInput` time from the component instance, not from the
- * descriptor type.
+ * Unit types whose engine state the editor reads beside snapshots — a RAM's
+ * memory — so their units are recorded by component.
  */
-const ENGINE_USER_INPUT_TYPE = 200;
+const STATE_TYPES: ReadonlySet<number> = new Set([BuiltInComponentType.RAM]);
+
+/**
+ * Unit types whose records the editor reads beside snapshots — a terminal's
+ * characters — so their units are recorded by component.
+ */
+const RECORD_TYPES: ReadonlySet<number> = new Set([
+  BuiltInComponentType.TERMINAL
+]);
+
+/**
+ * Editor types whose engine type id is not their own. A terminal is the
+ * engine's recorder: `D0`…`D7` its data bus and `CLK` its trigger, the
+ * recorder's last input, so its ports are already in engine order.
+ */
+const ENGINE_TYPES: ReadonlyMap<number, number> = new Map([
+  [BuiltInComponentType.TERMINAL, ENGINE_RECORDER_TYPE]
+]);
 
 /** One emitted unit, pins as union-find node ids (link ids come later). */
 interface EmittedUnit {
   type: number;
   inputs: number[];
   outputs: number[];
-  /** Negated pin indices into inputs[]/outputs[]; invariant under node remap. */
+  /** Negated pin indices into inputs[]/outputs[]; survive node remaps. */
   negInputs?: number[];
   negOutputs?: number[];
-  /** Per-type parameter blob (e.g. ROM contents); invariant under node remap. */
-  ops?: number[];
+  /** Per-type parameters (e.g. ROM contents); survive node remaps. */
+  params?: BoardComponentParams;
 }
 
 /**
- * Copies a unit's negation and per-type ops forward unchanged. Pin reorderings
- * during flattening (node→local, node→link) remap pin *values* but preserve pin
- * *order*, so the negated indices and ops stay valid.
+ * A unit's fields past its pins, as the descriptor spells them. Pin remaps
+ * preserve pin *order*, so negated indices and parameters carry over.
  */
-function copyNegation(unit: EmittedUnit): {
+function carriedFields(unit: EmittedUnit): {
   negInputs?: number[];
   negOutputs?: number[];
-  ops?: number[];
-} {
+} & BoardComponentParams {
   return {
     ...(unit.negInputs ? { negInputs: unit.negInputs } : {}),
     ...(unit.negOutputs ? { negOutputs: unit.negOutputs } : {}),
-    ...(unit.ops ? { ops: unit.ops } : {})
+    ...unit.params
   };
 }
 
 /**
  * A snapshot definition's circuit compiled once per session: units with
  * template-local net ids, plus the plug bindings tying local nets to the
- * instance's outer pins. Nested custom instances are already flattened into
- * `units`. Snapshots are frozen, so a cached template never invalidates.
+ * instance's outer pins. Nested custom instances are already flattened in.
  */
 interface CompiledTemplate {
-  /** Number of template-local nets (every net class, wire-only ones included). */
+  /** Every net class, wire-only ones included. */
   netCount: number;
   units: EmittedUnit[];
   /** Local net id per input pin, in plug-index order. */
@@ -125,15 +141,24 @@ interface EmitContext {
   uf: UnionFind;
   units: EmittedUnit[];
   diagnostics: CompileDiagnostic[];
-  /** Directly emitted button/switch: component id → unit index in this pass. */
+  /**
+   * Directly emitted user input: component id → its unit's index in this
+   * pass.
+   */
   userInputs: Map<number, number>;
+  /**
+   * Directly emitted unit of a {@link STATE_TYPES} type: component id → its
+   * unit's index in this pass.
+   */
+  stateUnits: Map<number, number>;
+  /** Directly emitted recorder: component id → its unit's index in this pass. */
+  recordUnits: Map<number, number>;
   /** Directly placed custom instances, keyed by component id. */
   instances: Map<number, EmittedInstance>;
   /**
-   * LED matrices with their engine-only cell nodes (unit outputs that exist
-   * on no net). The top-level pass maps them back onto the component as
-   * pseudo-ports; inside a template they only feed the engine (an inner
-   * matrix simulates, but does not light up in a watch).
+   * LED matrices with their engine-only cell nodes (unit outputs on no net),
+   * mapped back onto the component as pseudo-ports: by the top-level pass into
+   * its render targets, by a template into its watch port nets.
    */
   displays: { component: Component; nodes: number[] }[];
 }
@@ -162,9 +187,8 @@ function buildPortNetLookup(nets: Net[]): Map<Component, number[]> {
 
 /**
  * Compiles the active circuit into the WASM simulator's board format plus the
- * link → render-target mapping. Synchronous and registry-backed: custom
- * components expand from their inlined snapshot circuits via session-cached
- * templates; no store loading.
+ * link → render-target mapping. Synchronous: custom components expand from
+ * their inlined snapshot circuits via session-cached templates.
  */
 @Injectable({
   providedIn: 'root'
@@ -180,11 +204,8 @@ export class BoardCompilerService {
   private readonly _templates = new Map<number, CompiledTemplate>();
   private readonly _templatesInProgress = new Set<number>();
 
-  /**
-   * Negation to carry on a freshly-emitted unit. Within-group indices (into
-   * inputs[]/outputs[]), sorted, in-range, omitted when empty — the shape the
-   * persisted form uses, which the engine consumes verbatim.
-   */
+  /** Within-group pin indices, sorted and omitted when empty — the shape the
+   * engine consumes verbatim. */
   private _negationFor(component: Component): {
     negInputs?: number[];
     negOutputs?: number[];
@@ -193,26 +214,62 @@ export class BoardCompilerService {
   }
 
   /**
-   * Per-type `ops` blob for the engine. ROM carries its contents bit-packed to
-   * a byte table sized to `addressSize` × `wordSize` (the address and word pin
-   * counts), the exact format the engine reads — see `rom-data.codec.ts`. The
-   * clock carries its period in ticks.
+   * Per-type engine parameters: ROM contents bit-packed to a byte table sized
+   * `addressSize` × `wordSize` (`rom-data.codec.ts`), the clock's delay (the
+   * ticks it stays low per cycle) and waveform, the RAM's read mode, and the
+   * records a terminal's recorder keeps.
    */
-  private _opsFor(component: Component): { ops?: number[] } {
+  private _paramsFor(component: Component): BoardComponentParams | undefined {
     switch (component.config.type) {
       case BuiltInComponentType.ROM: {
         const contents = (component.options['data']?.value as string) ?? '';
         return {
-          ops: encodeRomOps(contents, component.numInputs, component.numOutputs)
+          data: encodeRomData(
+            contents,
+            component.numInputs,
+            component.numOutputs
+          )
         };
       }
       case BuiltInComponentType.CLOCK:
-        return { ops: [component.options['speed'].value as number] };
-      case BuiltInComponentType.MUX:
-        return { ops: [component.options['selectLines'].value as number] };
+        return {
+          period: component.options['speed'].value as number,
+          mode: component.options['mode'].value as ClockMode
+        };
+      case BuiltInComponentType.RAM:
+        return { read: component.options['read'].value as RamRead };
+      case BuiltInComponentType.TERMINAL:
+        return { capacity: TERMINAL_RECORD_CAPACITY };
       default:
-        return {};
+        return undefined;
     }
+  }
+
+  /**
+   * The unit's input pins and their negations in the engine's pin order. A
+   * DEMUX from a document older than its `pinOrder` takes its data input first,
+   * where the engine reads it last, after the select bits; every other
+   * component's ports are already in engine order.
+   */
+  private _enginePinOrder(
+    component: Component,
+    inputs: number[],
+    negInputs: number[] | undefined
+  ): { inputs: number[]; negInputs?: number[] } {
+    if (
+      component.config.type !== BuiltInComponentType.DEMUX ||
+      component.options['pinOrder'].value !== 'dataFirst'
+    ) {
+      return { inputs, ...(negInputs ? { negInputs } : {}) };
+    }
+    const last = inputs.length - 1;
+    const toEngine = (pin: number) => (pin === 0 ? last : pin - 1);
+    return {
+      inputs: [...inputs.slice(1), inputs[0]],
+      ...(negInputs
+        ? { negInputs: negInputs.map(toEngine).sort((a, b) => a - b) }
+        : {})
+    };
   }
 
   public compile(project: Project): CompiledBoard {
@@ -222,20 +279,23 @@ export class BoardCompilerService {
       units: [],
       diagnostics: [],
       userInputs: new Map<number, number>(),
+      stateUnits: new Map<number, number>(),
+      recordUnits: new Map<number, number>(),
       instances: new Map<number, EmittedInstance>(),
       displays: []
     };
 
     const nets = extractNets({
       components: project.components,
-      wires: project.wires
+      wires: project.wires,
+      junctions: project.connectionPoints.cps
     });
     const netNodes = nets.map(() => ctx.uf.makeSet());
     const portNets = buildPortNetLookup(nets);
 
-    // Quad-tree iteration order is not guaranteed stable — sort by component
-    // id so the submission order (and with it triggerInput comp ids and the
-    // getOutputs layout) is reproducible.
+    // Quad-tree iteration order is not stable — sort by id so submission
+    // order (and with it submitInput comp ids, the engine's input numbering
+    // and the getOutputs layout) is reproducible.
     const components = [...project.components].sort((a, b) => a.id - b.id);
     this._unionTunnelNets(components, portNets, netNodes, ctx.uf);
     for (const component of components) {
@@ -245,10 +305,9 @@ export class BoardCompilerService {
       this._emitComponent(component, pinNodes, TOP_LEVEL_PATH, ctx);
     }
 
-    // Dense link ids over final classes referenced by ≥1 unit pin, assigned
-    // in emission order. Instantiation adds unions, so this must run only
-    // after all expansion completed. Wire-only or plug-only classes get no
-    // link — they stay unpowered.
+    // Dense link ids over final classes referenced by ≥1 unit pin, in
+    // emission order. Instantiation adds unions, so this runs only after all
+    // expansion. Wire-only or plug-only classes get no link — never powered.
     const linkOfClass = new Map<number, number>();
     const linkFor = (node: number): number => {
       const root = ctx.uf.find(node);
@@ -264,24 +323,32 @@ export class BoardCompilerService {
         type: unit.type,
         inputs: unit.inputs.map(linkFor),
         outputs: unit.outputs.map(linkFor),
-        ...copyNegation(unit)
+        ...carriedFields(unit)
       })
     );
-    const links = linkOfClass.size;
+    const linkCount = linkOfClass.size;
 
-    const targets: LinkRenderTargets[] = Array.from({ length: links }, () => ({
-      wires: [],
-      ports: []
-    }));
+    const targets: LinkRenderTargets[] = Array.from(
+      { length: linkCount },
+      () => ({
+        wires: [],
+        ports: [],
+        junctions: []
+      })
+    );
     nets.forEach((net, netIndex) => {
       const link = linkOfClass.get(ctx.uf.find(netNodes[netIndex]));
       if (link === undefined) return;
-      targets[link].wires.push(...net.wires);
-      targets[link].ports.push(...net.ports);
+      // Plain loops, not `push(...net.wires)`: one net on a large board can
+      // hold more wires than a spread call has argument slots.
+      for (const wire of net.wires) targets[link].wires.push(wire);
+      for (const port of net.ports) targets[link].ports.push(port);
+      for (const junction of net.junctions) {
+        targets[link].junctions.push(junction);
+      }
     });
-    // LED-matrix cells: engine-only unit outputs, mapped back onto their
-    // component as pseudo-ports past the input range so the standard applier
-    // lights them (row-major cell order).
+    // LED-matrix cells map back onto their component as pseudo-ports past the
+    // input range (row-major), so the standard applier lights them.
     for (const { component, nodes } of ctx.displays) {
       nodes.forEach((node, cellIndex) => {
         targets[linkFor(node)].ports.push({
@@ -291,8 +358,8 @@ export class BoardCompilerService {
       });
     }
 
-    // Watch records: resolve each top-level instance's local nets to global
-    // links (after link assignment; `-1` = wire-only class, never powered).
+    // Each top-level instance's local nets resolved to global links; `-1` is
+    // a wire-only class, never powered.
     const instances = new Map<string, WatchInstanceRecord>();
     for (const [id, instance] of ctx.instances) {
       instances.set(String(id), {
@@ -310,26 +377,27 @@ export class BoardCompilerService {
     }
 
     this.logging.info(
-      `compiled board: ${descriptorComponents.length} units, ${links} links, ` +
+      `compiled board: ${descriptorComponents.length} units, ${linkCount} links, ` +
         `${ctx.diagnostics.length} diagnostics`,
       'BoardCompiler'
     );
     done();
 
     return {
-      descriptor: { links, components: descriptorComponents },
+      descriptor: { components: descriptorComponents },
+      linkCount,
       mapping: new Map([[TOP_LEVEL_PATH, targets]]),
       userInputs: ctx.userInputs,
+      stateUnits: ctx.stateUnits,
+      recordUnits: ctx.recordUnits,
       diagnostics: ctx.diagnostics,
       watch: new WatchIndex(instances, templateTables)
     };
   }
 
   /**
-   * Electrically joins the nets of all tunnels sharing a label by unioning
-   * their nodes ("wireless wires"). Tunnels are scoped to their own circuit:
-   * this runs once per compilation pass (board and each template), so a label
-   * never leaks across a custom-component boundary.
+   * Joins the nets of tunnels sharing a label. Runs once per compilation pass,
+   * so a label never leaks across a custom-component boundary.
    */
   private _unionTunnelNets(
     components: Component[],
@@ -355,8 +423,8 @@ export class BoardCompilerService {
 
   /**
    * Emits one component into the current node-id space: units directly,
-   * custom instances by template instantiation. `pinNodes` are the nodes of
-   * the nets at the component's ports, in `connectionPoints` order.
+   * custom instances by template instantiation. `pinNodes` holds the node of
+   * the net at each port, in `connectionPoints` order.
    */
   private _emitComponent(
     component: Component,
@@ -386,8 +454,8 @@ export class BoardCompilerService {
     }
 
     if (type === BuiltInComponentType.LED_MATRIX) {
-      // The cells are unit outputs with no editor port: fresh nodes on no net.
-      // ops[0] is the data-bus width the engine derives the pin split from.
+      // Cells are unit outputs with no editor port: fresh nodes on no net.
+      // `dataBus` is the data-bus width the engine derives the pin split from.
       const { size, dataBits } = ledMatrixShape(
         component.options['size'].value as number
       );
@@ -399,37 +467,45 @@ export class BoardCompilerService {
         type,
         inputs: pinNodes,
         outputs: cellNodes,
-        ops: [dataBits],
+        params: { dataBus: dataBits },
         ...this._negationFor(component)
       });
+      return;
+    }
+
+    if (isUserInput(component) || type === BuiltInComponentType.KEYBOARD) {
+      this._emitUserInput(component, pinNodes, ctx);
       return;
     }
 
     if (UNIT_TYPES.has(type)) {
-      const isUserInput =
-        type === BuiltInComponentType.BUTTON ||
-        type === BuiltInComponentType.SWITCH;
-      if (isUserInput) {
-        ctx.userInputs.set(component.id, ctx.units.length);
+      if (STATE_TYPES.has(type)) {
+        ctx.stateUnits.set(component.id, ctx.units.length);
       }
+      if (RECORD_TYPES.has(type)) {
+        ctx.recordUnits.set(component.id, ctx.units.length);
+      }
+      const { negInputs, negOutputs } = this._negationFor(component);
+      const params = this._paramsFor(component);
       ctx.units.push({
-        type: isUserInput ? ENGINE_USER_INPUT_TYPE : type,
-        inputs: pinNodes.slice(0, component.numInputs),
+        type: ENGINE_TYPES.get(type) ?? type,
+        ...this._enginePinOrder(
+          component,
+          pinNodes.slice(0, component.numInputs),
+          negInputs
+        ),
         outputs: pinNodes.slice(component.numInputs),
-        ...this._opsFor(component),
-        ...this._negationFor(component)
+        ...(negOutputs ? { negOutputs } : {}),
+        ...(params ? { params } : {})
       });
       return;
     }
 
-    // TEXT has no ports; top-level INPUT/OUTPUT plugs are inert decoration
-    // (no board unit), but their nets are still mapped so their stubs light
-    // up. Inside a template, plugs are collected before emission and never
-    // reach this point. TUNNEL is handled entirely at the net level (see
-    // `_unionTunnelNets`) — no unit, but its joined net is mapped, so its
-    // stub lights up too. LED and SEGMENT_DISPLAY are displays: they render
-    // the powered state of their input nets through the same mapping, without
-    // an engine unit.
+    // These emit no unit, but their nets are mapped so their stubs light up:
+    // TEXT has no ports; top-level plugs are inert decoration (inside a
+    // template they are collected before emission and never reach here);
+    // TUNNEL is joined at the net level; LED and SEGMENT_DISPLAY render the
+    // powered state of their input nets.
     if (
       type === BuiltInComponentType.TEXT ||
       type === BuiltInComponentType.INPUT ||
@@ -453,11 +529,43 @@ export class BoardCompilerService {
   }
 
   /**
-   * Materializes a placed instance: a fresh global node per template-local
-   * net, each plug-bound local net unioned with the outer net at the matching
-   * instance pin. A plug wired straight to another plug thereby merges the
-   * two outer nets through the instance. Returns the instance's node per
-   * template-local net — the watch index's bridge into the inner circuit.
+   * A user input or a keyboard: one {@link ENGINE_USER_INPUT_TYPE} unit with
+   * an output per output port, in port order, recorded in `userInputs`, so
+   * slot `i` — output port `i` — is the unit's output `i` and one frame sets
+   * every slot on one tick. What the outputs show over time — a pulse, a
+   * held level, a key — is the frames' to say, not the descriptor's. A bubble
+   * on output port `i` negates the unit's output `i`. Both have no inputs,
+   * and a user input whose slot count is not its output count is a broken
+   * type, refused here rather than mis-wired.
+   */
+  private _emitUserInput(
+    component: Component,
+    pinNodes: number[],
+    ctx: EmitContext
+  ): void {
+    if (
+      isUserInput(component) &&
+      component.inputSlots !== component.numOutputs
+    ) {
+      throw new Error(
+        `${component.config.symbol}: ${component.inputSlots} input slots ` +
+          `for ${component.numOutputs} outputs`
+      );
+    }
+    ctx.userInputs.set(component.id, ctx.units.length);
+    ctx.units.push({
+      type: ENGINE_USER_INPUT_TYPE,
+      inputs: [],
+      outputs: pinNodes.slice(component.numInputs),
+      ...this._negationFor(component)
+    });
+  }
+
+  /**
+   * Materializes a placed instance: a fresh global node per template-local net,
+   * each plug-bound local net unioned with the outer net at the matching
+   * instance pin — so a plug wired straight to another plug merges the two
+   * outer nets. Returns the instance's node per template-local net.
    */
   private _instantiateTemplate(
     template: CompiledTemplate,
@@ -483,10 +591,9 @@ export class BoardCompilerService {
 
     for (const unit of template.units) {
       ctx.units.push({
-        type: unit.type,
+        ...unit,
         inputs: unit.inputs.map((node) => localNodes[node]),
-        outputs: unit.outputs.map((node) => localNodes[node]),
-        ...copyNegation(unit)
+        outputs: unit.outputs.map((node) => localNodes[node])
       });
     }
     for (const diagnostic of template.diagnostics) {
@@ -546,7 +653,7 @@ export class BoardCompilerService {
   /**
    * Compiles one snapshot circuit into a template. The body is instantiated
    * into live elements (for real port geometry, rotation included), net
-   * extracted, and destroyed again — it is never added to a Project.
+   * extracted, and destroyed again — never added to a Project.
    */
   private _buildTemplate(def: CustomComponentDefinition): CompiledTemplate {
     const done = this.logging.time(
@@ -560,6 +667,8 @@ export class BoardCompilerService {
         units: [],
         diagnostics: [],
         userInputs: new Map<number, number>(),
+        stateUnits: new Map<number, number>(),
+        recordUnits: new Map<number, number>(),
         instances: new Map<number, EmittedInstance>(),
         displays: []
       };
@@ -625,11 +734,9 @@ export class BoardCompilerService {
         (plug) => nodesOf(plug.component)[0]
       );
 
-      // Compress to canonical template-local net ids. Every net class gets an
-      // id — unit pins and plug bindings first (their ids feed the engine
-      // emission and must stay deterministic), then the remaining classes so
-      // the watch can address inner wire-only nets too (those never gain an
-      // engine link and simply stay dark).
+      // Canonical template-local net ids: unit pins and plug bindings first
+      // (their ids feed engine emission and must stay deterministic), then the
+      // remaining classes so the watch can address inner wire-only nets too.
       const canonical = new Map<number, number>();
       const localId = (node: number): number => {
         const root = ctx.uf.find(node);
@@ -641,10 +748,9 @@ export class BoardCompilerService {
         return id;
       };
       const units = ctx.units.map((unit) => ({
-        type: unit.type,
+        ...unit,
         inputs: unit.inputs.map(localId),
-        outputs: unit.outputs.map(localId),
-        ...copyNegation(unit)
+        outputs: unit.outputs.map(localId)
       }));
       const inputBindings = inputBindingNodes.map(localId);
       const outputBindings = outputBindingNodes.map(localId);
@@ -659,14 +765,36 @@ export class BoardCompilerService {
       const wireNets = Int32Array.from(wires, (wire) =>
         localId(netNodes[netOfWire.get(wire)!])
       );
-      const watchPortNets = components.map((component) =>
-        Int32Array.from(portNets.get(component) ?? [], (netIndex) =>
-          localId(netNodes[netIndex])
-        )
+      const cellNodesOf = new Map(
+        ctx.displays.map(({ component, nodes }) => [component, nodes])
       );
+      const watchPortNets = components.map((component) => {
+        const ports = Int32Array.from(
+          portNets.get(component) ?? [],
+          (netIndex) => localId(netNodes[netIndex])
+        );
+        const cells = cellNodesOf.get(component);
+        if (!cells) return ports;
+        // An LED matrix's cells follow its inputs as pseudo-ports, as on the
+        // board, so a watch copy lights them through the same applier.
+        const withCells = new Int32Array(component.numInputs + cells.length);
+        withCells.set(ports);
+        cells.forEach((node, cellIndex) => {
+          withCells[component.numInputs + cellIndex] = localId(node);
+        });
+        return withCells;
+      });
       const userInputs = new Map<number, number>();
       for (const [id, unitIndex] of ctx.userInputs) {
         userInputs.set(indexOfId.get(id)!, unitIndex);
+      }
+      const stateUnits = new Map<number, number>();
+      for (const [id, unitIndex] of ctx.stateUnits) {
+        stateUnits.set(indexOfId.get(id)!, unitIndex);
+      }
+      const recordUnits = new Map<number, number>();
+      for (const [id, unitIndex] of ctx.recordUnits) {
+        recordUnits.set(indexOfId.get(id)!, unitIndex);
       }
       const children = new Map<number, WatchChildBridge>();
       for (const [id, instance] of ctx.instances) {
@@ -684,7 +812,14 @@ export class BoardCompilerService {
         inputBindings,
         outputBindings,
         diagnostics: ctx.diagnostics,
-        watch: { wireNets, portNets: watchPortNets, userInputs, children }
+        watch: {
+          wireNets,
+          portNets: watchPortNets,
+          userInputs,
+          stateUnits,
+          recordUnits,
+          children
+        }
       };
     } finally {
       for (const component of components) {

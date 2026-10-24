@@ -1,12 +1,10 @@
 import { computed, Signal } from '@angular/core';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
-import { CustomComponentDefinition } from '../custom-component-definition.model';
+import { CustomComponentDefinition } from '@logigator/core';
 
 /**
- * A computed that resolves an instance's config type id to its master entry,
- * re-running when the registry revision changes so a promotion (which flips a
- * master's source) is reflected. Shared by the per-instance actions that gate
- * their button on whether the master is local or in the cloud.
+ * Resolves a config type id to its master entry, re-running on a registry
+ * revision change so a promotion's flipped source is reflected.
  */
 export function resolveMasterSignal(
   registry: CustomComponentRegistry,

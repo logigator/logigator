@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Component } from '../../components/component';
-import { BuiltInComponentType } from '../../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { Project } from '../../project/project';
 import { SimulationService } from '../../simulation/simulation.service';
 import { TOP_LEVEL_PATH } from '../../simulation/compiler/compiled-board.model';
@@ -77,8 +77,7 @@ describe('tutorial detectors', () => {
   });
 
   describe('netComplete', () => {
-    // Two switches wired to the AND's two inputs; the AND's output wired to the
-    // LED's input — the canonical circuit.
+    // The canonical circuit: one switch per AND input, AND output to the LED.
     function wiredCircuit() {
       const sw1 = fakeComponent(SW, 0, [{ x: 0, y: 0 }]);
       const sw2 = fakeComponent(SW, 0, [{ x: 0, y: 2 }]);

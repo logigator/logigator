@@ -30,21 +30,24 @@ import {
 } from '../../utils/packed-buffer';
 import { ToastService } from '../../logging/toast.service';
 import { TranslateDirective } from '../../translation/translate.directive';
+import type { ByteRange } from '../../components/component-inspection';
 
 type HexView = 'word' | 'byte';
 type Radix = 'hex' | 'decimal' | 'octal' | 'binary';
 
 /** How each cell's value is rendered and parsed for a given number base. */
 interface RadixSpec {
-  /** Base passed to `Number/BigInt.toString` and used to size cells. */
   base: number;
-  /** Bits encoded per digit (`log2(base)`): hex 4, octal 3, binary 1. */
+  /** `log2(base)`; decimal's fractional value sizes its cells. */
   bitsPerDigit: number;
-  /** Character class (without brackets) of the digits valid in this base. */
+  /** Character class of the digits valid in this base, without brackets. */
   chars: string;
-  /** `BigInt` literal prefix for parsing a digit string in this base. */
+  /** `BigInt` literal prefix. */
   prefix: string;
 }
+
+/** Every digit of a cell whose bytes are not loaded; also what Copy writes. */
+const NOT_LOADED_DIGIT = '·';
 
 const RADICES: Record<Radix, RadixSpec> = {
   hex: { base: 16, bitsPerDigit: 4, chars: '0-9a-fA-F', prefix: '0x' },
@@ -54,23 +57,19 @@ const RADICES: Record<Radix, RadixSpec> = {
 };
 
 /**
- * A hex editor for a packed memory buffer. A plain, self-contained component
- * (no dialog wrapper) — place it anywhere, or open it in a `DynamicDialog` (see
- * {@link MemoryDataOptionInputComponent}). Its contract is deliberately generic
+ * Hex editor over a packed memory buffer. The contract is deliberately generic
  * — a `Uint8Array` plus a word width and word count — so it knows nothing about
- * any specific component, base64 transport, or persistence policy; callers adapt
- * their own storage to this interface. It seeds a working copy from the inputs,
- * lets the user edit it in a virtualized grid (word- or byte-addressed, staying
- * responsive at large word counts, sizing columns for compact/touch layouts),
- * and emits the edited `Uint8Array` on save / a bare event on cancel.
+ * any specific component, transport or persistence policy. It edits a working
+ * copy in a virtualized grid and emits it on save.
  *
- * With `readOnly`, it doubles as a live memory *viewer* (the ROM inspection):
- * cells render as plain text, the editing chrome (Clear, Save/Cancel) is
- * hidden, and `highlightIndex` marks the currently addressed word — it becomes
- * the active cell (so the status box reads out the live address and value)
- * and is followed into view while the Follow toggle is on. The host sizes it:
- * the default `scrollHeight` keeps the dialog layout, `100%` fills a flexed
- * container.
+ * `readOnly` turns it into a live memory viewer: cells render as plain text,
+ * the editing chrome is hidden, and `highlightIndex` marks the currently
+ * addressed word — it becomes the active cell and is followed into view while
+ * the Follow toggle is on. A viewer shows `data` as it is, new contents
+ * without a reset of the view, base or active cell, so a buffer updated live
+ * can be handed over as a fresh view of the same bytes every frame; a buffer
+ * known only in part says which part through `loadedRange`, and learns what
+ * to load from `shownBytes`.
  */
 @Component({
   selector: 'app-hex-editor',
@@ -90,32 +89,41 @@ export class HexEditorComponent {
   private readonly translation = inject(TranslationService);
   private readonly toastService = inject(ToastService);
 
-  /** Initial contents as a packed buffer; padded/truncated to the table size. */
+  /**
+   * Initial contents; padded or truncated to the table size. A viewer reads a
+   * buffer of exactly that size in place.
+   */
   public readonly data = input<Uint8Array>(new Uint8Array(0));
   /** Bits per word. */
   public readonly wordSize = input.required<number>();
-  /** Number of addressable words. */
   public readonly wordCount = input.required<number>();
-  /** Viewer mode: no cell editing and no editing chrome (Clear, Save/Cancel). */
+  /** Viewer mode: no cell editing and no editing chrome. */
   public readonly readOnly = input(false, { transform: booleanAttribute });
-  /** Word index highlighted as the currently addressed one (viewer mode). */
+  /** Word index marked as the currently addressed one (viewer mode). */
   public readonly highlightIndex = input<number | null>(null);
   /** Height of the virtualized grid viewport; `100%` fills a flexed host. */
   public readonly scrollHeight = input('28rem');
+  /**
+   * The bytes of `data` that hold what they show, `null` for all of them. A
+   * cell with a byte outside shows as not loaded.
+   */
+  public readonly loadedRange = input<ByteRange | null>(null);
 
-  /** Emits the edited contents (packed buffer, table-sized) when the user saves. */
   public readonly saved = output<Uint8Array>();
-  /** Emits when the user cancels without saving. */
+  /**
+   * The bytes the rows the grid has rendered cover, on every change — a
+   * scroll, a resize, a switch between words and bytes.
+   */
+  public readonly shownBytes = output<ByteRange>();
   public readonly dismissed = output<void>();
 
   protected readonly isCompact = this.layout.isCompact;
   protected readonly isTouch = this.layout.isTouch;
 
   private readonly scroller = viewChild(LgScroller);
-  /** The header's content row (translated to mirror the body's horizontal
-   * offset, see {@link syncHeaderScroll}) and its column cells. The header
-   * doubles as the measuring proxy for bringing a searched cell's column into
-   * view sideways (it is always rendered and column-aligned with the body). */
+  /** The header's content row and its column cells. Always rendered and
+   * column-aligned with the body, so it also serves as the measuring proxy for
+   * scrolling a column into view. */
   private readonly headerRow = viewChild<ElementRef<HTMLElement>>('headerRow');
   private readonly headerCols =
     viewChild<ElementRef<HTMLElement>>('headerCols');
@@ -127,7 +135,6 @@ export class HexEditorComponent {
   protected readonly radix = signal<Radix>('hex');
   protected readonly radixSpec = computed(() => RADICES[this.radix()]);
   protected readonly gotoInput = signal('');
-  /** True when the go-to field holds a non-hex character (drives the red state). */
   protected readonly gotoInvalid = computed(() =>
     /[^0-9a-fA-F]/.test(this.gotoInput())
   );
@@ -135,13 +142,37 @@ export class HexEditorComponent {
   protected readonly activeCell = signal<number | null>(null);
   /** Keep the highlighted cell scrolled into view (viewer mode). */
   protected readonly follow = signal(true);
+  /** The rows the scroller has rendered, `[start, end)`. */
+  protected readonly renderedRows = signal<{ start: number; end: number }>({
+    start: 0,
+    end: 0
+  });
+  /** {@link shownBytes}, as the rendered rows cover them in the active view. */
+  private readonly renderedBytes = computed(
+    () => {
+      const { start, end } = this.renderedRows();
+      const cols = this.columns();
+      const count = this.cellCount();
+      const first = Math.min(start * cols, count);
+      const last = Math.min(end * cols, count);
+      if (this.view() === 'byte') {
+        return { start: first, end: last };
+      }
+      const wordSize = this.wordSize();
+      return {
+        start: Math.floor((first * wordSize) / 8),
+        end: Math.ceil((last * wordSize) / 8)
+      };
+    },
+    { equal: (a, b) => a.start === b.start && a.end === b.end }
+  );
 
   protected readonly addressText =
     this.translation.translate('hexEditor.address');
 
-  // Labels are translated here rather than in an `#item` template: the select
-  // button's option type is `unknown`, so a key read off the template context
-  // carries no type. `computed` keeps them live across a language switch.
+  // Translated here rather than in an `#item` template: the select button's
+  // option type is `unknown`, so a key read off the template context carries no
+  // type. `computed` keeps the labels live across a language switch.
   protected readonly viewOptions = computed(() => [
     {
       label: this.translation.translate('hexEditor.wordView'),
@@ -175,23 +206,17 @@ export class HexEditorComponent {
   protected readonly byteCount = computed(() =>
     packedByteLength(this.wordCount(), this.wordSize())
   );
-  /** Bits held by one cell — a full word, or 8 in byte view. */
   protected readonly cellBits = computed(() =>
     this.view() === 'word' ? this.wordSize() : 8
   );
-  /** Digits to display per cell, in the active radix. */
   protected readonly cellDigits = computed(() =>
     Math.ceil(this.cellBits() / this.radixSpec().bitsPerDigit)
   );
-  /**
-   * Minimum cell width (in `ch`): its hex digits plus padding. Cells flex to
-   * share spare width evenly, but never shrink below this — past that the grid
-   * scrolls horizontally instead.
-   */
+  /** Cells flex to share spare width but never shrink below this; past it the
+   * grid scrolls horizontally instead. */
   protected readonly cellMinWidthCh = computed(
     () => this.cellDigits() + (this.isTouch() ? 3 : 2)
   );
-  /** Address-gutter width (in `ch`): the address digits plus padding. */
   protected readonly gutterWidthCh = computed(
     () => Math.max(this.addressDigits(), this.addressText.length) + 3
   );
@@ -199,11 +224,10 @@ export class HexEditorComponent {
   protected readonly rowMinWidthCh = computed(
     () => this.gutterWidthCh() + this.columns() * this.cellMinWidthCh()
   );
-  /** Number of cells (words or bytes) in the active view. */
   protected readonly cellCount = computed(() =>
     this.view() === 'word' ? this.wordCount() : this.byteCount()
   );
-  /** Cells per row — always a full 0–F line; the grid scrolls if it can't fit. */
+  /** Always a full 0–F line; the grid scrolls if it can't fit. */
   protected readonly columns = computed(() => 16);
   protected readonly columnIndexes = computed(() =>
     Array.from({ length: this.columns() }, (_, i) => i)
@@ -216,27 +240,28 @@ export class HexEditorComponent {
     const cols = this.columns();
     return Array.from({ length: this.rowCount() }, (_, r) => r * cols);
   });
-  /** Width of the address gutter in hex digits. */
   protected readonly addressDigits = computed(() =>
     Math.max(2, (this.cellCount() - 1).toString(16).length)
   );
 
-  /**
-   * Address / value readout of the focused cell for the status box, or null
-   * when nothing is focused. Recomputes on edits so the value stays live.
-   */
+  /** Readout of the focused cell for the status box, or null when none is
+   * focused. Recomputes on edits so the value stays live. */
   protected readonly active = computed(() => {
     const index = this.activeCell();
     if (index === null || index >= this.cellCount()) return null;
+    const address = index
+      .toString(16)
+      .toUpperCase()
+      .padStart(this.addressDigits(), '0');
+    if (!this.cellLoaded(index)) {
+      return { address, value: null, decimal: null };
+    }
     const value =
       this.view() === 'word'
         ? readWord(this.buffer(), index, this.wordSize())
         : BigInt(this.buffer()[index] ?? 0);
     return {
-      address: index
-        .toString(16)
-        .toUpperCase()
-        .padStart(this.addressDigits(), '0'),
+      address,
       value: value
         .toString(this.radixSpec().base)
         .toUpperCase()
@@ -248,21 +273,28 @@ export class HexEditorComponent {
   protected readonly rowHeight = computed(() => (this.isTouch() ? 44 : 36));
 
   constructor() {
-    // Seed the working buffer from the inputs, re-seeding if they change (a host
-    // reusing the instance with new contents). The reset itself runs untracked
-    // so writes to `buffer` during editing don't feed back into this effect.
+    // A new table shape starts over; new contents only re-seed the working
+    // buffer, so a live viewer keeps its view, base and active cell. Both run
+    // untracked so edits to `buffer` don't feed back into them.
     effect(() => {
-      this.data();
       this.wordSize();
       this.wordCount();
       untracked(() => this.reset());
     });
+    effect(() => {
+      this.data();
+      untracked(() => this.seed());
+    });
 
-    // Track the highlighted word (and re-track when the view switches, so the
-    // byte view lands on the same word): it becomes the active cell — the
-    // status box shows its address and value — and, while Follow is on, stays
-    // scrolled into view. A click can still activate another cell until the
-    // address next changes.
+    effect(() => {
+      const shown = this.renderedBytes();
+      untracked(() => this.shownBytes.emit(shown));
+    });
+
+    // Make the highlighted word the active cell, and follow it into view while
+    // Follow is on. Re-tracked on a view switch so the byte view lands on the
+    // same word. A click can still activate another cell until the address
+    // next changes.
     effect(() => {
       const word = this.highlightIndex();
       const byteView = this.view() === 'byte';
@@ -288,10 +320,23 @@ export class HexEditorComponent {
     this.radix.set('hex');
     this.gotoInput.set('');
     this.activeCell.set(null);
-    this.buffer.set(resizeBuffer(this.data(), this.byteCount()));
+    this.seed();
   }
 
-  /** First cell index of a row, given the row's anchor (its first cell index). */
+  /**
+   * A viewer never writes, so it shows a right-sized buffer as it is rather
+   * than copying a whole memory per update.
+   */
+  private seed(): void {
+    const data = this.data();
+    const byteCount = this.byteCount();
+    this.buffer.set(
+      this.readOnly() && data.length === byteCount
+        ? data
+        : resizeBuffer(data, byteCount)
+    );
+  }
+
   protected addressLabel(rowStart: number): string {
     return rowStart
       .toString(16)
@@ -303,17 +348,28 @@ export class HexEditorComponent {
     return cellIndex >= this.cellCount();
   }
 
-  /** Extra classes marking the currently addressed word's cell(s). */
-  protected cellHighlight(cellIndex: number): string {
-    return this.isHighlighted(cellIndex)
-      ? 'bg-primary-500/20 font-semibold text-primary-700 dark:text-primary-300'
-      : '';
+  /** Whether every byte the cell shows is inside {@link loadedRange}. */
+  protected cellLoaded(cellIndex: number): boolean {
+    const range = this.loadedRange();
+    if (range === null) return true;
+    if (this.view() === 'byte') {
+      return cellIndex >= range.start && cellIndex < range.end;
+    }
+    const wordSize = this.wordSize();
+    const first = Math.floor((cellIndex * wordSize) / 8);
+    const last = Math.floor(((cellIndex + 1) * wordSize - 1) / 8);
+    return first >= range.start && last < range.end;
   }
 
-  /**
-   * Whether a cell belongs to the highlighted word — the word itself in word
-   * view, any byte it touches in byte view.
-   */
+  /** The addressed word's emphasis, or the muted ink of a cell not loaded. */
+  protected cellHighlight(cellIndex: number): string {
+    if (this.isHighlighted(cellIndex)) {
+      return 'bg-primary-500/20 font-semibold text-primary-700 dark:text-primary-300';
+    }
+    return this.cellLoaded(cellIndex) ? '' : 'text-muted';
+  }
+
+  /** The word itself in word view, any byte it touches in byte view. */
   private isHighlighted(cellIndex: number): boolean {
     const word = this.highlightIndex();
     if (word === null) {
@@ -330,6 +386,9 @@ export class HexEditorComponent {
 
   protected cellValue(cellIndex: number): string {
     if (this.isPadCell(cellIndex)) return '';
+    if (!this.cellLoaded(cellIndex)) {
+      return NOT_LOADED_DIGIT.repeat(this.cellDigits());
+    }
     const bytes = this.buffer();
     const value =
       this.view() === 'word'
@@ -350,11 +409,10 @@ export class HexEditorComponent {
   }
 
   /**
-   * Commits a cell edit and force-corrects the field to the canonical value.
-   * The rewrite matters because the `[value]` binding won't touch the DOM when
-   * the stored value is unchanged (e.g. an invalid entry that parses back to
-   * the same number, or a clamp) — without it the field would keep showing the
-   * raw text the user typed.
+   * Commits a cell edit, then force-writes the canonical value back into the
+   * field: the `[value]` binding leaves the DOM alone when the stored value is
+   * unchanged (an entry that parses back to the same number, or a clamp), so
+   * without this the field keeps showing the raw text the user typed.
    */
   protected onCellCommit(cellIndex: number, el: HTMLInputElement): void {
     this.onCellInput(cellIndex, el.value);
@@ -389,9 +447,9 @@ export class HexEditorComponent {
   }
 
   /**
-   * Splits pasted text into per-cell values, in the active radix:
-   * whitespace/separator-delimited tokens, or — for one unbroken run — chunks
-   * of `cellDigits` digits. Lets a dump be pasted across many cells at once.
+   * Splits pasted text into per-cell values in the active radix: separated
+   * tokens, or, for one unbroken run, chunks of `cellDigits` digits. Lets a
+   * dump be pasted across many cells at once.
    */
   private parseValues(text: string): bigint[] {
     const { chars, prefix } = this.radixSpec();
@@ -432,8 +490,8 @@ export class HexEditorComponent {
   }
 
   protected copyAll(): void {
-    // Optional chaining short-circuits to `undefined` when the Clipboard API is
-    // absent, so guard the absence case before attaching to the promise.
+    // Optional chaining yields `undefined` when the Clipboard API is absent,
+    // so guard that before attaching to the promise.
     const copied = navigator.clipboard?.writeText(this.dump());
     if (!copied) {
       this.toastService.warn(
@@ -458,18 +516,16 @@ export class HexEditorComponent {
     this.scrollCellIntoView(cell, 'smooth');
   }
 
-  /** Scrolls the cell's row and column into view. */
   private scrollCellIntoView(cell: number, behavior?: ScrollBehavior): void {
     const cols = this.columns();
     this.scroller()?.scrollToIndex(Math.floor(cell / cols), behavior);
     this.scrollColumnIntoView(cell % cols);
   }
 
-  /** Mirrors the body's horizontal scroll offset onto the header row, keeping
-   * the columns aligned while the body owns both scrollbars. Translates the
-   * row instead of scrolling it: a transform is not clamped to the header's
-   * own scroll range, whose end can sit a vertical-scrollbar's width off the
-   * body's. */
+  /** Mirrors the body's horizontal scroll offset onto the header row. It
+   * translates rather than scrolls the row: a transform is not clamped to the
+   * header's own scroll range, whose end can sit a vertical scrollbar's width
+   * off the body's. */
   protected syncHeaderScroll(): void {
     const row = this.headerRow()?.nativeElement;
     const viewport = this.scroller()?.viewportElement;
@@ -477,8 +533,8 @@ export class HexEditorComponent {
     row.style.transform = `translate3d(${-viewport.scrollLeft}px, 0, 0)`;
   }
 
-  /** Scrolls the grid horizontally so the given column is visible. Measures the
-   * always-rendered, column-aligned header cell as a proxy for the body cell. */
+  /** Measures the always-rendered header cell as a proxy for the body cell,
+   * which the virtualized grid may not have rendered. */
   private scrollColumnIntoView(col: number): void {
     const viewport = this.scroller()?.viewportElement;
     const row = this.headerRow()?.nativeElement;
@@ -486,8 +542,8 @@ export class HexEditorComponent {
       HTMLElement | undefined;
     if (!viewport || !row || !colEl) return;
 
-    // The column's offset in content space — both rects carry the header
-    // row's translation, so it cancels out.
+    // Content-space offset: both rects carry the header row's translation, so
+    // it cancels out.
     const left =
       colEl.getBoundingClientRect().left - row.getBoundingClientRect().left;
     const right = left + colEl.offsetWidth;

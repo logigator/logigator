@@ -1,9 +1,22 @@
 <div class="flex flex-col gap-3" *appTranslate="let t">
   @for (setting of editorSettings.settings; track setting.key) {
     <div class="flex items-center justify-between gap-4">
-      <label [for]="'setting-' + setting.key" class="text-sm">{{
-        t(setting.labelKey)
-      }}</label>
+      <div class="flex items-center gap-1.5">
+        <label [for]="'setting-' + setting.key" class="text-sm">{{
+          t(setting.labelKey)
+        }}</label>
+        <button
+          type="button"
+          class="flex rounded-full text-muted outline-none hover:text-text focus-visible:outline-2 focus-visible:outline-primary"
+          [lgTooltip]="t(setting.descriptionKey)"
+          tooltipPosition="top"
+          [attr.aria-label]="
+            t('settings.info', { setting: t(setting.labelKey) })
+          "
+        >
+          <i class="ph ph-info" aria-hidden="true"></i>
+        </button>
+      </div>
       <lg-toggle-switch
         [inputId]="'setting-' + setting.key"
         [ngModel]="setting.value()"
@@ -12,16 +25,4 @@
       />
     </div>
   }
-
-  <div class="flex items-center justify-between gap-4">
-    <label for="setting-onboarding-tips" class="text-sm">{{
-      t('onboarding.settings.showTips')
-    }}</label>
-    <lg-toggle-switch
-      inputId="setting-onboarding-tips"
-      [ngModel]="onboarding.tipsEnabled()"
-      (ngModelChange)="setTipsEnabled($event)"
-      [ngModelOptions]="{ standalone: true }"
-    />
-  </div>
 </div>

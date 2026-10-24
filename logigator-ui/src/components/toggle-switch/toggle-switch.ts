@@ -2,13 +2,9 @@ import { Component, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 /**
- * An on/off switch. The interactive element is a `role="switch"` checkbox that
- * covers the whole control (so clicking the track toggles it) but is visually
- * hidden behind the track + handle skin; `inputId` lets an external
- * `<label for>` toggle it too.
- *
- * `ControlValueAccessor` (value = `boolean`) so template `ngModel` and reactive
- * forms both bind. Keyboard (space) works natively via the checkbox.
+ * An on/off switch. A `role="switch"` checkbox covers the whole control and is
+ * hidden behind the track + handle skin, so clicking the track toggles it,
+ * space works natively, and `inputId` lets an external `<label for>` reach it.
  */
 @Component({
   selector: 'lg-toggle-switch',
@@ -26,6 +22,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
       role="switch"
       class="peer absolute inset-0 z-10 m-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-default"
       [id]="inputId()"
+      [attr.aria-describedby]="describedBy() ?? null"
       [checked]="checked()"
       [disabled]="disabled()"
       (change)="onChangeEvent($event)"
@@ -45,6 +42,8 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 })
 export class LgToggleSwitch implements ControlValueAccessor {
   readonly inputId = input<string>();
+  /** Ids of the text describing the switch, beside the label naming it. */
+  readonly describedBy = input<string>();
 
   protected readonly checked = signal(false);
   protected readonly disabled = signal(false);

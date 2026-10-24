@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideMarkdown } from 'ngx-markdown';
+import { resolveMarkdownUrls } from '../../internal/markdown-urls';
 import {
   headingSlug,
   LgMarkdown,
   LgMarkdownLinkClick,
-  resolveMarkdownUrls
+  LgTextMatcher
 } from './markdown';
 
 describe('resolveMarkdownUrls', () => {
@@ -38,6 +39,24 @@ describe('resolveMarkdownUrls', () => {
     expect(
       resolveMarkdownUrls('![alt](images/intro-banner.png "The editor")', urls)
     ).toBe('![alt](media/intro-banner-H4SH.png "The editor")');
+  });
+
+  it('maps a destination with a fragment by its part before the hash', () => {
+    expect(
+      resolveMarkdownUrls('[manual](files/manual.pdf#page-2) [top](#top)', urls)
+    ).toBe('[manual](media/manual-H4SH.pdf#page-2) [top](#top)');
+  });
+
+  it('maps a destination to the URL of a picture given with its size', () => {
+    expect(
+      resolveMarkdownUrls('![alt](images/intro-banner.png)', {
+        'images/intro-banner.png': {
+          url: 'media/intro-banner-H4SH.png',
+          width: 640,
+          height: 360
+        }
+      })
+    ).toBe('![alt](media/intro-banner-H4SH.png)');
   });
 
   it('matches destinations verbatim, not inherited object properties', () => {
@@ -119,6 +138,14 @@ describe('LgMarkdown content interaction', () => {
       '_blank',
       'noopener'
     );
+  });
+
+  it('keeps a web link the browser cannot open inert instead of throwing', async () => {
+    const { link, click } = await setup();
+    vi.spyOn(window, 'open').mockImplementation(() => {
+      throw new DOMException('Unable to open a window', 'SyntaxError');
+    });
+    expect(click(link('https://logigator.com/features'))).toBe(false);
   });
 
   it('scrolls to the matching heading on a fragment link', async () => {
@@ -253,5 +280,325 @@ describe('LgMarkdown content interaction', () => {
     expect(heading.scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
     markdown.scrollToHeading('not-a-heading');
     expect(heading.scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('LgMarkdown heading ids', () => {
+  @Component({
+    imports: [LgMarkdown],
+    template: `<lg-markdown [data]="data" />`
+  })
+  class HeadingHost {
+    data =
+      '# Simulation\n\n' +
+      '## Steuerung {#run-controls}\n\n' +
+      '## Takt mit `clk` {#clock}\n\n' +
+      '## Ohne Id\n\n' +
+      '[jump](#run-controls)';
+  }
+
+  async function render() {
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(HeadingHost);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+    const el = fixture.nativeElement as HTMLElement;
+    const headings = Array.from(el.querySelectorAll('h2'));
+    for (const heading of headings) {
+      heading.scrollIntoView = vi.fn();
+    }
+    const markdown = fixture.debugElement.query(By.directive(LgMarkdown))
+      .componentInstance as LgMarkdown;
+    return { el, headings, markdown };
+  }
+
+  it('moves a closing {#id} off the heading text onto the heading', async () => {
+    const { headings } = await render();
+
+    expect(headings.map((heading) => heading.textContent)).toEqual([
+      'Steuerung',
+      'Takt mit clk',
+      'Ohne Id'
+    ]);
+    expect(headings.map((heading) => heading.id)).toEqual([
+      'run-controls',
+      'clock',
+      ''
+    ]);
+  });
+
+  it('resolves an anchor by id, and by slug only for a heading without one', async () => {
+    const { headings, markdown } = await render();
+    const [controls, , plain] = headings;
+
+    markdown.scrollToHeading('steuerung');
+    expect(controls.scrollIntoView).not.toHaveBeenCalled();
+
+    markdown.scrollToHeading('run-controls');
+    expect(controls.scrollIntoView).toHaveBeenCalledTimes(1);
+
+    markdown.scrollToHeading('ohne-id');
+    expect(plain.scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+
+  it('follows an in-page link to the heading carrying its id', async () => {
+    const { el, headings } = await render();
+
+    el.querySelector('a')!.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true })
+    );
+
+    expect(headings[0].scrollIntoView).toHaveBeenCalledWith({
+      block: 'start'
+    });
+  });
+});
+
+describe('LgMarkdown image sizes', () => {
+  @Component({
+    imports: [LgMarkdown],
+    template: `<lg-markdown
+      [data]="data"
+      [assetUrls]="assets"
+      (ready)="onReady()"
+    />`
+  })
+  class SizedHost {
+    data =
+      '![Wide](./wide.webp)\n\n![Tall](./tall.webp)\n\n![Plain](./plain.webp)';
+    assets = {
+      './wide.webp': { url: 'media/wide-H4SH.webp', width: 1200, height: 300 },
+      './tall.webp': { url: 'media/tall-H4SH.webp', width: 300, height: 900 },
+      './plain.webp': 'media/plain-H4SH.webp'
+    };
+    /** Each image's class list at the moment `ready` fired. */
+    classesAtReady: string[][] = [];
+    el?: HTMLElement;
+    onReady(): void {
+      this.classesAtReady = Array.from(
+        this.el!.querySelectorAll('img'),
+        (image) => Array.from(image.classList)
+      );
+    }
+  }
+
+  async function render() {
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(SizedHost);
+    fixture.componentInstance.el = fixture.nativeElement;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+    const el = fixture.nativeElement as HTMLElement;
+    const image = (alt: string) =>
+      el.querySelector<HTMLImageElement>(`img[alt=${alt}]`)!;
+    return { host: fixture.componentInstance, image };
+  }
+
+  /**
+   * A consumer scrolls to a heading on `ready`; a box still growing after
+   * that moves the heading off the spot it was scrolled to.
+   */
+  it('gives a sized picture its box before ready, with no file loaded', async () => {
+    const { host, image } = await render();
+
+    expect(host.classesAtReady).toEqual([
+      ['lg-sized'],
+      ['lg-sized', 'lg-portrait'],
+      []
+    ]);
+    const wide = image('Wide');
+    expect(wide.style.getPropertyValue('--lg-image-width')).toBe('1200');
+    expect(wide.style.getPropertyValue('--lg-image-height')).toBe('300');
+  });
+
+  it('leaves a picture mapped to a bare URL to size itself on load', async () => {
+    const { image } = await render();
+    const plain = image('Plain');
+
+    expect(plain.getAttribute('src')).toBe('media/plain-H4SH.webp');
+    expect(plain.style.getPropertyValue('--lg-image-width')).toBe('');
+  });
+});
+
+describe('LgMarkdown match marking', () => {
+  /**
+   * jsdom implements neither the registry nor `Highlight`, so they are stood
+   * in for: what is under test is the walk over the rendered text and the
+   * ranges built from it, not the browser's painting of them.
+   */
+  function stubHighlightApi(): Map<string, Range[]> {
+    const registry = new Map<string, Range[]>();
+    const globals = globalThis as unknown as Record<string, unknown>;
+    globals['Highlight'] = class {
+      public readonly ranges: Range[];
+      constructor(...ranges: Range[]) {
+        this.ranges = ranges;
+      }
+    };
+    globals['CSS'] = {
+      highlights: {
+        set: (name: string, highlight: { ranges: Range[] }) =>
+          registry.set(name, highlight.ranges),
+        delete: (name: string) => registry.delete(name)
+      }
+    };
+    return registry;
+  }
+
+  @Component({
+    imports: [LgMarkdown],
+    template: `<lg-markdown [data]="data" [highlightMatches]="matcher()" />`
+  })
+  class HighlightHost {
+    data = '# Speed Modes\n\nThe engine paces itself to a target frequency.';
+    matcher = signal<LgTextMatcher | undefined>(undefined);
+  }
+
+  async function render() {
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(HighlightHost);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  /** Marks every run the matcher reports, wherever the text sits. */
+  it('turns what the matcher finds into ranges over the rendered text', async () => {
+    const registry = stubHighlightApi();
+    const fixture = await render();
+
+    fixture.componentInstance.matcher.set((text) => {
+      const at = text.toLowerCase().indexOf('speed');
+      return at === -1 ? [] : [{ start: at, end: at + 5 }];
+    });
+    fixture.detectChanges();
+
+    const ranges = registry.get('lg-markdown-match') ?? [];
+    // Once in the heading, once in nothing else — the body has no "speed".
+    expect(ranges).toHaveLength(1);
+    expect(ranges[0].toString()).toBe('Speed');
+  });
+
+  /**
+   * The matcher runs over every text node, including the short ones between
+   * elements: a range longer than the node it is built on throws, and would
+   * take the whole render with it.
+   */
+  it('skips a range the text it is given cannot carry', async () => {
+    const registry = stubHighlightApi();
+    const fixture = await render();
+
+    fixture.componentInstance.matcher.set(() => [{ start: 0, end: 3 }]);
+    expect(() => fixture.detectChanges()).not.toThrow();
+    expect(registry.get('lg-markdown-match')?.length).toBeGreaterThan(0);
+  });
+
+  it('unmarks when the matcher goes away', async () => {
+    const registry = stubHighlightApi();
+    const fixture = await render();
+
+    fixture.componentInstance.matcher.set(() => [{ start: 0, end: 3 }]);
+    fixture.detectChanges();
+    expect(registry.has('lg-markdown-match')).toBe(true);
+
+    fixture.componentInstance.matcher.set(undefined);
+    fixture.detectChanges();
+    expect(registry.has('lg-markdown-match')).toBe(false);
+  });
+
+  /** A browser without the API renders the document, marks and all skipped. */
+  it('does nothing where the browser has no highlight registry', async () => {
+    const globals = globalThis as unknown as Record<string, unknown>;
+    globals['CSS'] = {};
+    const fixture = await render();
+
+    fixture.componentInstance.matcher.set(() => [{ start: 0, end: 3 }]);
+    expect(() => fixture.detectChanges()).not.toThrow();
+  });
+});
+
+describe('LgMarkdown user content', () => {
+  @Component({
+    imports: [LgMarkdown],
+    template: `<lg-markdown [data]="data()" userContent />`
+  })
+  class UserHost {
+    readonly data = signal('');
+  }
+
+  function render(source: string) {
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(UserHost);
+    fixture.componentInstance.data.set(source);
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  it('renders synchronously, so a server render carries the prose', () => {
+    // No `whenStable`, no timeout: one change detection and the text is there.
+    // The authored branch cannot promise this — ngx-markdown parses in a
+    // promise — and it is what puts a member's bio in the first byte.
+    const fixture = render('A **four-bit** adder.');
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('strong')?.textContent).toBe('four-bit');
+  });
+
+  it('shows raw HTML as text and emits no live markup', () => {
+    const fixture = render('<img src=x onerror="alert(1)"> and <b>bold</b>');
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('img')).toBeNull();
+    expect(host.querySelector('b')).toBeNull();
+    expect(host.textContent).toContain('<b>bold</b>');
+  });
+
+  it('gives a member’s heading no id of their choosing', () => {
+    const fixture = render('## Notes {#run-controls}');
+    const heading = (fixture.nativeElement as HTMLElement).querySelector(
+      'h1, h2, h3, h4, h5, h6'
+    );
+
+    expect(heading?.id).toBe('');
+    expect(heading?.textContent).toBe('Notes {#run-controls}');
+  });
+
+  it('marks a link as a visitor’s in the markup a crawler reads', () => {
+    const fixture = render('[docs](https://example.com)');
+    const anchor = (fixture.nativeElement as HTMLElement).querySelector('a');
+
+    expect(anchor?.getAttribute('rel')).toBe(
+      'nofollow ugc noopener noreferrer'
+    );
+    expect(anchor?.getAttribute('target')).toBe('_blank');
+  });
+
+  it('leaves the authored branch alone', async () => {
+    // The same string through the default path keeps ngx-markdown's own
+    // rendering, so the manual's own links are not marked as a stranger's.
+    @Component({
+      imports: [LgMarkdown],
+      template: `<lg-markdown [data]="data" />`
+    })
+    class AuthoredHost {
+      data = '[docs](https://example.com)';
+    }
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(AuthoredHost);
+    fixture.detectChanges();
+    // Awaited, where the user-content branch above is not: ngx-markdown
+    // resolves a promise before it writes, which is the whole reason the
+    // authored path could not be reused for text a server render must carry.
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+
+    const anchor = (fixture.nativeElement as HTMLElement).querySelector('a');
+    expect(anchor).not.toBeNull();
+    expect(anchor?.getAttribute('rel')).toBeNull();
   });
 });

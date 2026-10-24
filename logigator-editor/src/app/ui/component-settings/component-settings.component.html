@@ -1,14 +1,41 @@
 @if (componentSettings(); as settings) {
   <lg-card class="block">
     <ng-template #title>
-      <span class="flex items-center gap-2 flex-wrap">
-        <span>{{ text(settings.name) }}</span>
-        @if (settings.source; as source) {
-          <app-source-indicator [source]="source" />
+      <span class="flex items-center gap-2">
+        <span class="flex min-w-0 flex-wrap items-center gap-2">
+          <span>{{ text(settings.name) }}</span>
+          @if (settings.source; as source) {
+            <app-source-indicator [source]="source" />
+          }
+        </span>
+        @if (settings.docs; as docs) {
+          <button
+            type="button"
+            class="ml-auto flex shrink-0 rounded-full text-lg text-muted outline-none hover:text-text focus-visible:outline-2 focus-visible:outline-primary"
+            [lgTooltip]="text('documentation.help')"
+            tooltipPosition="top"
+            [attr.aria-label]="text('documentation.help')"
+            (click)="openDocs(docs)"
+          >
+            <i class="ph ph-question" aria-hidden="true"></i>
+          </button>
         }
       </span>
     </ng-template>
-    <ng-template #subtitle>{{ text(settings.description) }}</ng-template>
+    <!-- Markdown under the user-content rule for built-ins too: a custom
+         component's description is a member's text and needs it, and one
+         renderer keeps the two kinds looking alike in the same slot. It also
+         parses synchronously, so switching selection never shows the old
+         description for a frame. Capped and scrolled on its own, since an
+         author's description has no length limit and would otherwise push the
+         options off the top of the screen. The padding is pulled out into the
+         card's own by an equal negative margin, so the text keeps its width
+         and the gap only shows once a scrollbar sits beside it. -->
+    <ng-template #subtitle>
+      <div class="-mr-2 max-h-56 overflow-y-auto overscroll-contain pr-2">
+        <lg-markdown [data]="text(settings.description)" userContent />
+      </div>
+    </ng-template>
     <form class="flex flex-col gap-2">
       <div class="flex gap-4 items-center justify-between">
         <span [id]="directionLabelId">{{
@@ -36,10 +63,9 @@
       }
       @if (settings.context; as ctx) {
         @if (settings.actions.length > 0) {
-          <!-- Two-column action grid. Every action host is `display: contents`,
-               so the buttons themselves are the grid items and a hidden action
-               leaves no empty cell; a button with a long label (or one that is
-               the only action) spans both columns. -->
+          <!-- Every action host is `display: contents`, so the buttons are
+               the grid items and a hidden action leaves no empty cell. A long
+               label, or a lone action, spans both columns. -->
           <div class="grid grid-cols-2 gap-2">
             @for (action of settings.actions; track $index) {
               <ng-container

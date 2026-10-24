@@ -4,7 +4,7 @@ import { DialogService } from '@logigator/ui';
 import { Subject } from 'rxjs';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { TranslationService } from '../translation/translation.service';
-import { docPage } from './docs-pages';
+import { docPageUrl } from './docs-pages';
 import { DocumentationService } from './documentation.service';
 
 describe('DocumentationService', () => {
@@ -63,14 +63,14 @@ describe('DocumentationService', () => {
   it('resolves the markdown for a translated language', () => {
     TestBed.inject(TranslationService).setActiveLang('de');
     expect(service.resolveUrl('getting-started')).toBe(
-      docPage('getting-started').urls['de']
+      docPageUrl('getting-started', 'de')
     );
   });
 
   it('falls back to the English markdown for a language without one', () => {
     TestBed.inject(TranslationService).setActiveLang('it');
     expect(service.resolveUrl('getting-started')).toBe(
-      docPage('getting-started').urls['en']
+      docPageUrl('getting-started', 'en')
     );
   });
 });

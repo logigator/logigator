@@ -1,6 +1,4 @@
-/**
- * Triggers a browser download of a Blob via a transient object URL.
- */
+/** Triggers a browser download of a Blob via a transient object URL. */
 export function downloadBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

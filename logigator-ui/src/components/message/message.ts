@@ -1,12 +1,7 @@
 import { booleanAttribute, Component, computed, input } from '@angular/core';
 import { LgSeverity } from '../../tokens/severity';
 
-/**
- * Border/background/text classes per severity. `none` is borderless with muted
- * text — an empty-state placeholder rather than a tinted banner; `secondary` is
- * a bordered neutral banner. `danger` renders the red `error-*` palette. Written
- * as full literal class strings so Tailwind's scanner keeps them.
- */
+// Full literal class strings so Tailwind's scanner keeps them.
 const SEVERITY_CLASSES: Record<LgSeverity, string> = {
   none: 'border-transparent text-muted',
   secondary: 'border-border text-muted',
@@ -16,7 +11,6 @@ const SEVERITY_CLASSES: Record<LgSeverity, string> = {
   danger: 'border-error-border bg-error-surface text-error'
 };
 
-/** Default Phosphor icon per severity, overridable via the `icon` input. */
 const SEVERITY_ICONS: Record<LgSeverity, string> = {
   none: 'ph-warning-circle',
   secondary: 'ph-info',
@@ -27,11 +21,9 @@ const SEVERITY_ICONS: Record<LgSeverity, string> = {
 };
 
 /**
- * Icon + message banner. Severity drives the border/background/text colors;
- * `none` renders borderless as a muted empty-state placeholder. Set `centered`
- * to stack the icon above centered text (e.g. a tab-filling placeholder)
- * instead of the default left-aligned row. The message is projected; outer
- * spacing is left to the consumer via the host element's classes.
+ * Icon + message banner. Severity drives the colors, `none` rendering
+ * borderless as a muted empty-state placeholder. Outer spacing is the
+ * consumer's, via classes on the host.
  */
 @Component({
   selector: 'lg-message',
@@ -48,7 +40,6 @@ const SEVERITY_ICONS: Record<LgSeverity, string> = {
   }
 })
 export class LgMessage {
-  /** Visual severity; `none` (default) renders borderless with muted text. */
   readonly severity = input<LgSeverity>('none');
   /** Stack the icon above centered text instead of a left-aligned row. */
   readonly centered = input(false, { transform: booleanAttribute });

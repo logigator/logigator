@@ -6,16 +6,16 @@ const COMPACT_QUERY = '(max-width: 64rem)';
 const COARSE_POINTER_QUERY = '(pointer: coarse)';
 
 /**
- * The two orthogonal device axes the editor adapts to:
+ * Two orthogonal device axes:
  *
- * - `isTouch` (input) — drives the multi-touch gesture layer and the touch
- *   branch of canvas input.
- * - `isCompact` (layout) — drives which Angular chrome renders (desktop bars
- *   vs. mobile HUD + sheets).
+ * - `isTouch` (input) — touch capability, so hit targets can be finger-sized.
+ *   Not a claim about the pointer in use: canvas input branches per event on
+ *   `pointerType`, so a mouse on a touch device still takes the mouse path.
+ * - `isCompact` (layout) — which chrome renders (desktop bars vs mobile HUD
+ *   and sheets).
  *
- * They are deliberately separate: a touch laptop is `isTouch && !isCompact`,
- * a narrow desktop window is `!isTouch && isCompact`. Never collapse them into
- * a single "isMobile" flag.
+ * Never collapse them into one "isMobile": a touch laptop is `isTouch &&
+ * !isCompact`, a narrow desktop window is `!isTouch && isCompact`.
  */
 @Injectable({ providedIn: 'root' })
 export class LayoutService {

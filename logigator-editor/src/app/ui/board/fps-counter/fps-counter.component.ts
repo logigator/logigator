@@ -4,13 +4,11 @@ import { Ticker } from 'pixi.js';
 /**
  * Debug overlay showing the board's render frame rate.
  *
- * `Ticker.FPS` is the instantaneous 1000/elapsedMS of the last frame, so on
- * imperfect vsync it quantizes to the display grid (e.g. 144/72) rather than
- * the true rate. This counts rendered frames over each sample window and
- * divides by real elapsed time for an averaged, accurate reading. Only
- * continuously-driven frames count; one-off `ticker.update()` renders (idle/
- * single) run with `started === false` and are excluded so sparse renders
- * don't read as a near-zero rate.
+ * `Ticker.FPS` is the last frame's instantaneous 1000/elapsedMS, which on
+ * imperfect vsync quantizes to the display grid rather than the true rate, so
+ * this averages counted frames over a sample window instead. Only
+ * continuously-driven frames count: one-off `ticker.update()` renders run with
+ * `started === false`, and counting them would read as a near-zero rate.
  */
 @Component({
   selector: 'app-fps-counter',

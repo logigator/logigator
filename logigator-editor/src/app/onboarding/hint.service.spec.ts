@@ -6,6 +6,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { ProjectService } from '../project/project.service';
 import { DocumentationService } from '../documentation/documentation.service';
+import { SimulationService } from '../simulation/simulation.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { Project } from '../project/project';
@@ -16,13 +17,24 @@ import {
 import { OnboardingService } from './onboarding.service';
 import { HintService } from './hint.service';
 import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
+import { EditorSettingsService } from '../settings/editor-settings.service';
 
 function popover(): Element | null {
   return document.querySelector('.cdk-overlay-container app-hint-popover');
 }
 
-/** A global (bottom-centre float) overlay sits in a global wrapper; an anchored
- *  (connected) one does not — this distinguishes the two placements. */
+function popoverCount(): number {
+  return document.querySelectorAll('.cdk-overlay-container app-hint-popover')
+    .length;
+}
+
+function pressEscape(): void {
+  document.body.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+  );
+}
+
+/** A floated overlay sits in a global wrapper; an anchored one does not. */
 function isFloating(): boolean {
   return !!popover()?.closest('.cdk-global-overlay-wrapper');
 }
@@ -45,16 +57,41 @@ describe('HintService', () => {
   let onboarding: OnboardingService;
   let activeProject: WritableSignal<ReturnType<typeof makeFakeProject> | null>;
   let docsOpen: ReturnType<typeof vi.fn>;
+  let conflictShown$: Subject<void>;
 
   const tick = () => TestBed.inject(ApplicationRef).tick();
   const enterWireTool = () => {
     workMode.setMode(WorkMode.WIRE_TOOL);
     tick();
   };
+  /** Opens a component editor, which serves the (non-tool) ports hint. */
+  const openComponentEditor = () => {
+    const project = makeFakeProject();
+    TestBed.inject(ProjectMetadataStore).register(
+      project as unknown as Project,
+      { type: 'comp' } as ProjectMetadata,
+      false
+    );
+    activeProject.set(project);
+    tick();
+    return project;
+  };
+  /** Enters simulation, which serves the sim-controls hint. */
+  const enterSimulation = () => {
+    workMode.setSimulationMode(true);
+    tick();
+  };
+  const selectTwo = (project: ReturnType<typeof makeFakeProject>) => {
+    project.selectionManager.selectedComponents.add({});
+    project.selectionManager.selectedWires.add({});
+    project.selectionManager.selectionChange$.next();
+    tick();
+  };
 
   beforeEach(async () => {
     localStorage.clear();
     activeProject = signal<ReturnType<typeof makeFakeProject> | null>(null);
+    conflictShown$ = new Subject<void>();
     configureTestBed([
       {
         provide: ProjectService,
@@ -63,7 +100,8 @@ describe('HintService', () => {
       {
         provide: DocumentationService,
         useValue: { open: (docsOpen = vi.fn()) }
-      }
+      },
+      { provide: SimulationService, useValue: { conflictShown$ } }
     ]);
     const transloco = TestBed.inject(TranslocoService);
     await firstValueFrom(transloco.load('en'));
@@ -105,15 +143,14 @@ describe('HintService', () => {
   });
 
   it('is suppressed when tips are turned off', () => {
-    onboarding.setTipsEnabled(false);
+    onboarding.disableAllTips();
     enterWireTool();
     expect(popover()).toBeNull();
     expect(onboarding.hasSeenHint('wire-tap-actions')).toBe(false);
   });
 
-  // A hint's target can enter the DOM only after its trigger fires (e.g. the
-  // sim controls on entering simulation). Resolution reads the reactive target
-  // registry, so it anchors once the element is registered instead of floating.
+  // A hint's target can enter the DOM only after its trigger fires; the
+  // reactive registry read anchors it once the element registers.
   it('anchors a hint to its target element when the target is registered', () => {
     const wire = document.createElement('div');
     document.body.appendChild(wire);
@@ -138,7 +175,7 @@ describe('HintService', () => {
     enterWireTool(); // target not registered yet → floats
     expect(isFloating()).toBe(true);
 
-    // The target appears later (e.g. the sim controls on entering simulation).
+    // The target appears later, as the sim controls do.
     const wire = document.createElement('div');
     document.body.appendChild(wire);
     TestBed.inject(OnboardingTargetRegistry).register('tool-wire', wire);
@@ -148,9 +185,8 @@ describe('HintService', () => {
     wire.remove();
   });
 
-  // Floating is for a target that has not appeared yet. Once the hint has
-  // anchored, losing the target means its surface closed (the component tab, the
-  // side bar) — floating it on would leave it over the board pointing at nothing.
+  // Floating is for a target that has not appeared yet. Losing one the hint had
+  // already anchored to means its surface closed, so the hint goes with it.
   it('dismisses an anchored hint once its target leaves the DOM', async () => {
     const registry = TestBed.inject(OnboardingTargetRegistry);
     const wire = document.createElement('div');
@@ -168,8 +204,8 @@ describe('HintService', () => {
     expect(popover()).toBeNull();
   });
 
-  // An anchor that is merely re-created (its host re-rendered) unregisters and
-  // registers again; the hint has to follow it, not read the loss as a close.
+  // A merely re-created anchor unregisters and registers again; the hint
+  // follows it rather than reading the loss as a close.
   it('re-anchors an anchored hint to a re-created target', async () => {
     const registry = TestBed.inject(OnboardingTargetRegistry);
     const wire = document.createElement('div');
@@ -225,9 +261,8 @@ describe('HintService', () => {
     expect(onboarding.hasSeenHint('ports-panel')).toBe(true);
   });
 
-  // Picking a tool is what several non-tool hints ask for — the Ports hint asks
-  // for a plug, which arms COMPONENT_PLACEMENT. Only tool hints clear on a mode
-  // change, or following the instruction would close the hint giving it.
+  // Picking a tool is what several non-tool hints ask for, so only tool hints
+  // clear on a mode change — otherwise following a hint would close it.
   it('keeps a non-tool hint open across a work-mode change', () => {
     const project = makeFakeProject();
     TestBed.inject(ProjectMetadataStore).register(
@@ -270,6 +305,107 @@ describe('HintService', () => {
     expect(onboarding.hasSeenHint('paste-placement')).toBe(true);
   });
 
+  it('floats the conflict hint the first time the board shows a conflict', () => {
+    conflictShown$.next();
+    tick();
+    expect(popover()).not.toBeNull();
+    expect(isFloating()).toBe(true);
+    expect(onboarding.hasSeenHint('wire-conflict')).toBe(true);
+  });
+
+  // The first-simulation case: the controls hint opens on entry, and a
+  // conflict already on the board fires straight after it.
+  it('shows a hint that fired while another was up once that one closes', () => {
+    enterSimulation();
+    expect(onboarding.hasSeenHint('sim-controls')).toBe(true);
+
+    conflictShown$.next();
+    tick();
+    expect(popoverCount()).toBe(1);
+    expect(onboarding.hasSeenHint('wire-conflict')).toBe(false);
+
+    pressEscape();
+    tick();
+    expect(popoverCount()).toBe(1);
+    expect(onboarding.hasSeenHint('wire-conflict')).toBe(true);
+  });
+
+  it('drops a waiting conflict hint once its simulation has ended', () => {
+    enterSimulation();
+    conflictShown$.next();
+    tick();
+
+    workMode.setSimulationMode(false); // also closes the sim-controls hint
+    tick();
+    expect(popover()).toBeNull();
+    expect(onboarding.hasSeenHint('wire-conflict')).toBe(false);
+
+    // Still unseen, so the next session's conflict serves it.
+    enterSimulation();
+    conflictShown$.next();
+    tick();
+    expect(onboarding.hasSeenHint('wire-conflict')).toBe(true);
+  });
+
+  it('drops a waiting hint that a tutorial started meanwhile suppresses', () => {
+    enterSimulation();
+    conflictShown$.next();
+    tick();
+
+    onboarding.startTutorial('getting-started');
+    pressEscape();
+    tick();
+    expect(popover()).toBeNull();
+    expect(onboarding.hasSeenHint('wire-conflict')).toBe(false);
+    onboarding.skipCurrent();
+  });
+
+  it('forgets waiting hints when tips are turned off', () => {
+    enterSimulation();
+    conflictShown$.next();
+    tick();
+
+    onboarding.disableAllTips();
+    tick();
+    TestBed.inject(EditorSettingsService).onboardingTips.set(true);
+    pressEscape();
+    tick();
+    expect(popover()).toBeNull();
+    expect(onboarding.hasSeenHint('wire-conflict')).toBe(false);
+  });
+
+  // The queue holds two: a repeat of a waiting trigger must not take the slot
+  // a different hint needs.
+  it('queues a hint once however often its trigger repeats', () => {
+    const project = openComponentEditor();
+    selectTwo(project);
+    project.selectionManager.selectionChange$.next();
+    tick();
+    enterWireTool();
+
+    pressEscape(); // the ports hint
+    tick();
+    expect(onboarding.hasSeenHint('selection-actions')).toBe(true);
+    pressEscape();
+    tick();
+    expect(onboarding.hasSeenHint('wire-tap-actions')).toBe(true);
+    expect(popoverCount()).toBe(1);
+  });
+
+  it('never queues a hint already seen', () => {
+    onboarding.markHintSeen('selection-actions');
+    const project = openComponentEditor();
+    selectTwo(project);
+    project.selectionManager.selectionChange$.next();
+    tick();
+    enterWireTool();
+
+    pressEscape(); // the ports hint
+    tick();
+    expect(onboarding.hasSeenHint('wire-tap-actions')).toBe(true);
+    expect(popoverCount()).toBe(1);
+  });
+
   it('opens the linked documentation page from the learn-more action', () => {
     enterWireTool();
     const learnMore = Array.from(
@@ -281,7 +417,7 @@ describe('HintService', () => {
 
     learnMore!.click();
     tick();
-    expect(docsOpen).toHaveBeenCalledWith('wires-and-connections');
+    expect(docsOpen).toHaveBeenCalledWith('wires-and-connections', undefined);
     expect(popover()).toBeNull();
   });
 

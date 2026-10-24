@@ -39,10 +39,9 @@ export interface LgTabReorder {
 }
 
 /**
- * Builds the live-region text for a keyboard reorder, given the 1-based
- * destination and the movable-tab count. A function rather than a template
- * string so the strip never has to define a placeholder syntax of its own —
- * the consumer's i18n layer does the interpolation it already knows how to do.
+ * Live-region text for a keyboard reorder, given the 1-based destination and
+ * the movable-tab count. A function so the interpolation stays with the
+ * consumer's i18n layer and the strip needs no placeholder syntax.
  */
 export type LgMovedLabel = (position: number, total: number) => string;
 
@@ -51,30 +50,20 @@ const DEFAULT_MOVED: LgMovedLabel = (position, total) =>
   `Moved to position ${position} of ${total}`;
 
 /**
- * A document/editor tab strip: a horizontal row of closable, reorderable tabs
- * (icon + label + dirty marker + ✕) — the browser/IDE tab pattern, distinct from
- * {@link LgTabs}, which shows and hides content panels. This component renders no
- * panels; selecting a tab is a signal the consumer acts on (e.g. swapping a
- * canvas).
+ * A document/editor tab strip: the browser/IDE tab pattern, distinct from
+ * {@link LgTabs}, which shows and hides content panels. This renders no
+ * panels; selecting a tab is a signal the consumer acts on.
  *
- * Tabs are supplied as data via `tabs`. Items marked `fixed` pin to the front
- * and never reorder or close; the rest sit in a horizontal CDK drop list and
- * emit `(reorder)` with indices in the reorderable subset. The drop list and its
- * drag items must share one view for CDK's DI-based container lookup to resolve,
- * so the strip is data-driven rather than content-projected. Set
- * `reorderDisabled` to freeze dragging (e.g. while a simulation is bound to the
- * active tab).
+ * Tabs come as data via `tabs`, not content projection: CDK's drop list and
+ * its drag items must share one view for its DI-based container lookup to
+ * resolve. `(reorder)` indices are in the reorderable (non-`fixed`) subset.
  *
- * Keyboard model — **manual activation**, unlike {@link LgTabs}: Left/Right and
- * Home/End move focus along the strip without switching tabs, and Enter/Space
- * activates the focused one. Activation-follows-focus would swap the consumer's
- * whole panel (in editor, the board and its project) on every arrow press.
- * Focus roves via `tabindex` so the strip is a single tab stop.
- *
- * Ctrl+Left/Right reorders the focused movable tab, the keyboard equivalent of
- * dragging it (WCAG 2.1.1); each move is announced through the strip's own
- * polite live region. Because the strip renders no panels, `aria-controls` is
- * opt-in: pass `controls` with the id of the region the consumer swaps.
+ * Keyboard model is **manual activation**, unlike {@link LgTabs}: arrows and
+ * Home/End rove focus, Enter/Space activates. Activation-follows-focus would
+ * swap the consumer's whole panel on every arrow press. Ctrl+Left/Right
+ * reorders the focused movable tab (WCAG 2.1.1), announced through the
+ * strip's polite live region. `aria-controls` is opt-in via `controls`, since
+ * only the consumer knows which region it swaps.
  */
 @Component({
   selector: 'lg-tab-strip',
@@ -166,10 +155,9 @@ const DEFAULT_MOVED: LgMovedLabel = (position, total) =>
       }
     </ng-template>
   `,
-  // The hover/touch swap of the dirty dot and ✕, plus CDK drag-drop polish.
   // CDK injects its classes onto the auto-generated placeholder and animating
-  // siblings, so they cannot be expressed as template utility classes. The
-  // drag items live in this view, so plain (encapsulated) selectors match them.
+  // siblings, so they cannot be template utility classes. The drag items live
+  // in this view, so plain (encapsulated) selectors match them.
   styles: `
     .tab-close {
       display: none;
@@ -199,12 +187,10 @@ const DEFAULT_MOVED: LgMovedLabel = (position, total) =>
     }
 
     /*
-     * CDK's cdk-resets cascade layer strips the dragged preview clone's
-     * background, border, padding and color (leaving it transparent). These
-     * rules are unlayered, so they win over that layer — and over the clone's
-     * own (layered) utilities — restoring the tab surface per state via the
-     * tab-active marker. The utilities the reset leaves alone (flex, gap,
-     * height, font) still apply to the clone.
+     * CDK's cdk-resets layer strips the drag preview clone's background,
+     * border, padding and color. These rules are unlayered, so they win over
+     * that layer and over the clone's own utilities, restoring the surface
+     * per state via the tab-active marker.
      */
     .cdk-drag-preview {
       padding: 0 0.75rem;
@@ -223,19 +209,13 @@ export class LgTabStrip<T = unknown> {
   readonly tabs = input<LgTabStripItem<T>[]>([]);
   /** Freezes reordering (dragging and Ctrl+Arrow) of the non-fixed tabs. */
   readonly reorderDisabled = input(false, { transform: booleanAttribute });
-  /** ARIA label for every close button. */
   readonly closeLabel = input(lgLabel('close'));
-  /**
-   * Id of the region the tabs govern, for `aria-controls`. The strip renders no
-   * panels of its own, so the consumer names the element it swaps.
-   */
+  /** Id of the region the tabs govern, for `aria-controls`. */
   readonly controls = input<string>();
-  /** Builds the live-region text for a keyboard reorder. */
   readonly movedLabel = input<LgMovedLabel>(DEFAULT_MOVED);
 
   readonly selected = output<T>();
   readonly closed = output<T>();
-  /** Emits when a reorderable tab is dropped or moved to a new position. */
   readonly reorder = output<LgTabReorder>();
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -256,9 +236,9 @@ export class LgTabStrip<T = unknown> {
   });
 
   /**
-   * The strip's single tab stop. Tracks the active tab, but an arrow key moves
-   * it on its own (manual activation) — hence a `linkedSignal` rather than a
-   * plain `computed`: a manual `set` survives until the active tab changes.
+   * The strip's single tab stop. A `linkedSignal` because manual activation
+   * lets an arrow key `set` it, and that survives until the active tab
+   * changes.
    */
   private readonly focusIndex = linkedSignal(() => this.activeIndex());
 
@@ -268,8 +248,8 @@ export class LgTabStrip<T = unknown> {
     return [
       'tab flex items-center gap-2 h-8 px-3 text-sm whitespace-nowrap',
       'cursor-pointer select-none transition-colors border-r border-border border-t-2',
-      // tab-active is a marker for the drag-preview restore rules below; the
-      // visible styling comes from the utilities.
+      // tab-active is a marker for the drag-preview restore rules; the visible
+      // styling comes from the utilities.
       tab.active
         ? 'tab-active bg-content text-text font-medium border-t-primary'
         : 'bg-content-hover text-muted border-t-transparent hover:text-text'
@@ -280,7 +260,6 @@ export class LgTabStrip<T = unknown> {
     return `${tab.icon} text-base shrink-0${tab.active ? '' : ' opacity-70'}`;
   }
 
-  /** `tabindex` for the tab at `index` in strip order — 0 for the tab stop. */
   protected tabIndexAt(index: number): number {
     const total = this.fixedTabs().length + this.movableTabs().length;
     // Clamp: the focused tab can be closed out from under the stored index.
@@ -318,7 +297,7 @@ export class LgTabStrip<T = unknown> {
     }
   }
 
-  /** Arrow/Home/End roving. Moves focus only — activation stays explicit. */
+  /** Roving focus only; activation stays explicit. */
   private moveFocus(event: KeyboardEvent, index: number): void {
     const total = this.fixedTabs().length + this.movableTabs().length;
     if (total === 0) {
@@ -343,7 +322,6 @@ export class LgTabStrip<T = unknown> {
     this.focusTabAt(next);
   }
 
-  /** Ctrl+Arrow reorder — the keyboard equivalent of a drag. */
   private moveFocusedTab(event: KeyboardEvent, index: number): void {
     if (this.reorderDisabled()) {
       return;
@@ -362,8 +340,8 @@ export class LgTabStrip<T = unknown> {
     this.reorder.emit({ previousIndex: from, currentIndex: to });
     this.announcement.set(this.movedLabel()(to + 1, movable.length));
 
-    // The consumer owns the tab order, so the re-rendered strip is what carries
-    // the tab to its new slot; follow it there once that has painted.
+    // The consumer owns the tab order, so the re-rendered strip carries the tab
+    // to its new slot; follow it there once that has painted.
     const moved = to + this.fixedTabs().length;
     this.focusIndex.set(moved);
     afterPaint(() => this.focusTabAt(moved));

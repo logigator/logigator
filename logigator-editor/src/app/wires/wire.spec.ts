@@ -9,7 +9,7 @@ import {
   POWERED_WIRE_THICKNESS,
   WireGraphics
 } from '../rendering/graphics/wire.graphics';
-import { WireDirection } from './wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { environment } from '../../environments/environment';
 import { ThemingService } from '../theming/theming.service';
 import { ThemeType } from '../theming/theme-type.enum';
@@ -28,8 +28,8 @@ describe('Wire.setPowered', () => {
     expect(context).toBe(provider.getGraphicsContext(WireGraphics));
     const baseScaleY = wire.scale.y;
 
-    // The per-frame hot path: powered state must land as transform only — a
-    // context swap or redraw would force a render-group instruction rebuild.
+    // A per-frame hot path: powered state must land as transform only, since a
+    // context swap or redraw forces a render-group instruction rebuild.
     wire.setPowered(true);
     expect(wire.context).toBe(context);
     expect(wire.scale.y).toBeCloseTo(baseScaleY * POWERED_WIRE_THICKNESS, 8);
@@ -83,10 +83,9 @@ describe('Wire tint', () => {
     theming.setActiveThemeType(originalTheme);
   });
 
-  // The shared context is a white base, so the tint IS the wire's color. The
-  // selection color must be a distinct explicit color in EVERY theme — a
-  // multiplicative dark tint would be invisible on light mode's black wires
-  // (black × anything = black).
+  // The shared context is a white base, so the tint *is* the wire's color and
+  // the selection color must be explicit in every theme: a multiplicative dark
+  // tint is invisible on light mode's black wires.
   it('derives base and selection color from the theme, distinct in both themes', () => {
     for (const type of [ThemeType.DARK, ThemeType.LIGHT]) {
       theming.setActiveThemeType(type);
@@ -117,6 +116,30 @@ describe('Wire tint', () => {
 
     wire.destroy();
   });
+
+  it('carries the conflict color independently of power, across a theme change', () => {
+    theming.setActiveThemeType(ThemeType.DARK);
+    const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 4);
+    const context = wire.context;
+    const thinScaleY = wire.scale.y;
+
+    // An unpowered link can be in conflict (an SR flip-flop's Q̄): the
+    // color says conflict, the thickness still says low.
+    wire.setConflict(true);
+    expect(wire.tint).toBe(theming.currentTheme().wireConflict);
+    expect(wire.scale.y).toBeCloseTo(thinScaleY, 8);
+    expect(wire.context).toBe(context);
+
+    // A collision tint's way back (refreshTint) keeps it too.
+    theming.setActiveThemeType(ThemeType.LIGHT);
+    wire.refreshTint();
+    expect(wire.tint).toBe(theming.currentTheme().wireConflict);
+
+    wire.setConflict(false);
+    expect(wire.tint).toBe(theming.currentTheme().wire);
+
+    wire.destroy();
+  });
 });
 
 describe('Wire.intersectsGridBounds', () => {
@@ -124,9 +147,8 @@ describe('Wire.intersectsGridBounds', () => {
     configureTestBed();
   });
 
-  // The quad tree tests candidates through this instead of building a
-  // Rectangle per element, so a disagreement with gridBounds would make
-  // selection and collision queries miss (or invent) wires.
+  // Used in place of building a Rectangle per element, so a disagreement with
+  // gridBounds makes selection and collision queries miss or invent wires.
   it('agrees with gridBounds().intersects() as the probe slides across', () => {
     for (const direction of [
       WireDirection.HORIZONTAL,
@@ -149,8 +171,7 @@ describe('Wire.intersectsGridBounds', () => {
     }
   });
 
-  // Degenerate wires reach the audit on corrupted boards, before
-  // computeWireRepair drops them.
+  // Degenerate wires reach the audit on corrupted boards.
   it('agrees for a zero-length wire', () => {
     const wire = makeWire(3, 5, WireDirection.HORIZONTAL);
     wire.length = 0;

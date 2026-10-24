@@ -2,15 +2,24 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { makeSwitch } from '../../../testing/factories';
+import {
+  makeButton,
+  makeGamepad,
+  makeKeyboard,
+  makeRam,
+  makeSwitch
+} from '../../../testing/factories';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { outputComponentConfig } from '../../components/component-types/output/output.config';
-import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
+import {
+  BuiltInComponentType,
+  SerializedCircuitBody,
+  WireDirection
+} from '@logigator/core';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
 import { BoardCompilerService } from './board-compiler.service';
 
 /** Wire spanning the two given half-grid termination points (axis-aligned). */
@@ -86,12 +95,12 @@ describe('BoardCompilerService watch index', () => {
   }
 
   /**
-   * Snapshot with a switch driving its single output plug, plus a floating
-   * wire connected to nothing. Body order: components [switchComp, plug],
-   * wires [switch→plug, floating].
+   * A switch — or another user input — driving its single output plug, plus a
+   * wire connected to nothing. Body order: components [input, plug], wires
+   * [input→plug, floating].
    */
-  function registerSwitchBox(): number {
-    const switchComp = makeSwitch(0, 0);
+  function registerSwitchBox(makeInput: () => Component = makeSwitch): number {
+    const switchComp = makeInput();
     const plug = makeOutPlug(0, [8, 0]);
     const wire = wireBetween(
       switchComp.connectionPoints[0],
@@ -112,9 +121,8 @@ describe('BoardCompilerService watch index', () => {
   }
 
   /**
-   * Snapshot nesting a SwitchBox: its own switch on plug 0, the nested
-   * instance's output on plug 1. Body order: components [switchComp, nested,
-   * plug0, plug1].
+   * A SwitchBox nested beside an own switch on plug 0, the nested instance's
+   * output on plug 1. Body order: [switchComp, nested, plug0, plug1].
    */
   function registerOuter(switchBox: number): number {
     const switchComp = makeSwitch(0, 0);
@@ -155,18 +163,169 @@ describe('BoardCompilerService watch index', () => {
     expect(info).not.toBeNull();
     expect(info.typeId).toBe(switchBox);
 
-    // The single unit is the inner switch (engine UserInput type).
+    // The single unit is the inner switch.
     expect(board.descriptor.components).toEqual([
       { type: 200, inputs: [], outputs: [0] }
     ]);
     expect(info.unitIndexFor(0)).toBe(0);
     expect(info.unitIndexFor(1)).toBeUndefined();
 
-    // Wire 0 and both ports share the switch's output link.
     const switchOutLink = board.descriptor.components[0].outputs[0];
     expect(info.linkOfLocalNet[info.tables.wireNets[0]]).toBe(switchOutLink);
     expect(info.linkOfLocalNet[info.tables.portNets[0][0]]).toBe(switchOutLink);
     expect(info.linkOfLocalNet[info.tables.portNets[1][0]]).toBe(switchOutLink);
+  });
+
+  it('addresses an inner button as a user input, like a switch', () => {
+    const buttonBox = registerSwitchBox(() => makeButton(0, 0));
+    const outer = registerOuter(buttonBox);
+    const instance = placeByType(outer, [0, 0]);
+
+    const board = compiler.compile(project);
+
+    // The outer switch, then the nested box's button.
+    expect(board.descriptor.components).toEqual([
+      { type: 200, inputs: [], outputs: [0] },
+      { type: 200, inputs: [], outputs: [1] }
+    ]);
+    const innerInfo = board.watch.infoFor(`${instance.id}/1`)!;
+    expect(innerInfo.unitIndexFor(0)).toBe(1);
+    expect(innerInfo.unitIndexFor(1)).toBeUndefined();
+  });
+
+  it('addresses an inner gamepad through its one unit, slot k driving its output k', () => {
+    // A switch ahead of the pad in the body, so the pad's unit is not the
+    // first; only the pad's `start` output is wired to the plug.
+    const lead = makeSwitch(0, 0);
+    const pad = makeGamepad({ face: 4 }, 0, 2);
+    const plug = makeOutPlug(0, [12, 0]);
+    const start = pad.slotIds.indexOf('start');
+    const corner = new Point(10.5, pad.connectionPoints[start].y);
+    const wires = [
+      wireBetween(pad.connectionPoints[start], corner),
+      wireBetween(corner, new Point(10.5, plug.connectionPoints[0].y)),
+      wireBetween(
+        new Point(10.5, plug.connectionPoints[0].y),
+        plug.connectionPoints[0]
+      )
+    ];
+    const box = registry.registerSnapshot({
+      kind: 'snapshot',
+      source: 'browser',
+      name: 'PadBox',
+      symbol: 'PB',
+      description: '',
+      numInputs: 0,
+      numOutputs: 1,
+      labels: ['O'],
+      circuit: liveToBody([lead, pad, plug], wires)
+    });
+    const instance = placeByType(box, [0, 0]);
+
+    const board = compiler.compile(project);
+    const info = board.watch.infoFor(String(instance.id))!;
+
+    const unit = info.unitIndexFor(1)!;
+    expect(unit).toBe(info.unitIndexFor(0)! + 1);
+    const units = board.descriptor.components;
+    expect(units).toHaveLength(unit + 1);
+    expect(units[unit]).toEqual({
+      type: 200,
+      inputs: [],
+      outputs: Array.from(
+        { length: 10 },
+        (_, slot) => info.linkOfLocalNet[info.tables.portNets[1][slot]]
+      )
+    });
+    // The wired-out control's output drives the plug's net.
+    expect(units[unit].outputs[start]).toBe(
+      info.linkOfLocalNet[info.tables.portNets[2][0]]
+    );
+  });
+
+  it('addresses an inner keyboard through its one unit, a bubble on port i negating its output i only', () => {
+    const lead = makeSwitch(0, 0);
+    const keyboard = makeKeyboard(0, 2);
+    const plug = makeOutPlug(0, [12, 0]);
+    const corner = new Point(10.5, keyboard.connectionPoints[0].y);
+    const wires = [
+      wireBetween(keyboard.connectionPoints[0], corner),
+      wireBetween(corner, new Point(10.5, plug.connectionPoints[0].y)),
+      wireBetween(
+        new Point(10.5, plug.connectionPoints[0].y),
+        plug.connectionPoints[0]
+      )
+    ];
+    const circuit = liveToBody([lead, keyboard, plug], wires);
+    circuit.components[1].negOutputs = [5];
+    const box = registry.registerSnapshot({
+      kind: 'snapshot',
+      source: 'browser',
+      name: 'KeyboardBox',
+      symbol: 'KB',
+      description: '',
+      numInputs: 0,
+      numOutputs: 1,
+      labels: ['O'],
+      circuit
+    });
+    const instance = placeByType(box, [0, 0]);
+
+    const board = compiler.compile(project);
+    const info = board.watch.infoFor(String(instance.id))!;
+
+    const unit = info.unitIndexFor(1)!;
+    expect(unit).toBe(info.unitIndexFor(0)! + 1);
+    const units = board.descriptor.components;
+    expect(units).toHaveLength(unit + 1);
+    expect(units[unit]).toEqual({
+      type: 200,
+      inputs: [],
+      outputs: Array.from(
+        { length: 10 },
+        (_, port) => info.linkOfLocalNet[info.tables.portNets[1][port]]
+      ),
+      negOutputs: [5]
+    });
+    // D0 drives the plug's net.
+    expect(units[unit].outputs[0]).toBe(
+      info.linkOfLocalNet[info.tables.portNets[2][0]]
+    );
+  });
+
+  it('addresses the state of a board RAM and of each placement’s inner RAM by its own unit', () => {
+    const box = registry.registerSnapshot({
+      kind: 'snapshot',
+      source: 'browser',
+      name: 'RamBox',
+      symbol: 'RB',
+      description: '',
+      numInputs: 0,
+      numOutputs: 0,
+      labels: [],
+      circuit: liveToBody([makeSwitch(0, 0), makeRam(2, 4, 4, 0)], [])
+    });
+    const first = placeByType(box, [0, 0]);
+    const ram = makeRam(3, 8, 0, 10);
+    project.addComponent(ram);
+    const second = placeByType(box, [0, 20]);
+
+    const board = compiler.compile(project);
+    const units = board.descriptor.components;
+    const firstUnit = board.watch.infoFor(String(first.id))!.stateUnitFor(1)!;
+    const secondUnit = board.watch.infoFor(String(second.id))!.stateUnitFor(1)!;
+    const boardUnit = board.stateUnits.get(ram.id)!;
+
+    expect(new Set([firstUnit, secondUnit, boardUnit]).size).toBe(3);
+    for (const unit of [firstUnit, secondUnit, boardUnit]) {
+      expect(units[unit].type).toBe(BuiltInComponentType.RAM);
+    }
+    expect(units[boardUnit].outputs).toHaveLength(8);
+    // Only the board's own RAM is the board's; the switch holds no state.
+    expect([...board.stateUnits.keys()]).toEqual([ram.id]);
+    expect(
+      board.watch.infoFor(String(first.id))!.stateUnitFor(0)
+    ).toBeUndefined();
   });
 
   it('gives a wire-only inner net a local id but no link', () => {
@@ -189,7 +348,7 @@ describe('BoardCompilerService watch index', () => {
 
     const board = compiler.compile(project);
 
-    // Flattening emits the outer switch first, then the nested one.
+    // Flattening emits the outer switch first.
     expect(board.descriptor.components).toEqual([
       { type: 200, inputs: [], outputs: [0] },
       { type: 200, inputs: [], outputs: [1] }
@@ -206,13 +365,12 @@ describe('BoardCompilerService watch index', () => {
     expect(innerInfo.typeId).toBe(switchBox);
     expect(innerInfo.unitIndexFor(0)).toBe(1);
 
-    // The inner switch's wire lights from the second unit's output link; the
-    // floating inner wire still has no link.
+    // The floating inner wire still has no link.
     expect(innerInfo.linkOfLocalNet[innerInfo.tables.wireNets[0]]).toBe(1);
     expect(innerInfo.linkOfLocalNet[innerInfo.tables.wireNets[1]]).toBe(-1);
 
-    // The inner level's plug net is the same link the outer level sees on the
-    // nested instance's output port.
+    // The inner plug net is the link the outer level sees on the nested
+    // instance's output port.
     expect(outerInfo.linkOfLocalNet[outerInfo.tables.portNets[1][0]]).toBe(
       innerInfo.linkOfLocalNet[innerInfo.tables.portNets[1][0]]
     );
@@ -241,7 +399,7 @@ describe('BoardCompilerService watch index', () => {
     const board = compiler.compile(project);
 
     expect(board.watch.infoFor('999999')).toBeNull();
-    // SwitchBox nests no custom, so any deeper segment dead-ends.
+    // SwitchBox nests no custom, so a deeper segment dead-ends.
     expect(board.watch.infoFor(`${instance.id}/0`)).toBeNull();
   });
 });

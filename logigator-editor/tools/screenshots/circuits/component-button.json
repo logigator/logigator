@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "name": "Button",
+  "components": [
+    {
+      "type": 202,
+      "x": [6],
+      "y": [0]
+    },
+    {
+      "type": 205,
+      "x": [0],
+      "y": [0]
+    }
+  ],
+  "wires": "5,0:w4",
+  "definitions": []
+}

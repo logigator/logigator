@@ -1,0 +1,198 @@
+<svg
+  class="pointer-events-none absolute inset-0 size-full overflow-visible transition-opacity"
+  [class.opacity-40]="assigning()"
+  [attr.viewBox]="viewBox"
+  aria-hidden="true"
+>
+  <rect
+    [attr.x]="body.x"
+    [attr.y]="body.y"
+    [attr.width]="body.width"
+    [attr.height]="body.height"
+    [attr.rx]="body.radius"
+    class="fill-content-hover"
+    [class.stroke-primary]="ringed()"
+    [class.stroke-border]="!ringed()"
+    [attr.stroke-width]="ringed() ? 2 : 1"
+    vector-effect="non-scaling-stroke"
+  />
+  @if (hasDpad()) {
+    <path
+      [attr.d]="crossPath"
+      class="fill-content stroke-muted"
+      stroke-width="1"
+      stroke-linejoin="round"
+      vector-effect="non-scaling-stroke"
+    />
+  }
+  @for (entry of entries(); track entry.control) {
+    @let shape = entry.layout.shape;
+    @let down = isPressed(entry.control);
+    @if (shape.kind === 'disc') {
+      <circle
+        [attr.cx]="shape.cx"
+        [attr.cy]="shape.cy"
+        [attr.r]="shape.r"
+        [class.fill-primary]="down"
+        [class.stroke-primary]="down"
+        [class.fill-content]="!down"
+        [class.stroke-muted]="!down"
+        stroke-width="1"
+        vector-effect="non-scaling-stroke"
+      />
+    } @else if (entry.isDpad) {
+      <!-- The cross outline is drawn once above; an arm adds only its fill. -->
+      <rect
+        [attr.x]="shape.x"
+        [attr.y]="shape.y"
+        [attr.width]="shape.width"
+        [attr.height]="shape.height"
+        [attr.rx]="shape.radius"
+        [class.fill-primary]="down"
+        [class.fill-transparent]="!down"
+      />
+    } @else {
+      <rect
+        [attr.x]="shape.x"
+        [attr.y]="shape.y"
+        [attr.width]="shape.width"
+        [attr.height]="shape.height"
+        [attr.rx]="shape.radius"
+        [class.fill-primary]="down"
+        [class.stroke-primary]="down"
+        [class.fill-content]="!down"
+        [class.stroke-muted]="!down"
+        stroke-width="1"
+        vector-effect="non-scaling-stroke"
+      />
+    }
+  }
+</svg>
+
+@for (entry of entries(); track entry.control) {
+  @let down = isPressed(entry.control);
+  <button
+    type="button"
+    class="absolute z-[1] cursor-pointer touch-none outline-primary focus-visible:outline-2 focus-visible:outline-offset-2"
+    [class.pointer-events-none]="editingNames()"
+    [style]="entry.buttonStyle"
+    [attr.data-control]="entry.control"
+    [attr.aria-label]="entry.ariaLabel"
+    [attr.aria-pressed]="ariaPressed(entry.control)"
+    [attr.aria-disabled]="editingNames() ? 'true' : null"
+    [attr.tabindex]="editingNames() ? -1 : null"
+    (click)="onControlClick($event, entry.control)"
+    (pointerdown)="onControlDown($event, entry.control)"
+    (pointerup)="onPointerEnd($event)"
+    (pointercancel)="onPointerEnd($event)"
+    (lostpointercapture)="onPointerEnd($event)"
+  ></button>
+
+  <span
+    class="pointer-events-none absolute z-[2] leading-none font-semibold"
+    [class.opacity-40]="assigning()"
+    [class.text-primary-contrast]="down"
+    [class.text-text]="!down"
+    [style]="entry.glyphStyle"
+    [style.transform]="down ? 'translate(-50%, calc(-50% + 1px))' : undefined"
+    aria-hidden="true"
+  >
+    @switch (entry.layout.glyph.kind) {
+      @case ('icon') {
+        <i [class]="glyphIcon(entry)"></i>
+      }
+      @default {
+        {{ entry.defaultName }}
+      }
+    }
+  </span>
+
+  @if (editingNames()) {
+    <input
+      type="text"
+      autocomplete="off"
+      spellcheck="false"
+      class="absolute z-[1] w-(--slot-width) rounded border text-center border-border bg-content px-1 py-0.5 font-mono text-xs text-text placeholder:text-muted focus:z-10 focus:w-(--full-width) focus:border-primary focus:outline-none max-lg:text-base"
+      [style]="entry.inputStyle"
+      [attr.data-control]="entry.control"
+      [attr.aria-label]="entry.nameLabel"
+      [attr.maxlength]="maxLength()"
+      [placeholder]="entry.defaultName"
+      [value]="entry.name"
+      (input)="onNameInput(entry.control, $event)"
+      (keydown)="onNameKeydown($event)"
+    />
+  } @else if (entry.name) {
+    <span
+      class="absolute truncate font-mono text-[clamp(10px,2.4cqw,14px)] leading-tight text-text"
+      [style]="entry.captionStyle"
+      [attr.title]="entry.name"
+      aria-hidden="true"
+      >{{ entry.name }}</span
+    >
+  }
+
+  @if (assigning()) {
+    @let capturingThis = capturing() === entry.control;
+    @let flashedThis = flashed() === entry.control;
+    <!-- The key, large on the control's face; the pulse and the flash
+         animate only where motion is welcome, the colours show either way. -->
+    <span
+      class="pointer-events-none absolute z-[3] flex -translate-x-1/2 -translate-y-1/2 items-center rounded border px-[0.4em] py-[0.15em] font-mono text-[clamp(11px,3.4cqw,20px)] leading-tight font-semibold whitespace-nowrap shadow-sm transition-colors duration-300 motion-reduce:transition-none"
+      [class.key-capturing]="capturingThis"
+      [class.key-flashed]="flashedThis"
+      [class.border-primary]="capturingThis || flashedThis"
+      [class.border-border]="!capturingThis && !flashedThis"
+      [class.bg-primary]="flashedThis && !capturingThis"
+      [class.text-primary-contrast]="flashedThis && !capturingThis"
+      [class.bg-content]="!flashedThis || capturingThis"
+      [class.text-primary]="capturingThis"
+      [class.text-text]="!capturingThis && !flashedThis"
+      [style]="entry.keyStyle"
+      aria-hidden="true"
+    >
+      @if (capturingThis) {
+        <span class="text-[0.6em]">{{ pressKeyPrompt() }}</span>
+      } @else if (entry.keyCap; as cap) {
+        @if (cap.icon) {
+          <i [class]="cap.icon"></i>
+        } @else {
+          {{ cap.label }}
+        }
+      } @else {
+        —
+      }
+    </span>
+  }
+
+  @if (showChips() && entry.keyCap; as cap) {
+    <span
+      class="chip pointer-events-none absolute z-[2] flex -translate-x-1/2 -translate-y-1/2 items-center rounded border border-border bg-content px-[0.35em] py-[0.1em] font-mono text-[clamp(9px,2.1cqw,12px)] leading-tight whitespace-nowrap text-muted shadow-sm transition-opacity"
+      [class.chip-touch]="!keyboardPresent()"
+      [class.opacity-40]="!keyboardActive()"
+      [style]="entry.chipStyle"
+      aria-hidden="true"
+    >
+      @if (cap.icon) {
+        <i [class]="cap.icon"></i>
+      } @else {
+        {{ cap.label }}
+      }
+    </span>
+  }
+}
+
+@if (playing() && hasDpad()) {
+  <!-- The D-pad's one hit region, over its arm buttons: the sector under the
+       pointer decides which directions it holds. -->
+  <div
+    class="absolute z-[3] cursor-pointer touch-none"
+    [style]="dpadStyle()"
+    aria-hidden="true"
+    (pointerdown)="onDpadDown($event)"
+    (pointermove)="onDpadMove($event)"
+    (pointerup)="onPointerEnd($event)"
+    (pointercancel)="onPointerEnd($event)"
+    (lostpointercapture)="onPointerEnd($event)"
+  ></div>
+}

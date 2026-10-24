@@ -1,6 +1,6 @@
+import { rngMeta } from '@logigator/core';
 import { ComponentConfig } from '../../component-config.model';
-import { BuiltInComponentType } from '../../component-type.enum';
-import { ComponentCategory } from '../../component-category.enum';
+import { configFromMeta } from '../../config-from-meta';
 import { ComponentOption } from '../../component-option';
 import { NumberComponentOption } from '../../component-options/number/number.component-option';
 import { RngComponent } from './rng.component';
@@ -10,20 +10,7 @@ export interface RngOptions {
   numOutputs: NumberComponentOption;
 }
 
-export const rngComponentConfig: ComponentConfig<RngOptions> = {
-  type: BuiltInComponentType.RNG,
-  category: ComponentCategory.ADVANCED,
-  symbol: 'RNG',
-  name: 'components.def.RNG.name',
-  description: 'components.def.RNG.description',
-  options: {
-    numOutputs: new NumberComponentOption(
-      'components.options.outputs',
-      1,
-      64,
-      1
-    )
-  },
-  legacyV0Slots: { n: ['numOutputs'] },
-  create: (options) => new RngComponent(options)
-};
+export const rngComponentConfig: ComponentConfig<RngOptions> = configFromMeta(
+  rngMeta,
+  { create: (options) => new RngComponent(options) }
+);

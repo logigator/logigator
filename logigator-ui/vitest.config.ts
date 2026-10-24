@@ -1,8 +1,8 @@
 import { defineConfig } from 'vitest/config';
 import { fileURLToPath } from 'node:url';
 
-// Resolve relative to this config file (not the workspace root) so the setup
-// file is found regardless of the CWD/root the Angular unit-test builder uses.
+// Relative to this config file, so the setup file is found whatever CWD the
+// Angular unit-test builder uses.
 export default defineConfig({
   test: {
     setupFiles: [fileURLToPath(new URL('./vitest.setup.ts', import.meta.url))],

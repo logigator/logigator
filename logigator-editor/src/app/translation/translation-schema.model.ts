@@ -13,8 +13,7 @@ type Widen<T> = {
 export type TranslationSchema = Widen<typeof en>;
 
 /**
- * The English messages with their literal text. Only the placeholder extraction
- * in `TranslateArgs` reads this; translated *results* are always `string`, since
- * the text depends on the active language.
+ * The English messages with their literal text, read only by `TranslateArgs`'s
+ * placeholder extraction; translated results are always `string`.
  */
 export type TranslationMessages = typeof en;

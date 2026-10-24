@@ -1,0 +1,8 @@
+@if (option().editor) {
+  <app-dialog-option-button
+    [label]="option().label"
+    icon="ph ph-pencil-simple"
+    [summary]="summary()"
+    (open)="open()"
+  />
+}

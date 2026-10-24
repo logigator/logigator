@@ -70,7 +70,7 @@ describe('OnboardingNudgeComponent', () => {
   });
 
   it('is hidden when tips are turned off', () => {
-    onboarding.setTipsEnabled(false);
+    onboarding.disableAllTips();
     fixture.detectChanges();
     expect(buttons().length).toBe(0);
   });

@@ -7,7 +7,6 @@ import { ComponentConfig } from '../../components/component-config.model';
 import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
 import { PlacementGhost } from '../placement-ghost';
-import { roundToGrid } from '../../utils/grid';
 import { AddComponentsAction } from '../../actions/actions/add-components.action';
 import { ActionContainer } from '../../actions/action-container';
 import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
@@ -20,6 +19,7 @@ import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
 import { TranslationService } from '../../translation/translation.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
+import { appendPlugIndices } from '../../custom-component/definition-derivation';
 
 export class ComponentPlacementSession implements DragSession {
   // A drop onto a colliding area clears the ghost rather than freezing it.
@@ -37,7 +37,7 @@ export class ComponentPlacementSession implements DragSession {
   constructor(
     private readonly project: Project,
     dragLayer: Container<Component | Wire | ConnectionPoint>,
-    startPos: Point,
+    startCursor: Point,
     placeConfig: ComponentConfig
   ) {
     this._wouldCycle = wouldCyclePlacement(project, placeConfig);
@@ -45,11 +45,16 @@ export class ComponentPlacementSession implements DragSession {
     // The ghost is built from the palette config and stays on it for the whole
     // gesture, so what the settings panel writes while placing — options,
     // direction — lands on the very config the commit builds from.
-    this._ghost = new PlacementGhost(project, dragLayer, placeConfig, startPos);
+    this._ghost = new PlacementGhost(
+      project,
+      dragLayer,
+      placeConfig,
+      startCursor
+    );
   }
 
   onMove(input: PointerInput): void {
-    this._ghost.moveTo(roundToGrid(input.grid, true));
+    this._ghost.moveTo(input.grid);
   }
 
   canEnd(): boolean {
@@ -79,6 +84,8 @@ export class ComponentPlacementSession implements DragSession {
     // The instance the commit adds: a built-in is the ghost itself, a custom is
     // re-frozen onto a placement snapshot.
     const placed = ComponentPlacementSession._freeze(ghost);
+    // A new plug is the last port of its kind, not tied with the first one.
+    appendPlugIndices(this.project, [placed]);
 
     // Splits any wire whose interior passes under one of the placed component's ports.
     const { toAdd, toRemove } = this.project.topology.integrate({
@@ -89,11 +96,11 @@ export class ComponentPlacementSession implements DragSession {
     // mutations, then materialize the final state directly and register.
     const action = new ActionContainer();
     if (toRemove.length > 0) {
-      action.add(new RemoveWiresAction(...toRemove));
+      action.add(new RemoveWiresAction(toRemove));
     }
-    action.add(new AddComponentsAction(placed));
+    action.add(new AddComponentsAction([placed]));
     if (toAdd.length > 0) {
-      action.add(new AddWiresAction(...toAdd));
+      action.add(new AddWiresAction(toAdd));
     }
 
     // The ghost lands itself, minus its preview look; a frozen replacement is

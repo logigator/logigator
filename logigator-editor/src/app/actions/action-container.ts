@@ -9,9 +9,9 @@ export class ActionContainer extends Action {
 
   private readonly logging = getStaticDI(LoggingService);
 
-  constructor(...actions: Action[]) {
+  constructor(actions: readonly Action[] = []) {
     super();
-    this.actions = actions;
+    this.actions = [...actions];
   }
 
   public serialize(): SerializedAction {

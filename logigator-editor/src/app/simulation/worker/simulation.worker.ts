@@ -1,12 +1,10 @@
 import init, { Simulation } from '@logigator/sim/wasm';
-import type { InputEvent } from '@logigator/sim/wasm';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
-import {
-  nextPaceDelayMs,
-  PACE_BATCH_MS,
-  PACE_INTERVAL_MS,
-  ticksDue
-} from './pacing';
+import { InputProgressReader } from './input-progress';
+import { createSerialQueue } from './serial-queue';
+import { RecordReader } from './record-reads';
+import { StateReader } from './state-reads';
+import { MIN_TARGET_HZ, PACE_INTERVAL_MS, ticksDue } from './pacing';
 import {
   MainToWorkerMessage,
   packSnapshot,
@@ -24,7 +22,7 @@ const addEventListener = self.addEventListener as (
   listener: (event: MessageEvent<MainToWorkerMessage>) => void
 ) => void;
 
-/** Changed-link fraction above which the engine falls back to a full snapshot. */
+/** Changed-link fraction above which the engine sends a full snapshot. */
 const DELTA_THRESHOLD = 0.2;
 
 const BUFFER_POOL_LIMIT = 4;
@@ -34,16 +32,23 @@ let sim: Simulation | null = null;
 let descriptor: BoardDescriptor | null = null;
 
 let runMode: 'idle' | 'continuous' | 'target' = 'idle';
-/** In-flight `runAsync` promise while in continuous mode. */
+/** The active run: the `runAsync` promise, or target mode's pace loop. */
 let runPromise: Promise<void> | null = null;
-let paceTimer: ReturnType<typeof setTimeout> | null = null;
 let paceHz = 0;
 let paceStart = { tick: 0, time: 0 };
+/** Ends target mode's idle wait early, so a stop never sits it out. */
+let wakePace: (() => void) | null = null;
 
 const bufferPool: ArrayBuffer[] = [];
 
+/** Built with the descriptor; reset with every engine rebuilt from it. */
+let progress: InputProgressReader | null = null;
+// The main thread's state and record watches; they outlive a rebuild.
+const stateReader = new StateReader();
+const recordReader = new RecordReader();
+
 // The emitted artifact path is relative to the build output root, where the
-// worker chunk also lives — resolving against the script URL covers any
+// worker chunk also lives, so resolving against the script URL covers any
 // base href.
 void init({
   module_or_path: new URL(wasmUrl, self.location.href)
@@ -61,9 +66,13 @@ void init({
     });
   });
 
+// One message at a time: a run control awaits the run it stops, and a second
+// one handled meanwhile would start a run beside the first.
+const enqueue = createSerialQueue();
+
 addEventListener('message', (event) => {
   const msg = event.data;
-  handle(msg).catch((err: unknown) => {
+  enqueue(() => handle(msg)).catch((err: unknown) => {
     postMessage({
       kind: 'error',
       reqId: 'reqId' in msg ? msg.reqId : null,
@@ -78,25 +87,28 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       descriptor = msg.descriptor;
       sim?.destroy();
       sim = new Simulation(descriptor);
+      progress = new InputProgressReader(descriptor);
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     case 'start': {
       await stopRun();
       const simulation = requireSim();
+      let run: Promise<void>;
       if (msg.config.mode === 'continuous') {
         runMode = 'continuous';
-        runPromise = simulation.runAsync().catch((err: unknown) => {
-          postMessage({ kind: 'error', reqId: null, message: String(err) });
-        });
+        run = simulation.runAsync();
       } else {
         runMode = 'target';
-        paceHz = Math.max(1, msg.config.hz);
+        paceHz = Math.max(MIN_TARGET_HZ, msg.config.hz);
         paceStart = {
           tick: simulation.getStatus().tick,
           time: performance.now()
         };
-        paceTimer = setTimeout(paceLoop, PACE_INTERVAL_MS);
+        run = paceLoop(simulation);
       }
+      runPromise = run.catch((err: unknown) => {
+        postMessage({ kind: 'error', reqId: null, message: String(err) });
+      });
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     }
@@ -109,23 +121,42 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     case 'stop': {
-      // The engine has no reset: stopping for good = destroy and rebuild
-      // from the kept descriptor.
+      // The engine has no reset: destroy and rebuild from the descriptor.
       await stopRun();
       requireSim().destroy();
       sim = new Simulation(descriptor!);
+      progress?.reset();
+      stateReader.reset();
+      recordReader.reset();
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     }
     // Inputs, snapshots and status polls are advisory: the main thread awaits
-    // no ack, so a missing engine has nothing to fail and is dropped instead of
-    // reported. Reporting would come back uncorrelated and kill the session —
-    // the run controls above keep `requireSim`, since their caller holds a
-    // promise that can carry the failure.
-    case 'triggerInput':
+    // no ack, so a missing engine is dropped rather than reported — an
+    // uncorrelated error would kill the session. The run controls above keep
+    // `requireSim`, since their caller holds a promise to carry the failure.
+    // The engine sequences the frames inside its ticks, between `runAsync`
+    // batches as between steps, so nothing here waits for a tick. A request
+    // it refuses throws, and goes back as an error under its own `reqId`,
+    // which the bridge knows as a refused input rather than a failure.
+    case 'submitInput':
       if (!sim) break;
-      sim.triggerInput(msg.componentIndex, msg.event as InputEvent, msg.state);
+      sim.submitInput(msg.writes);
       postMessage({ kind: 'ok', reqId: msg.reqId });
+      break;
+    // Watches are bookkeeping read on the next snapshot, so they need no
+    // engine yet and get no ack.
+    case 'watchState':
+      stateReader.watch(msg.watch);
+      break;
+    case 'unwatchState':
+      stateReader.unwatch(msg.id);
+      break;
+    case 'watchRecords':
+      recordReader.watch(msg.watch);
+      break;
+    case 'unwatchRecords':
+      recordReader.unwatch(msg.id);
       break;
     case 'requestSnapshot':
       if (!sim) break;
@@ -138,6 +169,7 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
         kind: 'status',
         reqId: msg.reqId,
         tick: status.tick,
+        at: performance.now(),
         componentCount: status.componentCount,
         linkCount: status.linkCount
       });
@@ -161,12 +193,9 @@ function requireSim(): Simulation {
 /** Interrupts whatever run is active; resolves once the engine is idle. */
 async function stopRun(): Promise<void> {
   runMode = 'idle';
-  if (paceTimer !== null) {
-    clearTimeout(paceTimer);
-    paceTimer = null;
-  }
   if (runPromise) {
     sim?.stop();
+    wakePace?.();
     await runPromise;
     runPromise = null;
   }
@@ -174,27 +203,30 @@ async function stopRun(): Promise<void> {
 
 /**
  * Target-Hz pacing: each iteration runs the ticks the wall clock says are due
- * since the run started. Batches are bounded by wall-clock time, not tick
- * count: at a high target rate a tick-count cap would block the worker for
- * hundreds of ms in one synchronous `run`, starving the per-frame snapshot
- * pull — the `ms` bound returns control to the message pump after a few ms so
- * inputs and snapshots interleave. When a batch is cut short by the budget the
- * target is unreachable on this machine, so the next batch runs back-to-back
- * rather than idling an interval.
+ * since the run started, through `runAsync`, whose batches of about 5 ms yield
+ * to the message queue in between. A target the board can't reach therefore
+ * runs back-to-back as fast as continuous mode; a reached one idles
+ * {@link PACE_INTERVAL_MS} between iterations. A timer never stands in for the
+ * yield: browsers clamp a nested `setTimeout(0)` to 4 ms.
  */
-function paceLoop(): void {
-  if (runMode !== 'target' || !sim) {
-    return;
+async function paceLoop(simulation: Simulation): Promise<void> {
+  while (runMode === 'target') {
+    const elapsed = performance.now() - paceStart.time;
+    const ran = simulation.getStatus().tick - paceStart.tick;
+    const due = ticksDue(paceHz, elapsed, ran);
+    if (due > 0) {
+      await simulation.runAsync({ ticks: due });
+    } else {
+      await new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, PACE_INTERVAL_MS);
+        wakePace = () => {
+          clearTimeout(timer);
+          resolve();
+        };
+      });
+      wakePace = null;
+    }
   }
-  const elapsed = performance.now() - paceStart.time;
-  const currentTick = sim.getStatus().tick;
-  const due = ticksDue(paceHz, elapsed, currentTick - paceStart.tick);
-  let ran = 0;
-  if (due > 0) {
-    sim.run({ ticks: due, ms: PACE_BATCH_MS });
-    ran = sim.getStatus().tick - currentTick;
-  }
-  paceTimer = setTimeout(paceLoop, nextPaceDelayMs(due, ran));
 }
 
 /**
@@ -214,16 +246,39 @@ function sendSnapshot(reqId: number, full: boolean): void {
     const values = view.isDelta
       ? mem.subarray(view.valuesPtr, view.valuesPtr + view.valuesLen)
       : mem.subarray(view.ptr, view.ptr + view.len);
-    const packed = packSnapshot(bufferPool.pop(), ids, values);
+    // The whole invalid set rides along with every snapshot, usually empty.
+    const invalid =
+      view.invalidLen > 0
+        ? mem.subarray(view.invalidPtr, view.invalidPtr + view.invalidLen)
+        : undefined;
+    const packed = packSnapshot(bufferPool.pop(), ids, values, invalid);
+    // Read after the copy: `inputProgress`, the state and the record reads
+    // may allocate in linear memory, which would detach the views copied
+    // from. No tick runs in between, so what they read is the snapshot's tick.
+    const inputProgress = progress?.read(requireSim());
+    const state = stateReader.read(requireSim());
+    const records = recordReader.read(requireSim());
+    const transfer: Transferable[] = [packed.buffer];
+    // `readState` and `readRecords` hand out copies of their own, never views
+    // into memory.
+    for (const read of state ?? []) {
+      transfer.push(read.bytes.buffer as ArrayBuffer);
+    }
+    for (const read of records ?? []) {
+      transfer.push(read.values.buffer as ArrayBuffer);
+    }
     postMessage(
       {
         kind: 'snapshot',
         reqId,
         tick: view.tick,
         isDelta: view.isDelta,
-        ...packed
+        ...packed,
+        ...(inputProgress ? { inputProgress } : {}),
+        ...(state ? { state } : {}),
+        ...(records ? { records } : {})
       },
-      [packed.buffer]
+      transfer
     );
   } finally {
     view.free();

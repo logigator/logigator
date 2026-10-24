@@ -1,10 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ApplicationRef, signal, Type, WritableSignal } from '@angular/core';
+import {
+  ApplicationRef,
+  ErrorHandler,
+  signal,
+  Type,
+  WritableSignal
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Component } from '../components/component';
-import { ComponentInspection } from '../components/component-inspection';
+import {
+  ComponentInspection,
+  InspectionUnavailableError
+} from '../components/component-inspection';
+import { ToastService } from '../logging/toast.service';
 import { LayoutService } from '../layout/layout.service';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
@@ -102,10 +112,50 @@ describe('InspectionService', () => {
     expect(presenter.shown).toHaveLength(1);
     expect(presenter.shown[0].inspection).toBe(inspection);
 
-    // A second open focuses the existing view instead of duplicating it.
     service.openFor(component);
     expect(service.open()).toHaveLength(1);
     expect(presenter.focused).toEqual([presenter.shown[0]]);
+  });
+
+  /** A component stand-in whose inspection factory throws `error`. */
+  function makeFailing(error: Error): Component {
+    return {
+      config: {
+        inspection: () => {
+          throw error;
+        }
+      }
+    } as unknown as Component;
+  }
+
+  it('tells the user why an inspection is unavailable, without reporting a bug', () => {
+    const toast = vi.spyOn(TestBed.inject(ToastService), 'error');
+    const handleError = vi.spyOn(TestBed.inject(ErrorHandler), 'handleError');
+
+    service.openFor(makeFailing(new InspectionUnavailableError('changed')));
+
+    expect(toast).toHaveBeenCalledWith(
+      'changed',
+      'InspectionService',
+      expect.any(InspectionUnavailableError)
+    );
+    expect(handleError).not.toHaveBeenCalled();
+    expect(service.open()).toHaveLength(0);
+  });
+
+  it('hands any other factory failure to the error handler', () => {
+    const toast = vi.spyOn(TestBed.inject(ToastService), 'error');
+    const handleError = vi
+      .spyOn(TestBed.inject(ErrorHandler), 'handleError')
+      .mockImplementation(() => undefined);
+    const bug = new TypeError('broken');
+
+    service.openFor(makeFailing(bug));
+
+    expect(handleError).toHaveBeenCalledWith(bug);
+    expect(toast).not.toHaveBeenCalled();
+    expect(service.open()).toHaveLength(0);
+    expect(presenter.shown).toHaveLength(0);
   });
 
   it('ignores components without an inspection factory', () => {
@@ -165,24 +215,21 @@ describe('InspectionService', () => {
     expect(presenter.shown).toHaveLength(1);
     expect(sheetPresenter.shown).toHaveLength(0);
 
-    // Flip to compact: the window view closes, the sheet takes over.
     isCompact.set(true);
     flushEffects();
     expect(presenter.closed).toHaveLength(1);
     expect(sheetPresenter.shown).toHaveLength(1);
     expect(service.open()).toHaveLength(1);
 
-    // New inspections now go to the sheet.
     service.openFor(makeInspectable(new TestInspection()));
     expect(sheetPresenter.shown).toHaveLength(2);
 
-    // Flip back: everything returns to windows.
     isCompact.set(false);
     flushEffects();
     expect(sheetPresenter.closed).toHaveLength(2);
     expect(presenter.shown).toHaveLength(3);
 
-    // A dismissal from the re-homed window still reaches the service.
+    // A dismissal from the re-homed window reaches the service.
     presenter.dismissers.get(presenter.shown[1])!();
     expect(service.open()).toHaveLength(1);
     expect(inspection.destroyed).toHaveBeenCalledTimes(1);
@@ -196,22 +243,22 @@ describe('InspectionService', () => {
     service.openFor(makeInspectable(fullscreenBound));
     expect(presenter.shown).toHaveLength(2);
 
-    // Compact: only the sheet-bound entry re-homes; the fullscreen one keeps
-    // its window entry (the compact outlet renders it as a takeover).
+    // Only the sheet-bound entry re-homes; the fullscreen one keeps its window
+    // entry, which the compact outlet renders as a takeover.
     isCompact.set(true);
     flushEffects();
     expect(presenter.closed.map((e) => e.inspection)).toEqual([sheetBound]);
     expect(sheetPresenter.shown.map((e) => e.inspection)).toEqual([sheetBound]);
     expect(presenter.shown).toHaveLength(2);
 
-    // New fullscreen inspections open as windows on compact too.
+    // Fullscreen inspections open as windows on compact too.
     const another = new FullscreenTestInspection();
     service.openFor(makeInspectable(another));
     expect(presenter.shown).toHaveLength(3);
     service.close(service.open()[2]);
     expect(presenter.closed).toHaveLength(2);
 
-    // Back to desktop: only the sheet-bound entry moves again.
+    // Only the sheet-bound entry moves back.
     isCompact.set(false);
     flushEffects();
     expect(sheetPresenter.closed).toHaveLength(1);

@@ -1,21 +1,12 @@
 /**
- * Shared styling for text-entry form fields (InputText, Textarea, InputNumber,
- * and Select). Encodes the deliberate, colors-only field look:
+ * Shared styling for text-entry form fields. Two things are deliberate: the
+ * background and border use a dedicated form-field surface one step stronger
+ * than the content surface, named per scheme because the surface scale's
+ * meaning flips between the light slate ramp and the dark zinc one; and there
+ * is **no focus ring** — the border switching to `primary` is the only cue.
  *
- * - background and border are a dedicated form-field surface, one step stronger
- *   than the content/panel surface: `surface-0`/`surface-300` in light,
- *   `surface-950`/`surface-600` in dark (the surface scale's meaning flips
- *   between the slate light ramp and the zinc dark ramp, so each scheme names
- *   its own step)
- * - text = `text`
- * - hover strengthens the border one further step; focus switches it to `primary`
- * - **no visible focus ring** — the border-color change is the only focus cue
- * - placeholder = `muted`; disabled dims and blocks interaction
- * - 6px radius (`rounded-md`) with a hairline drop shadow (`shadow-xs`);
- *   padding comes from the shared `controlPadding`
- *
- * These are plain class strings (no Angular) so directives and components can
- * compose them onto a native element or a wrapper.
+ * Plain class strings, no Angular, so directives and components can compose
+ * them onto a native element or a wrapper.
  */
 
 import { controlPadding, LgSize } from './size';
@@ -35,10 +26,7 @@ export const FORM_FIELD_BASE =
 export const FORM_FIELD_INVALID =
   'border-error! hover:border-error! focus:border-primary!';
 
-/**
- * The full class string for a text-entry field at the given size and validity —
- * the shared body of the InputText / Textarea skinning directives.
- */
+/** The full class string for a text-entry field at a given size and validity. */
 export function formFieldClasses(
   size: LgSize | undefined,
   invalid: boolean

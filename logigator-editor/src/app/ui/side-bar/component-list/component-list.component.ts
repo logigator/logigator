@@ -9,6 +9,7 @@ import {
   LgInputIcon,
   LgInputText
 } from '@logigator/ui';
+import { ComponentCategory } from '@logigator/core';
 import { TranslationService } from '../../../translation/translation.service';
 import { ComponentProviderService } from '../../../components/component-provider.service';
 import { ComponentListCategoryComponent } from '../component-list-category/component-list-category.component';
@@ -22,13 +23,33 @@ import {
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationKey } from '../../../translation/translation-key.model';
 
+/** The built-in categories, in palette order; User Components follow them. */
+const BUILT_IN_PALETTE_CATEGORIES = [
+  ComponentCategory.LOGIC_GATES,
+  ComponentCategory.INPUTS,
+  ComponentCategory.OUTPUTS,
+  ComponentCategory.ADDERS_SELECTORS,
+  ComponentCategory.MEMORY,
+  ComponentCategory.TIMING
+] as const;
+
+/**
+ * The folded category keys. Folded rather than open, so a category the user
+ * has never seen (a new built-in, or User Components on first creation) opens.
+ */
+export const PALETTE_COLLAPSED_STORAGE_KEY = 'logigator.palette.collapsed';
+
+const ALL_PALETTE_KEYS: readonly string[] = [
+  ...BUILT_IN_PALETTE_CATEGORIES,
+  ComponentCategory.USER
+];
+
 /** A palette category rendered as one accordion panel. */
 interface PaletteCategory {
   /** Stable accordion-panel key. */
   key: string;
-  /** Translation key for the category headline. */
   labelKey: TranslationKey;
-  /** Components to show, already filtered by the active search. */
+  /** Already filtered by the active search. */
   components: ComponentConfig[];
 }
 
@@ -57,44 +78,27 @@ export class ComponentListComponent {
 
   public readonly searchText = signal('');
 
-  private readonly basicComponents =
-    this.componentProviderService.basicComponents;
-  private readonly advancedComponents =
-    this.componentProviderService.advancedComponents;
-  private readonly ioComponents = this.componentProviderService.ioComponents;
-
-  /** True while a non-empty search is active. */
   public readonly searchActive = computed(
     () => this.searchText().trim().length > 0
   );
 
   /**
    * All categories, filtered by the current search. Categories with no matches
-   * are dropped so the palette never shows an empty section. The Ports category
-   * is only present while editing a component.
+   * are dropped so the palette never shows an empty section.
    */
   public readonly categories = computed<PaletteCategory[]>(() => {
     const search = this.searchText().trim().toLowerCase();
 
-    const raw: PaletteCategory[] = [
-      {
-        key: 'basic',
-        labelKey: 'components.category.basic',
-        components: this.basicComponents()
-      },
-      {
-        key: 'advanced',
-        labelKey: 'components.category.advanced',
-        components: this.advancedComponents()
-      },
-      {
-        key: 'io',
-        labelKey: 'components.category.io',
-        components: this.ioComponents()
-      }
-    ];
+    const byCategory = this.componentProviderService.componentsByCategory();
+    const raw: PaletteCategory[] = BUILT_IN_PALETTE_CATEGORIES.map(
+      (category) => ({
+        key: category,
+        labelKey: `components.category.${category}` as const,
+        components: byCategory.get(category) ?? []
+      })
+    );
     raw.push({
-      key: 'user',
+      key: ComponentCategory.USER,
       labelKey: 'components.category.user',
       components: this.userComponents()
     });
@@ -109,26 +113,17 @@ export class ComponentListComponent {
       .filter((cat) => cat.components.length > 0);
   });
 
-  /** Manual expand/collapse state (panel keys), honored when not searching. */
-  private readonly manualOpen = signal<string[]>([
-    'basic',
-    'advanced',
-    'io',
-    'port',
-    'user'
-  ]);
+  /** Panel keys, honored when not searching. */
+  private readonly manualOpen = signal<string[]>(loadOpenKeys());
 
-  /**
-   * Which accordion panels are open: every matching category while searching
-   * (auto-expand), otherwise the user's manual state.
-   */
+  /** Every matching category while searching, otherwise the manual state. */
   public readonly openPanels = computed(() =>
     this.searchActive()
       ? this.categories().map((cat) => cat.key)
       : this.manualOpen()
   );
 
-  /** Persists manual expand/collapse; ignored while search drives the state. */
+  /** Ignored while search drives the state. */
   public onPanelChange(
     value: string | number | string[] | number[] | null | undefined
   ): void {
@@ -137,16 +132,17 @@ export class ComponentListComponent {
       Array.isArray(value) ? value : value != null ? [value] : []
     ).map(String);
     this.manualOpen.set(open);
+    saveCollapsed(ALL_PALETTE_KEYS.filter((key) => !open.includes(key)));
   }
 
   /**
-   * The palette's user (master) components, newest-edited first and cycle-filtered
-   * while editing a component: placing the edited master itself or any master that
-   * (transitively) depends on it would close a cycle, so both are excluded.
+   * User masters, newest-edited first. While editing a component, the edited
+   * master and anything transitively depending on it are excluded: placing
+   * either would close a cycle.
    */
   public readonly userComponents = computed(() => {
-    // A registry save/promotion re-stamps a master and bumps this revision; read
-    // it so the ordering below recomputes when a master's `lastEdited` changes.
+    // A save or promotion re-stamps a master and bumps this revision; read it
+    // so the ordering recomputes when a master's `lastEdited` changes.
     this.registry.revision();
 
     const all = this.componentProviderService.userComponents();
@@ -178,9 +174,8 @@ export class ComponentListComponent {
   }
 
   /**
-   * Orders masters by their `lastEdited` time (newest first), falling back to a
-   * case-insensitive name compare so equal timestamps stay deterministic. Masters
-   * with no recorded timestamp sort last.
+   * Newest `lastEdited` first, name-compared on ties so the order is
+   * deterministic. Masters with no timestamp sort last.
    */
   private sortByLastEdited(configs: ComponentConfig[]): ComponentConfig[] {
     return [...configs].sort((a, b) => {
@@ -189,5 +184,27 @@ export class ComponentListComponent {
       if (tb !== ta) return tb - ta;
       return this.name(a).localeCompare(this.name(b));
     });
+  }
+}
+
+function loadOpenKeys(): string[] {
+  let collapsed: unknown = [];
+  try {
+    collapsed = JSON.parse(
+      localStorage.getItem(PALETTE_COLLAPSED_STORAGE_KEY) ?? '[]'
+    );
+  } catch {
+    // Unreadable storage or a corrupt value: everything opens.
+  }
+  return Array.isArray(collapsed)
+    ? ALL_PALETTE_KEYS.filter((key) => !collapsed.includes(key))
+    : [...ALL_PALETTE_KEYS];
+}
+
+function saveCollapsed(keys: string[]): void {
+  try {
+    localStorage.setItem(PALETTE_COLLAPSED_STORAGE_KEY, JSON.stringify(keys));
+  } catch {
+    // Private-mode / disabled storage: the fold state lasts the session only.
   }
 }

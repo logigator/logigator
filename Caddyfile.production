@@ -1,8 +1,77 @@
-logigator.test {
-	tls internal
+# The origin of the production stack. TLS ends at Cloudflare's edge, which
+# reaches this server through the `cloudflared` tunnel, so this listens in plain
+# HTTP on the compose network and publishes no port. Every request arrives from
+# an edge: the tunnel in production, the `edge` service in a local staging run.
 
-	# The production image serves the backend and both editors from one process.
-	reverse_proxy app:3000
+# What a request learned at the edge, handed to an application. Only an edge can
+# reach this listener, so its `Cf-Connecting-Ip` is the visitor's address, and
+# it overwrites whatever chain a visitor sent along. The scheme is the edge's,
+# which is always HTTPS; the API writes no session over a request it believes
+# arrived in plain HTTP.
+(from_edge) {
+	header_up X-Forwarded-For {http.request.header.Cf-Connecting-Ip}
+	header_up X-Forwarded-Proto https
+}
+
+:8080 {
+	# Compression for every upstream at once. A response that already names an
+	# encoding is left alone, so an upstream compressing its own output keeps it.
+	encode zstd gzip
+
+	@api path /api /api/*
+	handle @api {
+		reverse_proxy api:3000 {
+			import from_edge
+		}
+	}
+
+	# The editor, a static bundle baked into this image. Its address is
+	# `/editor`, and `/editor/` is served the same shell rather than redirected:
+	# browsers still hold the legacy backend's cached `301` from `/editor` to it,
+	# and the editor rewrites the address itself.
+	@editor path /editor /editor/*
+	handle @editor {
+		root * /srv/editor
+		uri strip_prefix /editor
+
+		# A hashed name is held forever, and a missing one stays an uncached 404:
+		# a page from an earlier deploy asking for its old chunk must not be
+		# handed the shell under a cache-forever header.
+		@hashed path_regexp ^/(?:media/|[^/]+-[A-Za-z0-9_-]{8}\.(?:js|css)(?:\.map)?$)
+		handle @hashed {
+			@present file
+			header @present Cache-Control "public, max-age=31536000, immutable"
+			file_server
+		}
+
+		# Everything else is a file under a name the next deploy reuses, or one of
+		# the editor's own routes, which all get the shell.
+		handle {
+			header Cache-Control "no-cache"
+			try_files {path} /index.html
+			file_server
+		}
+	}
+
+	# The API's storage volume: avatars and circuit previews. Every file under it
+	# is written once under a name nothing reuses — replacing an asset means a new
+	# directory and a new pointer — so the URLs are safe to cache forever, and
+	# serving them here keeps a static read off the application entirely. Only a
+	# file that exists is: the edge would otherwise hold a 404 for a year.
+	handle_path /files/* {
+		root * /srv/files
+		@present file
+		header @present Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# The website, at the origin root, including everything the legacy backend's
+	# pages used to answer and the redirects from their addresses.
+	handle {
+		reverse_proxy web:4000 {
+			import from_edge
+		}
+	}
 
 	log {
 		output stdout
