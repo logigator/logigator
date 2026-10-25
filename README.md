@@ -169,13 +169,8 @@ To go deeper, [`CLAUDE.md`](CLAUDE.md) maps the repository and the rules that sp
 
 ## Contributing
 
-Bug reports, ideas and pull requests are welcome.
-
-1. Fork the repository and create a branch off `master`.
-2. Keep a change to one concern, and add tests for behavior you change.
-3. Run `yarn lint`, `yarn typecheck` and `yarn test` before opening a pull request.
-4. For a change users will notice, add an entry under `## [Unreleased]` in
-   [`CHANGELOG.md`](CHANGELOG.md) and its translations in [`changelog/`](changelog).
+Bug reports, ideas, translations and pull requests are welcome; [`CONTRIBUTING.md`](CONTRIBUTING.md)
+explains how. Security issues go through [`SECURITY.md`](SECURITY.md), never a public issue.
 
 ## License
 

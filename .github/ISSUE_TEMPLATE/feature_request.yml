@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest an idea or an improvement.
+labels: ['feature']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! Please search the [existing issues](https://github.com/logigator/logigator/issues?q=is%3Aissue) first; if someone suggested it already, a 👍 on theirs helps us see what people want.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The problem or the situation behind the idea. "I'm building a CPU and keep having to ..." tells us more than the feature alone.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would help?
+      description: How you imagine it working. Sketches and mockups are welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: How do you work around it today?
+      description: Any workaround or alternative you've considered.
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      options:
+        - label: I'd like to implement this myself (see [CONTRIBUTING.md](https://github.com/logigator/logigator/blob/master/CONTRIBUTING.md)).

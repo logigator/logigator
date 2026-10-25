@@ -1,0 +1,70 @@
+name: Bug report
+description: Something in Logigator doesn't work the way it should.
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Please search the [existing issues](https://github.com/logigator/logigator/issues?q=is%3Aissue) first.
+
+        **Found a security issue?** Don't report it here; see [SECURITY.md](https://github.com/logigator/logigator/blob/master/SECURITY.md).
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where does it happen?
+      options:
+        - Editor
+        - Simulation
+        - Website or community
+        - Account, sign-in or cloud saving
+        - Documentation
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see? Screenshots or a short recording help a lot.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the editor
+        2. Place an AND gate
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: circuit
+    attributes:
+      label: Circuit
+      description: |
+        If the bug involves a circuit, a share link to it or the exported file (zipped, since GitHub doesn't accept `.lgix` attachments). Leave empty if it doesn't apply.
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and operating system
+      placeholder: Firefox 140 on Windows 11, Safari on iPad, ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Editor version
+      description: Shown in the editor under Help → About. Leave empty if you're not sure.
+      placeholder: 2.2.0
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Console errors, how often it happens, whether it worked before, ...

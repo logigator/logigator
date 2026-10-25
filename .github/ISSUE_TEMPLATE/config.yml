@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://logigator.com/en/docs
+    about: How every component and the editor work.
+  - name: Report a security vulnerability
+    url: https://github.com/logigator/logigator/security/advisories/new
+    about: Report it privately, never in a public issue.
