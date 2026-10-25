@@ -9,6 +9,7 @@ import { socialHost, socialLinkLabel } from '@logigator/core';
 import { LgAvatar, LgMarkdown } from '@logigator/ui';
 import { SiteLinks } from '../../layout/site-links';
 import { SOCIAL_ICONS } from './social-icons';
+import { PageUnavailable } from '../../states/page-unavailable';
 import { SectionError } from '../../states/section-error';
 import { NotFoundPage } from '../not-found/not-found-page';
 import { TranslateDirective } from '../../translation/translate.directive';
@@ -56,6 +57,7 @@ const TABS = [
     NotFoundPage,
     RouterLink,
     RouterOutlet,
+    PageUnavailable,
     SectionError,
     TranslateDirective
   ],

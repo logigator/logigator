@@ -10,6 +10,7 @@ import { CircuitTiles } from '../../documents/circuit-tiles';
 import { toTileEntries } from '../../documents/circuit-tile-entry';
 import { SiteLinks } from '../../layout/site-links';
 import { EmptyState } from '../../states/empty-state';
+import { PageUnavailable } from '../../states/page-unavailable';
 import { SectionError } from '../../states/section-error';
 import { TranslateDirective } from '../../translation/translate.directive';
 import { TranslationKey } from '../../translation/translation-key.model';
@@ -38,6 +39,7 @@ const EMPTY_KEYS: Record<string, TranslationKey> = {
     CircuitTiles,
     EmptyState,
     LgPaginator,
+    PageUnavailable,
     SectionError,
     TranslateDirective
   ],

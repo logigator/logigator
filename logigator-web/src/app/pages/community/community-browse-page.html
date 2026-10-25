@@ -72,6 +72,7 @@
   <div class="mt-7">
     @if (listing.failureKey(); as failure) {
     <web-section-error
+      webPageUnavailable
       [heading]="t('pages.community.browse.errorHeading')"
       [message]="t(failure)"
       [retryLabel]="t('errors.retry')"

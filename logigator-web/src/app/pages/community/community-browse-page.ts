@@ -11,6 +11,7 @@ import { toTileEntries } from '../../documents/circuit-tile-entry';
 import { SiteLinks } from '../../layout/site-links';
 import { ListingSearch } from '../../listings/listing-search';
 import { EmptyState } from '../../states/empty-state';
+import { PageUnavailable } from '../../states/page-unavailable';
 import { SectionError } from '../../states/section-error';
 import { TranslateDirective } from '../../translation/translate.directive';
 import { TranslationKey } from '../../translation/translation-key.model';
@@ -51,6 +52,7 @@ const ORDER_KEYS: Record<string, TranslationKey> = {
     LgPaginator,
     ListingSearch,
     RouterLink,
+    PageUnavailable,
     SectionError,
     TranslateDirective
   ],

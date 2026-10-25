@@ -9,6 +9,7 @@
      rather than a slot in it. -->
 <div class="page-wrap py-12" *webTranslate="let t">
   <web-section-error
+    webPageUnavailable
     [heading]="t('pages.community.document.errorHeading')"
     [message]="t(failure)"
     [retryLabel]="t('errors.retry')"
@@ -40,6 +41,7 @@
   <div class="mt-7 border-t border-border pt-6">
     @if (listing.failureKey(); as failure) {
     <web-section-error
+      webPageUnavailable
       [heading]="t('pages.community.stargazers.errorHeading')"
       [message]="t(failure)"
       [retryLabel]="t('errors.retry')"

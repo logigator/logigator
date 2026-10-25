@@ -8,6 +8,7 @@ import { Router, RouterLink } from '@angular/router';
 import { LgAvatar, LgPaginator } from '@logigator/ui';
 import { SiteLinks } from '../../layout/site-links';
 import { EmptyState } from '../../states/empty-state';
+import { PageUnavailable } from '../../states/page-unavailable';
 import { SectionError } from '../../states/section-error';
 import { NotFoundPage } from '../not-found/not-found-page';
 import { TranslateDirective } from '../../translation/translate.directive';
@@ -34,6 +35,7 @@ import { StargazersService } from './stargazers.service';
     LgPaginator,
     NotFoundPage,
     RouterLink,
+    PageUnavailable,
     SectionError,
     TranslateDirective
   ],

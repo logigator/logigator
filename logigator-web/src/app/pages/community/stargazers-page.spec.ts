@@ -171,12 +171,12 @@ describe('StargazersPage', () => {
   it('keeps the page and a retry where the document read failed', async () => {
     // The other side of the rule: a read that failed says nothing about the
     // document, so the reader gets the retry rather than a 404 the page cannot
-    // vouch for.
+    // vouch for, and a crawler a 503 to come back after.
     const el = await render('public', { documentFailure: DOWN });
 
     expect(el.textContent).not.toContain('Page not found');
     expect(el.textContent).toContain('Retry');
-    expect(responseInit.status).toBe(200);
+    expect(responseInit.status).toBe(503);
   });
 
   it('keeps a failed list on a published document’s own page', async () => {

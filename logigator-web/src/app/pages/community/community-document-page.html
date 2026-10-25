@@ -5,6 +5,7 @@
 } @else if (failureKey(); as failure) {
 <div class="page-wrap py-12" *webTranslate="let t">
   <web-section-error
+    webPageUnavailable
     [heading]="t('pages.community.document.errorHeading')"
     [message]="t(failure)"
     [retryLabel]="t('errors.retry')"

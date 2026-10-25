@@ -154,6 +154,8 @@ Angular 22, standalone + zoneless, rendered per request by `@angular/ssr` behind
 - **Server reads cross to the browser only through `TransferHandoffService`** (Angular's HTTP
   transfer cache is off). Skipping it repeats the request after hydration. `contentSection()` is the
   packaged pattern: a failed read resolves to a translation key, never rejects.
+- **A page whose own read failed answers `503` + `Retry-After`** (`webPageUnavailable` on its
+  error), never a `noindex` 200; `noindex` is for a missing or non-public document only.
 - **Every list is resolved by a guard**, so there are no skeletons. Listing controls are links or
   `<form method="get">` writing the URL; listing routes need
   `runGuardsAndResolvers: 'paramsOrQueryParamsChange'`.

@@ -8,6 +8,7 @@ import { LgButton, LgMarkdown } from '@logigator/ui';
 import { CircuitPreview } from '../../documents/circuit-preview';
 import { SiteLinks } from '../../layout/site-links';
 import { EmptyState } from '../../states/empty-state';
+import { PageUnavailable } from '../../states/page-unavailable';
 import { SectionError } from '../../states/section-error';
 import { TranslateDirective } from '../../translation/translate.directive';
 import { ExamplesContentService } from './examples-content.service';
@@ -28,6 +29,7 @@ import { ExamplesContentService } from './examples-content.service';
     EmptyState,
     LgButton,
     LgMarkdown,
+    PageUnavailable,
     SectionError,
     TranslateDirective
   ],

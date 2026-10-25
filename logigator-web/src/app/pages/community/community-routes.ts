@@ -60,20 +60,26 @@ const documentCard = (): string | null => {
  * `noindex` rather than a `robots.txt` rule, which is the only lever that works
  * on a URL arrived at by links: a crawler is never told to skip what it is
  * forbidden to fetch, and a listed-by-URL page is the outcome that prevents.
+ *
+ * A read that failed says nothing about the document, so its 503 carries no
+ * verdict either: a crawler keeps the page it has and asks again.
  */
 const documentNoindex = (): boolean => {
-  const document = inject(CommunityDocumentService).document();
-  return document?.visibility !== 'public' || !documentIsIndexable(document);
+  const content = inject(CommunityDocumentService);
+  const document = content.document();
+  if (!document) return content.missing();
+  return document.visibility !== 'public' || !documentIsIndexable(document);
 };
 
 /**
  * Whether a member's page may be indexed, for all four tabs alike: they share
  * the header the rule reads. A link naming no member renders the 404, which
- * is no index entry either way.
+ * is no index entry either way; a read that failed is a 503 with no verdict.
  */
 const profileNoindex = (): boolean => {
-  const profile = inject(ProfileService).profile();
-  return !profile || !profileIsIndexable(profile);
+  const profiles = inject(ProfileService);
+  const profile = profiles.profile();
+  return profile ? !profileIsIndexable(profile) : profiles.missing();
 };
 
 /**

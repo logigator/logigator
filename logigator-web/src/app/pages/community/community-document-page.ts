@@ -29,6 +29,7 @@ import { ShareControls } from '../../documents/share-controls';
 import { VisibilityTag } from '../../documents/visibility-tag';
 import { SiteLinks } from '../../layout/site-links';
 import { SITE_ORIGIN } from '../../seo/site-origin';
+import { PageUnavailable } from '../../states/page-unavailable';
 import { SectionError } from '../../states/section-error';
 import { genericFailureKey } from '../../forms/api-failure';
 import { TranslationKey } from '../../translation/translation-key.model';
@@ -73,6 +74,7 @@ import { realLanguage, textLangAttribute } from './text-language';
     LgTag,
     NotFoundPage,
     RouterLink,
+    PageUnavailable,
     SectionError,
     ShareControls,
     StarIcon,

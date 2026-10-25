@@ -1,6 +1,7 @@
 <div *webTranslate="let t">
   @if (listing.failureKey(); as failure) {
   <web-section-error
+    webPageUnavailable
     [heading]="t('pages.community.profile.listErrorHeading')"
     [message]="t(failure)"
     [retryLabel]="t('errors.retry')"

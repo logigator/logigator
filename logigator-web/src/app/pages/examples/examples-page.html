@@ -13,6 +13,7 @@
   <div class="page-wrap pb-14 md:pb-20">
     @if (examples.failureKey(); as failure) {
     <web-section-error
+      webPageUnavailable
       [heading]="t('pages.examples.failed')"
       [message]="t(failure)"
       [retryLabel]="t('errors.retry')"
