@@ -30,7 +30,11 @@ export class MailService {
     recipient: MailRecipient,
     token: string
   ): Promise<void> {
-    await this.send('verifyRegistration', recipient, this.verifyLink(token));
+    await this.send(
+      'verifyRegistration',
+      recipient,
+      this.verifyLink(recipient, token)
+    );
   }
 
   /**
@@ -41,7 +45,11 @@ export class MailService {
     recipient: MailRecipient,
     token: string
   ): Promise<void> {
-    await this.send('verifyEmailChange', recipient, this.verifyLink(token));
+    await this.send(
+      'verifyEmailChange',
+      recipient,
+      this.verifyLink(recipient, token)
+    );
   }
 
   async sendPasswordReset(
@@ -51,7 +59,7 @@ export class MailService {
     await this.send(
       'resetPassword',
       recipient,
-      `${this.env.PUBLIC_URL}/reset-password?token=${encodeURIComponent(token)}`
+      `${this.siteUrl(recipient)}/reset-password?token=${encodeURIComponent(token)}`
     );
   }
 
@@ -83,8 +91,16 @@ export class MailService {
     return true;
   }
 
-  private verifyLink(token: string): string {
-    return `${this.env.PUBLIC_URL}/verify-email/${encodeURIComponent(token)}`;
+  /**
+   * The site root in the mail's language, so the page a link opens speaks the
+   * language the mail was written in rather than whatever the browser asks for.
+   */
+  private siteUrl(recipient: MailRecipient): string {
+    return `${this.env.PUBLIC_URL}/${recipient.locale}`;
+  }
+
+  private verifyLink(recipient: MailRecipient, token: string): string {
+    return `${this.siteUrl(recipient)}/verify-email/${encodeURIComponent(token)}`;
   }
 
   private async send(
@@ -95,6 +111,7 @@ export class MailService {
     const mail = renderMail(kind, recipient.locale, {
       username: recipient.username,
       link,
+      linkLifetimeMinutes: this.env.AUTH_TOKEN_TTL_MINUTES,
       publicUrl: this.env.PUBLIC_URL
     });
 

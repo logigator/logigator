@@ -145,7 +145,7 @@ describe('the signed-in user', () => {
       emailVerificationSent: true
     });
     expect(api.mail.last().to).toBe('ada@newmail.test');
-    expect(api.mail.last().subject).toBe('Verify your new email');
+    expect(api.mail.last().subject).toBe('Confirm your new email address');
 
     const verification = await api.inject({
       method: 'POST',

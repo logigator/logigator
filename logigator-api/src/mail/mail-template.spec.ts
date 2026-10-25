@@ -12,6 +12,7 @@ const KINDS: MailKind[] = [
 const params = {
   username: 'Ada',
   link: 'https://logigator.test/verify-email/abc123',
+  linkLifetimeMinutes: 60,
   publicUrl: 'https://logigator.test'
 };
 
@@ -44,15 +45,27 @@ describe('renderMail', () => {
   it.each(LOCALES)('renders every mail in %s with no gaps', (locale) => {
     for (const kind of KINDS) {
       const mail = renderMail(kind, locale, params);
-      const strings = MAIL_STRINGS[locale][kind];
+      const strings = MAIL_STRINGS[locale].mails[kind];
 
       expect(mail.subject).toBe(strings.subject);
-      // The note is missing from the reset mail in every language.
-      expect(mail.html).not.toContain('undefined');
-      expect(mail.text).not.toContain('undefined');
-      expect(mail.html).toContain(strings.closing);
-      expect(mail.text).toContain(strings.closing);
+      for (const part of [mail.html, mail.text]) {
+        expect(part).not.toContain('undefined');
+        // A placeholder left in the wording would reach the recipient as is.
+        expect(part).not.toMatch(/\{\w+\}/);
+        expect(part).toContain(strings.button);
+      }
     }
+  });
+
+  it('states the link lifetime in the recipient language', () => {
+    const german = renderMail('resetPassword', 'de', params);
+    const french = renderMail('verifyRegistration', 'fr', {
+      ...params,
+      linkLifetimeMinutes: 90
+    });
+
+    expect(german.text).toContain('1 Stunde gültig');
+    expect(french.text).toContain('valable 90 minutes');
   });
 
   it('renders the requested language, not the default one', () => {
