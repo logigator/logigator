@@ -18,9 +18,8 @@ function clearCookie(): void {
 }
 
 /**
- * Starts the editor with the given cookie in place and builds the storage
- * adapter against it. The cookie has to exist before bootstrap, as it does on a
- * page load: it is read once, when the service reading it is constructed.
+ * Starts the editor with the given cookie in place. The cookie must exist
+ * before bootstrap, as on a page load: it is read once, at construction.
  */
 function startEditor(preferences?: Record<string, unknown>): PersistStorage {
   if (preferences) {
@@ -47,8 +46,8 @@ describe('preferencesLangStorage', () => {
   });
 
   it('reports no language for one the editor has no translations for', () => {
-    // The server offers the same four languages today, but the sets are
-    // independent and the cookie is client-writable.
+    // The two language sets are independent and the cookie is
+    // client-writable.
     expect(
       startEditor({ lang: 'it', theme: 'dark' }).getItem('lang')
     ).toBeNull();
@@ -89,16 +88,16 @@ describe('resolveStartupLang', () => {
   });
 
   it('falls back to the browser language when there is no cookie yet', () => {
-    // The editor bundle is served ahead of the middleware that writes the
-    // cookie, so a first request straight to /editor/ has no preference.
+    // The bundle is served ahead of the middleware that writes the cookie, so
+    // a first request straight to /editor/ has no preference.
     requestLanguages('fr-CA', 'fr');
 
     expect(resolveStartupLang(params({}))).toBe('fr');
   });
 
   it('follows the browser down its list past languages it cannot render', () => {
-    // The same negotiation the server runs over Accept-Language — the language
-    // resolved here seeds the shared cookie, so the two have to agree.
+    // The same negotiation the server runs over Accept-Language; what is
+    // resolved here seeds the shared cookie, so the two must agree.
     requestLanguages('it', 'de', 'en');
 
     expect(resolveStartupLang(params({}))).toBe('de');
@@ -111,8 +110,8 @@ describe('resolveStartupLang', () => {
   });
 
   it('uses the primary language when the browser lists none', () => {
-    // Some browsers report an empty list in private mode; the primary language
-    // is still the user's.
+    // Some browsers report an empty list in private mode, where the primary
+    // language is still the user's.
     requestLanguages();
     vi.spyOn(navigator, 'language', 'get').mockReturnValue('de-DE');
 

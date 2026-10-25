@@ -1,0 +1,6 @@
+/* Type checking including the specs, which tsconfig.json excludes. */
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.ts"],
+  "exclude": []
+}

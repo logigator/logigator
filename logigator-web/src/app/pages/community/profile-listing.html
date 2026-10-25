@@ -1,0 +1,31 @@
+<div *webTranslate="let t">
+  @if (listing.failureKey(); as failure) {
+  <web-section-error
+    [heading]="t('pages.community.profile.listErrorHeading')"
+    [message]="t(failure)"
+    [retryLabel]="t('errors.retry')"
+    [retrying]="listing.retrying()"
+    (retry)="retry()"
+  />
+  } @else if (tiles().length === 0) {
+  <!-- Somebody else's empty list. No action: what the reader wanted may well
+         exist, just not here. -->
+  <div class="lattice rounded-md border border-border">
+    <web-empty-state
+      [heading]="t(emptyKey())"
+      [body]="t('pages.community.profile.emptyBody')"
+    />
+  </div>
+  } @else {
+  <web-circuit-tiles [entries]="tiles()" aboveTheFold />
+
+  @if (pageCount() > 1) {
+  <lg-paginator
+    class="mt-6"
+    [first]="page() * pageSize"
+    [rows]="pageSize"
+    [totalRecords]="listing.total() ?? 0"
+    (onPageChange)="toPage($event.page)"
+  />
+  } }
+</div>

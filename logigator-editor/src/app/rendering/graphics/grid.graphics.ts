@@ -11,16 +11,14 @@ export class GridGraphics extends StaticGraphicsContext {
     const themingService = getStaticDI(ThemingService);
     const sizePx = fromGrid(size);
 
-    // Dots sit at cell centres — the half-grid lattice wire endpoints, port
-    // tips, and junctions terminate on — so the visible grid marks exactly
-    // where elements connect. One dot per cell, strictly interior to the
-    // chunk, so edge-to-edge chunk tiling never doubles up seam dots.
+    // Dots sit at cell centres, the half-grid lattice endpoints and port tips
+    // terminate on. One per cell, strictly interior to the chunk, so tiling
+    // never doubles up seam dots.
     //
     // Each dot covers the exact pixels a wire crossing its lattice point
-    // covers: a horizontal wire carries its thickness below the lattice line,
-    // while a vertical wire (the same unit rect rotated 90°) carries it to
-    // the left — so the dot extends down in y but left in x. Dot size and
-    // wire thickness are both 1/scale, keeping the match at every zoom.
+    // covers: a horizontal wire carries its thickness below the lattice line
+    // and a vertical one to the left, so the dot extends down in y but left in
+    // x. Dot size and wire thickness are both 1/scale.
     const half = environment.gridSize / 2;
     for (let x = 0; x < sizePx; x += environment.gridSize) {
       for (let y = 0; y < sizePx; y += environment.gridSize) {

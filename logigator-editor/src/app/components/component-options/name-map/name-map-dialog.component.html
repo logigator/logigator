@@ -1,0 +1,15 @@
+<div class="flex flex-col gap-4">
+  <ng-container #editorHost />
+
+  <div class="flex justify-end gap-2" *appTranslate="let t">
+    <button
+      lgButton
+      severity="secondary"
+      [outlined]="true"
+      (onClick)="cancel()"
+    >
+      {{ t('common.cancel') }}
+    </button>
+    <button lgButton (onClick)="save()">{{ t('common.save') }}</button>
+  </div>
+</div>

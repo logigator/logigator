@@ -18,12 +18,15 @@ import {
   createConnectedOverlay,
   externalTeardown
 } from '../../internal/overlay';
-import { MENU_ITEM_CLASS, MENU_PANEL_CLASS, MenuItem } from './menu-item.model';
+import {
+  claimMenuItemClick,
+  ENABLED_MENU_ITEM_SELECTOR,
+  MENU_ITEM_CLASS,
+  MENU_PANEL_CLASS,
+  MenuItem
+} from './menu-item.model';
 
-/**
- * Edge-aligned drop positions (the panel hugs an edge of the trigger, not its
- * centre) — below/right-aligned first, then below/left, then the upward flips.
- */
+/** Edge-aligned, not centred: below/right first, then below/left, then flips. */
 const MENU_POSITIONS: ConnectedPosition[] = [
   {
     originX: 'end',
@@ -61,8 +64,9 @@ const MENU_POSITIONS: ConnectedPosition[] = [
  * trigger can reflect the open state. Renders an optional projected `#start`
  * block (large non-menu content) above the `model` items; each item uses the
  * `#item` slot (`$implicit` = the item) or default icon+label chrome. Items run
- * their `command` and close; dismisses on outside-click or Escape. Keyboard
- * focus roves the items with the arrow keys. A panel taller than the space
+ * their `command` and close; an item with an `href` is a real link, whose plain
+ * click runs the `command` in place of the navigation. Dismisses on
+ * outside-click or Escape. Keyboard focus roves the items with the arrow keys. A panel taller than the space
  * beside its anchor scrolls.
  */
 @Component({
@@ -84,6 +88,20 @@ const MENU_POSITIONS: ConnectedPosition[] = [
           @if (item.visible !== false) {
             @if (item.separator) {
               <div class="my-1 border-t border-border"></div>
+            } @else if (item.href) {
+              <a
+                role="menuitem"
+                tabindex="-1"
+                [class]="itemClass"
+                [attr.href]="item.disabled ? null : item.href"
+                [attr.target]="item.target ?? null"
+                [attr.aria-disabled]="item.disabled ? 'true' : null"
+                (click)="run(item, $event)"
+              >
+                <ng-container
+                  *ngTemplateOutlet="row; context: { $implicit: item }"
+                ></ng-container>
+              </a>
             } @else {
               <button
                 type="button"
@@ -91,25 +109,34 @@ const MENU_POSITIONS: ConnectedPosition[] = [
                 tabindex="-1"
                 [class]="itemClass"
                 [disabled]="item.disabled"
-                (click)="run(item)"
+                (click)="run(item, $event)"
               >
-                @if (itemTemplate(); as tpl) {
-                  <ng-container
-                    *ngTemplateOutlet="tpl; context: { $implicit: item }"
-                  ></ng-container>
-                } @else {
-                  <span class="flex w-full items-center gap-2 px-3 py-2">
-                    @if (item.icon) {
-                      <i [class]="item.icon" aria-hidden="true"></i>
-                    }
-                    <span>{{ item.label }}</span>
-                  </span>
-                }
+                <ng-container
+                  *ngTemplateOutlet="row; context: { $implicit: item }"
+                ></ng-container>
               </button>
             }
           }
         }
       </div>
+    </ng-template>
+
+    <ng-template #row let-item>
+      @if (itemTemplate(); as tpl) {
+        <ng-container
+          *ngTemplateOutlet="tpl; context: { $implicit: item }"
+        ></ng-container>
+      } @else {
+        <span
+          class="flex w-full items-center gap-2 px-3 py-2"
+          [class]="item.styleClass"
+        >
+          @if (item.icon) {
+            <i [class]="item.icon" aria-hidden="true"></i>
+          }
+          <span>{{ item.label }}</span>
+        </span>
+      }
     </ng-template>
   `
 })
@@ -133,7 +160,6 @@ export class LgMenu implements OnDestroy {
   private subscriptions: Subscription | null = null;
   private trigger: HTMLElement | null = null;
 
-  /** Open anchored to the event target, or close if already open. */
   toggle(event: Event): void {
     if (this.overlayRef) {
       this.hide();
@@ -154,15 +180,18 @@ export class LgMenu implements OnDestroy {
     this.disposeOverlay();
   }
 
-  protected run(item: MenuItem): void {
+  protected run(item: MenuItem, event: MouseEvent): void {
+    const claimed = claimMenuItemClick(item, event);
     this.hide();
     this.trigger?.focus();
-    item.command?.({ item });
+    if (claimed) {
+      item.command?.({ originalEvent: event, item });
+    }
   }
 
   protected onKeydown(event: KeyboardEvent): void {
-    // A nested control in the #start slot (e.g. an lg-select) handles its own
-    // keys and preventDefaults them; don't also rove/close the menu on those.
+    // A nested control in the #start slot handles and preventDefaults its own
+    // keys; those must not also rove or close the menu.
     if (event.defaultPrevented) {
       return;
     }
@@ -241,15 +270,14 @@ export class LgMenu implements OnDestroy {
     }
     return Array.from(
       this.overlayRef.overlayElement.querySelectorAll<HTMLElement>(
-        '[role=menuitem]:not([disabled])'
+        ENABLED_MENU_ITEM_SELECTOR
       )
     );
   }
 
   /**
-   * Moves focus into the overlay so its keydown handler (Escape, roving) is
-   * reachable: the first item, or the panel itself when the menu is all
-   * `#start` content with no items.
+   * Moves focus into the overlay so its keydown handler is reachable: the
+   * first item, or the panel itself when the menu is all `#start` content.
    */
   private focusFirstItem(): void {
     queueMicrotask(() => {

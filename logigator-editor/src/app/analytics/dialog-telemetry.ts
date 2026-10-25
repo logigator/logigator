@@ -5,12 +5,11 @@ import { AnalyticsEvent } from './analytics.mapping';
 
 /**
  * Bridges the library's dialog lifecycle hook to the analytics sink, so every
- * dialog carrying a `telemetryId` reports its open and its close without the
- * call site subscribing to anything. `AnalyticsService.capture` drops events
- * until consent, so this stays inert until then like every other source.
+ * dialog carrying a `telemetryId` reports open and close without its call site
+ * subscribing to anything.
  *
- * `resolved` mirrors the library's meaning exactly — the dialog closed with a
- * result — and is not a completion signal; see `DialogId`.
+ * `resolved` means the dialog closed with a result, not that the task
+ * completed; see `DialogId`.
  */
 export function provideDialogAnalytics(): ReturnType<
   typeof provideLgDialogTelemetry

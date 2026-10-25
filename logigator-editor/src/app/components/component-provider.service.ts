@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, Signal, signal } from '@angular/core';
 import { ComponentConfig } from './component-config.model';
-import { ComponentCategory } from './component-category.enum';
+import { ComponentCategory } from '@logigator/core';
 import { LoggingService } from '../logging/logging.service';
 import { notComponentConfig } from './component-types/not/not.config';
 import { andComponentConfig } from './component-types/and/and.config';
@@ -25,67 +25,87 @@ import { textComponentConfig } from './component-types/text/text.config';
 import { inputComponentConfig } from './component-types/input/input.config';
 import { outputComponentConfig } from './component-types/output/output.config';
 import { buttonComponentConfig } from './component-types/button/button.config';
+import { pulseButtonComponentConfig } from './component-types/pulse-button/pulse-button.config';
 import { switchComponentConfig } from './component-types/switch/switch.config';
 import { ledComponentConfig } from './component-types/led/led.config';
 import { segmentDisplayComponentConfig } from './component-types/segment-display/segment-display.config';
 import { ledMatrixComponentConfig } from './component-types/led-matrix/led-matrix.config';
+import { gamepadComponentConfig } from './component-types/gamepad/gamepad.config';
+import { keyboardComponentConfig } from './component-types/keyboard/keyboard.config';
+import { terminalComponentConfig } from './component-types/terminal/terminal.config';
 
+/**
+ * Every built-in's config, in palette order: categories group the list, and
+ * this order is the order inside each category. A function rather than a
+ * module-level array: a config's own imports (its inspection's renderer and
+ * the services that one injects) can lead back here, and a list built while
+ * such a config module is still loading would hold `undefined` for it. Read at
+ * construction, every module has finished loading.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
+const builtInComponents = (): ComponentConfig<any>[] => [
   notComponentConfig,
   andComponentConfig,
   orComponentConfig,
   xorComponentConfig,
-  delayComponentConfig,
-  clockComponentConfig,
   tunnelComponentConfig,
   halfAdderComponentConfig,
   fullAdderComponentConfig,
-  romComponentConfig,
+  muxComponentConfig,
+  demuxComponentConfig,
+  decoderComponentConfig,
+  encoderComponentConfig,
   dFfComponentConfig,
   jkFfComponentConfig,
   srFfComponentConfig,
-  rngComponentConfig,
+  romComponentConfig,
   ramComponentConfig,
-  decoderComponentConfig,
-  encoderComponentConfig,
-  muxComponentConfig,
-  demuxComponentConfig,
-  textComponentConfig,
-  inputComponentConfig,
-  outputComponentConfig,
-  buttonComponentConfig,
+  clockComponentConfig,
+  delayComponentConfig,
+  rngComponentConfig,
   switchComponentConfig,
+  buttonComponentConfig,
+  pulseButtonComponentConfig,
+  gamepadComponentConfig,
+  keyboardComponentConfig,
   ledComponentConfig,
   segmentDisplayComponentConfig,
-  ledMatrixComponentConfig
+  ledMatrixComponentConfig,
+  terminalComponentConfig,
+  textComponentConfig,
+  inputComponentConfig,
+  outputComponentConfig
 ];
 
 @Injectable({
   providedIn: 'root'
 })
 export class ComponentProviderService {
-  // Keyed by numeric type id (not the closed `ComponentType` enum) so
-  // runtime-allocated custom configs can be registered alongside built-ins.
-  // A signal so the reactive category lists below update on register/unregister.
+  // Keyed by numeric type id, not the closed `ComponentType` enum, so
+  // runtime-allocated custom configs register alongside built-ins. A signal so
+  // the category lists below update on register/unregister.
   private readonly _configs = signal<ReadonlyMap<number, ComponentConfig>>(
-    new Map(BUILT_IN_COMPONENTS.map((config) => [config.type, config]))
+    new Map(builtInComponents().map((config) => [config.type, config]))
   );
 
   private readonly logging = inject(LoggingService);
 
-  public readonly basicComponents = this._categorySignal(
-    ComponentCategory.BASIC
-  );
-  public readonly advancedComponents = this._categorySignal(
-    ComponentCategory.ADVANCED
-  );
-  public readonly ioComponents = this._categorySignal(ComponentCategory.IO);
+  /** Every registered type by category, each in registration order. */
+  public readonly componentsByCategory = computed<
+    ReadonlyMap<ComponentCategory, ComponentConfig[]>
+  >(() => {
+    const byCategory = new Map<ComponentCategory, ComponentConfig[]>();
+    for (const config of this._configs().values()) {
+      const list = byCategory.get(config.category);
+      if (list) list.push(config);
+      else byCategory.set(config.category, [config]);
+    }
+    return byCategory;
+  });
   public readonly portComponents = this._categorySignal(ComponentCategory.PORT);
   public readonly userComponents = this._categorySignal(ComponentCategory.USER);
 
-  /** Every registered type, hidden ones included — the registry-derived source
-   *  the automation catalog is generated from. */
+  /** Every registered type, hidden ones included. */
   public readonly allComponents = computed(() => [...this._configs().values()]);
 
   public getComponent(type: number): ComponentConfig | undefined {
@@ -118,10 +138,6 @@ export class ComponentProviderService {
   private _categorySignal(
     category: ComponentCategory
   ): Signal<ComponentConfig[]> {
-    return computed(() =>
-      [...this._configs().values()].filter(
-        (config) => config.category === category
-      )
-    );
+    return computed(() => this.componentsByCategory().get(category) ?? []);
   }
 }

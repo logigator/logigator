@@ -1,48 +1,177 @@
-services:
-  proxy:
-    image: caddy:2-alpine
-    networks:
-      - net
-    volumes:
-      - ./Caddyfile.production:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-    ports:
-      - "127.0.0.1:80:80"
-      - "127.0.0.1:443:443"
+# The production stack: the website, the API and the editor behind one Caddy
+# origin (`Caddyfile.production`), with Postgres and Redis on the same network.
+#
+# Cloudflare is the edge. On the server it reaches the stack through a tunnel:
+# `cloudflared` dials out, so nothing here publishes a port, and the tunnel's
+# public hostname points at `http://proxy:8080` in the Cloudflare dashboard.
+# Locally, `edge` stands in for Cloudflare instead, terminating TLS for
+# logigator.test with Caddy's internal CA and setting the one header the origin
+# takes from Cloudflare.
+#
+# Choose one with COMPOSE_PROFILES in `.env` next to this file:
+#
+#   COMPOSE_PROFILES=tunnel   # the server
+#   COMPOSE_PROFILES=local    # a staging run on this machine
+#
+# The same `.env` holds the values below. SESSION_SECRET is required (32+
+# characters): the API refuses to start in production without one. On the
+# server, also set SITE_HOST, POSTGRES_PASSWORD and CLOUDFLARE_TUNNEL_TOKEN.
+#
+# On the server, LOGIGATOR_VERSION names the release whose images a `pull`
+# fetches (`latest` without it); a local `up --build` builds them instead,
+# under the same names. Either way, `up` migrates the database and seeds the
+# examples through `migrate` before the API starts.
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+x-api-environment: &api-environment
+  DATABASE_URL: postgresql://logigator:${POSTGRES_PASSWORD:-logigator}@postgres:5432/logigator
+  REDIS_URL: redis://redis:6379
+  PUBLIC_URL: https://${SITE_HOST:-logigator.test}
+  # Every request reaches the API from a container on this network, and the
+  # origin has already written the visitor's address into X-Forwarded-For.
+  TRUST_PROXY: uniquelocal
+  SESSION_SECRET: ${SESSION_SECRET:-}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  SMTP_URL: ${SMTP_URL:-}
+  MAIL_FROM: ${MAIL_FROM:-}
+  REPORT_MAIL_TO: ${REPORT_MAIL_TO:-}
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+  TRANSLATION_ENABLED: ${TRANSLATION_ENABLED:-}
+  OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+  OPENROUTER_PRESET: ${OPENROUTER_PRESET:-}
+
+services:
+  tunnel:
+    image: cloudflare/cloudflared:2026.10.0
+    profiles:
+      - tunnel
     networks:
       - net
     depends_on:
-      - mysql
-      - redis
-    volumes:
-      - ./logigator-backend/config:/app/config
-
-  mysql:
-    image: mysql:8.3
-    networks:
-      - net
-    ports:
-      - "127.0.0.1:3306:3306"
-    cap_add:
-      - SYS_NICE
-    command: --default-authentication-plugin=mysql_native_password
+      - proxy
+    command: tunnel --no-autoupdate run
     environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=logigator
-      - MYSQL_USER=logigator
-      - MYSQL_PASSWORD=logigator
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:-}
+    restart: unless-stopped
 
-  redis:
-    image: redis:7
+  edge:
+    image: caddy:2-alpine
+    profiles:
+      - local
     networks:
       - net
+    depends_on:
+      - proxy
+    command: >-
+      caddy reverse-proxy --from ${SITE_HOST:-logigator.test} --to proxy:8080
+      --internal-certs --header-up "Cf-Connecting-Ip: {http.request.remote.host}"
+    volumes:
+      # The dev stack's volume, under the same project name: its local root CA
+      # is the one the browser already trusts.
+      - caddy_data:/data
+    ports:
+      - '127.0.0.1:80:80'
+      - '127.0.0.1:443:443'
+
+  proxy:
+    image: ghcr.io/logigator/logigator-proxy:${LOGIGATOR_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: proxy
+    networks:
+      - net
+    depends_on:
+      - web
+      - api
+    volumes:
+      # What the API writes, read-only: Caddy serves these files, and only the
+      # API ever produces them.
+      - storage:/srv/files:ro
+    restart: unless-stopped
+
+  web:
+    image: ghcr.io/logigator/logigator-web:${LOGIGATOR_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    networks:
+      - net
+    environment:
+      - API_ORIGIN=http://api:3000
+      - NG_ALLOWED_HOSTS=${SITE_HOST:-logigator.test}
+      - NG_TRUST_PROXY_HEADERS=x-forwarded-host,x-forwarded-proto,x-forwarded-for
+    restart: unless-stopped
+
+  # Brings the database to the migrations this build carries, then writes the
+  # examples it was built with. Both are idempotent, so every `up` runs them;
+  # the API refuses to start on a database whose migrations differ from its own.
+  migrate:
+    image: ghcr.io/logigator/logigator-api:${LOGIGATOR_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    networks:
+      - net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - storage:/data/storage
+    environment: *api-environment
+    command: sh -c 'node dist/logigator-api/migrate.js && exec node dist/logigator-api/seed-examples.js'
+
+  api:
+    image: ghcr.io/logigator/logigator-api:${LOGIGATOR_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    networks:
+      - net
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - storage:/data/storage
+    environment: *api-environment
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:18-alpine
+    networks:
+      - net
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=logigator
+      - POSTGRES_USER=logigator
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-logigator}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U logigator -d logigator']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # Sessions live here, so it keeps its snapshots on a volume: a restart that
+  # lost them would sign every visitor out.
+  redis:
+    image: redis:8
+    networks:
+      - net
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
 
 volumes:
+  storage:
+  postgres_data:
+  redis_data:
   caddy_data:
 
 networks:

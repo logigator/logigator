@@ -1,18 +1,33 @@
-import { Point, Rectangle } from 'pixi.js';
+import { Point } from 'pixi.js';
 import { Project } from '../../../project/project';
-import { BuiltInComponentType } from '../../../components/component-type.enum';
+import { HoldSession } from '../../sessions/hold.session';
 import { PanSession } from '../../sessions/pan.session';
+import {
+  componentBodiesAt,
+  holdInputAt,
+  isCanvasOperatedInput
+} from '../body-hit';
 import { PointerInput } from '../pointer-input';
 import { BoardTool, ToolHost } from './board-tool';
 
 /**
- * The simulation mode's canvas behavior: editing stays structurally locked,
- * but one-finger / left-drag pans the viewport like the hand tool. A tap that
- * never crosses the pan threshold instead activates the component under the
- * cursor — the only canvas interaction allowed while editing is locked.
+ * Editing stays structurally locked, but a drag pans like the hand tool and a
+ * tap activates the component under the cursor — the only canvas interaction
+ * allowed while the lock holds. A press on a `hold` user input operated on
+ * the canvas holds its one slot for the gesture instead, and never pans.
  */
 export class SimulationTool implements BoardTool {
   public down(project: Project, input: PointerInput, host: ToolHost): void {
+    const holdInput = holdInputAt(project, input.grid);
+    if (holdInput) {
+      host.startSession(
+        new HoldSession(
+          () => project.emitUserInput(holdInput, 'press', 0),
+          () => project.emitUserInput(holdInput, 'release', 0)
+        )
+      );
+      return;
+    }
     host.startSession(
       new PanSession(project, input.global, input.grid, (clickPoint) =>
         this._emitUserInputAt(project, clickPoint)
@@ -21,27 +36,15 @@ export class SimulationTool implements BoardTool {
   }
 
   /**
-   * Activates the component whose body contains the grid-space point, if any:
-   * a button/switch emits user input, an inspectable component (its config
-   * declares an inspection) emits an inspect request.
+   * Activates the component whose body contains the point: an inspectable
+   * component emits an inspect request, a `toggle` or `pulse` user input
+   * operated on the canvas a tap on its one slot. A multi-slot input without
+   * an inspection is passed over.
    */
   private _emitUserInputAt(project: Project, localPoint: Point): void {
-    const queryRect = new Rectangle(
-      localPoint.x - 0.5,
-      localPoint.y - 0.5,
-      1,
-      1
-    );
-    for (const comp of project.queryComponentsInRange(queryRect)) {
-      if (!comp.bodyGridBounds.contains(localPoint.x, localPoint.y)) {
-        continue;
-      }
-      const type = comp.config.type;
-      if (
-        type === BuiltInComponentType.BUTTON ||
-        type === BuiltInComponentType.SWITCH
-      ) {
-        project.emitUserInput(comp);
+    for (const comp of componentBodiesAt(project, localPoint)) {
+      if (isCanvasOperatedInput(comp) && comp.gesture !== 'hold') {
+        project.emitUserInput(comp, 'tap', 0);
         break;
       }
       if (comp.config.inspection) {

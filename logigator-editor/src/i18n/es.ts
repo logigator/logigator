@@ -1,7 +1,8 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
+import { consentEs } from '@logigator/core/consent-text/es';
 
 const es: TranslationSchema = {
   common: {
@@ -15,11 +16,42 @@ const es: TranslationSchema = {
     previousPage: 'Página anterior',
     nextPage: 'Página siguiente',
     lastPage: 'Última página',
+    formatting: 'Formato',
+    heading1: 'Encabezado 1',
+    heading2: 'Encabezado 2',
+    heading3: 'Encabezado 3',
+    bold: 'Negrita',
+    italic: 'Cursiva',
+    code: 'Código',
+    link: 'Enlace',
+    bulletedList: 'Lista con viñetas',
+    numberedList: 'Lista numerada',
+    quote: 'Cita',
+    codeBlock: 'Bloque de código',
+    divider: 'Separador',
+    table: 'Tabla',
+    linkTools: 'Enlace',
+    linkText: 'enlace',
+    linkUrl: 'Dirección del enlace',
+    removeLink: 'Eliminar enlace',
+    tableTools: 'Tabla',
+    insertRowAbove: 'Insertar fila arriba',
+    insertRowBelow: 'Insertar fila abajo',
+    insertColumnBefore: 'Insertar columna a la izquierda',
+    insertColumnAfter: 'Insertar columna a la derecha',
+    deleteRow: 'Eliminar fila',
+    deleteColumn: 'Eliminar columna',
+    deleteTable: 'Eliminar tabla',
+    alignLeft: 'Alinear a la izquierda',
+    alignCenter: 'Centrar',
+    alignRight: 'Alinear a la derecha',
+    viewMode: 'Vista',
+    richText: 'Texto enriquecido',
+    markdownSource: 'Markdown',
     moved: 'Movido a la posición {{position}} de {{total}}'
   },
   user: {
-    loadFailed:
-      'No se pudieron cargar los datos del usuario. Inicia sesión de nuevo.'
+    loadFailed: 'No se pudo cargar tu cuenta. Inicia sesión de nuevo.'
   },
   userSettings: {
     notSignedIn: 'Sesión no iniciada',
@@ -28,12 +60,14 @@ const es: TranslationSchema = {
     editorSettings: 'Ajustes del editor',
     account: 'Cuenta',
     logOut: 'Cerrar sesión',
-    logIn: 'Iniciar sesión'
+    logIn: 'Iniciar sesión',
+    signUp: 'Registrarse'
   },
   theming: {
     light: 'Claro',
     dark: 'Oscuro'
   },
+  consent: consentEs,
   hexEditor: {
     wordView: 'Palabras',
     byteView: 'Bytes',
@@ -47,6 +81,7 @@ const es: TranslationSchema = {
     activeAddress: 'Dirección',
     value: 'Valor',
     noActiveCell: 'Ninguna celda seleccionada',
+    notLoaded: 'Sin cargar',
     clear: 'Vaciar',
     copy: 'Copiar',
     follow: 'Seguir',
@@ -60,8 +95,25 @@ const es: TranslationSchema = {
       fpsCounter: 'Contador de FPS',
       showGrid: 'Mostrar cuadrícula',
       autoStartSimulation: 'Iniciar la simulación automáticamente',
-      dragSelectionInPanMode: 'Arrastrar la selección en modo Desplazar'
-    }
+      dragSelectionInPanMode: 'Arrastrar la selección en modo Desplazar',
+      highlightConflicts: 'Resaltar conflictos',
+      onboardingTips: 'Mostrar consejos de introducción'
+    },
+    descriptions: {
+      fpsCounter:
+        'Muestra los fotogramas por segundo en la esquina del tablero.',
+      showGrid:
+        'Dibuja la cuadrícula de puntos. Los componentes se ajustan a ella en cualquier caso.',
+      autoStartSimulation:
+        'Pone en marcha el circuito en cuanto entras en la simulación. Desactivado, espera en pausa en el tick 0.',
+      dragSelectionInPanMode:
+        'Un arrastre con Desplazar que empieza dentro de la selección mueve la selección. Desactivado, todo arrastre desplaza la vista.',
+      highlightConflicts:
+        'Durante la simulación, dibuja un cable en naranja cuando las salidas que lo controlan dan valores distintos, o cuando un biestable SR recibió un flanco de reloj con S y R a 1.',
+      onboardingTips:
+        'Muestra un consejo la primera vez que te encuentras con algo nuevo en el editor.'
+    },
+    info: 'Qué hace «{{setting}}»'
   },
   minimap: {
     expand: 'Mostrar minimapa',
@@ -70,9 +122,12 @@ const es: TranslationSchema = {
   components: {
     category: {
       hidden: 'Ocultos',
-      basic: 'Básicos',
-      advanced: 'Avanzados',
-      io: 'Entradas / Salidas',
+      logicGates: 'Puertas lógicas',
+      addersAndSelectors: 'Sumadores y selectores',
+      memory: 'Memoria',
+      timing: 'Temporización',
+      inputs: 'Entradas',
+      outputs: 'Salidas',
       port: 'Puertos',
       user: 'Componentes del usuario'
     } satisfies Record<ComponentCategory, string>,
@@ -80,22 +135,22 @@ const es: TranslationSchema = {
       NOT: {
         name: 'Puerta NO',
         description:
-          'Una puerta NO es una puerta lógica digital que implementa la negación lógica. Se comporta según la tabla de verdad mostrada a la derecha. La salida es ALTA (1) si la entrada es BAJA (0), y BAJA (0) si la entrada es ALTA (1).'
+          'Una puerta NO es una puerta lógica digital que implementa la **negación** lógica. Una entrada ALTA (1) da una salida BAJA (0), y una entrada BAJA (0) una salida ALTA (1).'
       },
       AND: {
         name: 'Puerta Y',
         description:
-          'Una puerta Y es una puerta lógica digital que implementa la conjunción lógica. Se comporta según la tabla de verdad mostrada a la derecha. La salida es ALTA (1) solo si ambas entradas de la puerta Y son ALTAS (1). Si ninguna o solo una de las entradas es ALTA, la salida es BAJA.'
+          'Una puerta Y es una puerta lógica digital que implementa la **conjunción** lógica. La salida es ALTA (1) solo si todas las entradas de la puerta Y son ALTAS (1). Si alguna entrada es BAJA (0), la salida es BAJA.'
       },
       OR: {
         name: 'Puerta O',
         description:
-          'Una puerta O es una puerta lógica digital que implementa la disyunción lógica. La salida es ALTA (1) si al menos una entrada de la puerta O es ALTA (1). La salida solo es BAJA (0) si todas las entradas son BAJAS (0).'
+          'Una puerta O es una puerta lógica digital que implementa la **disyunción** lógica. La salida es ALTA (1) si al menos una entrada de la puerta O es ALTA (1). La salida solo es BAJA (0) si todas las entradas son BAJAS (0).'
       },
       XOR: {
         name: 'Puerta XOR',
         description:
-          'Una puerta XOR es una puerta lógica digital que implementa la disyunción exclusiva. La salida es ALTA (1) si un número impar de entradas de la puerta XOR son ALTAS (1).'
+          'Una puerta XOR es una puerta lógica digital que implementa la **disyunción exclusiva**. La salida es ALTA (1) si un número impar de entradas de la puerta XOR son ALTAS (1).'
       },
       DELAY: {
         name: 'Retardo',
@@ -105,30 +160,35 @@ const es: TranslationSchema = {
       CLOCK: {
         name: 'Reloj',
         description:
-          'Emite periódicamente un pulso de un tick en su salida. El retardo entre pulsos es configurable; poner la entrada STP en ALTO pausa el reloj.',
+          'Conmuta su salida una y otra vez: en BAJO durante el retardo configurado y luego en ALTO. Como onda cuadrada se queda en ALTO tanto tiempo como estuvo en BAJO; como pulso, un tick. Poner la entrada `STP` en ALTO detiene el reloj y mantiene su salida en BAJO, y empieza un ciclo nuevo en cuanto `STP` vuelve a BAJO.',
         options: {
+          mode: 'Forma de onda',
           speed: 'Retardo'
+        },
+        modes: {
+          square: 'Cuadrada',
+          pulse: 'Pulso'
         }
       },
       TUNNEL: {
         name: 'Túnel',
         description:
-          'Funciona como un cable, pero sin cables: todos los túneles con la misma etiqueta están conectados eléctricamente.'
+          'Funciona como un cable, pero sin cables: todos los túneles con la **misma etiqueta** están conectados eléctricamente.'
       },
       HALF_ADDER: {
         name: 'Semisumador',
         description:
-          'Suma dos números de 1 bit. S lleva el bit de suma y C el bit de acarreo.'
+          'Suma dos números de 1 bit. `S` lleva el bit de suma y `C` el bit de acarreo.'
       },
       FULL_ADDER: {
         name: 'Sumador completo',
         description:
-          'Suma tres números de 1 bit (dos sumandos y un acarreo de entrada). S lleva el bit de suma y C el bit de acarreo.'
+          'Suma tres números de 1 bit (dos sumandos y un acarreo de entrada). `S` lleva el bit de suma y `C` el bit de acarreo.'
       },
       ROM: {
         name: 'ROM',
         description:
-          'Una memoria de solo lectura (ROM) es un tipo de memoria no volátil usada en ordenadores y otros dispositivos electrónicos. Los datos almacenados en la ROM no se pueden modificar electrónicamente tras la fabricación del dispositivo de memoria.',
+          'Memoria de solo lectura. Las salidas llevan la palabra almacenada en la dirección presente en las entradas `A`. Su contenido se fija con **Editar contenido** y no cambia mientras la simulación está en marcha.',
         options: {
           wordSize: 'Tamaño de palabra',
           addressSize: 'Tamaño de dirección',
@@ -139,30 +199,35 @@ const es: TranslationSchema = {
       D_FF: {
         name: 'Biestable D',
         description:
-          'Almacena un bit de estado. El estado en D se guarda en el flanco ascendente de CLK; Q lleva el estado y !Q su inverso.'
+          'Almacena un bit de estado. El estado en `D` se guarda en el flanco ascendente de `CLK`; `Q` lleva el estado y `!Q` su inverso.'
       },
       JK_FF: {
         name: 'Biestable JK',
         description:
-          'Almacena un bit de estado. En el flanco ascendente de CLK, una J ALTA activa el estado y una K ALTA lo reinicia; ambas ALTAS lo conmutan. Q lleva el estado y !Q su inverso.'
+          'Almacena un bit de estado. En el flanco ascendente de `CLK`:\n\n- una `J` ALTA activa el estado\n- una `K` ALTA lo reinicia\n- ambas ALTAS lo conmutan\n\n`Q` lleva el estado y `!Q` su inverso.'
       },
       SR_FF: {
         name: 'Biestable SR',
         description:
-          'Almacena un bit de estado. En el flanco ascendente de CLK, una S ALTA activa el estado y una R ALTA lo reinicia. Q lleva el estado y !Q su inverso.'
+          'Almacena un bit de estado. En el flanco ascendente de `CLK`:\n\n- una `S` ALTA activa el estado\n- una `R` ALTA lo reinicia\n\n`Q` lleva el estado y `!Q` su inverso.'
       },
       RNG: {
         name: 'Generador de números aleatorios',
         description:
-          'Genera datos aleatorios en sus salidas en cada flanco ascendente de CLK.'
+          'Genera datos aleatorios en sus salidas en cada flanco ascendente de `CLK`.'
       },
       RAM: {
         name: 'RAM',
         description:
-          'Memoria de acceso aleatorio. En el flanco ascendente de CLK lee la palabra direccionada hacia las salidas o, mientras WE está en ALTO, almacena en la dirección actual la palabra presente en las entradas de datos.',
+          'Memoria de acceso aleatorio. Las salidas muestran la palabra almacenada en la dirección presente en las entradas de dirección. En el flanco ascendente de `CLK`, mientras `WE` está en ALTO, almacena en esa dirección la palabra de las entradas de datos. Con lectura por reloj, las salidas solo cambian en el flanco ascendente de `CLK`, que lee la palabra direccionada o muestra la que acaba de almacenar.',
         options: {
           wordSize: 'Tamaño de palabra',
-          addressSize: 'Tamaño de dirección'
+          addressSize: 'Tamaño de dirección',
+          read: 'Lectura'
+        },
+        reads: {
+          async: 'Inmediata',
+          clocked: 'Por reloj'
         }
       },
       DECODER: {
@@ -173,7 +238,10 @@ const es: TranslationSchema = {
       ENCODER: {
         name: 'Codificador',
         description:
-          'Codificador binario de 2^n a n. Emite el índice binario de la entrada activa de mayor peso.'
+          'Codificador binario de 2ⁿ a n. Emite el índice binario de la entrada activa de mayor peso. `V` está en HIGH mientras alguna entrada esté activa, de modo que la entrada 0 se distingue de ninguna entrada.',
+        options: {
+          validOutput: 'Salida de validez'
+        }
       },
       MUX: {
         name: 'Multiplexor',
@@ -186,9 +254,10 @@ const es: TranslationSchema = {
       DEMUX: {
         name: 'Demultiplexor',
         description:
-          'Encamina la entrada de datos I hacia la salida direccionada por las líneas de selección.',
+          'Encamina la entrada de datos `I` hacia la salida direccionada por las líneas de selección.',
         options: {
-          selectLines: 'Líneas de selección'
+          selectLines: 'Líneas de selección',
+          pinOrder: 'Orden de los pines'
         }
       },
       TEXT: {
@@ -197,7 +266,7 @@ const es: TranslationSchema = {
           'Una anotación de texto colocada en el lienzo. El punto marca el punto de anclaje de la etiqueta.',
         options: {
           text: 'Editar texto',
-          placeholder: 'Escribe el texto...',
+          placeholder: 'Escribe el texto…',
           fontSize: 'Tamaño de fuente'
         }
       },
@@ -214,7 +283,120 @@ const es: TranslationSchema = {
       BUTTON: {
         name: 'Botón',
         description:
-          'Un pulsador momentáneo. Mientras la simulación está en marcha, al hacer clic emite un único pulso en su salida.'
+          'Un pulsador. Mientras la simulación está en marcha, su salida está encendida mientras se mantenga pulsado.'
+      },
+      GAMEPAD: {
+        name: 'Mando',
+        description:
+          'Un mando de juego con una salida por botón, encendida mientras el botón se mantenga pulsado. Mientras la simulación está en marcha, al hacer clic se abre un mando en pantalla que se maneja con el teclado, el ratón o un mando físico.',
+        options: {
+          face: 'Botones de acción',
+          shoulders: 'Botones laterales',
+          menu: 'Botones de menú',
+          names: 'Nombres de botones'
+        },
+        controls: {
+          up: 'Arriba',
+          down: 'Abajo',
+          left: 'Izquierda',
+          right: 'Derecha',
+          a: 'A',
+          b: 'B',
+          x: 'X',
+          y: 'Y',
+          l: 'L',
+          r: 'R',
+          select: 'Select',
+          start: 'Start'
+        },
+        pad: {
+          control: '{{control}}, tecla {{key}}',
+          namedControl: '{{name}}, {{control}}, tecla {{key}}',
+          unboundControl: '{{control}}, sin tecla',
+          namedUnboundControl: '{{name}}, {{control}}, sin tecla',
+          nameFor: 'Nombre de {{control}}',
+          pressKey: 'Pulsa una tecla…'
+        },
+        window: {
+          keyboardActive: 'Teclado activo',
+          keyboardInactive: 'Haz clic aquí para usar el teclado',
+          assignKeys: 'Asignar teclas',
+          controller: 'Mando',
+          controllerNone: 'Ninguno',
+          controllerHint: 'Pulsa un botón del mando para conectarlo',
+          controllerUnsupported: 'La disposición de este mando no es compatible'
+        },
+        assign: {
+          hint: 'Haz clic en un control y pulsa una tecla',
+          reset: 'Restablecer valores predeterminados',
+          done: 'Listo',
+          prompt: 'Pulsa una tecla para {{control}}',
+          assigned: '{{control}}: {{key}}',
+          swapped: '{{control}}: {{key}} (intercambiada con {{other}})',
+          cleared: '{{control}}: sin tecla',
+          resetDone: 'Teclas restablecidas a los valores predeterminados'
+        },
+        names: {
+          hint: 'Los nombres aparecen junto a los botones y en los puertos. Un campo vacío mantiene el nombre predeterminado.',
+          outsideFont:
+            'Algunos de estos caracteres no se pueden dibujar en la placa, así que las etiquetas de los puertos los omiten.'
+        }
+      },
+      KEYBOARD: {
+        name: 'Teclado',
+        description:
+          'Un teclado.\n\n- `D0`–`D7` llevan el código Latin-1 de la última tecla pulsada\n- `STB` emite un pulso cada vez que se pulsa una tecla\n- `KD` está encendido mientras se mantiene pulsada una tecla\n\nMientras la simulación está en marcha, al hacer clic se abre una ventana que recibe lo que escribes.',
+        window: {
+          field: 'Escribir en el circuito',
+          onD: 'En D',
+          typing: 'Escribiendo en el circuito · Mayús+Tab para salir',
+          clickToType: 'Haz clic aquí para escribir',
+          tapToType: 'Toca aquí para escribir',
+          skippedOne: '{{char}} no es Latin-1 y se ha omitido',
+          skippedMany: '{{count}} caracteres no eran Latin-1 y se han omitido',
+          truncated: 'Solo se han enviado los primeros {{limit}} caracteres',
+          refused:
+            'No se ha enviado nada: espera a que se envíen los caracteres pendientes',
+          sending: 'Enviando {{count}}…',
+          cancelSending: 'Detener el envío',
+          typeText: 'Escribir texto…'
+        },
+        typeText: {
+          header: 'Escribir texto',
+          label: 'Texto que enviará el teclado',
+          skippedOne: '{{char}} no es Latin-1 y se omitirá',
+          skippedMany: '{{count}} caracteres no son Latin-1 y se omitirán',
+          doesNotFit:
+            'Espera a que se envíen los caracteres pendientes: este texto aún no cabe detrás de ellos',
+          send: 'Enviar',
+          cancel: 'Cancelar'
+        }
+      },
+      TERMINAL: {
+        name: 'Terminal',
+        description:
+          'Una pantalla de texto. En el flanco ascendente de `CLK`, muestra el carácter cuyo código está en `D0`–`D7`. Códigos como el salto de línea y el retroceso mueven el cursor en su lugar.\n\nMientras la simulación está en marcha, al hacer clic en él se abre una ventana con todo lo que ha mostrado.',
+        options: {
+          columns: 'Columnas',
+          rows: 'Filas',
+          textSize: 'Tamaño de texto'
+        },
+        textSizes: {
+          small: 'Pequeño',
+          large: 'Grande'
+        },
+        window: {
+          copyAll: 'Copiar todo',
+          copied: 'Texto del terminal copiado al portapapeles.',
+          copyFailed: 'No se pudo copiar el texto del terminal.',
+          lostOne: '1 carácter perdido',
+          lostMany: '{{count}} caracteres perdidos'
+        }
+      },
+      PULSE_BUTTON: {
+        name: 'Botón de pulso',
+        description:
+          'Un botón de pulso. Mientras la simulación está en marcha, al hacer clic emite un único pulso de un tick en su salida.'
       },
       SWITCH: {
         name: 'Interruptor',
@@ -237,7 +419,7 @@ const es: TranslationSchema = {
       LED_MATRIX: {
         name: 'Matriz de LEDs',
         description:
-          'Una cuadrícula cuadrada de LEDs que muestra una imagen. En el flanco ascendente de CLK, las entradas de datos se enclavan en la fila direccionada por las entradas de dirección.',
+          'Una cuadrícula cuadrada de LEDs que muestra una imagen. En el flanco ascendente de `CLK`, las entradas de datos se enclavan en la fila direccionada por las entradas de dirección.',
         options: {
           size: 'Ancho/Alto'
         }
@@ -248,12 +430,19 @@ const es: TranslationSchema = {
       inputs: 'Entradas',
       outputs: 'Salidas',
       label: 'Etiqueta',
-      index: 'Índice'
+      index: 'Índice',
+      nameMap: {
+        summary: '{{count}} con nombre'
+      },
+      memory: {
+        summary: '{{count}} de {{total}} palabras ocupadas',
+        empty: 'Vacía'
+      }
     }
   },
   sideBar: {
     title: 'Componentes',
-    search: 'Buscar..',
+    search: 'Buscar…',
     outdatedInstances:
       '{{count}} instancia(s) colocada(s) de este componente están desactualizadas'
   },
@@ -281,15 +470,15 @@ const es: TranslationSchema = {
       pan: 'Desplazar: arrastra para mover el tablero · desplaza o pellizca para hacer zoom',
       wireTool:
         'Herramienta de cable: arrastra para dibujar · toca un puerto para negarlo · toca un cruce para conectar/desconectar · toca para seleccionar · {{additiveKey}} para añadir o quitar',
-      sel: 'Seleccionar: arrastra un marco para seleccionar · arrastra la selección para moverla · mantén {{scissorKey}} para cortar cables',
+      sel: 'Seleccionar: arrastra un recuadro para seleccionar · arrastra la selección para moverla · mantén {{scissorKey}} para cortar cables',
       selExact:
-        'Selección de corte: arrastra un marco para seleccionar · los cables se cortan en su borde',
+        'Cortar cables: arrastra un recuadro para seleccionar · los cables se cortan en su borde',
       erase:
         'Borrador: haz clic o arrastra sobre los elementos para eliminarlos',
       placeComp:
         'Colocando {{componentName}}: arrastra para posicionar · Esc para cancelar',
       simulation:
-        'Simulando: haz clic en botones e interruptores · arrastra para desplazar'
+        'Simulando: haz clic en interruptores, pulsa botones · arrastra para desplazar'
     } satisfies Record<WorkMode, string>,
     saved: 'Guardado',
     unsaved: 'Cambios sin guardar',
@@ -381,9 +570,6 @@ const es: TranslationSchema = {
           changelog: {
             label: 'Novedades'
           },
-          legacyEditor: {
-            label: 'Abrir el editor antiguo'
-          },
           cookieSettings: {
             label: 'Ajustes de cookies'
           },
@@ -423,20 +609,35 @@ const es: TranslationSchema = {
     loadError: 'No se pudo cargar esta página.',
     back: 'Todos los temas',
     learnMore: 'Más información',
+    help: 'Ayuda',
+    search: {
+      label: 'Buscar en la documentación',
+      placeholder: 'Buscar…',
+      loading: 'Cargando la documentación…',
+      empty: 'Nada coincide con «{{query}}».'
+    },
     sections: {
       basics: 'Conceptos básicos',
       building: 'Construir circuitos',
+      components: 'Componentes',
       simulation: 'Simulación',
       projects: 'Proyectos y nube'
     },
     pages: {
       gettingStarted: 'Primeros pasos',
       boardAndTools: 'Tablero y herramientas',
+      phonesAndTablets: 'Móviles y tabletas',
       shortcuts: 'Atajos de teclado',
-      settings: 'Ajustes y apariencia',
-      componentsAndOptions: 'Componentes y opciones',
+      settings: 'Ajustes',
       wiresAndConnections: 'Cables y conexiones',
       customComponents: 'Componentes personalizados',
+      componentsAndOptions: 'Componentes y opciones',
+      logicGates: 'Puertas lógicas',
+      addersAndSelectors: 'Sumadores y selectores',
+      memory: 'Memoria',
+      clockAndTiming: 'Temporización',
+      inputs: 'Entradas',
+      outputs: 'Salidas',
       simulation: 'Simulación',
       inspection: 'Inspección y monitores',
       savingAndFiles: 'Guardar y archivos',
@@ -446,7 +647,7 @@ const es: TranslationSchema = {
   aboutDialog: {
     header: 'Acerca de Logigator',
     tagline:
-      'Un editor y simulador open source de circuitos lógicos digitales.',
+      'Un editor y simulador de circuitos lógicos, gratuito y open source.',
     version: 'Versión',
     commit: 'Commit',
     buildDate: 'Fecha de compilación',
@@ -455,7 +656,7 @@ const es: TranslationSchema = {
     copyright: '© 2019–{{year}} Logigator',
     repository: 'Repositorio',
     privacyPolicy: 'Política de privacidad',
-    imprint: 'Pie de imprenta',
+    imprint: 'Aviso legal',
     close: 'Cerrar'
   },
   openProjectDialog: {
@@ -465,7 +666,7 @@ const es: TranslationSchema = {
     fromFile: 'Desde archivo',
     notLoggedIn: 'Inicia sesión para ver tus proyectos en la nube',
     close: 'Cerrar',
-    loading: 'Cargando...',
+    loading: 'Cargando…',
     uploadPrompt: 'Abre un archivo de circuito guardado en tu dispositivo.',
     chooseFile: 'Elegir archivo',
     deleteProject: 'Eliminar proyecto',
@@ -474,10 +675,10 @@ const es: TranslationSchema = {
     shareProject: 'Compartir',
     cancelRename: 'Cancelar',
     deleteConfirmMessage:
-      '¿Seguro que quieres eliminar "{{name}}"? Esto no se puede deshacer.',
+      '¿Seguro que quieres eliminar «{{name}}»? Esto no se puede deshacer.',
     deleteAccept: 'Eliminar',
     deleteReject: 'Cancelar',
-    searchPlaceholder: 'Buscar proyectos...',
+    searchPlaceholder: 'Buscar proyectos…',
     searchButton: 'Buscar',
     noSearchResults: 'No se encontraron proyectos',
     lastEdited: 'Última edición',
@@ -501,11 +702,9 @@ const es: TranslationSchema = {
     destinationLocal: 'Local',
     notLoggedIn:
       'Debes haber iniciado sesión para guardar proyectos en la nube.',
-    public: 'Público',
-    publicInfo:
-      'Los proyectos públicos se publican en tu perfil y son accesibles para cualquiera mediante un enlace para compartir. Los proyectos privados solo son visibles para ti.',
+    visibilityLabel: 'Quién puede abrirlo',
     localWarning:
-      'Los proyectos locales no se conservan entre dispositivos y pueden perderse.'
+      'Un proyecto local solo existe en este navegador. Si borras los datos del sitio en el navegador, se elimina.'
   },
   newComponentDialog: {
     name: 'Nombre',
@@ -516,38 +715,64 @@ const es: TranslationSchema = {
     storeLocal: 'Local',
     notLoggedIn:
       'Debes haber iniciado sesión para guardar componentes en la nube.',
-    public: 'Público',
-    publicInfo:
-      'Los componentes públicos se publican en tu perfil y son accesibles para cualquiera mediante un enlace para compartir. Los componentes privados solo son visibles para ti.',
+    visibilityLabel: 'Quién puede abrirlo',
     localWarning:
-      'Los componentes locales no se conservan entre dispositivos y pueden perderse.',
+      'Un componente local solo existe en este navegador. Si borras los datos del sitio en el navegador, se elimina.',
     create: 'Crear'
   },
   uploadComponent: {
     button: 'Subir a la nube',
     signInTooltip: 'Inicia sesión para subir a la nube'
   },
+  visibility: {
+    private: {
+      label: 'Solo tú',
+      hint: 'Solo tú puedes abrirlo, incluso con el enlace.'
+    },
+    unlisted: {
+      label: 'Cualquiera con el enlace',
+      hint: 'Quien tenga el enlace puede abrirlo en modo lectura. No aparece en las listas de la comunidad ni en los buscadores.'
+    },
+    public: {
+      label: 'Todo el mundo',
+      hint: 'Aparece en la comunidad, está abierto a todos y los buscadores lo indexan.'
+    }
+  },
   shareDialog: {
+    /** Sent with the link by a share sheet, and the embed's alt text. */
+    caption: '«{{name}}» en Logigator',
     header: 'Compartir proyecto',
     headerComponent: 'Compartir componente',
-    intro:
-      'Cualquiera que tenga este enlace puede abrir “{{name}}” en modo de solo lectura y clonarlo en su propia biblioteca.',
+    intro: 'Elige quién puede abrir «{{name}}».',
+    visibilityLabel: 'Quién puede abrirlo',
     linkLabel: 'Enlace para compartir',
+    noLink:
+      'Mientras el documento sea privado, solo tú puedes abrirlo. El enlace no cambia: elige «Cualquiera con el enlace» para volver a repartirlo o para regenerarlo.',
+    viewPublicPage: 'Ver la página de la comunidad',
     copy: 'Copiar enlace',
     linkCopied: 'Enlace para compartir copiado al portapapeles.',
     copyFailed: 'No se pudo copiar el enlace al portapapeles.',
     regenerate: 'Regenerar enlace',
     regenerateWarning:
-      'Regenerar crea un enlace nuevo e invalida permanentemente el actual: cualquiera que use el enlace antiguo perderá el acceso.',
+      'El enlace anterior deja de funcionar de inmediato, para todos los que lo tengan. El circuito en sí no cambia.',
+    linkPublished:
+      'El enlace no se ha sustituido: el documento está publicado y su enlace es la dirección de su página.',
     linkRegenerated: 'Se generó un nuevo enlace para compartir.',
     regenerateFailed: 'No se pudo regenerar el enlace para compartir.',
-    public: 'Público',
-    publicInfoProject:
-      'Los proyectos públicos se publican en tu perfil y cualquiera puede descubrirlos. Los proyectos privados solo son accesibles mediante el enlace para compartir.',
-    publicInfoComponent:
-      'Los componentes públicos se publican en tu perfil y cualquiera puede descubrirlos. Los componentes privados solo son accesibles mediante el enlace para compartir.',
     visibilityUpdated: 'Visibilidad actualizada.',
     visibilityFailed: 'No se pudo actualizar la visibilidad.',
+    share: 'Compartir',
+    embed: 'Insertar',
+    embedHide: 'Ocultar inserción',
+    embedCopy: 'Copiar código',
+    embedCopied: 'Código de inserción copiado al portapapeles.',
+    embedCopyFailed:
+      'No se pudo copiar el código de inserción al portapapeles.',
+    embedHint: 'Pégalo en un mensaje de foro, una página wiki o una clase.',
+    formatLabel: 'Formato',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode',
     close: 'Cerrar'
   },
   shareComponent: {
@@ -556,46 +781,42 @@ const es: TranslationSchema = {
   deleteComponent: {
     button: 'Eliminar',
     confirmMessageLocal:
-      '¿Eliminar “{{name}}” de tu biblioteca? Esto es permanente. Las instancias ya colocadas permanecen como copias incrustadas que podrás restaurar más adelante.',
+      '¿Eliminar «{{name}}» de tu biblioteca? Esto es permanente. Las instancias ya colocadas permanecen como copias incrustadas que podrás restaurar más adelante.',
     confirmMessageCloud:
-      '¿Eliminar “{{name}}” de tu biblioteca en la nube? Esto es permanente y su enlace para compartir dejará de funcionar. Las instancias ya colocadas permanecen como copias incrustadas que podrás restaurar más adelante.',
+      '¿Eliminar «{{name}}» de tu biblioteca en la nube? Esto es permanente y su enlace para compartir dejará de funcionar. Las instancias ya colocadas permanecen como copias incrustadas que podrás restaurar más adelante.',
     confirmAccept: 'Eliminar',
     confirmReject: 'Cancelar',
-    deleted: '“{{name}}” se eliminó de tu biblioteca.',
+    deleted: '«{{name}}» se eliminó de tu biblioteca.',
     deleteFailed: 'No se pudo eliminar el componente.'
   },
   uploadDialog: {
     header: 'Subir a la nube',
     introProject:
-      '“{{name}}” se traslada del almacenamiento local a tu biblioteca en la nube, para que puedas acceder a él desde cualquier dispositivo.',
+      '«{{name}}» se traslada del almacenamiento local a tu biblioteca en la nube, para que puedas acceder a él desde cualquier dispositivo.',
     introComponent:
-      '“{{name}}” se traslada de tu biblioteca local a tu biblioteca en la nube, para que puedas usarlo desde cualquier dispositivo.',
+      '«{{name}}» se traslada de tu biblioteca local a tu biblioteca en la nube, para que puedas usarlo desde cualquier dispositivo.',
     introDraft:
-      '“{{name}}” incrusta estos componentes locales. Se subirán a tu biblioteca en la nube junto con él.',
-    depsTitle: 'Estos componentes locales también se publicarán',
+      '«{{name}}» incrusta estos componentes locales. Se subirán a tu biblioteca en la nube junto con él.',
+    depsTitle: 'Estos componentes locales también se subirán',
     depsHint:
       'Un proyecto en la nube solo puede contener componentes en la nube, así que cada uno de estos se sube primero a tu biblioteca en la nube y luego se referencia.',
     unresolvableWarning:
-      '{{count}} componente(s) incrustado(s) ya no se pueden publicar (su entrada en la biblioteca ya no existe) y permanecerán como simples copias incrustadas.',
-    public: 'Público',
-    publicInfoProject:
-      'Los proyectos públicos se publican en tu perfil y son accesibles para cualquiera mediante un enlace para compartir. Los proyectos privados solo son visibles para ti.',
-    publicInfoComponent:
-      'Los componentes públicos se publican en tu perfil y son accesibles para cualquiera mediante un enlace para compartir. Los componentes privados solo son visibles para ti.',
+      '{{count}} componente(s) incrustado(s) ya no se pueden subir porque su entrada en la biblioteca ya no existe. Siguen siendo copias incrustadas.',
+    visibilityLabel: 'Quién puede abrirlo',
     notLoggedIn: 'Debes haber iniciado sesión para subir a la nube.',
     cancel: 'Cancelar',
     upload: 'Subir',
     analyzeFailed: 'No se pudo leer el circuito para preparar la subida.',
     dependencyFailed:
-      'No se pudo subir el componente “{{name}}”. No se subió nada más: inténtalo de nuevo.',
-    uploadFailed: 'No se pudo subir “{{name}}” a la nube.'
+      'No se pudo subir el componente «{{name}}». La subida se detuvo ahí, así que inténtalo de nuevo.',
+    uploadFailed: 'No se pudo subir «{{name}}» a la nube.'
   },
   closeTab: {
     header: 'Cambios sin guardar',
     message:
-      '“{{name}}” tiene cambios sin guardar. ¿Guardarlos antes de cerrar?',
+      '«{{name}}» tiene cambios sin guardar. ¿Guardarlos antes de cerrar?',
     promotionWarning:
-      'Al guardar también se publicarán {{count}} componente(s) local(es) en tu biblioteca en la nube.',
+      'Al guardar también se suben {{count}} componente(s) local(es) a tu biblioteca en la nube.',
     save: 'Guardar',
     discard: 'Descartar',
     cancel: 'Cancelar'
@@ -603,8 +824,8 @@ const es: TranslationSchema = {
   sourceIndicator: {
     cloudTitle: 'Guardado en tu biblioteca en la nube',
     localTitle: 'Guardado solo en este navegador',
-    draftTitle: 'Aún sin guardar: guárdalo en la nube o localmente',
-    shareTitle: 'Abierto desde un enlace para compartir: solo lectura',
+    draftTitle: 'Aún sin guardar. Guárdalo en la nube o en este navegador.',
+    shareTitle: 'Abierto desde un enlace para compartir (solo lectura)',
     label: {
       server: 'Nube',
       browser: 'Local',
@@ -617,8 +838,7 @@ const es: TranslationSchema = {
       browser: 'Guardado solo en este navegador',
       draft: 'Aún sin guardar',
       share: 'Abierto desde un enlace para compartir',
-      embedded:
-        'Copia incrustada: su componente de la biblioteca ya no está disponible'
+      embedded: 'Copia incrustada: su componente de la biblioteca ya no existe'
     }
   },
   toolBar: {
@@ -651,11 +871,23 @@ const es: TranslationSchema = {
     pause: 'Pausar',
     step: 'Paso',
     stopSim: 'Detener',
-    targetSpeed: 'Velocidad objetivo',
-    targetUnit: 'Unidad de velocidad objetivo',
-    targetMode: 'Limitar a la velocidad objetivo',
-    syncToFrame: 'Sincronizar con el fotograma',
-    measuredHz: '{{hz}}Hz',
+    speed: 'Velocidad de simulación',
+    speedFrame: 'Cada fotograma',
+    speedFrameHint:
+      'Un tick por cada refresco de pantalla, así que se dibuja cada cambio.',
+    speedFixed: 'Velocidad fija',
+    speedFixedHint: 'Avanza al ritmo que elijas.',
+    speedMax: 'Lo más rápido posible',
+    speedMaxShort: 'Velocidad máx.',
+    speedMaxHint: 'Sin límite. La pantalla muestra solo algunos de los ticks.',
+    speedRate: 'Ticks por segundo',
+    speedRateHint: 'Por ejemplo 0,5 · 20 · 2,5k · 1M',
+    speedBehind:
+      'Más lento que la velocidad fija: el circuito es demasiado grande para seguir el ritmo.',
+    clocks: 'Relojes a esta velocidad',
+    clockSquare: 'Cuadrada, retardo {{delay}}',
+    clockPulse: 'Pulso, retardo {{delay}}',
+    clocksMore: '+{{count}} más',
     ticks: '{{ticks}} ticks'
   },
   mobile: {
@@ -671,20 +903,20 @@ const es: TranslationSchema = {
     info: 'Información',
     debug: 'Depuración',
     unexpectedError:
-      'Algo salió mal. Es posible que algunas acciones no se hayan completado: consulta la consola del navegador para más detalles.'
+      'Algo salió mal y puede que algunas acciones no hayan terminado. Los detalles están en la consola del navegador.'
   },
   clipboard: {
     clear: 'Vaciar portapapeles',
     pastePartial:
-      'Algunos elementos no se pudieron pegar: su tipo de componente ya no está disponible.',
+      'Algunos elementos no se pegaron porque su tipo de componente ya no existe.',
     pastePlugsSkipped:
-      'Los conectores de entrada y salida no se pegaron: solo se admiten dentro de componentes personalizados.'
+      'Los conectores de entrada y salida no se pegaron. Solo funcionan dentro de un componente personalizado.'
   },
   wireRepair: {
     repaired:
       'Se repararon {{count}} problema(s) de cables. Comprueba que tu circuito siga funcionando como esperas antes de guardar.',
     loadDetected:
-      'Este circuito tiene {{count}} problema(s) de cables, lo que puede hacer que las conexiones se comporten de forma inesperada.',
+      'Este circuito tiene {{count}} problema(s) de cables, como cables superpuestos. Un cable con un problema puede estar conectado de otra forma de lo que parece.',
     repairAction: 'Reparar cables',
     leftSimulation: 'La simulación se detuvo para reparar los cables.',
     clean: 'No se encontraron problemas de cables.'
@@ -693,18 +925,16 @@ const es: TranslationSchema = {
     title: 'Informar de un problema',
     badgeTooltip: 'Informar de un error',
     intro:
-      '¿Has encontrado un error? Describe qué estabas haciendo cuando ocurrió: cuanto más detalle, más fácil será corregirlo.',
+      'Describe qué estabas haciendo cuando ocurrió el error. Lo que más ayuda son los pasos para volver a provocarlo.',
     errorIntro:
       'Se ha producido un error inesperado. Cuéntanos qué estabas haciendo para que podamos localizarlo.',
     errorDetails: 'Detalles del error',
-    legacyEditorNotice: '¿Esto te bloquea?',
-    legacyEditorLink: 'Abrir el editor antiguo',
     placeholder: '¿Qué ha ocurrido?',
     dataNotice:
       'Tu proyecto actual, los detalles del navegador y la actividad reciente se adjuntan para ayudarnos a reproducir el problema.',
     send: 'Enviar informe',
     cancel: 'Cancelar',
-    sent: 'Gracias: tu informe se ha enviado.',
+    sent: 'Gracias, tu informe se ha enviado.',
     failed: 'No se pudo enviar el informe. Inténtalo de nuevo.'
   },
   persistence: {
@@ -724,8 +954,10 @@ const es: TranslationSchema = {
     saveFailed: 'No se pudo guardar: {{detail}}',
     saveFailedGeneric: 'No se pudo guardar el proyecto.',
     createFailed: 'No se pudo crear el proyecto: {{detail}}',
+    saveTooLarge:
+      'Este circuito es demasiado grande para guardarlo en la nube. Elimina algunos componentes e inténtalo de nuevo.',
     versionMismatch:
-      'Este proyecto cambió en otro sitio: recárgalo antes de volver a guardarlo.',
+      'Este proyecto se modificó en otro sitio. Recárgalo antes de volver a guardarlo.',
     loadFailed: 'No se pudo cargar el proyecto.',
     componentLoadFailed: 'No se pudo cargar el componente.',
     shareLoadFailed: 'No se pudo cargar el circuito compartido.',
@@ -736,19 +968,23 @@ const es: TranslationSchema = {
     dumpElementCountChanged:
       'El número de elementos del volcado del proyecto cambió al cargar: los identificadores y el historial de acciones no se restauraron.',
     skippedCustomOne:
-      'No se pudo cargar un componente personalizado (falta su definición) y se omitió.',
+      'Se omitió un componente personalizado porque falta su definición.',
     skippedCustomMany:
-      'No se pudieron cargar {{count}} componentes personalizados (faltan sus definiciones) y se omitieron.'
+      'Se omitieron {{count}} componentes personalizados porque faltan sus definiciones.'
+  },
+  browserSupport: {
+    unsupported:
+      'Este navegador no es compatible, así que partes del editor pueden no funcionar. Si tienes problemas, prueba a actualizarlo.'
   },
   editor: {
     rendererInitFailed:
       'No se pudo iniciar el renderizador de gráficos. Puede que tu navegador o GPU no sean compatibles.',
     fontLoadFailed:
-      'No se pudieron cargar las fuentes del editor: algunas etiquetas pueden verse mal.',
+      'Las fuentes del editor no se cargaron, así que algunas etiquetas pueden verse mal.',
     eraseRestoreFailed:
       'Algunos componentes borrados no se pudieron restaurar.',
     circularDependency:
-      'No se puede colocar este componente aquí: crearía una dependencia circular.'
+      'No se puede colocar este componente aquí. Crearía una dependencia circular.'
   },
   simulation: {
     workerMessageUnreadable:
@@ -757,21 +993,21 @@ const es: TranslationSchema = {
       'No se pudo iniciar el motor de simulación. Puede que tu navegador no admita WebAssembly.',
     workerCrashed: 'La simulación se detuvo inesperadamente.',
     unsupportedComponent:
-      'El componente "{{symbol}}" no es compatible con el simulador.',
+      'El componente «{{symbol}}» no es compatible con el simulador.',
     recursiveComponent:
-      'El componente personalizado "{{name}}" se coloca a sí mismo de forma recursiva.',
+      'El componente personalizado «{{name}}» se coloca a sí mismo dentro de su propio circuito.',
     componentNoCircuit:
-      'El componente personalizado "{{name}}" no tiene circuito para simular.',
+      'El componente personalizado «{{name}}» no tiene circuito para simular.',
     plugMismatch:
-      'El componente personalizado "{{name}}" declara {{declaredInputs}}/{{declaredOutputs}} puertos, pero su circuito tiene {{actualInputs}}/{{actualOutputs}} conectores.'
+      'El componente personalizado «{{name}}» declara {{declaredInputs}}/{{declaredOutputs}} puertos, pero su circuito tiene {{actualInputs}}/{{actualOutputs}} conectores.'
   },
   watch: {
     rendererFailed:
-      'No se pudo abrir la vista de monitor: el renderizador no se pudo iniciar.',
+      'No se pudo abrir la vista de monitor porque el renderizador no se inició.',
     noInnerCircuit:
       'Este componente no tiene circuito interno para inspeccionar.',
     circuitMismatch:
-      'El circuito interno no coincide con la simulación compilada: reinicia la simulación para inspeccionarlo.'
+      'El circuito interno no coincide con la simulación compilada. Reinicia la simulación para inspeccionarlo.'
   },
   componentActions: {
     edit: 'Editar circuito',
@@ -782,10 +1018,10 @@ const es: TranslationSchema = {
     cloudLoadFailed: 'No se pudo cargar el componente desde la nube.',
     view: 'Ver por dentro',
     viewTooltip:
-      'Abre este componente en modo de solo lectura. Pertenece al circuito compartido, así que no se añade nada a tu biblioteca: clona el recurso compartido para conservar una copia.',
+      'Abre este componente en modo de solo lectura. Pertenece al circuito compartido, así que no se añade nada a tu biblioteca. Clona el circuito compartido para conservar una copia.',
     restore: 'Restaurar y editar',
     restoreTooltip:
-      'El maestro de este componente en la biblioteca ya no existe, pero su circuito está incrustado. Restáuralo en tu biblioteca local para editarlo.',
+      'La entrada de este componente en la biblioteca ya no existe, pero su circuito está incrustado en el proyecto. Restáuralo en tu biblioteca local para editarlo.',
     restored: 'Componente restaurado en tu biblioteca local.',
     restoreFailed: 'No se pudo restaurar este componente.',
     signInToEdit: 'Inicia sesión para editar',
@@ -799,7 +1035,7 @@ const es: TranslationSchema = {
     symbol: 'Símbolo',
     description: 'Descripción',
     frozenInstancesHint:
-      'Las instancias ya colocadas conservan sus detalles actuales; usa "Actualizar a la última versión" en una instancia seleccionada para aplicarlos.',
+      'Las instancias colocadas conservan sus detalles actuales. Usa «Actualizar a la última versión» en una instancia seleccionada para aplicar los nuevos.',
     save: 'Guardar',
     saved: 'Detalles del componente actualizados.',
     saveFailed: 'No se pudieron actualizar los detalles del componente.'
@@ -812,7 +1048,7 @@ const es: TranslationSchema = {
     message:
       'Estos documentos en la nube tienen cambios sin guardar. ¿Guardarlos antes de cerrar sesión?',
     promotionWarning:
-      'Al guardar también se publicarán {{count}} componente(s) local(es) en tu biblioteca en la nube.',
+      'Al guardar también se suben {{count}} componente(s) local(es) a tu biblioteca en la nube.',
     save: 'Guardar y cerrar sesión',
     discard: 'Cerrar sesión sin guardar',
     cancel: 'Cancelar',
@@ -823,7 +1059,7 @@ const es: TranslationSchema = {
     logoutFailed: 'No se pudo cerrar la sesión. Inténtalo de nuevo.',
     saveLoggedOut:
       'Has cerrado sesión. Inicia sesión de nuevo para guardar en la nube.',
-    saveForeign: '“{{name}}” pertenece a otra cuenta y no se puede guardar.'
+    saveForeign: '«{{name}}» pertenece a otra cuenta y no se puede guardar.'
   },
   routing: {
     notFound: 'No se pudo abrir ese enlace.'
@@ -836,6 +1072,7 @@ const es: TranslationSchema = {
     background: 'Fondo',
     backgroundHint: 'Color del tema y cuadrícula',
     quality: 'Calidad',
+    lossless: 'Sin pérdida',
     dimensions: '{{width}} × {{height}} px',
     clampedHint: '(reducido para ajustarse a los límites del dispositivo)',
     export: 'Exportar',
@@ -898,15 +1135,12 @@ const es: TranslationSchema = {
       recordPrompt: 'Pulsa las teclas…'
     },
     toast: {
-      reassignedFrom: 'Atajo desasignado de "{{action}}"',
+      reassignedFrom: 'Atajo desasignado de «{{action}}»',
       loadFailed:
-        'No se pudieron cargar los atajos configurados; se usarán los predeterminados.'
+        'No se pudieron cargar tus atajos, así que se usan los predeterminados.'
     }
   },
   onboarding: {
-    settings: {
-      showTips: 'Mostrar consejos de introducción'
-    },
     menu: {
       showTipsAgain: 'Mostrar los consejos de nuevo'
     },
@@ -929,24 +1163,26 @@ const es: TranslationSchema = {
       wireTapActions:
         'Arrastra para dibujar cables. <strong>Toca un puerto</strong> para añadir o quitar una burbuja de negación, o toca un cruce para conectar o dividir cables.',
       scissorSelectDesktop:
-        'La selección de tijera corta los cables en el borde del recuadro. Mantén <strong>Alt</strong> para activarla mientras seleccionas con el recuadro.',
+        '<strong>Cortar cables</strong> corta todos los cables en el borde del recuadro de selección. Mantén <strong>Alt</strong> mientras arrastras un recuadro para activarlo.',
       scissorSelectCompact:
-        'La selección de tijera corta los cables en el borde del recuadro.',
+        '<strong>Cortar cables</strong> corta todos los cables en el borde del recuadro de selección.',
       eraser: 'Arrastra sobre cualquier cosa para eliminarla.',
       simControls:
-        'La edición está bloqueada mientras se ejecuta. Usa estos controles para pausar, avanzar paso a paso y fijar la velocidad; los botones e interruptores siguen siendo clicables.',
+        'La edición está bloqueada mientras la simulación está en marcha. Estos botones la pausan, la avanzan paso a paso y fijan su velocidad. Los interruptores y botones del tablero siguen respondiendo.',
       selectionActions:
-        'Gira la selección con estos botones, o pulsa <strong>R</strong> / <strong>Shift+R</strong>. Muévela con las <strong>teclas de flecha</strong>.',
+        'Gira la selección con estos botones o con <strong>R</strong> y <strong>Shift+R</strong>. Las teclas de flecha la mueven.',
       pastePlacementDesktop:
-        'Los elementos pegados aparecen como un fantasma: arrástralos a un sitio libre y suelta para colocarlos, o pulsa Esc para cancelar.',
+        'Los elementos pegados flotan sobre el tablero hasta que los sueltas. Arrástralos a un sitio libre y suelta, o pulsa Esc para cancelar.',
       pastePlacementCompact:
-        'Los elementos pegados aparecen como un fantasma: arrástralos a un sitio libre y levanta el dedo para colocarlos, o toca fuera para cancelar.',
+        'Los elementos pegados flotan sobre el tablero hasta que los sueltas. Arrástralos a un sitio libre y levanta el dedo, o toca en otro sitio para cancelar.',
       portsPanelDesktop:
         'Aquí viven los conectores de este componente: coloca <strong>Entrada</strong> y <strong>Salida</strong> desde este panel, luego arrastra las filas para fijar el orden de los puertos y escribe sus nombres.',
       portsPanelCompact:
-        'Aquí dentro viven los conectores de este componente: coloca <strong>Entrada</strong> y <strong>Salida</strong> desde este panel, luego arrastra las filas para fijar el orden de los puertos y escribe sus nombres.',
+        'Aquí viven los conectores de este componente: coloca <strong>Entrada</strong> y <strong>Salida</strong> desde este panel, luego arrastra las filas para fijar el orden de los puertos y escribe sus nombres.',
       panZoomCompact:
-        'Arrastra con dos dedos para desplazar, pellizca para hacer zoom. Con un solo dedo solo se desplaza en el modo de desplazamiento.'
+        'Arrastra con dos dedos para desplazar, pellizca para hacer zoom. Con un solo dedo solo se desplaza en el modo de desplazamiento.',
+      wireConflict:
+        'Un <strong>cable naranja</strong> tiene un conflicto: dos salidas le dan valores distintos, o un biestable SR recibió un flanco de reloj con S y R a 1. Conecta una sola salida a cada cable y no pongas S y R a 1 a la vez. La simulación sigue en marcha, y el cable sigue contando como 1 mientras al menos una salida le dé 1. El ajuste <strong>Resaltar conflictos</strong> lo desactiva.'
     },
     tutorials: {
       gettingStarted: {
@@ -958,7 +1194,7 @@ const es: TranslationSchema = {
           moveAround: {
             title: 'Moverse',
             textDesktop:
-              'Desplaza para hacer zoom, arrastra con el botón derecho para desplazarte.',
+              'Desplaza para hacer zoom, arrastra con el botón derecho o el botón central para desplazarte.',
             textCompact:
               'Pellizca para hacer zoom, arrastra con dos dedos para desplazarte.'
           },
@@ -969,21 +1205,21 @@ const es: TranslationSchema = {
             textCompact:
               'Toca <strong>+</strong> para abrir tus bloques de construcción, elige <strong>Y</strong> y luego toca el lienzo para colocarla.',
             nudge:
-              'Eso no es una puerta Y: elige <strong>Y</strong> para esta (puedes quitar piezas con el borrador).'
+              'Eso no es una puerta Y. Elige <strong>Y</strong> para este paso. El borrador quita la otra pieza.'
           },
           addSwitches: {
             title: 'Añade dos interruptores',
             textDesktop:
               'Ahora coloca dos entradas de <strong>interruptor</strong> a la izquierda de la puerta. ({{placed}} de {{total}} colocados)',
             textCompact:
-              'Toca <strong>+</strong>, elige un <strong>interruptor</strong> y luego toca el lienzo: coloca dos a la izquierda de la puerta. ({{placed}} de {{total}} colocados)'
+              'Toca <strong>+</strong>, elige un <strong>interruptor</strong> y luego toca el lienzo a la izquierda de la puerta. Coloca dos. ({{placed}} de {{total}} colocados)'
           },
           addLed: {
             title: 'Añade un LED',
             textDesktop:
-              'Coloca un <strong>LED</strong> a la derecha: esa es tu salida.',
+              'Coloca un <strong>LED</strong> a la derecha de la puerta. Muestra la salida de la puerta.',
             textCompact:
-              'Toca <strong>+</strong>, elige el <strong>LED</strong> y luego toca a la derecha de la puerta: esa es tu salida.'
+              'Toca <strong>+</strong>, elige el <strong>LED</strong> y luego toca a la derecha de la puerta. Muestra la salida de la puerta.'
           },
           wireUp: {
             title: 'Conéctalo con cables',
@@ -991,7 +1227,7 @@ const es: TranslationSchema = {
           },
           startSim: {
             title: 'Inicia la simulación',
-            text: 'Pulsa <strong>Iniciar</strong> para alimentar tu circuito. La edición se bloquea mientras se ejecuta.'
+            text: 'Pulsa <strong>Iniciar</strong> para poner en marcha tu circuito. La edición está bloqueada mientras funciona.'
           },
           flipSwitch: {
             title: 'Acciona un interruptor',
@@ -1001,11 +1237,11 @@ const es: TranslationSchema = {
               'Toca un interruptor para alternarlo. Enciende <strong>ambos</strong> y observa cómo se ilumina el LED.'
           },
           complete: {
-            title: '¡Todo listo!',
+            title: 'Tu circuito funciona',
             textDesktop:
-              'Has construido una puerta Y funcional y has encendido el LED: ¡bien hecho!<br>A partir de aquí, hazlo tuyo: añade más componentes, conecta circuitos más grandes y guarda tu trabajo cuando te guste.<br><br>¿Necesitas ayuda más adelante? El menú <strong>Ayuda</strong> tiene de nuevo este tutorial, las Novedades y más. ¡Diviértete construyendo!',
+              'El LED solo se enciende mientras ambos interruptores están encendidos: una puerta Y da ALTO solo cuando todas sus entradas están en ALTO.<br><br>Para volver a hacer este tutorial, elige «Mostrar los consejos de nuevo» en el menú <strong>Ayuda</strong>. La documentación está en el mismo menú.',
             textCompact:
-              'Has construido una puerta Y funcional y has encendido el LED: ¡bien hecho!<br>A partir de aquí, hazlo tuyo: añade más componentes, conecta circuitos más grandes y guarda tu trabajo cuando te guste.<br><br>¿Necesitas ayuda más adelante? Abre el <strong>menú</strong> para ver de nuevo este tutorial, las Novedades y más. ¡Diviértete construyendo!'
+              'El LED solo se enciende mientras ambos interruptores están encendidos: una puerta Y da ALTO solo cuando todas sus entradas están en ALTO.<br><br>Para volver a hacer este tutorial, elige «Mostrar los consejos de nuevo» en el <strong>menú</strong>. La documentación está en el mismo menú.'
           }
         }
       }

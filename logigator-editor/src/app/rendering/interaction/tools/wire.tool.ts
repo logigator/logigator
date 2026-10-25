@@ -2,7 +2,7 @@ import { Point, Rectangle } from 'pixi.js';
 import { Project } from '../../../project/project';
 import { Component, PortSide } from '../../../components/component';
 import { Wire } from '../../../wires/wire';
-import { CUSTOM_TYPE_ID_BASE } from '../../../components/component-type.enum';
+import { acceptsPortNegation } from '../../../components/port-negation';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
 import { Action } from '../../../actions/action';
 import { TogglePortNegationAction } from '../../../actions/actions/toggle-port-negation.action';
@@ -299,9 +299,10 @@ export class WireTool implements BoardTool {
   }
 
   /**
-   * Nearest negatable port to a grid-space point, within tolerance. Rejects
-   * placed custom instances: their external ports are not independently
-   * negatable.
+   * Nearest negatable port to a grid-space point, within tolerance. Uses the
+   * quad-tree range query (never iterates every component). A type
+   * {@link acceptsPortNegation} refuses is skipped unless the port already
+   * carries a bubble, which stays removable.
    *
    * Two tips coincide where an output stub meets an input head-on, so reach
    * alone cannot say which port a tap means. The pick is the port whose
@@ -318,7 +319,7 @@ export class WireTool implements BoardTool {
     let best: PortHit | null = null;
     let bestAnchorDist = Infinity;
     for (const comp of project.queryComponentsInRange(queryRect)) {
-      if (comp.config.type >= CUSTOM_TYPE_ID_BASE) continue;
+      const negatable = acceptsPortNegation(comp.config.type);
       const points = comp.connectionPoints;
       for (let i = 0; i < points.length; i++) {
         const dx = points[i].x - localPoint.x;
@@ -328,6 +329,7 @@ export class WireTool implements BoardTool {
         }
         const side: PortSide = i < comp.numInputs ? 'in' : 'out';
         const index = side === 'in' ? i : i - comp.numInputs;
+        if (!negatable && !comp.isPortNegated(side, index)) continue;
         const anchor = comp.negationBubbleAnchor(side, index);
         const ax = anchor.x - localPoint.x;
         const ay = anchor.y - localPoint.y;

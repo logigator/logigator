@@ -1,4 +1,4 @@
-import { Signal, Type } from '@angular/core';
+import { Signal, signal, Type, WritableSignal } from '@angular/core';
 import { Subject } from 'rxjs';
 import { TranslationKey } from '../translation/translation-key.model';
 
@@ -14,43 +14,47 @@ export abstract class ComponentOption<T = any> {
   public onChange$ = new Subject<T>();
 
   /**
-   * When `true`, this option is omitted from the generic per-component settings
-   * form ({@link ComponentSettingsComponent}). The value still round-trips
-   * through the wire format — it is simply system-managed and never typed by
-   * the user directly (e.g. a plug's `index`, driven by the Ports panel).
+   * Omits the option from the settings form. The value still round-trips
+   * through the wire format; it is system-managed rather than user-typed (a
+   * plug's `index`, driven by the Ports panel).
    */
   public inspectorHidden = false;
 
-  private _value: T;
+  // A signal, so a template or computed reading `value` follows every write —
+  // a commit, an undo, an automation edit — without being told.
+  private readonly _value: WritableSignal<T>;
 
   protected constructor(value: T) {
-    this._value = value;
+    this._value = signal(value);
   }
 
   get value(): T {
-    return this._value;
+    return this._value();
   }
 
   set value(value: T) {
-    this._value = value;
+    this._value.set(value);
     this.onChange$.next(value);
   }
 
   /**
-   * Marks this option as hidden from the inspector and returns `this` for
-   * fluent use in config definitions (`new NumberComponentOption(...).hideFromInspector()`).
+   * Whether writing `value` would leave the option as it is. Identity by
+   * default; a kind whose value is an object compares what it would store.
    */
+  public isCurrent(value: T): boolean {
+    return this._value() === value;
+  }
+
+  /** Returns `this`, for fluent use in config definitions. */
   public hideFromInspector(): this {
     this.inspectorHidden = true;
     return this;
   }
 
   /**
-   * Clones this option (optionally with a new value). Concrete subclasses
-   * implement {@link cloneWithValue}; this template method then copies
-   * cross-cutting flags ({@link inspectorHidden}) so they survive every
-   * clone-based path (deserialization, placement ghosts). Returns the
-   * polymorphic `this` type so callers keep the concrete option subtype.
+   * Subclasses implement {@link cloneWithValue}; this copies the cross-cutting
+   * flags on top, so they survive deserialization and placement ghosts alike.
+   * Returns the polymorphic `this` type, keeping the concrete subtype.
    */
   public clone(initialValue?: T): this {
     const cloned = this.cloneWithValue(initialValue);

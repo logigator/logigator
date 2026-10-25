@@ -4,7 +4,14 @@ import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../testing/configure-test-bed';
-import { makeAnd, makeRom, makeSwitch } from '../../testing/factories';
+import {
+  makeAnd,
+  makeButton,
+  makeGamepad,
+  makeKeyboard,
+  makeRom,
+  makeSwitch
+} from '../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
@@ -25,8 +32,12 @@ import { CustomComponentRegistry } from '../components/custom/custom-component-r
 import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
 import { outputComponentConfig } from '../components/component-types/output/output.config';
 import { RomComponent } from '../components/component-types/rom/rom.component';
+import { ButtonComponent } from '../components/component-types/button/button.component';
+import { GamepadComponent } from '../components/component-types/gamepad/gamepad.component';
+import { GamepadInspection } from '../components/component-types/gamepad/gamepad-inspection';
+import { KeyboardComponent } from '../components/component-types/keyboard/keyboard.component';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { AutomationApiService } from './automation-api.service';
 
 describe('AutomationApiService inspection', () => {
@@ -34,12 +45,16 @@ describe('AutomationApiService inspection', () => {
   let simulation: SimulationService;
   let project: Project;
   let rom: RomComponent;
+  let fakeWorker: FakeSimulationWorker;
 
   beforeEach(async () => {
     configureTestBed([
       {
         provide: SIMULATION_WORKER_FACTORY,
-        useValue: () => new FakeSimulationWorker().asWorker()
+        useValue: () => {
+          fakeWorker = new FakeSimulationWorker();
+          return fakeWorker.asWorker();
+        }
       },
       { provide: FRAME_SCHEDULER, useValue: new ManualFrameScheduler() }
     ]);
@@ -141,9 +156,8 @@ describe('AutomationApiService inspection', () => {
     }
 
     /**
-     * A one-output custom: `driver` (whatever produces the signal) wired to an
-     * OUTPUT plug. Registered as a frozen snapshot, the way a placed instance
-     * carries its definition.
+     * A one-output custom: `driver` wired to an OUTPUT plug, registered as a
+     * frozen snapshot the way a placed instance carries its definition.
      */
     function registerBox(
       name: string,
@@ -204,9 +218,14 @@ describe('AutomationApiService inspection', () => {
       return instance;
     }
 
-    /** Outer(Inner(switch)) placed on the board — two levels to drill through. */
-    async function openNestedWatch(): Promise<number> {
-      const inner = registerBox('Inner', 'IN', makeSwitch());
+    /**
+     * Outer(Inner(switch)) placed on the board — two levels to drill through.
+     * `driver` swaps the switch for another component.
+     */
+    async function openNestedWatch(
+      driver: Component = makeSwitch()
+    ): Promise<number> {
+      const inner = registerBox('Inner', 'IN', driver);
       const outerHost = new Project();
       const outer = registerBox('Outer', 'OUT', place(inner, outerHost));
       outerHost.destroy({ children: true });
@@ -265,8 +284,115 @@ describe('AutomationApiService inspection', () => {
       expect(camera.getViewport(id).zoom).toBeCloseTo(2, 5);
       expect(view.x + view.width / 2).toBeCloseTo(4, 5);
       // The renderer fits a level the first time it shows; a placement takes
-      // that turn, so it is not overwritten on the level's first frame.
+      // that turn instead of being overwritten on the first frame.
       expect(watch.levels()[0].needsFit).toBe(false);
+    });
+
+    it('drives an inner button through setInput, refusing a tap on it', async () => {
+      const id = await openNestedWatch(makeButton());
+      const nested = api
+        .inspectGetElements(id)
+        .components.find((component) => component.type >= 1000)!;
+      api.inspectActivate(id, nested.id);
+      const watch = TestBed.inject(InspectionService).open()[0]
+        .inspection as SubCircuitWatch;
+      const copy = watch
+        .activeLevel()
+        .session.components.find(
+          (component) => component instanceof ButtonComponent
+        ) as ButtonComponent;
+
+      expect(() => api.inspectActivate(id, copy.id)).toThrow(
+        /tap cannot express — use inspect\.setInput$/
+      );
+      expect(copy.isActive(0)).toBe(false);
+
+      await api.inspectSetInput(id, copy.id, true);
+      expect(copy.isActive(0)).toBe(true);
+      await api.inspectSetInput(id, copy.id, false);
+      expect(copy.isActive(0)).toBe(false);
+
+      const plug = watch
+        .activeLevel()
+        .session.components.find((component) => component !== copy)!;
+      await expect(api.inspectSetInput(id, plug.id, true)).rejects.toThrow(
+        /not a user input/
+      );
+    });
+
+    it('opens an inner gamepad’s own inspection on the copy, played through the level, and drives it by slot', async () => {
+      const id = await openNestedWatch(makeGamepad());
+      const nested = api
+        .inspectGetElements(id)
+        .components.find((component) => component.type >= 1000)!;
+      api.inspectActivate(id, nested.id);
+      const inspections = TestBed.inject(InspectionService);
+      const watch = inspections.open()[0].inspection as SubCircuitWatch;
+      const pad = watch
+        .activeLevel()
+        .session.components.find(
+          (component) => component instanceof GamepadComponent
+        ) as GamepadComponent;
+      const slotA = pad.slotIds.indexOf('a');
+
+      api.inspectActivate(id, pad.id);
+      const opened = inspections.open().at(-1)!;
+      expect(opened.component).toBe(pad);
+      expect(opened.inspection).toBeInstanceOf(GamepadInspection);
+      expect(pad.slotIds.some((_, slot) => pad.isActive(slot))).toBe(false);
+
+      const played = opened.inspection as GamepadInspection;
+      played.pointerDown('a', 1);
+      expect(pad.isActive(slotA)).toBe(true);
+      played.pointerUp('a', 1);
+      expect(pad.isActive(slotA)).toBe(false);
+
+      await api.inspectSetInput(id, pad.id, true, 'a');
+      expect(pad.isActive(slotA)).toBe(true);
+    });
+
+    it('types into, holds a key of and cancels an inner keyboard, reaching the copy’s unit', async () => {
+      // A keyboard on the board too, whose units the copy's frames must miss.
+      const boardKeyboard = makeKeyboard(0, 20);
+      project.addComponent(boardKeyboard);
+      const id = await openNestedWatch(makeKeyboard());
+      const nested = api
+        .inspectGetElements(id)
+        .components.find((component) => component.type >= 1000)!;
+      api.inspectActivate(id, nested.id);
+      const level = (
+        TestBed.inject(InspectionService).open()[0]
+          .inspection as SubCircuitWatch
+      ).activeLevel();
+      const index = level.session.components.findIndex(
+        (component) => component instanceof KeyboardComponent
+      );
+      const copy = level.session.components[index] as KeyboardComponent;
+      const base = level.session.info.unitIndexFor(index)!;
+      const sentUnits = () =>
+        new Set(fakeWorker.sentFrames().map((frame) => frame.comp));
+
+      await api.inspectType(id, copy.id, 'hi');
+      expect(sentUnits()).toEqual(new Set([base]));
+      expect(simulation.board!.userInputs.get(boardKeyboard.id)).not.toBe(base);
+
+      const queued = fakeWorker.postedOfKind('submitInput').length;
+      await api.inspectSetKey(id, copy.id, 'A');
+      await api.inspectSetKey(id, copy.id, 'A');
+      expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(queued + 1);
+      expect(copy.heldKey()).toEqual({ code: 0x41, key: null });
+      expect(sentUnits()).toEqual(new Set([base]));
+
+      await api.inspectCancelKeys(id, copy.id);
+      expect(fakeWorker.submitted().at(-1)).toMatchObject({
+        comp: base,
+        replace: true
+      });
+      expect(copy.heldKey()).toBeNull();
+
+      await expect(api.inspectSetInput(id, copy.id, true)).rejects.toThrow(
+        /is a keyboard — use inspect\.type or inspect\.setKey$/
+      );
     });
 
     it('refuses a component that is not in the visible level', async () => {

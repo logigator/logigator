@@ -1,51 +1,47 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { CONSENT_COOKIE, encodeConsent } from '@logigator/core';
+import { configureTestBed } from '../../testing/configure-test-bed';
+import { CookieService } from '../storage/cookie.service';
 import { ConsentService } from './consent.service';
 
-const SELECTOR = 'script[src$="/js/cookieconsent.js"]';
-
-/** Runs `load()` and returns the script element that call injected. */
-function loadWithInjectedScript(service: ConsentService): Element | undefined {
-  const before = new Set(document.head.querySelectorAll(SELECTOR));
-  service.load();
-  return Array.from(document.head.querySelectorAll(SELECTOR)).find(
-    (s) => !before.has(s)
-  );
+function clearCookies(): void {
+  document.cookie = `${CONSENT_COOKIE}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
 }
 
 describe('ConsentService', () => {
+  beforeEach(() => {
+    clearCookies();
+    configureTestBed();
+  });
+
   afterEach(() => {
-    document.head.querySelectorAll(SELECTOR).forEach((s) => s.remove());
-    delete window.CookieConsent;
+    TestBed.resetTestingModule();
+    clearCookies();
   });
 
-  it('becomes available only once the bundle script has loaded', () => {
-    const service = new ConsentService();
-    const script = loadWithInjectedScript(service);
+  it('closes the question once the website records an answer', () => {
+    // The cookie is origin-wide: an answer given in a site tab reaches the
+    // editor through the cookie map, not through anything the editor did.
+    const consent = TestBed.inject(ConsentService);
+    expect(consent.pending()).toBe(true);
 
-    expect(script).toBeDefined();
-    expect(service.available()).toBe(false);
+    TestBed.inject(CookieService).set(
+      CONSENT_COOKIE,
+      encodeConsent(['analytics'])
+    );
 
-    script!.dispatchEvent(new Event('load'));
-    expect(service.available()).toBe(true);
+    expect(consent.pending()).toBe(false);
+    expect(consent.isGranted('analytics')).toBe(true);
   });
 
-  it('stays unavailable when the bundle never loads', () => {
-    const service = new ConsentService();
-    const script = loadWithInjectedScript(service);
+  it('withdraws a grant when the visitor rejects later', () => {
+    const consent = TestBed.inject(ConsentService);
+    consent.decide(['analytics']);
 
-    script!.dispatchEvent(new Event('error'));
-    expect(service.available()).toBe(false);
-  });
+    consent.decide([]);
 
-  it('skips injection when the bundle is already present', () => {
-    window.CookieConsent = {
-      showPreferences: () => undefined,
-      acceptedCategory: () => false
-    };
-    const service = new ConsentService();
-    const script = loadWithInjectedScript(service);
-
-    expect(service.available()).toBe(true);
-    expect(script).toBeUndefined();
+    expect(consent.pending()).toBe(false);
+    expect(consent.isGranted('analytics')).toBe(false);
   });
 });

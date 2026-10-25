@@ -40,6 +40,34 @@ describe('LgTooltip', () => {
     expect(overlayText()).not.toContain('hello tip');
   });
 
+  it('shows the bubble on keyboard focus and removes it on blur', () => {
+    const { f, button } = setup();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab' }));
+    button.focus();
+    f.detectChanges();
+    expect(overlayText()).toContain('hello tip');
+
+    button.blur();
+    f.detectChanges();
+    expect(overlayText()).not.toContain('hello tip');
+  });
+
+  it('stays closed on focus moved by code or by a click', () => {
+    const { f, button } = setup();
+    button.focus();
+    f.detectChanges();
+    expect(overlayText()).toBe('');
+
+    button.blur();
+    // A real press: cdk reads `detail: 0` as a screen reader's fake click.
+    document.dispatchEvent(
+      new MouseEvent('mousedown', { buttons: 1, detail: 1 })
+    );
+    button.focus();
+    f.detectChanges();
+    expect(overlayText()).toBe('');
+  });
+
   it('registers the text for screen readers (aria-describedby)', () => {
     const { button } = setup();
     expect(button.getAttribute('aria-describedby')).toBeTruthy();

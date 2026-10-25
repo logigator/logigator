@@ -1,56 +1,61 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import {
+  computed,
+  effect,
+  inject,
+  Injectable,
+  signal,
+  untracked
+} from '@angular/core';
 import { LayoutService } from '../layout/layout.service';
 import { LoggingService } from '../logging/logging.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { EditorSettingsService } from '../settings/editor-settings.service';
 
 /**
  * The two device axes onboarding content is authored for. Derived from the
- * layout breakpoint (compact chrome vs. desktop bars) rather than input type:
- * step targets and gesture wording follow which UI is on screen.
+ * layout breakpoint rather than input type: step targets and gesture wording
+ * follow which UI is on screen.
  */
 export type OnboardingPlatform = 'desktop' | 'compact';
 
 /** The flagship first-run tutorial, launched only from the first-run nudge. */
 export const GETTING_STARTED_TUTORIAL = 'getting-started';
 
-const TIPS_ENABLED_KEY = 'logigator.onboarding.tips-enabled';
 const COMPLETED_TUTORIALS_KEY = 'logigator.onboarding.completed-tutorials';
 const SEEN_HINTS_KEY = 'logigator.onboarding.seen-hints';
 const NUDGE_DISMISSED_KEY = 'logigator.onboarding.nudge-dismissed';
 
 /**
- * Single orchestrator and persistence gate for the whole onboarding surface —
- * the hands-on tutorials (Phase 2) and the just-in-time hints (Phase 3) both
- * read their enable/seen/completed state from here.
- *
- * Persistence mirrors {@link ChangelogService}: plain `localStorage` under the
- * `onboarding.*` namespace, degrading silently when storage is unavailable
- * (private mode) so the editor never breaks over a preference write. The
- * user-visible "show tips" toggle is this same global flag.
+ * Orchestrator and persistence gate for the whole onboarding surface: the
+ * tutorials and the just-in-time hints both read their enable/seen/completed
+ * state from here. The enable flag is the user's `onboardingTips` editor
+ * setting; what has been seen or completed is onboarding's own record, kept in
+ * plain `localStorage` and degrading silently when it is unavailable so the
+ * editor never breaks over a write.
  */
 @Injectable({ providedIn: 'root' })
 export class OnboardingService {
   private readonly layout = inject(LayoutService);
   private readonly logging = inject(LoggingService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly settings = inject(EditorSettingsService);
 
-  private readonly _tipsEnabled = signal(this.loadBool(TIPS_ENABLED_KEY, true));
   /** Master switch: false silences every tutorial and hint. */
-  public readonly tipsEnabled = this._tipsEnabled.asReadonly();
+  public readonly tipsEnabled = this.settings.onboardingTips.value;
 
   private readonly _nudgeDismissed = signal(
     this.loadBool(NUDGE_DISMISSED_KEY, false)
   );
   /**
-   * Whether the first-run "take the tutorial" nudge has been dismissed. The
-   * nudge is the only launch path (there is no auto-start): it shows once for a
-   * new user and, once dismissed or once the tutorial starts, never returns.
+   * Whether the first-run "take the tutorial" nudge has been dismissed. It is
+   * the only launch path — there is no auto-start — and never returns once
+   * dismissed or once the tutorial starts.
    */
   public readonly nudgeDismissed = this._nudgeDismissed.asReadonly();
 
   private readonly _activeTutorial = signal<string | null>(null);
-  /** Id of the tutorial currently running, or null. The runner reacts to this. */
+  /** Id of the tutorial currently running, or null. */
   public readonly activeTutorial = this._activeTutorial.asReadonly();
 
   private readonly _completedTutorials = this.loadSet(COMPLETED_TUTORIALS_KEY);
@@ -61,32 +66,22 @@ export class OnboardingService {
     this.layout.isCompact() ? 'compact' : 'desktop'
   );
 
-  /**
-   * Flips the master switch and persists it. Turning tips off also ends any
-   * running tutorial without marking it complete, so it can be resumed later.
-   */
-  public setTipsEnabled(enabled: boolean): void {
-    this._tipsEnabled.set(enabled);
-    this.saveBool(TIPS_ENABLED_KEY, enabled);
-    this.logging.debug(
-      `tips ${enabled ? 'enabled' : 'disabled'}`,
-      'OnboardingService'
-    );
-    if (!enabled && this._activeTutorial() !== null) {
-      this.endTutorial(false);
-    }
+  constructor() {
+    // Tips turned off from anywhere end a running tutorial without marking it
+    // complete, so it can be resumed later.
+    effect(() => {
+      if (!this.tipsEnabled()) untracked(() => this.endTutorial(false));
+    });
   }
 
-  /** The "turn off all tips" control on the coach-mark bubble and in settings. */
+  /** The "turn off all tips" control on the coach-mark bubble. */
   public disableAllTips(): void {
-    this.setTipsEnabled(false);
+    this.settings.onboardingTips.set(false);
   }
 
   /**
-   * Re-enables tips, forgets which hints have been seen (so the JIT hints
-   * surface again on their next trigger), clears completed tutorials (so they
-   * can be started again from the nudge), and restores the first-run tutorial
-   * nudge.
+   * Re-enables tips and forgets every seen hint, completed tutorial and the
+   * nudge dismissal, so the whole surface can be met again.
    */
   public showTipsAgain(): void {
     this.logging.debug('show tips again (reset)', 'OnboardingService');
@@ -96,7 +91,7 @@ export class OnboardingService {
     this.saveSet(COMPLETED_TUTORIALS_KEY, this._completedTutorials);
     this._nudgeDismissed.set(false);
     this.saveBool(NUDGE_DISMISSED_KEY, false);
-    this.setTipsEnabled(true);
+    this.settings.onboardingTips.set(true);
   }
 
   public hasCompletedTutorial(id: string): boolean {
@@ -128,7 +123,7 @@ export class OnboardingService {
     this.logging.debug('nudge dismissed', 'OnboardingService');
   }
 
-  /** Ends the active tutorial as skipped (not completed) — Skip button / Esc. */
+  /** Ends the active tutorial as skipped, not completed. */
   public skipCurrent(): void {
     this.endTutorial(false);
   }

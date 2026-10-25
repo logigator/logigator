@@ -46,10 +46,8 @@ export class ChangeOptionAction<T = unknown> extends Action {
       return;
     }
     option.value = value;
-    // A port-count change repaints via the project's portsChange$ handler, but
-    // a visual-only option (e.g. the segment display's base) rebuilds the
-    // component's scene graph without touching ports — request a frame so the
-    // edit shows immediately instead of on the next unrelated render.
+    // A port-count change repaints through portsChange$, but a visual-only
+    // option touches no ports, so ask for the frame here.
     project.triggerTicker('single');
   }
 }

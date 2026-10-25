@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Container, BitmapText } from 'pixi.js';
 import { PX } from '../../utils/grid';
 import { CANVAS_FONT_FAMILY } from '../../utils/text-fit';
-import { Direction } from '../../utils/direction';
+import { Direction } from '@logigator/core';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { Component } from '../component';
 import { ComponentProviderService } from '../component-provider.service';
@@ -11,7 +11,7 @@ import { Project } from '../../project/project';
 import { CustomComponentRegistry } from './custom-component-registry.service';
 import { CustomComponent } from './custom-component';
 
-/** All BitmapText nodes rendered anywhere under `container` (symbol + port labels). */
+/** Every BitmapText node under `container` (symbol + port labels). */
 function renderedTextNodes(container: Container): BitmapText[] {
   const out: BitmapText[] = [];
   const walk = (c: Container): void => {
@@ -24,7 +24,7 @@ function renderedTextNodes(container: Container): BitmapText[] {
   return out;
 }
 
-/** All BitmapText strings rendered anywhere under `container` (symbol + port labels). */
+/** Every BitmapText string under `container` (symbol + port labels). */
 function renderedTexts(container: Container): string[] {
   return renderedTextNodes(container).map((t) => t.text);
 }
@@ -39,7 +39,7 @@ describe('CustomComponent', () => {
     provider = TestBed.inject(ComponentProviderService);
   });
 
-  /** Place an instance by snapshotting the master's CURRENT state (the place flow). */
+  /** Places by snapshotting the master's current state, as placing does. */
   function placeLatest(masterTypeId: number): CustomComponent {
     const snap = registry.snapshot(masterTypeId);
     const config = provider.getComponent(snap.typeId)!;
@@ -76,6 +76,43 @@ describe('CustomComponent', () => {
     expect(texts).toContain('B');
     expect(texts).toContain('Q');
 
+    instance.destroy({ children: true });
+  });
+
+  it('draws once when deserialized turned and negated, symbol included', () => {
+    const master = registry.createMaster(
+      { symbol: 'CC', numInputs: 2, numOutputs: 1, labels: ['A', 'B', 'Q'] },
+      'browser'
+    );
+    const snap = registry.snapshot(master);
+    const config = provider.getComponent(snap.typeId)!;
+    const draw = vi.spyOn(
+      CustomComponent.prototype as unknown as { draw(): void },
+      'draw'
+    );
+
+    const instance = Component.deserialize(
+      {
+        pos: [3, 4],
+        direction: Direction.S,
+        options: {},
+        negInputs: [1]
+      },
+      config
+    ) as CustomComponent;
+
+    expect(draw).toHaveBeenCalledTimes(1);
+    expect(instance.direction).toBe(Direction.S);
+    expect([instance.position.x, instance.position.y]).toEqual([3, 4]);
+    expect(instance.portBubbles.has(1)).toBe(true);
+    expect(renderedTexts(instance)).toEqual(
+      expect.arrayContaining(['CC', 'A', 'B', 'Q'])
+    );
+    const symbol = renderedTextNodes(instance).find((t) => t.text === 'CC')!;
+    // Counter-rotated upright, as the direction setter would leave it.
+    expect(symbol.rotation).toBeCloseTo(-instance.rotation, 10);
+
+    draw.mockRestore();
     instance.destroy({ children: true });
   });
 

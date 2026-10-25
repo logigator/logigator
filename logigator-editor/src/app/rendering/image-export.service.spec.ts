@@ -35,7 +35,7 @@ describe('ImageExportService', () => {
     available: boolean;
     computeRegion: Mock;
     outputSize: Mock;
-    renderProjectToCanvas: Mock;
+    renderRegionToCanvas: Mock;
     subPixelSupersample: Mock;
   };
   let toast: { error: Mock; warn: Mock; success: Mock; info: Mock };
@@ -51,9 +51,8 @@ describe('ImageExportService', () => {
         width: Math.round(r.width * GRID_SIZE * m),
         height: Math.round(r.height * GRID_SIZE * m)
       })),
-      renderProjectToCanvas: vi.fn(() => fakeCanvas()),
-      // Whole-number resolutions land hairlines on whole pixels already; the
-      // real policy declines to supersample them (see BoardSnapshotService).
+      renderRegionToCanvas: vi.fn(() => fakeCanvas()),
+      // The real policy declines to supersample whole-number resolutions.
       subPixelSupersample: vi.fn(() => 1)
     };
     toast = { error: vi.fn(), warn: vi.fn(), success: vi.fn(), info: vi.fn() };
@@ -70,8 +69,8 @@ describe('ImageExportService', () => {
 
   beforeEach(() => {
     downloads = [];
-    // jsdom/happy-dom don't implement object URLs; stub them and capture the
-    // download via the anchor's click rather than letting it navigate.
+    // jsdom/happy-dom implement no object URLs; capture the download via the
+    // anchor's click rather than letting it navigate.
     globalThis.URL.createObjectURL = vi.fn(() => 'blob:x');
     globalThis.URL.revokeObjectURL = vi.fn();
     clickSpy = vi
@@ -100,7 +99,7 @@ describe('ImageExportService', () => {
       background: true
     });
     expect(toast.error).toHaveBeenCalledOnce();
-    expect(snapshot.renderProjectToCanvas).not.toHaveBeenCalled();
+    expect(snapshot.renderRegionToCanvas).not.toHaveBeenCalled();
     expect(clickSpy).not.toHaveBeenCalled();
   });
 
@@ -111,11 +110,15 @@ describe('ImageExportService', () => {
       multiplier: 2,
       background: true
     });
-    expect(snapshot.renderProjectToCanvas).toHaveBeenCalledWith(project, {
-      multiplier: 2,
-      background: 'grid',
-      supersample: 1
-    });
+    expect(snapshot.renderRegionToCanvas).toHaveBeenCalledWith(
+      project,
+      expect.anything(),
+      {
+        multiplier: 2,
+        background: 'grid',
+        supersample: 1
+      }
+    );
     expect(downloads[0]).toBe('MyBoard.png');
     expect(toast.warn).not.toHaveBeenCalled();
   });
@@ -129,7 +132,7 @@ describe('ImageExportService', () => {
       multiplier: 2,
       background: true
     });
-    const used = snapshot.renderProjectToCanvas.mock.calls[0][1].multiplier;
+    const used = snapshot.renderRegionToCanvas.mock.calls[0][2].multiplier;
     expect(used).toBeLessThan(2);
     expect(used).toBeCloseTo(MAX_EXPORT_DIMENSION / 16000);
     expect(toast.warn).toHaveBeenCalledOnce();
@@ -142,11 +145,15 @@ describe('ImageExportService', () => {
       multiplier: 1,
       background: false
     });
-    expect(snapshot.renderProjectToCanvas).toHaveBeenCalledWith(project, {
-      multiplier: 1,
-      background: 'transparent',
-      supersample: 1
-    });
+    expect(snapshot.renderRegionToCanvas).toHaveBeenCalledWith(
+      project,
+      expect.anything(),
+      {
+        multiplier: 1,
+        background: 'transparent',
+        supersample: 1
+      }
+    );
   });
 
   it('uses the jpg extension and an explicit file name', async () => {

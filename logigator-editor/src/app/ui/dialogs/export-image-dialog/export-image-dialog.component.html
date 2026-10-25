@@ -59,6 +59,17 @@
       t('imageExport.backgroundHint')
     }}</span>
   </div>
+  @if (showLossless()) {
+    <div class="flex items-center gap-2">
+      <lg-checkbox
+        inputId="export-lossless"
+        [ngModel]="lossless()"
+        (ngModelChange)="lossless.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+      <label for="export-lossless">{{ t('imageExport.lossless') }}</label>
+    </div>
+  }
   @if (showQuality()) {
     <div class="flex flex-col gap-1">
       <label for="export-quality"
@@ -75,18 +86,22 @@
     </div>
   }
   <div class="flex justify-end gap-2">
-    <lg-button
+    <button
+      lgButton
       type="button"
       severity="secondary"
       [outlined]="true"
-      [label]="t('imageExport.cancel')"
       (onClick)="cancel()"
-    />
-    <lg-button
+    >
+      {{ t('imageExport.cancel') }}
+    </button>
+    <button
+      lgButton
       type="submit"
-      [label]="t('imageExport.export')"
       [disabled]="!canExport"
       [loading]="exporting()"
-    />
+    >
+      {{ t('imageExport.export') }}
+    </button>
   </div>
 </form>

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
+import { ChangelogRelease } from '@logigator/docs';
 import { DialogService } from '@logigator/ui';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { environment } from '../../environments/environment';
@@ -78,6 +79,49 @@ describe('ChangelogService', () => {
       service.maybeAutoOpen();
 
       expect(open).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('load', () => {
+    it('yields released notes only, without the repository’s link syntax', () => {
+      let releases: ChangelogRelease[] = [];
+      service.load().subscribe((loaded) => (releases = loaded));
+
+      http
+        .expectOne(() => true)
+        .flush(
+          [
+            '# Changelog',
+            '',
+            'Newest first.',
+            '',
+            '## [Unreleased]',
+            '',
+            '### ✨ Added',
+            '',
+            '- Not out yet.',
+            '',
+            '## [2.1.0] - 2026-08-06',
+            '',
+            '### 🐛 Fixed',
+            '',
+            '- A fix.',
+            '',
+            '[Unreleased]: https://example.com/compare/v2.1.0...HEAD',
+            '[2.1.0]: https://example.com/releases/tag/v2.1.0',
+            ''
+          ].join('\n')
+        );
+
+      expect(
+        releases.map(({ version, date, body }) => ({ version, date, body }))
+      ).toEqual([
+        {
+          version: '2.1.0',
+          date: '2026-08-06',
+          body: '### 🐛 Fixed\n\n- A fix.'
+        }
+      ]);
     });
   });
 });

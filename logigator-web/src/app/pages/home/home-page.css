@@ -1,0 +1,97 @@
+/*
+ * A five-stop gradient that swaps shape at a breakpoint reads as noise in
+ * arbitrary-value classes; `--hero-page` carries the scheme in, so the rule
+ * itself needs no dark variant. 1024px is Tailwind's `lg`.
+ *
+ * The board is a background rather than an <img>: hydration writes an
+ * element's attributes again, and writing `src` or `srcset` — even unchanged
+ * — sends an animated image back to its first frame, while a background keeps
+ * playing. Which file it is is decided here too, so a page downloads only the
+ * one the reader's scheme and motion preference name: the loop, or the still
+ * under reduced motion. The loop paints from its first frame, a small part of
+ * the file, while the rest is still downloading.
+ *
+ * The render is only what the page shows, and its sizes here count grid
+ * columns: `--hero-columns` is the render's width, which has to match the
+ * capture tool's; the band below the copy shows 60 of them across, 80 from
+ * `sm`, and beside the copy a column is about 10.4px. Its left edge lies
+ * under the scrim's opaque part at every width.
+ *
+ * Beside the copy, the composition is the one a 1440px page shows, held
+ * relative to the centred column above that: the board's right edge stays
+ * 5rem past the column's, the scrim's stops keep their distance from the
+ * centre, and the gap the board leaves at the page's edge is `--hero-gap`.
+ * The render ends there, so once there is a gap, the board's right edge fades
+ * into the page as its left one does — over the gap's width, so the fade
+ * arrives as the gap opens, up to the 3.5rem right of the last matrix,
+ * so it never reaches the display. A percentage in a custom property
+ * resolves where it is used: against the section's width in both, since the
+ * board and the scrim each span it.
+ */
+
+:host {
+  --hero-span: min(100%, 90rem);
+  --hero-gap: max(0px, 50% - 45rem);
+}
+
+.hero-board {
+  background-image: url('../../../assets/hero-board-animated-light.webp');
+}
+
+:host-context(.dark-mode) .hero-board {
+  background-image: url('../../../assets/hero-board-animated-dark.webp');
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-board {
+    background-image: url('../../../assets/hero-board-light.webp');
+  }
+
+  :host-context(.dark-mode) .hero-board {
+    background-image: url('../../../assets/hero-board-dark.webp');
+  }
+}
+
+.hero-board {
+  --hero-columns: 95;
+  background-size: calc(var(--hero-columns) / 60 * 100%) auto;
+}
+
+@media (min-width: 640px) {
+  .hero-board {
+    background-size: calc(var(--hero-columns) / 80 * 100%) auto;
+  }
+}
+
+.hero-scrim {
+  background: linear-gradient(
+    to bottom,
+    var(--hero-page) 0%,
+    color-mix(in srgb, var(--hero-page) 30%, transparent) 20%,
+    color-mix(in srgb, var(--hero-page) 30%, transparent) 62%,
+    var(--hero-page) 100%
+  );
+}
+
+@media (min-width: 1024px) {
+  .hero-board {
+    left: auto;
+    right: var(--hero-gap);
+    width: calc(var(--hero-columns) * 0.6521rem);
+    background-size: 100% auto;
+  }
+
+  .hero-scrim {
+    background: linear-gradient(
+      to right,
+      var(--hero-page) 0%,
+      var(--hero-page) calc(50% - 0.17 * var(--hero-span)),
+      color-mix(in srgb, var(--hero-page) 66%, transparent)
+        calc(50% - 0.05 * var(--hero-span)),
+      color-mix(in srgb, var(--hero-page) 16%, transparent)
+        calc(50% + 0.14 * var(--hero-span)),
+      transparent calc(100% - var(--hero-gap) - min(var(--hero-gap), 3.5rem)),
+      var(--hero-page) calc(100% - var(--hero-gap))
+    );
+  }
+}

@@ -1,5 +1,6 @@
 import { ComponentOption } from '../../component-option';
 import { TranslationKey } from '../../../translation/translation-key.model';
+import { OptionChoice } from '../option-choice';
 import { SelectButtonOptionInputComponent } from './select-button-option-input.component';
 
 export class SelectButtonComponentOption<T> extends ComponentOption<T> {
@@ -7,7 +8,7 @@ export class SelectButtonComponentOption<T> extends ComponentOption<T> {
 
   constructor(
     public readonly label: TranslationKey,
-    public readonly options: { value: T; label?: string; icon?: string }[],
+    public readonly options: OptionChoice<T>[],
     defaultValue: T
   ) {
     super(defaultValue);

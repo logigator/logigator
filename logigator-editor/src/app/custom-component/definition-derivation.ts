@@ -1,6 +1,7 @@
 import { Project } from '../project/project';
 import { InputComponent } from '../components/component-types/input/input.component';
 import { OutputComponent } from '../components/component-types/output/output.component';
+import { Component } from '../components/component';
 
 export interface DerivedSummary {
   numInputs: number;
@@ -9,15 +10,18 @@ export interface DerivedSummary {
   labels: string[];
 }
 
+type Plug = InputComponent | OutputComponent;
+
+const byOrder = (a: Plug, b: Plug): number =>
+  a.options.index.value - b.options.index.value || a.id - b.id;
+
 /**
- * Derives a custom component's port summary from the INPUT/OUTPUT plugs placed
- * in its circuit — the **only** place that knows the plug → port mapping. Both
- * the live editor binding and the save path use it.
+ * A custom component's port summary from the INPUT/OUTPUT plugs in its circuit
+ * — the only place that knows the plug → port mapping.
  *
- * Ports are ordered by each plug's `index` option, then by instance id as a
- * defensive tiebreaker: the Ports panel always writes clean `0..n-1` indices, so
- * duplicate/gappy values never arise from in-app editing, but externally-authored
- * or legacy data might contain them. This stays a total order and never throws.
+ * Ports are ordered by each plug's `index` option, then by instance id: the
+ * Ports panel writes clean `0..n-1` indices, but externally-authored data may
+ * have duplicates or gaps, and this stays a total order regardless.
  */
 export function deriveSummary(project: Project): DerivedSummary {
   const inputs: InputComponent[] = [];
@@ -31,11 +35,6 @@ export function deriveSummary(project: Project): DerivedSummary {
     }
   }
 
-  const byOrder = (
-    a: InputComponent | OutputComponent,
-    b: InputComponent | OutputComponent
-  ): number => a.options.index.value - b.options.index.value || a.id - b.id;
-
   inputs.sort(byOrder);
   outputs.sort(byOrder);
 
@@ -47,4 +46,29 @@ export function deriveSummary(project: Project): DerivedSummary {
       ...outputs.map((c) => c.options.label.value)
     ]
   };
+}
+
+/**
+ * Numbers plugs about to join `project` after the ones it already holds, so
+ * a placed or pasted plug becomes the last port of its kind. Among `added`,
+ * their existing order is kept. Call before the adding action snapshots them.
+ */
+export function appendPlugIndices(
+  project: Project,
+  added: readonly Component[]
+): void {
+  for (const ctor of [InputComponent, OutputComponent]) {
+    const incoming = added.filter((c): c is Plug => c instanceof ctor);
+    if (incoming.length === 0) continue;
+
+    let next = 0;
+    for (const component of project.components) {
+      if (component instanceof ctor) {
+        next = Math.max(next, component.options.index.value + 1);
+      }
+    }
+    for (const plug of incoming.sort(byOrder)) {
+      plug.options.index.value = next++;
+    }
+  }
 }

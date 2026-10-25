@@ -1,9 +1,13 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ComponentListComponent } from './component-list.component';
+import {
+  ComponentListComponent,
+  PALETTE_COLLAPSED_STORAGE_KEY
+} from './component-list.component';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { CustomComponentRegistry } from '../../../components/custom/custom-component-registry.service';
+import { BuiltInComponentType, ComponentCategory } from '@logigator/core';
 
 describe('ComponentListComponent', () => {
   let component: ComponentListComponent;
@@ -17,15 +21,62 @@ describe('ComponentListComponent', () => {
     fixture.detectChanges();
   });
 
+  afterEach(() => {
+    localStorage.removeItem(PALETTE_COLLAPSED_STORAGE_KEY);
+  });
+
+  function remount(): ComponentListComponent {
+    return TestBed.createComponent(ComponentListComponent).componentInstance;
+  }
+
   it('shows non-empty categories with all panels open by default', () => {
     const cats = component.categories();
     expect(cats.length).toBeGreaterThan(0);
     expect(cats.every((cat) => cat.components.length > 0)).toBe(true);
-    // The basic gates are always present.
-    expect(cats.some((cat) => cat.key === 'basic')).toBe(true);
     // Not searching: open state follows the manual default (everything open).
     expect(component.searchActive()).toBe(false);
-    expect(component.openPanels()).toContain('basic');
+    for (const cat of cats) {
+      expect(component.openPanels()).toContain(cat.key);
+    }
+  });
+
+  it('lists the built-ins by category, in palette order', () => {
+    const T = BuiltInComponentType;
+    expect(
+      component.categories().map((cat) => ({
+        key: cat.key,
+        types: cat.components.map((config) => config.type)
+      }))
+    ).toEqual([
+      {
+        key: ComponentCategory.LOGIC_GATES,
+        types: [T.NOT, T.AND, T.OR, T.XOR, T.TUNNEL]
+      },
+      {
+        key: ComponentCategory.INPUTS,
+        types: [T.SWITCH, T.BUTTON, T.PULSE_BUTTON, T.GAMEPAD, T.KEYBOARD]
+      },
+      {
+        key: ComponentCategory.OUTPUTS,
+        types: [T.LED, T.SEGMENT_DISPLAY, T.LED_MATRIX, T.TERMINAL]
+      },
+      {
+        key: ComponentCategory.ADDERS_SELECTORS,
+        types: [
+          T.HALF_ADDER,
+          T.FULL_ADDER,
+          T.MUX,
+          T.DEMUX,
+          T.DECODER,
+          T.ENCODER
+        ]
+      },
+      {
+        key: ComponentCategory.MEMORY,
+        types: [T.D_FF, T.JK_FF, T.SR_FF, T.ROM, T.RAM]
+      },
+      { key: ComponentCategory.TIMING, types: [T.CLOCK, T.DELAY, T.RNG] }
+    ]);
   });
 
   it('drops every category when the search matches nothing', () => {
@@ -43,13 +94,37 @@ describe('ComponentListComponent', () => {
   });
 
   it('honors manual expand/collapse while not searching', () => {
-    component.onPanelChange(['basic']);
-    expect(component.openPanels()).toEqual(['basic']);
+    component.onPanelChange([ComponentCategory.MEMORY]);
+    expect(component.openPanels()).toEqual([ComponentCategory.MEMORY]);
+  });
+
+  it('keeps folded categories folded in the next session', () => {
+    component.onPanelChange([ComponentCategory.LOGIC_GATES]);
+    expect(remount().openPanels()).toEqual([ComponentCategory.LOGIC_GATES]);
+  });
+
+  it('opens a category that was never folded', () => {
+    // Stored before User Components existed in the palette.
+    localStorage.setItem(
+      PALETTE_COLLAPSED_STORAGE_KEY,
+      JSON.stringify([ComponentCategory.MEMORY])
+    );
+    const open = remount().openPanels();
+    expect(open).not.toContain(ComponentCategory.MEMORY);
+    expect(open).toContain(ComponentCategory.USER);
+  });
+
+  it('opens everything when the stored value is corrupt', () => {
+    localStorage.setItem(PALETTE_COLLAPSED_STORAGE_KEY, '{not json');
+    const fresh = remount();
+    expect(fresh.openPanels()).toEqual(
+      expect.arrayContaining(fresh.categories().map((cat) => cat.key))
+    );
   });
 
   it('ignores manual toggles while a search drives the open state', () => {
     component.searchText.set('zzz-no-such-component');
-    component.onPanelChange(['basic']);
+    component.onPanelChange([ComponentCategory.MEMORY]);
     // Search still owns the open state, so the manual toggle is discarded.
     expect(component.openPanels()).toEqual([]);
   });

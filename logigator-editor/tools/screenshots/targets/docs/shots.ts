@@ -1,0 +1,1244 @@
+import { BOARD_ZOOM } from '../../lib/config.ts';
+import type {
+  ApiComponent,
+  Clip,
+  Editor,
+  SnapTarget
+} from '../../lib/editor.ts';
+import type { TranslationKey } from '../../lib/i18n.ts';
+import type { Shot, ShotResult } from '../../lib/target.ts';
+import { NARROW_VIEWPORT } from './config.ts';
+
+/** Smallest clip covering every given rectangle. */
+function mergeRects(...rects: Clip[]): Clip {
+  const x = Math.min(...rects.map((r) => r.x));
+  const y = Math.min(...rects.map((r) => r.y));
+  return {
+    x,
+    y,
+    width: Math.max(...rects.map((r) => r.x + r.width)) - x,
+    height: Math.max(...rects.map((r) => r.y + r.height)) - y
+  };
+}
+
+/**
+ * Two frames of a running circuit, dark then powered, with the given switches
+ * flipped between them. The engine is settled for each, so both are
+ * deterministic. Both frames share one `target`, as every animated shot's must.
+ */
+async function switchedFrames(
+  ed: Editor,
+  target: SnapTarget,
+  levers: readonly ApiComponent[]
+): Promise<ShotResult> {
+  const frames: Buffer[] = [];
+  for (const on of [false, true]) {
+    for (const lever of levers) {
+      await ed.setInput(lever.id, on);
+    }
+    await ed.runUntilSettled();
+    await ed.parkPointer();
+    frames.push(await ed.snap(target));
+  }
+  return { frames };
+}
+
+/** A circuit's components of one type, top to bottom. */
+async function column(ed: Editor, symbol: string): Promise<ApiComponent[]> {
+  return (await ed.componentsOfType(symbol)).sort(
+    (a, b) => a.pos[1] - b.pos[1]
+  );
+}
+
+/**
+ * One frame per row of `states`, each a settled circuit with lever `i` set to
+ * the row's element `i` (1 on, 0 off).
+ */
+async function leverFrames(
+  ed: Editor,
+  target: SnapTarget,
+  levers: readonly ApiComponent[],
+  states: readonly (readonly (0 | 1)[])[]
+): Promise<ShotResult> {
+  const frames: Buffer[] = [];
+  for (const state of states) {
+    for (const [i, lever] of levers.entries()) {
+      await ed.setInput(lever.id, state[i] === 1);
+    }
+    await ed.runUntilSettled();
+    await ed.parkPointer();
+    frames.push(await ed.snap(target));
+  }
+  return { frames };
+}
+
+/**
+ * Presses a pulse button and waits out its body's flash, which the editor
+ * times on the wall clock (`PULSE_BUTTON_FLASH_MS`, 150 ms), so whether a
+ * frame caught it would depend on how fast the run is.
+ */
+async function pulse(ed: Editor, button: ApiComponent): Promise<void> {
+  await ed.setInput(button.id, true);
+  await ed.page.waitForTimeout(250);
+}
+
+/**
+ * A component reference scene stepped through `states`, its switches taken
+ * top to bottom — the order of the ports they feed. A single state is a still.
+ */
+async function switchStates(
+  ed: Editor,
+  circuit: string,
+  states: readonly (readonly (0 | 1)[])[]
+): Promise<ShotResult> {
+  await ed.load(circuit);
+  const levers = await column(ed, 'SW');
+  await ed.enterSimulation();
+  const clip = await ed.contentClip({ pad: 1.5 });
+  return leverFrames(ed, { clip }, levers, states);
+}
+
+/**
+ * One entry per image the documentation embeds. `run(editor)` stages the state
+ * the picture is of and returns what to capture: a `clip` (CSS px,
+ * viewport-relative), a `locator`, or `frames` for an animated one. The editor
+ * arrives freshly loaded, dark-themed, tips and changelog popup suppressed,
+ * with an empty draft; circuits come from `circuits/*.json`.
+ */
+export const SHOTS: Shot[] = [
+  // -- Chrome ---------------------------------------------------------------
+  {
+    name: 'tool-buttons',
+    async run(ed) {
+      await ed.requireSingleRowToolBar();
+      const tools = (
+        [
+          'toolBar.pan',
+          'toolBar.wireTool',
+          'toolBar.select',
+          'toolBar.eraser',
+          'toolBar.text'
+        ] satisfies TranslationKey[]
+      ).map((key) => ed.button(key));
+      return { clip: await ed.unionClip(tools, 6) };
+    }
+  },
+  {
+    name: 'board-overview',
+    // Embedded at page width, where 3:2 is as tall as the text carries.
+    context: { viewport: { height: 720 } },
+    async run(ed) {
+      await ed.requireSingleRowToolBar();
+      await ed.load('half-adder');
+      await ed.focus('content', { paddingGrid: 4, maxZoom: BOARD_ZOOM });
+      // The minimap's first frame comes off a debounced action stream, so it
+      // is not on screen when the import returns.
+      await ed.waitVisible('app-minimap canvas');
+      await ed.parkPointer();
+      return { clip: await ed.fullViewportClip() };
+    }
+  },
+  {
+    name: 'component-settings',
+    async run(ed) {
+      await ed.load('single-gate');
+      const [gate] = (await ed.elements()).components;
+      await ed.focus('content', { paddingGrid: 8, maxZoom: 1 });
+      // A zero-area region is a click: one element, its card in the side
+      // panel, and no marquee left drawn over the gate.
+      await ed.select({
+        bounds: { ...ed.bodyPoint(gate), width: 0, height: 0 }
+      });
+      await ed.parkPointer();
+      return { clip: await ed.unionClip('app-component-settings lg-card', 8) };
+    }
+  },
+  {
+    // The touch layout, which a window of 64rem or narrower gets: a selected
+    // gate puts the action bar above the tool bar, so both show at once.
+    name: 'phone-layout',
+    context: { viewport: { width: 390, height: 760 } },
+    async run(ed) {
+      await ed.load('half-adder');
+      await ed.focus('content', { paddingGrid: 4, maxZoom: BOARD_ZOOM });
+      // Left of the controls docked to the right edge, and above the bars at
+      // the bottom, so none of them covers the circuit.
+      const board = await ed.canvasBox();
+      await ed.centerContentAt({
+        x: (board.width - 96) / 2,
+        y: board.height * 0.4
+      });
+      const [gate] = await ed.componentsOfType('&');
+      await ed.select({
+        bounds: { ...ed.bodyPoint(gate), width: 0, height: 0 }
+      });
+      await ed.parkPointer();
+      return { clip: await ed.fullViewportClip() };
+    }
+  },
+
+  // -- Board ----------------------------------------------------------------
+  {
+    name: 'wire-junction',
+    async run(ed) {
+      await ed.load('wire-junctions');
+      return { clip: await ed.contentClip({ pad: 2 }) };
+    }
+  },
+  {
+    // Animated: the switch drives the far LED through the tunnel pair, so the
+    // powered frame lights both ends with nothing between.
+    name: 'tunnel',
+    async run(ed) {
+      await ed.load('tunnels');
+      const [lever] = await ed.componentsOfType('SW');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      return switchedFrames(ed, { clip }, [lever]);
+    }
+  },
+  {
+    // Animated: the gate's negated input — the output is high until the switch
+    // feeding it goes high.
+    name: 'negated-gate',
+    async run(ed) {
+      await ed.load('negated-gate');
+      const [lever] = await ed.componentsOfType('SW');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      return switchedFrames(ed, { clip }, [lever]);
+    }
+  },
+  {
+    name: 'scissor-select',
+    async run(ed) {
+      await ed.load('half-adder');
+      // The editor's maximum zoom: the subject is a one-unit piece of wire, a
+      // handful of pixels at the standard board step.
+      await ed.focus('content', { paddingGrid: 3, maxZoom: 1.2 ** 5 });
+
+      // One grid unit out of the middle of the runs feeding the LEDs: the box
+      // edges fall between the wires' ends, so each stays selected as a short
+      // piece trimmed at the edge rather than grabbed whole — the point of the
+      // mode. Whole grid units, because the marquee snaps to the lattice.
+      const leds = await ed.componentsOfType('LED');
+      const rows = leds.map((led) => led.pos[1]);
+      const region = {
+        x: Math.min(...leds.map((led) => led.pos[0])) - 3,
+        y: Math.min(...rows) - 1,
+        width: 1,
+        height: Math.max(...rows) - Math.min(...rows) + 2
+      };
+
+      // The pill only renders while the select tool is active. The shot is of
+      // the gesture's result, so the drag is released and the cut lands.
+      await ed.setWorkMode('sel');
+      await ed.clickButton('toolBar.selExact');
+      const from = await ed.gridPoint({ x: region.x, y: region.y });
+      const to = await ed.gridPoint({
+        x: region.x + region.width,
+        y: region.y + region.height
+      });
+      await ed.page.mouse.move(from.x, from.y);
+      await ed.page.mouse.down();
+      await ed.page.mouse.move(to.x, to.y, { steps: 8 });
+      await ed.page.mouse.up();
+      await ed.parkPointer();
+      // At maximum zoom, cropping is the only way left to make a one-unit
+      // wire read. The pill is docked to the top of the board, so the circuit
+      // is panned up under it rather than the crop reaching down.
+      const pill = ed.button('toolBar.selExact');
+      const pillBox = await ed.box(pill);
+      // Where the pill sits, in grid units, so the pan needs no px-per-grid.
+      const under = await ed.gridOf({
+        x: pillBox.x + pillBox.width / 2,
+        y: pillBox.y + pillBox.height + 90
+      });
+      await ed.panBy({
+        x: region.x + region.width / 2 - under.x,
+        y: region.y + region.height / 2 - under.y
+      });
+
+      // Gate to past the LEDs, so the piece cut out has both ends in frame.
+      const cut = await ed.gridClip({
+        x: region.x - 4,
+        y: region.y - 1,
+        width: region.width + 8,
+        height: region.height + 1.5
+      });
+      return { clip: mergeRects(await ed.unionClip(pill, 8), cut) };
+    }
+  },
+
+  // -- Component reference --------------------------------------------------
+  //
+  // One running scene per built-in, its switches top to bottom in the order
+  // of the ports they feed.
+  {
+    name: 'component-not-gate',
+    run: (ed) => switchStates(ed, 'component-not-gate', [[0], [1]])
+  },
+  {
+    name: 'component-and-gate',
+    run: (ed) =>
+      switchStates(ed, 'component-and-gate', [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ])
+  },
+  {
+    name: 'component-or-gate',
+    run: (ed) =>
+      switchStates(ed, 'component-or-gate', [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ])
+  },
+  {
+    name: 'component-xor-gate',
+    run: (ed) =>
+      switchStates(ed, 'component-xor-gate', [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ])
+  },
+  {
+    // D, CLK: Q takes D on the rising edge, and holds it while D changes
+    // with the clock low. The last frame leads back into the first.
+    name: 'component-d-flip-flop',
+    run: (ed) =>
+      switchStates(ed, 'component-d-flip-flop', [
+        [1, 0],
+        [1, 1],
+        [0, 0],
+        [0, 1]
+      ])
+  },
+  {
+    // J, CLK, K: set, reset, then toggle twice, each on a rising edge.
+    name: 'component-jk-flip-flop',
+    run: (ed) =>
+      switchStates(ed, 'component-jk-flip-flop', [
+        [1, 0, 0],
+        [1, 1, 0],
+        [0, 0, 1],
+        [0, 1, 1],
+        [1, 0, 1],
+        [1, 1, 1],
+        [1, 0, 1],
+        [1, 1, 1]
+      ])
+  },
+  {
+    // S, CLK, R: set, then reset, each on a rising edge.
+    name: 'component-sr-flip-flop',
+    run: (ed) =>
+      switchStates(ed, 'component-sr-flip-flop', [
+        [1, 0, 0],
+        [1, 1, 0],
+        [0, 0, 1],
+        [0, 1, 1]
+      ])
+  },
+  {
+    name: 'component-half-adder',
+    run: (ed) =>
+      switchStates(ed, 'component-half-adder', [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ])
+  },
+  {
+    // A, B, Cin: one, two and three ones added.
+    name: 'component-full-adder',
+    run: (ed) =>
+      switchStates(ed, 'component-full-adder', [
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 1, 0],
+        [1, 1, 1]
+      ])
+  },
+  {
+    // S0, 0, 1: input 0 on and input 1 off, so the output follows S0.
+    name: 'component-multiplexer',
+    run: (ed) =>
+      switchStates(ed, 'component-multiplexer', [
+        [0, 1, 0],
+        [1, 1, 0]
+      ])
+  },
+  {
+    // S0, I: I on, so the lit output follows S0.
+    name: 'component-demultiplexer',
+    run: (ed) =>
+      switchStates(ed, 'component-demultiplexer', [
+        [0, 1],
+        [1, 1]
+      ])
+  },
+  {
+    name: 'component-decoder',
+    run: (ed) =>
+      switchStates(ed, 'component-decoder', [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1]
+      ])
+  },
+  {
+    // Two outputs, so four inputs: none, input 0 (only V tells it from
+    // none), then 2 and 3 joining, the highest one encoded.
+    name: 'component-encoder',
+    run: (ed) =>
+      switchStates(ed, 'component-encoder', [
+        [0, 0, 0, 0],
+        [1, 0, 0, 0],
+        [1, 0, 1, 0],
+        [1, 0, 1, 1]
+      ])
+  },
+  {
+    // Address 3. Words 0–4 of the scene's contents fill up one bit at a time,
+    // so word 3 reads 0111.
+    name: 'component-rom',
+    run: (ed) => switchStates(ed, 'component-rom', [[1, 1, 0, 0]])
+  },
+  {
+    // A0, A1, D0–D3, WE, CLK: 0101 written to address 0 on the clock edge,
+    // the data inputs cleared, then address 1 read (empty) and address 0
+    // again.
+    name: 'component-ram',
+    run: (ed) =>
+      switchStates(ed, 'component-ram', [
+        [0, 0, 1, 0, 1, 0, 1, 0],
+        [0, 0, 1, 0, 1, 0, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0]
+      ])
+  },
+  {
+    // One tick per frame, the clock's default delay of one tick: low, high.
+    name: 'component-clock',
+    async run(ed) {
+      await ed.load('clock');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      const frames: Buffer[] = [];
+      for (let tick = 0; tick < 4; tick++) {
+        await ed.stepSimulation();
+        await ed.parkPointer();
+        frames.push(await ed.snap({ clip }));
+      }
+      return { frames };
+    }
+  },
+  {
+    // One tick per frame: the lower LED, on the switch's own wire, lights and
+    // goes dark a tick before the one behind the delay.
+    name: 'component-delay',
+    async run(ed) {
+      await ed.load('component-delay');
+      const [lever] = await ed.componentsOfType('SW');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      const frames = [await ed.snap({ clip })];
+      for (const on of [true, false]) {
+        await ed.setInput(lever.id, on);
+        for (let tick = 0; tick < 2; tick++) {
+          await ed.stepSimulation();
+          await ed.parkPointer();
+          frames.push(await ed.snap({ clip }));
+        }
+      }
+      // The last frame is the first again.
+      return { frames: frames.slice(0, -1) };
+    }
+  },
+  {
+    // Four outputs into a segment display, one frame per pulse on CLK. The
+    // engine's random sequence is reproducible for the same board.
+    name: 'component-random-number-generator',
+    async run(ed) {
+      await ed.load('component-random-number-generator');
+      const [button] = await ed.componentsOfType('PLS');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      const frames: Buffer[] = [];
+      for (let i = 0; i < 4; i++) {
+        await pulse(ed, button);
+        await ed.runUntilSettled();
+        await ed.parkPointer();
+        frames.push(await ed.snap({ clip }));
+      }
+      return { frames };
+    }
+  },
+  {
+    name: 'component-switch',
+    run: (ed) => switchStates(ed, 'component-switch', [[0], [1]])
+  },
+  {
+    // Released, then held.
+    name: 'component-button',
+    async run(ed) {
+      await ed.load('component-button');
+      const [button] = await ed.componentsOfType('BTN');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      return switchedFrames(ed, { clip }, [button]);
+    }
+  },
+  {
+    // One tick per frame around a press: idle, the one-tick pulse, idle.
+    name: 'component-pulse-button',
+    async run(ed) {
+      await ed.load('component-pulse-button');
+      const [button] = await ed.componentsOfType('PLS');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      await ed.runUntilSettled();
+      const frames = [await ed.snap({ clip })];
+      await pulse(ed, button);
+      for (let tick = 0; tick < 2; tick++) {
+        await ed.stepSimulation();
+        await ed.parkPointer();
+        frames.push(await ed.snap({ clip }));
+      }
+      return { frames };
+    }
+  },
+  {
+    // One LED powered, one not.
+    name: 'component-led',
+    run: (ed) => switchStates(ed, 'component-led', [[1, 0]])
+  },
+  {
+    // The default pad, A and Right held.
+    name: 'component-gamepad',
+    async run(ed) {
+      await ed.load('component-gamepad');
+      const [pad] = await ed.componentsOfType('PAD');
+      await ed.enterSimulation();
+      await ed.api(async (id) => {
+        await __logigator.sim.setInput(id, true, 'a');
+        await __logigator.sim.setInput(id, true, 'right');
+      }, pad.id);
+      await ed.runUntilSettled();
+      return { clip: await ed.contentClip({ pad: 1.5 }) };
+    }
+  },
+  {
+    // A text typed into the keyboard, printed by a terminal on its strobe.
+    name: 'component-keyboard',
+    async run(ed) {
+      await ed.load('component-keyboard');
+      const [keyboard] = await ed.componentsOfType('KBD');
+      await ed.enterSimulation();
+      const text = 'Hello, world!';
+      await ed.api((a) => __logigator.sim.type(a.id, a.text), {
+        id: keyboard.id,
+        text
+      });
+      // Four steps per character while paused, then the last one settles.
+      await ed.stepSimulation(text.length * 4 + 4);
+      return { clip: await ed.contentClip({ pad: 1.5 }) };
+    }
+  },
+  {
+    // The keyboard echo with three lines printed.
+    name: 'component-terminal',
+    async run(ed) {
+      await ed.load('keyboard-terminal');
+      const [keyboard] = await ed.componentsOfType('KBD');
+      await ed.enterSimulation();
+      const text =
+        'Hello, world!\nEach character arrives on D0-D7\nand prints on the rising edge of CLK.';
+      await ed.api((a) => __logigator.sim.type(a.id, a.text), {
+        id: keyboard.id,
+        text
+      });
+      await ed.stepSimulation(text.length * 4 + 4);
+      return { clip: await ed.contentClip({ pad: 1.5 }) };
+    }
+  },
+  {
+    // Four switches, 0101 → 5, 1010 → 10, then 15.
+    name: 'component-segment-display',
+    run: (ed) =>
+      switchStates(ed, 'component-segment-display', [
+        [0, 0, 0, 0],
+        [1, 0, 1, 0],
+        [0, 1, 0, 1],
+        [1, 1, 1, 1]
+      ])
+  },
+  {
+    // A0, A1, D0–D3 on switches and a pulse button on CLK: a cross drawn
+    // one row per frame.
+    name: 'component-led-matrix',
+    async run(ed) {
+      await ed.load('component-led-matrix');
+      const levers = await column(ed, 'SW');
+      const [button] = await ed.componentsOfType('PLS');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      const rows: (0 | 1)[][] = [
+        [0, 0, 1, 0, 0, 1],
+        [1, 0, 0, 1, 1, 0],
+        [0, 1, 0, 1, 1, 0],
+        [1, 1, 1, 0, 0, 1]
+      ];
+      const frames: Buffer[] = [];
+      for (const row of rows) {
+        for (const [i, lever] of levers.entries()) {
+          await ed.setInput(lever.id, row[i] === 1);
+        }
+        await ed.runUntilSettled();
+        await pulse(ed, button);
+        await ed.runUntilSettled();
+        await ed.parkPointer();
+        frames.push(await ed.snap({ clip }));
+      }
+      return { frames };
+    }
+  },
+
+  // -- Custom components ----------------------------------------------------
+  {
+    name: 'component-palette',
+    async run(ed) {
+      // A loaded file carries its customs as embedded copies; restoring one
+      // fills "User Components".
+      await ed.load('custom-example');
+      await ed.openCustomForEdit();
+      await ed.openMainTab();
+      // The palette is one column five times as tall as it is wide, which the
+      // page can only show as a sliver under its image height cap. Set in
+      // columns of the side bar's own width, a category never split across
+      // two, it is wide rather than tall, which the page shows larger.
+      const columns = 4;
+      const gap = 32;
+      const accordion = ed.page.locator('app-component-list lg-accordion');
+      const width = await accordion.evaluate(
+        (element) => element.getBoundingClientRect().width
+      );
+      await ed.page.addStyleTag({
+        content: `
+          aside:has(> app-side-bar) { width: max-content !important }
+          app-component-list lg-accordion {
+            width: ${columns * width + (columns - 1) * gap}px;
+            columns: ${columns};
+            column-gap: ${gap}px;
+          }
+          app-component-list lg-accordion-panel { break-inside: avoid }
+        `
+      });
+      // The divider under each category separates it from the next one; the
+      // last in a column has none below it.
+      await accordion.evaluate((element) => {
+        const panels = Array.from(
+          element.querySelectorAll<HTMLElement>('lg-accordion-panel')
+        );
+        // Measured before any is changed, so no removal moves the rest.
+        const lefts = panels.map((panel) => panel.getBoundingClientRect().left);
+        for (const [i, panel] of panels.entries()) {
+          if (i + 1 < panels.length && lefts[i + 1] !== lefts[i]) {
+            panel.style.borderBottomWidth = '0';
+          }
+        }
+      });
+      // The widened side bar leaves the board a sliver, and the minimap
+      // docked in its corner overhangs the palette.
+      await ed.hideOverlays();
+      await ed.parkPointer();
+      // The side-bar host is a window-filling scroll container; its single
+      // child is the palette.
+      return { clip: await ed.unionClip('app-side-bar > *') };
+    }
+  },
+  {
+    // Animated: the gates above and the custom below running the same circuit.
+    name: 'custom-component-showcase',
+    async run(ed) {
+      await ed.load('custom-comparison');
+      // The scene stacks the circuit twice; driving the matching switch in
+      // both halves is what makes them answer alike.
+      const bounds = await ed.contentBounds();
+      const middle = bounds.y + bounds.height / 2;
+      const levers = (await ed.componentsOfType('SW')).sort(
+        (a, b) => a.pos[1] - b.pos[1]
+      );
+      const drive = [
+        levers.find((lever) => lever.pos[1] < middle),
+        levers.find((lever) => lever.pos[1] >= middle)
+      ].filter((lever) => lever !== undefined);
+
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 2, zoom: 1.2 ** 2 });
+      return switchedFrames(ed, { clip }, drive);
+    }
+  },
+  {
+    name: 'custom-component-tab',
+    async run(ed) {
+      await ed.load('custom-example');
+      await ed.openCustomForEdit();
+      // Back to Pan: the select tool's scissor pill would float in this crop.
+      await ed.setWorkMode('pan');
+      await ed.hideOverlays();
+      const circuit = await ed.contentClip({
+        pad: 2,
+        zoom: BOARD_ZOOM,
+        anchor: 'top-left'
+      });
+      // The tabs, not the bar: the bar spans the board and the shot is only as
+      // wide as its subject.
+      const tabs = await ed.unionClip('app-tab-bar [role="tab"]');
+      return { clip: mergeRects(tabs, circuit) };
+    }
+  },
+
+  // -- Simulation -----------------------------------------------------------
+  {
+    name: 'simulation-controls',
+    async run(ed) {
+      await ed.load('half-adder');
+      await ed.enterSimulation();
+      return { clip: await ed.unionClip('app-simulation-controls', 4) };
+    }
+  },
+  {
+    // The speed panel, on a fixed speed: its clock list is then filled from the
+    // rate asked for, with no run to measure and nothing that varies.
+    name: 'simulation-speed',
+    async run(ed) {
+      await ed.load('clock');
+      await ed.enterSimulation();
+      await ed.api(() => __logigator.sim.setTarget(10, 'Hz'));
+      await ed.settle();
+      // The chip is named by the setting it shows, the same in every language.
+      const controls = ed.page.locator('app-simulation-controls');
+      await controls.getByRole('button', { name: /^10\sHz$/ }).click();
+      const panel = ed.page.getByRole('group', { name: ed.t('toolBar.speed') });
+      await panel.waitFor({ state: 'visible' });
+      // Off the chip first, so its tooltip is gone before the panel is framed.
+      await ed.parkPointer();
+      await ed.waitStable(panel);
+      // Framed by the popover's card, which pads and borders the group. The
+      // run controls start 8 px from the window's edge, which is as far left as
+      // a clip can reach; more would be clamped and move to the right instead.
+      const card = panel.locator('xpath=..');
+      return {
+        clip: await ed.unionClip([controls, card], {
+          top: 8,
+          left: 8,
+          bottom: 20,
+          right: 20
+        })
+      };
+    }
+  },
+  {
+    // Animated: two ticks of a clock, so the LED is dark then lit.
+    name: 'simulation-showcase',
+    // The run controls set the frame's width; a wider viewport only adds empty
+    // bar to the right of the clock.
+    context: { viewport: NARROW_VIEWPORT },
+    async run(ed) {
+      await ed.requireSingleRowToolBar();
+      await ed.load('clock');
+      await ed.enterSimulation();
+      // Parked under the run controls but centred across them, since the bars
+      // set the frame's width. Zoomed past the standard board step, or one
+      // clock and one LED read as a detail.
+      const circuit = await ed.contentClip({
+        pad: 2,
+        zoom: 1.2 ** 4,
+        anchor: 'top'
+      });
+      const bars = await ed.unionClip(['app-title-bar', 'app-tool-bar']);
+      const clip = mergeRects(bars, circuit);
+
+      const frames: Buffer[] = [];
+      for (let tick = 0; tick < 2; tick++) {
+        await ed.stepSimulation();
+        await ed.parkPointer();
+        frames.push(await ed.snap({ clip }));
+      }
+      return { frames };
+    }
+  },
+  {
+    // Animated: the low address line flips, so the highlighted word and the
+    // lit output both move.
+    name: 'rom-inspection',
+    async run(ed) {
+      await ed.load('rom');
+      // The topmost lever drives A1, the low address bit: 0x00 → 0x01.
+      const levers = await ed.componentsOfType('SW');
+      const address = levers.sort((a, b) => a.pos[1] - b.pos[1])[0];
+
+      await ed.enterSimulation();
+      await ed.runUntilSettled();
+      // Zoomed well past the standard board step so the ROM and its address
+      // lines fill the left column beside the ~450 px-tall inspector.
+      const circuit = await ed.contentClip({
+        pad: 2,
+        zoom: 1.2 ** 5,
+        anchor: 'top-left'
+      });
+      await ed.openWatch('ROM');
+      await ed.moveWatch({ x: circuit.x + circuit.width + 24, y: circuit.y });
+      const inspector = await ed.unionClip(ed.watchWindow(), 8);
+
+      // The inspector is the taller, so the circuit rides down to its middle.
+      const board = await ed.canvasBox();
+      const bounds = await ed.contentBounds();
+      await ed.centerContentAt({
+        y: inspector.y + inspector.height / 2 - board.y
+      });
+      await ed.parkPointer();
+      const clip = mergeRects(await ed.gridClip(bounds, 2), inspector);
+
+      const frames = [await ed.snap({ clip })];
+      await ed.setInput(address.id, true);
+      await ed.runUntilSettled();
+      await ed.parkPointer();
+      frames.push(await ed.snap({ clip }));
+      return { frames };
+    }
+  },
+  {
+    // A full gamepad holding A and right, its controller window beside it, so
+    // the pressed buttons and the powered ports read as one state.
+    name: 'gamepad-window',
+    async run(ed) {
+      const type = await ed.typeOf('PAD');
+      await ed.api(
+        (t) =>
+          __logigator.applyEdit([
+            {
+              op: 'addComponent',
+              type: t,
+              pos: [4, 4],
+              direction: 0,
+              options: { face: 4, shoulders: 2, menu: 2 }
+            }
+          ]),
+        type
+      );
+      const [pad] = await ed.componentsOfType('PAD');
+
+      await ed.enterSimulation();
+      await ed.api(async (id) => {
+        await __logigator.sim.setInput(id, true, 'a');
+        await __logigator.sim.setInput(id, true, 'right');
+      }, pad.id);
+      await ed.runUntilSettled();
+      const circuit = await ed.contentClip({
+        pad: 2,
+        zoom: BOARD_ZOOM,
+        anchor: 'top-left'
+      });
+      // The window opens focused, so its footer reads "Keyboard active".
+      await ed.openWatch('PAD');
+      const opened = await ed.box(ed.watchWindow());
+      await ed.moveWatch({
+        x: circuit.x + circuit.width + 24,
+        y: circuit.y + Math.max(0, (circuit.height - opened.height) / 2)
+      });
+      const controller = await ed.unionClip(ed.watchWindow(), 8);
+
+      // Whichever of the two is shorter is centred on the other.
+      const board = await ed.canvasBox();
+      const bounds = await ed.contentBounds();
+      if (controller.height > circuit.height) {
+        await ed.centerContentAt({
+          y: controller.y + controller.height / 2 - board.y
+        });
+      }
+      await ed.parkPointer();
+      return {
+        clip: mergeRects(await ed.gridClip(bounds, 2), controller)
+      };
+    }
+  },
+  {
+    // A keyboard whose window has two words typed and the last key still
+    // held, so the strip's highlighted character, On D and the readout on the
+    // board all show the same code, and the readout's box is lit by KD.
+    name: 'keyboard-window',
+    async run(ed) {
+      const type = await ed.typeOf('KBD');
+      await ed.api(
+        (t) =>
+          __logigator.applyEdit([
+            {
+              op: 'addComponent',
+              type: t,
+              pos: [4, 4],
+              direction: 0,
+              options: {}
+            }
+          ]),
+        type
+      );
+
+      await ed.enterSimulation();
+      const circuit = await ed.contentClip({
+        pad: 2,
+        zoom: BOARD_ZOOM,
+        anchor: 'top-left'
+      });
+      // The window opens with its typing field focused. The keys are typed
+      // there rather than through `sim.type`, because the strip shows what
+      // the window itself sent.
+      await ed.openWatch('KBD');
+      await ed.page.keyboard.type('hello');
+      await ed.page.keyboard.press('Enter');
+      await ed.page.keyboard.type('worl');
+      await ed.page.keyboard.down('d');
+      // Paused, every character takes four steps, three with KD high and one
+      // with it low: ten taps, then the held key's three press frames.
+      await ed.runUntilSettled(43);
+
+      // The status line truncates in a language longer than the window's
+      // initial width allows; the window grows by what it overflows.
+      const status = ed
+        .watchWindow()
+        .getByText(ed.t('components.def.KEYBOARD.window.typing'));
+      const overflow = await status.evaluate(
+        (span) => span.scrollWidth - span.clientWidth
+      );
+      if (overflow > 0) {
+        const { width } = await ed.box(ed.watchWindow());
+        await ed.api(
+          (a) => __logigator.inspect.setBounds(a.id, { width: a.width }),
+          { id: ed.requireWatch(), width: Math.ceil(width + overflow + 4) }
+        );
+        await ed.settle();
+      }
+
+      const opened = await ed.box(ed.watchWindow());
+      await ed.moveWatch({
+        x: circuit.x + circuit.width + 24,
+        y: circuit.y + Math.max(0, (circuit.height - opened.height) / 2)
+      });
+      const typing = await ed.unionClip(ed.watchWindow(), 8);
+
+      // Whichever of the two is shorter is centred on the other.
+      const board = await ed.canvasBox();
+      const bounds = await ed.contentBounds();
+      if (typing.height > circuit.height) {
+        await ed.centerContentAt({
+          y: typing.y + typing.height / 2 - board.y
+        });
+      }
+      await ed.parkPointer();
+      return { clip: mergeRects(await ed.gridClip(bounds, 2), typing) };
+    }
+  },
+  {
+    // A keyboard typing into a terminal until two lines have scrolled off its
+    // screen, so the window shows them above the band the board also shows.
+    name: 'terminal-window',
+    async run(ed) {
+      await ed.load('keyboard-terminal');
+      await ed.enterSimulation();
+      const [keyboard] = await ed.componentsOfType('KBD');
+      const [terminal] = await ed.componentsOfType('TTY');
+      const lines = [
+        'hello',
+        'world',
+        'The quick brown fox jumps over the lazy dog.',
+        'Victor jagt zwölf Boxkämpfer quer über den großen Sylter Deich.',
+        'Portez ce vieux whisky au juge blond qui fume.',
+        'El veloz murciélago hindú comía feliz cardillo y kiwi.',
+        '0123456789',
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        'abcdefghijklmnopqrstuvwxyz'
+      ];
+      const text = lines.map((line) => `${line}\n`).join('');
+      await ed.api((a) => __logigator.sim.type(a.id, a.text), {
+        id: keyboard.id,
+        text
+      });
+      // Four steps per character while paused; the readout says when the
+      // last one has been printed.
+      await ed.stepSimulation(text.length * 4);
+      for (let attempt = 0; ; attempt++) {
+        const readout = await ed.api(
+          (id) => __logigator.sim.readTerminal(id),
+          terminal.id
+        );
+        const last = readout.screen[readout.cursor.row - 1];
+        if (readout.cursor.column === 0 && last === lines.at(-1)) break;
+        if (attempt === 10) {
+          throw new Error(`the terminal reads ${JSON.stringify(readout)}`);
+        }
+        await ed.stepSimulation(4);
+      }
+
+      const circuit = await ed.contentClip({
+        pad: 2,
+        zoom: BOARD_ZOOM,
+        anchor: 'top-left'
+      });
+      await ed.openWatch('TTY');
+      // The window opens scrolled to the screen; it grows until the
+      // scrollback above it is in view too.
+      const overflow = await ed
+        .watchWindow()
+        .locator('cdk-virtual-scroll-viewport')
+        .evaluate((viewport) => viewport.scrollHeight - viewport.clientHeight);
+      if (overflow > 0) {
+        const { height } = await ed.box(ed.watchWindow());
+        await ed.api(
+          (a) => __logigator.inspect.setBounds(a.id, { height: a.height }),
+          { id: ed.requireWatch(), height: Math.ceil(height + overflow) }
+        );
+        await ed.settle();
+      }
+      const opened = await ed.box(ed.watchWindow());
+      await ed.moveWatch({
+        x: circuit.x + circuit.width + 24,
+        // Its margin stays on the board, the window outgrowing the circuit.
+        y: circuit.y + Math.max(8, (circuit.height - opened.height) / 2)
+      });
+      const output = await ed.unionClip(ed.watchWindow(), 8);
+
+      // Whichever of the two is shorter is centred on the other.
+      const board = await ed.canvasBox();
+      const bounds = await ed.contentBounds();
+      if (output.height > circuit.height) {
+        await ed.centerContentAt({
+          y: output.y + output.height / 2 - board.y
+        });
+      }
+      await ed.parkPointer();
+      return { clip: mergeRects(await ed.gridClip(bounds, 2), output) };
+    }
+  },
+  {
+    // Animated: the watch following the board it mirrors, inner circuit
+    // lighting with the outer one.
+    name: 'inspection-showcase',
+    // Two things side by side: the narrowest viewport puts them as close as
+    // the layout allows, and the short height keeps the board off mostly grid.
+    context: { viewport: { ...NARROW_VIEWPORT, height: 560 } },
+    async run(ed) {
+      await ed.requireSingleRowToolBar();
+      await ed.load('custom-example');
+      await ed.hideOverlays();
+
+      const [lever] = await ed.componentsOfType('SW');
+      await ed.enterSimulation();
+      await ed.setInput(lever.id, true);
+      await ed.runUntilSettled();
+      // The standard board step, so the instance matches every other shot.
+      await ed.focus('content', { paddingGrid: 3, maxZoom: BOARD_ZOOM });
+      await ed.openWatch('EX');
+
+      // The window goes flush to the board's right edge and the circuit into
+      // the middle of what is left, whatever size the window came up.
+      const board = await ed.canvasBox();
+      const watch = await ed.box(ed.watchWindow());
+      const margin = 16;
+      // The window is as tall as the board allows: margin only on the sides.
+      const left = Math.max(0, board.width - watch.width - margin);
+      const top = Math.max(0, Math.min(margin, board.height - watch.height));
+      await ed.moveWatch({ x: board.x + left, y: board.y + top });
+      await ed.centerContentAt({ x: left / 2 });
+      // A watch fits its circuit at 100 % at most, which leaves this one small
+      // in a window this size; `BOARD_ZOOM` gives the inner circuit the same
+      // weight as the instance beside it.
+      await ed.zoomWatch(BOARD_ZOOM);
+      return switchedFrames(ed, { clip: await ed.fullViewportClip() }, [lever]);
+    }
+  },
+  {
+    name: 'inspection-window-multilayer',
+    // The watch is clamped to the board it floats over, so a short viewport
+    // makes a short window. Each level is fit to the canvas when it first
+    // shows, and these open at the window's final size, so the smaller window
+    // means less empty grid, not a cropped circuit.
+    context: { viewport: { height: 440 } },
+    async run(ed) {
+      await ed.load('nested-custom');
+      await ed.focus('content', { paddingGrid: 3, maxZoom: 1 });
+      await ed.enterSimulation();
+      await ed.openWatch('OTR');
+      // Drilling in is what puts the "Outer › Inner" trail in the header.
+      await ed.drillIntoWatch();
+      await ed.parkPointer();
+      return { locator: ed.watchWindow() };
+    }
+  },
+
+  // -- Dialogs --------------------------------------------------------------
+  {
+    // A draft's first save while signed in: Cloud is preselected, which is
+    // what brings up the visibility choice below it.
+    name: 'save-project',
+    context: { cloud: true },
+    async run(ed) {
+      // A draft, not a loaded circuit: an import is stored as a local project
+      // straight away, and saving one opens no dialog.
+      await ed.menu(
+        'titleBar.menuBar.file.label',
+        'titleBar.menuBar.file.items.save.label'
+      );
+      const dialog = ed.dialog();
+      await dialog.locator('#save-project-name').fill('Half adder');
+      await dialog.locator('#save-project-visibility-label').waitFor();
+      await ed.parkPointer();
+      await ed.waitStable(dialog);
+      return { locator: dialog };
+    }
+  },
+  {
+    name: 'open-file',
+    async run(ed) {
+      await ed.menu(
+        'titleBar.menuBar.file.label',
+        'titleBar.menuBar.file.items.open.label'
+      );
+      await ed.clickTab('openProjectDialog.fromFile');
+      await ed.parkPointer();
+      return { locator: ed.dialog() };
+    }
+  },
+  {
+    name: 'export-image',
+    async run(ed) {
+      await ed.load('half-adder');
+      await ed.menu(
+        'titleBar.menuBar.file.label',
+        'titleBar.menuBar.file.items.generateImage.label'
+      );
+      await ed.parkPointer();
+      return { locator: ed.dialog() };
+    }
+  },
+  // -- Cloud ----------------------------------------------------------------
+  //
+  // `context: { cloud: true }` runs the shot against `lib/cloud-api.ts`, not a
+  // real backend.
+  {
+    name: 'account-menu',
+    // This shot is *of* the preferences, so it shows their shipped defaults
+    // rather than the values the capture run pins for determinism.
+    context: {
+      cloud: true,
+      localStorage: {
+        'logigator.settings': JSON.stringify({
+          fpsCounter: true,
+          showGrid: true,
+          autoStartSimulation: true,
+          onboardingTips: true
+        })
+      }
+    },
+    async run(ed) {
+      // The shared account control: a trigger in the title bar and the panel it
+      // opens into an overlay.
+      const trigger = ed.page.locator('app-user-settings button');
+      await trigger.click();
+      const panel = ed.page.locator('lg-user-panel');
+      await panel.waitFor({ state: 'visible' });
+      await ed.waitStable(panel);
+      await ed.parkPointer();
+      // Padded, so neither the panel nor its trigger is cut flush. The
+      // trigger sits 4 px from the window's right edge and `unionClip` clamps
+      // there, so that side keeps the smaller margin.
+      return {
+        clip: await ed.unionClip([trigger, panel], {
+          top: 8,
+          left: 12,
+          bottom: 8,
+          right: 8
+        })
+      };
+    }
+  },
+  {
+    name: 'open-cloud',
+    context: { cloud: true },
+    async run(ed) {
+      await ed.menu(
+        'titleBar.menuBar.file.label',
+        'titleBar.menuBar.file.items.open.label'
+      );
+      await ed.clickTab('openProjectDialog.cloudProjects');
+      await ed.page.getByText('Example', { exact: true }).waitFor();
+      await ed.parkPointer();
+      return { locator: ed.dialog() };
+    }
+  },
+  {
+    name: 'upload-to-cloud',
+    context: { cloud: true },
+    async run(ed) {
+      // "Outer" embeds "Inner", so the dialog has a local dependency to list.
+      // Both must reach the browser library: restoring "Outer" opens its
+      // circuit, where "Inner" is an embedded copy until restored in turn.
+      await ed.load('nested-custom');
+      await ed.openCustomForEdit();
+      await ed.openCustomForEdit();
+      await ed.openMainTab();
+      await ed.selectCustomInstance();
+      await ed.clickButton('uploadComponent.button');
+      await ed.parkPointer();
+      return { locator: ed.dialog() };
+    }
+  },
+  {
+    name: 'share-component',
+    context: { cloud: true },
+    async run(ed) {
+      // Sharing acts on a component that already lives in the cloud.
+      const type = await ed.typeOf('Memory');
+      await ed.api(
+        (t) =>
+          __logigator.applyEdit([
+            {
+              op: 'addComponent',
+              type: t,
+              pos: [4, 4],
+              direction: 0,
+              options: {}
+            }
+          ]),
+        type
+      );
+      await ed.selectCustomInstance();
+      await ed.clickButton('shareComponent.button');
+      await ed.parkPointer();
+      return { locator: ed.dialog() };
+    }
+  },
+
+  {
+    name: 'shortcut-manager',
+    // The dialog fills the window's height and its list scrolls. A viewport
+    // holding every binding makes an image too tall to read, so this frames
+    // the first sections only.
+    context: { viewport: { width: 1280, height: 820 } },
+    async run(ed) {
+      await ed.menu('titleBar.menuBar.edit.label', 'shortcuts.title');
+      await ed.parkPointer();
+      return { locator: ed.dialog() };
+    }
+  }
+];

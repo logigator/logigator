@@ -1,0 +1,86 @@
+<ng-container *webTranslate="let t">
+  @let emailMessage = emailError(); @let passwordMessage = passwordError();
+
+  <web-auth-shell [heading]="t('pages.login.heading')">
+    <form class="flex flex-col gap-4" [formGroup]="form" (ngSubmit)="submit()">
+      @if (googleError(); as message) {
+      <lg-message severity="danger">{{ t(message) }}</lg-message>
+      } @if (verificationSent()) {
+      <lg-message severity="success">{{ t('pages.login.resent') }}</lg-message>
+      } @if (formError(); as message) {
+      <lg-message severity="danger">{{ t(message) }}</lg-message>
+      }
+
+      <lg-form-field
+        #emailField="lgFormField"
+        inputId="login-email"
+        [label]="t('auth.email')"
+        [error]="emailMessage ? t(emailMessage) : undefined"
+      >
+        <input
+          lgInputText
+          id="login-email"
+          type="email"
+          autocomplete="email"
+          class="w-full"
+          formControlName="email"
+          [invalid]="!!emailMessage"
+          [attr.aria-describedby]="emailField.describedBy()"
+        />
+      </lg-form-field>
+
+      <lg-form-field
+        #passwordField="lgFormField"
+        inputId="login-password"
+        [label]="t('auth.password')"
+        [error]="passwordMessage ? t(passwordMessage) : undefined"
+      >
+        <input
+          lgInputText
+          id="login-password"
+          type="password"
+          autocomplete="current-password"
+          class="w-full"
+          formControlName="password"
+          [invalid]="!!passwordMessage"
+          [attr.aria-describedby]="passwordField.describedBy()"
+        />
+      </lg-form-field>
+
+      <a
+        class="-mt-1 self-start text-sm text-primary hover:underline"
+        [routerLink]="links.resetPassword()"
+        >{{ t('pages.login.forgotPassword') }}</a
+      >
+
+      <button lgButton type="submit" [loading]="submitting()">
+        {{ t('pages.login.submit') }}
+      </button>
+
+      @if (unverified()) {
+      <!-- Resending needs the address *and* the password, which is what stops
+             it being a way to mail somebody else's inbox — so it is a button on
+             this form rather than a page of its own. -->
+      <button
+        lgButton
+        outlined
+        severity="secondary"
+        type="button"
+        [loading]="submitting()"
+        (click)="resendVerification()"
+      >
+        {{ t('pages.login.resend') }}
+      </button>
+      }
+    </form>
+
+    <web-google-sign-in class="block" [returnPath]="returnPath()" />
+
+    <p class="mt-6 text-center text-sm text-muted">
+      {{ t('pages.login.noAccount') }}
+      <a class="text-primary hover:underline" [routerLink]="links.register()"
+        >{{ t('pages.login.registerLink') }}</a
+      >
+    </p>
+  </web-auth-shell>
+</ng-container>

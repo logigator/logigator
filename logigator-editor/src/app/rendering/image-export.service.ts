@@ -6,13 +6,14 @@ import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ToastService } from '../logging/toast.service';
 import {
   BoardSnapshotService,
-  MAX_SNAPSHOT_DIMENSION,
-  SnapshotBackground
+  EXPORT_MARGIN_GRID,
+  MAX_SNAPSHOT_DIMENSION
 } from './board-snapshot.service';
 import { downloadBlob } from '../utils/download';
 import { environment } from '../../environments/environment';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { WEBP_LOSSLESS_QUALITY } from './webp-support';
 
 export type ImageFormat = 'png' | 'jpeg' | 'webp';
 
@@ -23,16 +24,36 @@ export interface ImageExportOptions {
   multiplier: number;
   /** `true` = theme color + dot-grid; `false` = transparent (png/webp) / white (jpeg). */
   background: boolean;
-  /** 0–1, applied to jpeg/webp. */
+  /** 0–1, applied to jpeg and lossy webp. */
   quality?: number;
+  /**
+   * WebP only: encode losslessly, ignoring `quality`. Only where
+   * `WebpSupportService.lossless` says the browser can.
+   */
+  lossless?: boolean;
   /** File name without extension; defaults to the project's metadata name. */
   fileName?: string;
 }
 
+/** Which part of a project one export picture covers. */
+export interface ImageFraming {
+  /** Grid rectangle to cover instead of the whole content. */
+  region?: Rectangle;
+  /** Grid units kept around it; defaults to the export margin. */
+  marginGrid?: number;
+}
+
+/** What one export picture is, before it becomes a file. */
+export interface ImageRenderOptions extends ImageFraming {
+  /** Output pixels per grid unit = `gridSize × multiplier`. */
+  multiplier: number;
+  /** `true` = theme color + dot-grid; `false` = transparent. */
+  background: boolean;
+}
+
 /**
- * Largest texture side (px) rendered in a single pass. Beyond it the multiplier
- * is clamped and the user warned, rather than tiling. Shared with the snapshot
- * service, which bounds its supersampling by the same cap.
+ * Largest texture side (px) per pass. Beyond it the multiplier is clamped and
+ * the user warned, rather than tiling.
  */
 export const MAX_EXPORT_DIMENSION = MAX_SNAPSHOT_DIMENSION;
 
@@ -47,12 +68,17 @@ const EXTENSION: Record<ImageFormat, string> = {
   webp: 'webp'
 };
 const DEFAULT_QUALITY = 0.92;
+/**
+ * The most a lossy WebP is asked for: Chromium reads
+ * {@link WEBP_LOSSLESS_QUALITY} as a request for lossless, and that is the
+ * `lossless` option's to make, not the top of the quality slider's.
+ */
+const MAX_LOSSY_WEBP_QUALITY = 0.99;
 const DEFAULT_NAME = 'circuit';
 
 /**
- * Exports a project's canvas as a downloadable PNG / JPEG / WebP. Orchestration
- * only — the actual rendering and pixel extraction live in
- * {@link BoardSnapshotService}.
+ * Exports a project's canvas as a downloadable PNG / JPEG / WebP.
+ * Orchestration only; rendering lives in {@link BoardSnapshotService}.
  */
 @Injectable({
   providedIn: 'root'
@@ -64,18 +90,14 @@ export class ImageExportService {
   private readonly translation = inject(TranslationService);
   private readonly analytics = inject(AnalyticsService);
 
-  /**
-   * Largest multiplier whose output fits {@link MAX_EXPORT_DIMENSION} on both
-   * axes. Used to clamp the export and to drive the dialog's dimension preview.
-   */
-  public maxMultiplier(project: Project): number {
-    return this._maxMultiplier(this.snapshot.computeRegion(project));
+  /** Largest multiplier whose output fits {@link MAX_EXPORT_DIMENSION}. */
+  public maxMultiplier(project: Project, framing: ImageFraming = {}): number {
+    return this._maxMultiplier(this._region(project, framing));
   }
 
   /**
-   * Output dimensions for a project at a multiplier, with the effective
-   * (possibly clamped) value applied. Drives the dialog's live size preview and
-   * needs no renderer (bounds-only).
+   * Output dimensions at a multiplier, with the effective (possibly clamped)
+   * value applied. Bounds-only, so it needs no renderer.
    */
   public previewSize(
     project: Project,
@@ -105,17 +127,9 @@ export class ImageExportService {
 
     let canvas: HTMLCanvasElement;
     try {
-      canvas = this.snapshot.renderProjectToCanvas(options.project, {
+      canvas = this.renderCanvas(options.project, {
         multiplier: effective,
-        background: this._backgroundMode(options),
-        // Inert at the dialog's whole-number resolutions, which already put
-        // hairlines on whole pixels; earns its cost only if a fit-derived
-        // multiplier ever reaches here with room under the dimension cap.
-        supersample: this.snapshot.subPixelSupersample(
-          region,
-          effective,
-          MAX_EXPORT_DIMENSION
-        )
+        background: options.background
       });
     } catch (err) {
       this.toast.error(
@@ -146,8 +160,8 @@ export class ImageExportService {
       background: options.background
     });
 
-    // A clamped export still succeeded; the clamp warning both confirms it and
-    // explains the reduced size, so it stands in for the success toast.
+    // A clamped export succeeded, and its warning stands in for the success
+    // toast by explaining the reduced size.
     if (clamped) {
       const { width, height } = this.snapshot.outputSize(region, effective);
       this.toast.warn(
@@ -165,11 +179,42 @@ export class ImageExportService {
     }
   }
 
-  private _backgroundMode(options: ImageExportOptions): SnapshotBackground {
-    if (options.background) return 'grid';
-    // JPEG has no alpha; flattening onto white happens in _toBlob, so render
-    // transparent here regardless of format.
-    return 'transparent';
+  /**
+   * The picture an export is, as a canvas: the content — or the given region —
+   * plus its margin at `multiplier`, which is taken as given; clamping is the
+   * caller's. Throws without a renderer.
+   *
+   * Without a background it is transparent in every format: JPEG has no
+   * alpha, and `_toBlob` flattens it onto white afterwards.
+   */
+  public renderCanvas(
+    project: Project,
+    options: ImageRenderOptions
+  ): HTMLCanvasElement {
+    const region = this._region(project, options);
+    return this.snapshot.renderRegionToCanvas(project, region, {
+      multiplier: options.multiplier,
+      background: options.background ? 'grid' : 'transparent',
+      // Inert at whole-number resolutions, which already put hairlines on
+      // whole pixels; only a fit-derived multiplier earns its cost.
+      supersample: this.snapshot.subPixelSupersample(
+        region,
+        options.multiplier,
+        MAX_EXPORT_DIMENSION
+      )
+    });
+  }
+
+  /** The grid rectangle a picture covers, margin included. */
+  private _region(project: Project, framing: ImageFraming): Rectangle {
+    const { region, marginGrid = EXPORT_MARGIN_GRID } = framing;
+    if (!region) return this.snapshot.computeRegion(project, marginGrid);
+    return new Rectangle(
+      region.x - marginGrid,
+      region.y - marginGrid,
+      region.width + 2 * marginGrid,
+      region.height + 2 * marginGrid
+    );
   }
 
   private _maxMultiplier(region: Rectangle): number {
@@ -186,10 +231,21 @@ export class ImageExportService {
       options.format === 'jpeg' && !options.background
         ? this._flattenOnWhite(canvas)
         : canvas;
-    const quality = options.quality ?? DEFAULT_QUALITY;
     return new Promise((resolve) =>
-      source.toBlob((blob) => resolve(blob), MIME[options.format], quality)
+      source.toBlob(
+        (blob) => resolve(blob),
+        MIME[options.format],
+        this._quality(options)
+      )
     );
+  }
+
+  private _quality(options: ImageExportOptions): number {
+    const quality = options.quality ?? DEFAULT_QUALITY;
+    if (options.format !== 'webp') return quality;
+    return options.lossless
+      ? WEBP_LOSSLESS_QUALITY
+      : Math.min(quality, MAX_LOSSY_WEBP_QUALITY);
   }
 
   /** JPEG cannot store alpha; composite a transparent render onto white. */

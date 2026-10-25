@@ -1,12 +1,11 @@
 import { Point, PointData, Rectangle } from 'pixi.js';
-import { Direction } from './direction';
+import { Direction } from '@logigator/core';
 
 /**
  * Pure quarter-turn helpers for rotating a group of circuit elements around a
- * shared pivot. Like `component-geometry.ts`, rotation here is exact
- * per-step arithmetic, never a trig Matrix: connection points are matched by
- * exact coordinates, so any float noise would disconnect ports that still
- * look attached.
+ * shared pivot. Exact per-step arithmetic, never a trig Matrix: connection
+ * points are matched by exact coordinates, so float noise would disconnect
+ * ports that still look attached.
  *
  * `steps` counts clockwise quarter-turns; a counter-clockwise turn is 3.
  */
@@ -24,11 +23,7 @@ export function rotateDirection(
   return ((direction + normalizeRotationSteps(steps)) % 4) as Direction;
 }
 
-/**
- * A point rotated clockwise around `pivot` by `steps` quarter-turns. One
- * clockwise turn maps an offset (dx, dy) to (-dy, dx) — the same matrix as
- * `rotatedLocalPoint`'s E→S step.
- */
+/** A point rotated clockwise around `pivot` by `steps` quarter-turns. */
 export function rotatePointAroundPivot(
   pivot: PointData,
   p: PointData,
@@ -49,8 +44,8 @@ export function rotatePointAroundPivot(
 }
 
 /**
- * An axis-aligned rectangle rotated around `pivot` — quarter-turns keep it
- * axis-aligned (width and height swap on odd steps).
+ * An axis-aligned rectangle rotated around `pivot`; quarter-turns keep it
+ * axis-aligned, with width and height swapping on odd steps.
  */
 export function rotateRectAroundPivot(
   pivot: PointData,
@@ -73,38 +68,29 @@ export function rotateRectAroundPivot(
 
 /**
  * The pivot a group rotates around: its bounding box's centre snapped to the
- * nearest rotation-safe lattice point. Safe points have both coordinates
- * integer or both half-odd — either kind maps integer component positions
- * back onto integers and half-grid wire endpoints back onto the half-grid
- * (the rotated coordinates are pivot-sums of the source offsets); a point
- * with a fractional part on only one axis would shear the two lattices into
- * each other.
+ * nearest rotation-safe lattice point. Safe means both coordinates integer or
+ * both half-odd, which keeps integer component positions on integers and
+ * half-grid wire endpoints on the half-grid; a fractional part on one axis
+ * only would shear the two lattices into each other.
  *
- * The snap is a fixed point of the rotation step: recomputing the pivot from
- * the rotated bounds yields the same point, so repeated quarter-turns — each
- * an independent rotate committing in place — share one exact pivot, and any
- * sequence netting out to full turns lands the group exactly where it
- * started. That property hinges on two deterministic tie-breaks (a
- * direction-biased tie like `Math.round`'s half-up translates the group a
- * little each step, and the bias never cancels across a cycle):
+ * The snap is a fixed point of the rotation step, so repeated quarter-turns
+ * share one exact pivot and any sequence netting out to full turns lands the
+ * group where it started. That needs unbiased tie-breaks — a half-up tie like
+ * `Math.round`'s translates the group a little every step and never cancels:
  *
- * - Integer vs half-odd at equal distance (centre fractions of ±1/4 on both
- *   axes): the integer point wins.
- * - Centre halfway between two integer points (fraction 1/2 on exactly one
- *   axis): the point with even x + y wins. Such centres are edge midpoints
- *   of the integer grid; every position the group orbits through resolves
- *   to the same even-sum endpoint.
+ * - Integer vs half-odd at equal distance: the integer point wins.
+ * - Centre halfway between two integer points: the even x + y point wins, so
+ *   every position the group orbits through picks the same endpoint.
  *
  * Bounds live on the half-grid, so centre coordinates are multiples of 1/4 —
- * dyadic and exact, like all lattice arithmetic in this file.
+ * dyadic and exact.
  */
 export function rotationPivotFor(bounds: Rectangle): Point {
   const cx = bounds.x + bounds.width / 2;
   const cy = bounds.y + bounds.height / 2;
 
-  // Integer candidate. On a half tie the two nearest integers are the
-  // half-up rounding and its lower neighbour; parity picks between them.
-  // `+ 0` folds Math.round's negative zero into plain zero.
+  // Integer candidate. On a half tie parity picks between the half-up
+  // rounding and its lower neighbour. `+ 0` folds away negative zero.
   let ix = Math.round(cx) + 0;
   let iy = Math.round(cy) + 0;
   if ((ix + iy) % 2 !== 0) {
@@ -112,8 +98,8 @@ export function rotationPivotFor(bounds: Rectangle): Point {
     else if (cy - Math.floor(cy) === 0.5) iy--;
   }
 
-  // Half-odd candidate. Whenever it is strictly nearer than the integer one
-  // it is also unique, so its own rounding ties never surface.
+  // Half-odd candidate: unique whenever it is strictly nearer than the
+  // integer one, so its own rounding ties never surface.
   const hx = Math.round(cx - 0.5) + 0.5;
   const hy = Math.round(cy - 0.5) + 0.5;
 

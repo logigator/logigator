@@ -2,10 +2,8 @@ import { ToastService } from '../logging/toast.service';
 import { TranslationService } from '../translation/translation.service';
 
 /**
- * Surfaces the aggregated "custom components were skipped" warning for a
- * decoded document. The file codec owns no UI — it reports the count of
- * customs dropped for a missing snapshot — so every load entry point funnels
- * that count through here, keeping the user-facing message uniform.
+ * The aggregated "custom components were skipped" warning. The file codec owns
+ * no UI, so every load entry point funnels its count through here.
  */
 export function warnSkippedCustoms(
   toast: ToastService,
