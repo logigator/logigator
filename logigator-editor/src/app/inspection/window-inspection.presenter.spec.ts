@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { signal, Type } from '@angular/core';
+import { isSignal, signal, Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { WindowService } from '@logigator/ui';
+import { LgHelpAction, WindowService } from '@logigator/ui';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Component } from '../components/component';
 import { ComponentInspection } from '../components/component-inspection';
+import { DocsTarget } from '../documentation/docs-target';
+import { DocumentationService } from '../documentation/documentation.service';
 import { OpenInspection } from './inspection-presenter';
 import { WindowInspectionPresenter } from './window-inspection.presenter';
 
@@ -16,6 +18,13 @@ class TestInspection extends ComponentInspection {
     initial: { width: 600, height: 500 },
     min: { width: 300, height: 200 }
   };
+}
+
+class DocumentedInspection extends TestInspection {
+  override readonly docs = signal<DocsTarget>({
+    page: 'inspection',
+    anchor: 'rom-contents'
+  });
 }
 
 function makeEntry(): OpenInspection {
@@ -48,6 +57,25 @@ describe('WindowInspectionPresenter', () => {
     expect(windows[0].config.title).toBe(entry.inspection.title);
     expect(windows[0].config.initialSize).toEqual({ width: 600, height: 500 });
     expect(windows[0].config.minSize).toEqual({ width: 300, height: 200 });
+  });
+
+  it('gives the window no help button when the inspection names no docs', () => {
+    presenter.show(makeEntry(), () => undefined);
+    expect(windowService.windows()[0].config.help).toBeUndefined();
+  });
+
+  it("opens the inspection's docs section as it stands when help is pressed", () => {
+    const open = vi
+      .spyOn(TestBed.inject(DocumentationService), 'open')
+      .mockImplementation(() => undefined);
+    const inspection = new DocumentedInspection();
+    presenter.show({ component: {} as Component, inspection }, () => undefined);
+    const help = windowService.windows()[0].config.help;
+    if (!isSignal(help)) throw new Error('expected a live help action');
+
+    inspection.docs.set({ page: 'shortcuts', anchor: 'gamepad-keys' });
+    (help() as LgHelpAction).command();
+    expect(open).toHaveBeenCalledWith('shortcuts', 'gamepad-keys');
   });
 
   it('reports a user-driven window close as dismissed', () => {

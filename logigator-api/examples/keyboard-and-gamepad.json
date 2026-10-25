@@ -1,0 +1,88 @@
+{
+  "version": 2,
+  "name": "Keyboard and Gamepad",
+  "components": [
+    {
+      "type": 5,
+      "x": [28],
+      "y": [31]
+    },
+    {
+      "type": 7,
+      "x": [36, 19, 2],
+      "y": [16, 8, 12],
+      "opt": {
+        "fontSize": [12, 12, 12],
+        "text": ["Key held", "Progress", "Unlocked"]
+      }
+    },
+    {
+      "type": 12,
+      "x": [35],
+      "y": [24],
+      "opt": {
+        "wordSize": [5],
+        "addressSize": [7],
+        "data": [
+          "IIhBijkoAQAAAEGIEEIIIQAAAAAADAIAAAAAAAAAAABQwAEAAAAAAAAAAAxAAAAAAAAAAAAAAAACAAAAAAAAAAAJAAAAAAAAAAAAAAAAAAA="
+        ]
+      }
+    },
+    {
+      "type": 13,
+      "x": [45, 0, 0, 0, 0],
+      "y": [24, 3, 3, 3, 3]
+    },
+    {
+      "type": 19,
+      "x": [23],
+      "y": [28],
+      "opt": {
+        "numOutputs": [3],
+        "validOutput": ["on"]
+      }
+    },
+    {
+      "type": 202,
+      "x": [34, 21],
+      "y": [16, 20]
+    },
+    {
+      "type": 203,
+      "x": [55],
+      "y": [26],
+      "opt": {
+        "numInputs": [4],
+        "base": [0]
+      }
+    },
+    {
+      "type": 206,
+      "x": [15],
+      "y": [29],
+      "opt": {
+        "face": [2],
+        "shoulders": [0],
+        "menu": [0],
+        "names": [{}]
+      }
+    },
+    {
+      "type": 207,
+      "x": [26],
+      "y": [6]
+    },
+    {
+      "type": 208,
+      "x": [34],
+      "y": [6],
+      "opt": {
+        "columns": [40],
+        "rows": [12],
+        "textSize": ["small"]
+      }
+    }
+  ],
+  "wires": "33,6:w3;0,1:w3;0,1:w3;0,1:w3;0,1:w3;0,1:w3;0,1:w3;0,1:w3;0,1:w3;0,2:w1n1w2;11,8:w6;4,0:e1;-14,1:w2n3e18s5;20,1:w5n2n1w16s1e1;-10,1:w2n2w4;10,0:w4w2;-20,1:w8;10,0:w1;10,0:w3;-32,1:w3;12,0:w8;20,0:w2;-32,1:w3;12,0:w8;10,0:w3n4w3;4,0:e3n2n7w20s5e3;-26,1:w3;5,0:w1;3,0:e6s7e7n1n3n3n3n3e1;14,0:w1;-22,1:w3;0,1:w3;22,0:w4n6w2;4,0:e4n4n9w22s7e4;-26,1:w3;22,0:w1;0,2:w5n8w1;10,0:w6;-10,1:w1",
+  "definitions": []
+}

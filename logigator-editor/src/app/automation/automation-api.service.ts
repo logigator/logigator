@@ -3,16 +3,32 @@ import { Point, Rectangle } from 'pixi.js';
 
 import { environment } from '../../environments/environment';
 import { Component } from '../components/component';
+import type { InputRoute } from '../components/component-inspection';
 import { ComponentProviderService } from '../components/component-provider.service';
-import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
+import { isUserInput, UserInput } from '../components/user-input';
+import {
+  charactersThatFit,
+  KEYBOARD_TEXT_LIMIT,
+  pendingCharacters,
+  textToCodesStrict
+} from '../components/component-types/keyboard/ascii';
+import {
+  KeyboardComponent,
+  KeyboardRoute
+} from '../components/component-types/keyboard/keyboard.component';
+import { TerminalComponent } from '../components/component-types/terminal/terminal.component';
+import { isCanvasOperatedInput } from '../rendering/interaction/body-hit';
+import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
 import { CustomComponentService } from '../custom-component/custom-component.service';
-import { OpenInspection } from '../inspection/inspection-presenter';
+import { entryTitle, OpenInspection } from '../inspection/inspection-presenter';
 import { InspectionService } from '../inspection/inspection.service';
 import { WindowInspectionPresenter } from '../inspection/window-inspection.presenter';
 import { LoggingService } from '../logging/logging.service';
+import { BoardSnapshotService } from '../rendering/board-snapshot.service';
 import { BoardSurfaceService } from '../rendering/board-surface.service';
+import { ImageExportService } from '../rendering/image-export.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import {
@@ -24,16 +40,14 @@ import { ProjectService } from '../project/project.service';
 import { BoardCompilerService } from '../simulation/compiler/board-compiler.service';
 import { CompiledBoard } from '../simulation/compiler/compiled-board.model';
 import { CompileDiagnostic } from '../simulation/compiler/compile-error';
-import {
-  SimulationService,
-  TargetSpeedUnit
-} from '../simulation/simulation.service';
+import { SimulationService } from '../simulation/simulation.service';
 import { EditorSettingsService } from '../settings/editor-settings.service';
 import { ThemeType } from '../theming/theme-type.enum';
 import { ThemingService } from '../theming/theming.service';
 import { TranslationService } from '../translation/translation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
+import { bytesToBase64 } from '../utils/packed-buffer';
 import { Wire } from '../wires/wire';
 import {
   ApiInfo,
@@ -49,17 +63,23 @@ import {
   FocusTarget,
   GridPoint,
   GridRect,
+  InputSlot,
+  InputValue,
   InspectionInfo,
   LibraryEntry,
   LogigatorAutomationApi,
   PerOpError,
   PortReadout,
   ProjectState,
+  RenderedImage,
+  RenderedPreviews,
+  RenderImageOptions,
   ScreenPoint,
   ScreenRect,
   SelectionState,
   SelectOptions,
   SelectRegion,
+  TerminalReadout,
   SettingDescriptor,
   SettingsState,
   SimStatus,
@@ -81,10 +101,7 @@ const DEFAULT_FOCUS_PADDING = 2;
 /** Zoom cap `focus()` respects, so framing one gate does not fill the screen. */
 const DEFAULT_FOCUS_MAX_ZOOM = 1;
 
-/**
- * The tools `setWorkMode` arms, contract name → mode. Simulation is missing on
- * purpose: it is a session, entered through `sim.enter()`.
- */
+/** Contract name → mode. Simulation is absent; `sim.enter()` enters it. */
 const WORK_MODES = new Map<WorkModeName, WorkMode>([
   ['pan', WorkMode.PAN],
   ['wireTool', WorkMode.WIRE_TOOL],
@@ -94,7 +111,7 @@ const WORK_MODES = new Map<WorkModeName, WorkMode>([
   ['placeComp', WorkMode.COMPONENT_PLACEMENT]
 ]);
 
-/** The contract name of a mode; the one absent from {@link WORK_MODES}. */
+/** Contract name of a mode; what {@link WORK_MODES} omits is simulation. */
 function workModeName(mode: WorkMode): WorkModeName {
   for (const [name, value] of WORK_MODES) {
     if (value === mode) return name;
@@ -102,18 +119,24 @@ function workModeName(mode: WorkMode): WorkModeName {
   return 'simulation';
 }
 
+type TargetSpeedUnit = 'Hz' | 'kHz' | 'MHz';
+
+const TARGET_SPEED_MULTIPLIER: Record<TargetSpeedUnit, number> = {
+  Hz: 1,
+  kHz: 1_000,
+  MHz: 1_000_000
+};
+
 /**
- * The transport-agnostic automation facade: a semantic, JSON-in/JSON-out view
- * of the editor for scripts and agents. {@link install} publishes it as
- * `window.__logigator`.
+ * The transport-agnostic automation facade, published as `window.__logigator`
+ * by {@link install}.
  *
  * The gate is the `AUTOMATION_API` define at the single call site in
- * `AppComponent`, not a check in here: that is what keeps this whole module out
- * of a production bundle rather than merely inert inside it.
+ * `AppComponent`, not a check in here: that keeps this module out of a
+ * production bundle rather than merely inert inside it.
  *
- * Everything here targets the **active** project, resolved per call: an import
- * or a new-project call replaces the main slot (and destroys the old project),
- * so the facade never caches a `Project` reference.
+ * Every call resolves the active project afresh — an import or a new-project
+ * call replaces and destroys it, so no `Project` reference is ever cached.
  */
 @Injectable({ providedIn: 'root' })
 export class AutomationApiService {
@@ -128,6 +151,8 @@ export class AutomationApiService {
   private readonly inspection = inject(InspectionService);
   private readonly windowPresenter = inject(WindowInspectionPresenter);
   private readonly boardSurface = inject(BoardSurfaceService);
+  private readonly snapshot = inject(BoardSnapshotService);
+  private readonly imageExport = inject(ImageExportService);
   private readonly customComponents = inject(CustomComponentService);
   private readonly registry = inject(CustomComponentRegistry);
   private readonly translation = inject(TranslationService);
@@ -135,22 +160,19 @@ export class AutomationApiService {
   private readonly settings = inject(EditorSettingsService);
   private readonly logging = inject(LoggingService);
 
-  // Port → link lookup for the current compiled board, rebuilt whenever the
-  // board identity changes (one per simulation session).
+  // Port → link lookup, rebuilt whenever the compiled board's identity changes.
   private _portIndex: PortLinkIndex | null = null;
   private _portIndexBoard: CompiledBoard | null = null;
 
-  // Handles for the open inspections. The service identifies them by object
-  // identity, which does not cross the boundary — ids are minted on first read
-  // and never reused, so a stale handle reports "no open inspection" rather
-  // than addressing whatever opened after it.
+  // Inspections are identified by object identity, which does not cross the
+  // boundary. Ids are minted on first read and never reused, so a stale handle
+  // reports "no open inspection" rather than addressing a newer one.
   private readonly _inspectionIds = new WeakMap<OpenInspection, number>();
   private _nextInspectionId = 1;
 
   /**
-   * Publishes the facade on `window`. Called once at startup, after the static
-   * DI injector is set — the facade builds model objects (`Project`,
-   * `Component`), which resolve their dependencies through it.
+   * Publishes the facade on `window`, after the static DI injector is set: the
+   * facade builds model objects that resolve their dependencies through it.
    */
   public install(): void {
     window.__logigator = this.buildApi();
@@ -161,9 +183,8 @@ export class AutomationApiService {
   }
 
   /**
-   * The frozen facade object. Methods are arrow properties so a driver may
-   * destructure them (`const { getProject } = window.__logigator`) without
-   * losing `this`.
+   * The frozen facade. Methods are arrow properties so a driver may destructure
+   * them without losing `this`.
    */
   public buildApi(): LogigatorAutomationApi {
     return Object.freeze({
@@ -172,6 +193,8 @@ export class AutomationApiService {
       getProject: (): ProjectState => this.getProject(),
       getElements: (query?: ElementQuery): ElementList =>
         this.getElements(query),
+      getBounds: (target: FocusTarget): GridRect | null =>
+        this.getBounds(target),
       applyEdit: (ops: EditOp[]): EditResult => this.applyEdit(ops),
       undo: (): boolean => this.undo(),
       redo: (): boolean => this.redo(),
@@ -180,6 +203,9 @@ export class AutomationApiService {
       importProject: (json: string): Promise<ProjectState> =>
         this.importProject(json),
       newProject: (): ProjectState => this.newProject(),
+      renderImage: (opts: RenderImageOptions): Promise<RenderedImage> =>
+        this.renderImage(opts),
+      renderPreviews: (): Promise<RenderedPreviews> => this.renderPreviews(),
       sim: Object.freeze({
         enter: (): Promise<SimStatus> => this.simEnter(),
         exit: (): void => this.simulation.exit(),
@@ -188,14 +214,23 @@ export class AutomationApiService {
         step: (count?: number): Promise<SimStatus> => this.simStep(count),
         stop: (): void => this.simulation.stop(),
         status: (): SimStatus => this.simStatus(),
-        setTarget: (value: number, unit: TargetSpeedUnit): void => {
-          this.simulation.setTargetValue(value);
-          this.simulation.setTargetUnit(unit);
-        },
-        setInput: (componentId: number, value: boolean): Promise<void> =>
-          this.simSetInput(componentId, value),
+        setTarget: (value: number, unit: TargetSpeedUnit): void =>
+          this.simulation.setTargetHz(value * TARGET_SPEED_MULTIPLIER[unit]),
+        setInput: (
+          componentId: number,
+          value: InputValue,
+          input?: InputSlot
+        ): Promise<void> => this.simSetInput(componentId, value, input),
+        type: (componentId: number, text: string): Promise<void> =>
+          this.simType(componentId, text),
+        setKey: (componentId: number, key: string | null): Promise<void> =>
+          this.simSetKey(componentId, key),
+        cancelKeys: (componentId: number): Promise<void> =>
+          this.simCancelKeys(componentId),
         readPorts: (componentIds?: number[]): Promise<PortReadout[]> =>
-          this.simReadPorts(componentIds)
+          this.simReadPorts(componentIds),
+        readTerminal: (componentId: number): Promise<TerminalReadout> =>
+          this.simReadTerminal(componentId)
       }),
       camera: Object.freeze({
         getViewport: (): ViewportInfo => this.getViewport(),
@@ -235,6 +270,32 @@ export class AutomationApiService {
         ): ElementList => this.inspectGetElements(inspectionId, query),
         activate: (inspectionId: number, componentId: number): InspectionInfo =>
           this.inspectActivate(inspectionId, componentId),
+        setInput: (
+          inspectionId: number,
+          componentId: number,
+          value: InputValue,
+          input?: InputSlot
+        ): Promise<void> =>
+          this.inspectSetInput(inspectionId, componentId, value, input),
+        type: (
+          inspectionId: number,
+          componentId: number,
+          text: string
+        ): Promise<void> => this.inspectType(inspectionId, componentId, text),
+        setKey: (
+          inspectionId: number,
+          componentId: number,
+          key: string | null
+        ): Promise<void> => this.inspectSetKey(inspectionId, componentId, key),
+        cancelKeys: (
+          inspectionId: number,
+          componentId: number
+        ): Promise<void> => this.inspectCancelKeys(inspectionId, componentId),
+        readTerminal: (
+          inspectionId: number,
+          componentId: number
+        ): Promise<TerminalReadout> =>
+          this.inspectReadTerminal(inspectionId, componentId),
         navigateTo: (inspectionId: number, level: number): InspectionInfo =>
           this.inspectNavigateTo(inspectionId, level),
         camera: Object.freeze({
@@ -296,8 +357,7 @@ export class AutomationApiService {
 
   public describeCatalog(): CatalogEntry[] {
     return describeCatalog(this.componentProvider.allComponents(), {
-      translate: (key) => this.translation.translate(key),
-      warn: (message) => this.logging.warn(message, 'AutomationApiService')
+      translate: (key) => this.translation.translate(key)
     });
   }
 
@@ -323,6 +383,11 @@ export class AutomationApiService {
     };
   }
 
+  public getBounds(target: FocusTarget): GridRect | null {
+    const rect = this.resolveFocusTarget(target, this.requireProject());
+    return rect ? toGridRect(rect) : null;
+  }
+
   public getElements(
     query: ElementQuery = {},
     project: Project | null = this.activeProject
@@ -344,15 +409,15 @@ export class AutomationApiService {
       : null;
 
     // A bounds filter goes through the quad trees; without one every element is
-    // a candidate. Id/type filters then narrow whichever set that produced.
+    // a candidate.
     const components = bounds
       ? project.queryComponentsInRange(bounds)
       : project.components;
     const wires = bounds ? project.queryWiresInRange(bounds) : project.wires;
 
     const result: ElementList = { components: [], wires: [] };
-    // An explicit id list on the *other* kind means "only those elements" —
-    // asking for wire ids alone must not also return every component.
+    // An id list on the *other* kind means "only those": asking for wire ids
+    // alone must not also return every component.
     const wantComponents = !wireIds || !!componentIds;
     const wantWires = !componentIds || !!wireIds;
 
@@ -377,10 +442,7 @@ export class AutomationApiService {
 
   // -- Writes --------------------------------------------------------------
 
-  /**
-   * Applies a batch of edits as exactly one undo step. Refused (nothing
-   * touched) while the editor is busy — see {@link BusyReason}.
-   */
+  /** Applies a batch as one undo step; refused, untouched, while busy. */
   public applyEdit(ops: EditOp[]): EditResult {
     const refusal = this.refuseWhenBusy('applyEdit');
     if (refusal) return refusal;
@@ -409,8 +471,7 @@ export class AutomationApiService {
     const project = this.busyReason() === null ? this.activeProject : null;
     if (!project?.actionManager.undoAvailable) return false;
     project.actionManager.undo();
-    // See the frame request in `applyEditOps`: a visuals-only action does not
-    // request one itself.
+    // A visuals-only action does not request a frame itself.
     project.triggerTicker('single');
     return true;
   }
@@ -426,8 +487,7 @@ export class AutomationApiService {
   // -- Validation ----------------------------------------------------------
 
   /**
-   * Compiles the active circuit and reports the blocking diagnostics, so an
-   * agent can validate a design without entering simulation. Read-only: the
+   * Compiles the active circuit and reports the blocking diagnostics; the
    * compiled board is discarded.
    */
   public check(): CompileDiagnosticReport {
@@ -456,10 +516,8 @@ export class AutomationApiService {
   }
 
   /**
-   * Replaces the open document with one loaded from native file JSON (a `.lgix`
-   * payload's inner JSON, or a legacy `logigator-editor` export). Like the file
-   * import in the UI, the result is persisted as a browser draft and the URL
-   * moves to `/local/:id`.
+   * Replaces the open document with one loaded from native file JSON. The
+   * result is persisted as a browser draft and the URL moves to `/local/:id`.
    */
   public async importProject(json: string): Promise<ProjectState> {
     this.assertNotBusy('importProject');
@@ -474,12 +532,75 @@ export class AutomationApiService {
     return this.getProject();
   }
 
+  // -- Image ---------------------------------------------------------------
+
+  /**
+   * The active circuit, or a region of it, as a PNG, rendered by the image
+   * export itself — the live scene graph, so a running simulation's state is
+   * in the picture, and independent of the camera. A multiplier past the export's size cap is
+   * refused rather than clamped: a smaller picture is not the one asked for.
+   */
+  public async renderImage(
+    options: RenderImageOptions
+  ): Promise<RenderedImage> {
+    const project = this.requireProject();
+    // No region is the export's own framing, an empty board included.
+    const region = options.region
+      ? this.resolveFocusTarget(options.region, project)
+      : undefined;
+    if (region === null) {
+      throw new Error('logigator: renderImage region covers nothing');
+    }
+    const framing = { region, marginGrid: options.margin };
+    const max = this.imageExport.maxMultiplier(project, framing);
+    if (!(options.multiplier > 0 && options.multiplier <= max)) {
+      throw new Error(
+        `logigator: renderImage multiplier ${options.multiplier} is outside ` +
+          `(0, ${max.toFixed(3)}] for this circuit`
+      );
+    }
+    await this.snapshot.whenAvailable();
+    const canvas = this.imageExport.renderCanvas(project, {
+      multiplier: options.multiplier,
+      background: options.background ?? true,
+      ...framing
+    });
+    const png = canvas.toDataURL('image/png');
+    return {
+      width: canvas.width,
+      height: canvas.height,
+      png: png.slice(png.indexOf(',') + 1)
+    };
+  }
+
+  /**
+   * The active circuit's two previews, rendered by the path a cloud save
+   * uploads them through — square, transparent, one per theme — so what a
+   * caller stores is what the editor would have stored. An empty board is
+   * refused: a save clears the preview instead of drawing one.
+   */
+  public async renderPreviews(): Promise<RenderedPreviews> {
+    const project = this.requireProject();
+    if (project.isEmpty) {
+      throw new Error('logigator: renderPreviews has no circuit to draw');
+    }
+    await this.snapshot.whenAvailable();
+    const previews = await this.snapshot.generatePreviews(project);
+    if (!previews) {
+      throw new Error('logigator: renderPreviews found no renderer');
+    }
+    const [light, dark] = await Promise.all([
+      toRenderedImage(previews.light),
+      toRenderedImage(previews.dark)
+    ]);
+    return { light, dark };
+  }
+
   // -- Simulation ----------------------------------------------------------
 
   /**
-   * Compiles the main project and starts a session, resolving once the engine
-   * is up. A blocked compile comes back as `state: 'inactive'` plus the
-   * diagnostics that blocked it — the same list {@link check} reports.
+   * Compiles the main project and starts a session. A blocked compile comes
+   * back as `state: 'inactive'` plus the diagnostics that blocked it.
    */
   public async simEnter(): Promise<SimStatus> {
     const diagnostics = await this.simulation.enter();
@@ -501,11 +622,8 @@ export class AutomationApiService {
 
   /**
    * `count` engine ticks while paused, resolved after the resulting snapshot
-   * has been applied — so a `readPorts` right after it sees the new state.
-   *
-   * The ticks are posted back to back and only the state after the last one is
-   * pulled: the worker processes its queue in order, so running a circuit to a
-   * settled state costs one round trip rather than one per tick.
+   * has been applied. The ticks are posted back to back and only the state
+   * after the last is pulled, so settling a circuit costs one round trip.
    */
   public async simStep(count = 1): Promise<SimStatus> {
     if (!Number.isInteger(count) || count < 1) {
@@ -519,22 +637,141 @@ export class AutomationApiService {
   }
 
   /**
-   * Drives a lever/button to an absolute state (see
-   * {@link SimulationService.setUserInput}). Resolves after one snapshot
-   * round-trip; the engine applies the input at its next tick, so the
-   * deterministic recipe is `pause()` → `setInput()` → `step()` → `readPorts()`.
+   * Drives one slot, or every slot, of a lever, button or pulse button to an absolute state. The
+   * engine takes the input up at its next tick and drives it on the tick after — every slot of an
+   * array on the same one — so the deterministic recipe is `pause()` → `setInput()` → `step(2)` →
+   * `readPorts()`.
    */
-  public async simSetInput(componentId: number, value: boolean): Promise<void> {
-    if (!this.simulation.setUserInput(componentId, value)) {
-      throw new Error(
+  public async simSetInput(
+    componentId: number,
+    value: InputValue,
+    input?: InputSlot
+  ): Promise<void> {
+    const notAnInput = () =>
+      new Error(
         `logigator: component ${componentId} is not a user input of the running simulation`
       );
+    const component = this.projectService
+      .mainProject()
+      ?.getComponentById(componentId);
+    if (component instanceof KeyboardComponent) {
+      throw new Error(
+        `logigator: component ${componentId} is a keyboard — use sim.type or sim.setKey`
+      );
+    }
+    if (
+      !component ||
+      !isUserInput(component) ||
+      !this.simulation.board?.userInputs.has(componentId)
+    ) {
+      throw notAnInput();
+    }
+    const writes = resolveInputWrites(component, value, input);
+    const applied = Array.isArray(value)
+      ? this.simulation.setUserInputs(
+          componentId,
+          writes.map((write) => write.value)
+        )
+      : this.simulation.setUserInput(
+          componentId,
+          writes[0].value,
+          writes[0].slot
+        );
+    if (!applied) {
+      throw notAnInput();
     }
     await this.nextFrame();
   }
 
   /**
-   * Per-port powered state, resolved against a freshly pulled snapshot. Without
+   * Types `text` into a keyboard as taps, a press and a release per
+   * character, queued behind what the keyboard still has to send. The text is
+   * checked whole first ({@link keyboardTextCodes}), so a character the
+   * keyboard has no key for queues nothing, and so does a text that does not
+   * fit behind the characters still queued ({@link typeKeyboardText}).
+   * Resolves once queued.
+   */
+  public async simType(componentId: number, text: string): Promise<void> {
+    const codes = keyboardTextCodes(text);
+    const keyboard = this.requireBoardKeyboard(componentId);
+    typeKeyboardText(keyboard, this.boardKeyRoute(keyboard), codes);
+    await this.nextFrame();
+  }
+
+  /**
+   * Holds a key of a keyboard down, or with `null` lets go of every key
+   * down. A key already on `D` while a key is down and a release with none
+   * down send nothing.
+   */
+  public async simSetKey(
+    componentId: number,
+    key: string | null
+  ): Promise<void> {
+    const code = keyboardKeyCode(key);
+    const keyboard = this.requireBoardKeyboard(componentId);
+    setKeyboardKey(keyboard, this.boardKeyRoute(keyboard), code);
+    await this.nextFrame();
+  }
+
+  /**
+   * Drops every character a keyboard still has to send and lets go of every
+   * key down, as its window's ✕ does (`KeyboardComponent.cancelKeys`).
+   */
+  public async simCancelKeys(componentId: number): Promise<void> {
+    const keyboard = this.requireBoardKeyboard(componentId);
+    keyboard.cancelKeys(this.boardKeyRoute(keyboard));
+    await this.nextFrame();
+  }
+
+  private requireBoardKeyboard(componentId: number): KeyboardComponent {
+    const component = this.projectService
+      .mainProject()
+      ?.getComponentById(componentId);
+    if (
+      !(component instanceof KeyboardComponent) ||
+      !this.simulation.board?.userInputs.has(componentId)
+    ) {
+      throw new Error(
+        `logigator: component ${componentId} is not a keyboard of the running simulation`
+      );
+    }
+    return component;
+  }
+
+  private boardKeyRoute(keyboard: KeyboardComponent): AutomationKeyRoute {
+    return {
+      send: (frames) => {
+        this.simulation.sendFrames(keyboard.id, frames);
+      },
+      cancel: (frames) => {
+        this.simulation.cancelFrames(keyboard.id, frames);
+      },
+      pending: () => this.simulation.pendingEvents(keyboard.id)
+    };
+  }
+
+  /**
+   * A terminal's screen, cursor and scrollback once every record written so
+   * far reached it ({@link settledFrame}).
+   */
+  public async simReadTerminal(componentId: number): Promise<TerminalReadout> {
+    const component = this.projectService
+      .mainProject()
+      ?.getComponentById(componentId);
+    if (
+      !(component instanceof TerminalComponent) ||
+      !this.simulation.board?.recordUnits.has(componentId)
+    ) {
+      throw new Error(
+        `logigator: component ${componentId} is not a terminal of the running simulation`
+      );
+    }
+    await this.settledFrame();
+    return terminalReadout(component);
+  }
+
+  /**
+   * Per-port powered state against a freshly pulled snapshot. Without
    * `componentIds`, every component carrying at least one mapped port.
    */
   public async simReadPorts(componentIds?: number[]): Promise<PortReadout[]> {
@@ -576,10 +813,20 @@ export class AutomationApiService {
   }
 
   /**
-   * Resolves once the next engine snapshot has been applied. A full snapshot is
+   * {@link nextFrame}, then the one after it. A snapshot already in flight
+   * resolves the first, and it was read before anything posted since — a
+   * record watch a watch level just started among them; the second was
+   * requested once it landed.
+   */
+  private async settledFrame(): Promise<void> {
+    await this.nextFrame();
+    await this.nextFrame();
+  }
+
+  /**
+   * Resolves once the next engine snapshot has been applied. The snapshot is
    * requested explicitly, so this settles whether the simulation is running or
-   * paused; it resolves without a frame when no session is up, and gives up
-   * after {@link FRAME_WAIT_MS} rather than hanging a driver forever.
+   * paused, and gives up after {@link FRAME_WAIT_MS} rather than hanging.
    */
   private nextFrame(): Promise<void> {
     if (!this.simulation.isReady()) return Promise.resolve();
@@ -603,10 +850,9 @@ export class AutomationApiService {
 
   // -- Camera --------------------------------------------------------------
   //
-  // View operations are visual only: never a history entry, never part of a
-  // snapshot, and allowed during simulation. Agents speak grid units; the
-  // `ViewportController` speaks screen px, so every call converts through the
-  // current zoom here.
+  // Visual only: never a history entry, and allowed during simulation. Agents
+  // speak grid units, `ViewportController` speaks screen px, so every call
+  // converts through the current zoom.
 
   public getViewport(project: Project = this.requireProject()): ViewportInfo {
     const state = project.viewport.viewportState;
@@ -644,8 +890,8 @@ export class AutomationApiService {
   }
 
   /**
-   * Sets an absolute zoom factor (1 = 100%), clamped to the editor's zoom
-   * ladder, anchored on a grid point (the viewport centre by default).
+   * Absolute zoom factor (1 = 100%), clamped to the editor's zoom ladder and
+   * anchored on a grid point (the viewport centre by default).
    */
   public cameraSetZoom(
     factor: number,
@@ -662,11 +908,7 @@ export class AutomationApiService {
     );
   }
 
-  /**
-   * Frames a target: a grid rectangle, the union of some elements' bounds, or
-   * all content. Returns the resulting viewport so a caller can confirm what is
-   * on screen.
-   */
+  /** Frames a target and returns the resulting viewport. */
   public cameraFocus(
     target: FocusTarget,
     options: FocusOptions = {},
@@ -685,10 +927,9 @@ export class AutomationApiService {
 
   // -- Grid ↔ screen -------------------------------------------------------
   //
-  // The one place the contract leaves grid units. A driver that points at the
-  // board — a synthetic click, a screenshot clip — needs the camera's mapping
-  // *and* the canvas's page offset; reproducing either outside the editor
-  // duplicates `ViewportController` and hard-codes a DOM selector.
+  // The one place the contract leaves grid units. A driver pointing at the
+  // board needs the camera's mapping *and* the canvas's page offset;
+  // reproducing either outside the editor duplicates `ViewportController`.
 
   /** The board canvas's box in viewport CSS px. */
   public boardRect(): ScreenRect {
@@ -745,11 +986,7 @@ export class AutomationApiService {
     };
   }
 
-  /**
-   * Arms a tool, exactly as the tool bar's buttons do — which tool is active
-   * decides what a pointer gesture on the board does, and what floating chrome
-   * (the scissor pill, the placement ghost) is on screen.
-   */
+  /** Arms a tool, exactly as the tool bar's buttons do. */
   public setWorkMode(
     mode: WorkModeName,
     options: { componentType?: number } = {}
@@ -794,13 +1031,11 @@ export class AutomationApiService {
   }
 
   /**
-   * Runs the pending view update so the whole tool swap lands before this call
-   * returns. The board picks the mode up in an effect, and the router's
-   * `setMode` aborts the live drag, deactivates the outgoing tool and clears the
-   * selection — so a caller that switched the tool and then selected something
-   * would have its selection wiped by that effect a frame later. A driver has no
-   * tick of its own to wait for; these calls have to be finished when they
-   * return.
+   * Runs the pending view update so the whole tool swap lands before the call
+   * returns. The board picks the mode up in an effect whose `setMode` clears
+   * the selection, so a caller that switched the tool and then selected
+   * something would have that selection wiped a frame later — and a driver has
+   * no tick of its own to wait for.
    */
   private flushModeSwitch(): void {
     this.appRef.tick();
@@ -809,21 +1044,11 @@ export class AutomationApiService {
   // -- Selection -----------------------------------------------------------
 
   /**
-   * Selects a region — the same operation as picking the select tool and
-   * dragging a marquee over it: the elements it catches carry the selection
-   * tint, the drawn rectangle persists as the grab rect, and the selection is
-   * then movable/rotatable/deletable exactly like a user's. This is the "look
-   * here" idiom an agent pairs with `camera.focus` after an edit.
-   *
-   * `{ bounds }` is the marquee (a zero-area rectangle behaves like a click:
-   * the single element under the point); `{ elementIds }` selects those
-   * elements directly, rect-ing their padded bounds like a committed paste
-   * does. `cut` scissors the marquee and `rect: false` drops the grab rect —
-   * see {@link SelectOptions}.
-   *
-   * The work mode is switched to SELECT, so the selection is grabbable
-   * afterwards; a `cut` mirrors the held-scissor-key marquee rather than the
-   * scissor tool, so it does not leave the tool in scissor mode.
+   * Selects a region, exactly as picking the select tool and dragging a marquee
+   * does. A zero-area `bounds` behaves like a click; `{ elementIds }` rects
+   * their padded bounds like a committed paste. The work mode is switched to
+   * SELECT so the selection is grabbable afterwards, and a `cut` mirrors the
+   * held-scissor-key marquee, so it does not leave the tool in scissor mode.
    */
   public select(
     region: SelectRegion,
@@ -836,8 +1061,8 @@ export class AutomationApiService {
     const project = this.activeProject!;
     const selection = project.selectionManager;
 
-    // Ahead of the selection, and flushed: switching tools clears the live
-    // selection, so the swap has to be finished before anything is selected.
+    // Switching tools clears the live selection, so the swap has to be finished
+    // before anything is selected.
     if (this.workMode.mode() !== WorkMode.SELECT) {
       this.workMode.setMode(WorkMode.SELECT);
       this.flushModeSwitch();
@@ -882,11 +1107,10 @@ export class AutomationApiService {
 
   /**
    * Clears the selection, like clicking empty canvas — which also retracts an
-   * uncommitted scissor cut, so a cut nothing acted on leaves no trace.
+   * uncommitted scissor cut.
    */
   public clearSelection(): void {
-    // Tolerates a replaced or destroyed project: a new document brings a fresh
-    // selection, so there is nothing left to clear.
+    // A replaced document brings a fresh selection; nothing left to clear.
     const project = this.activeProject;
     if (!project) return;
     project.selectionManager.clear();
@@ -933,9 +1157,9 @@ export class AutomationApiService {
 
   // -- Inspection ----------------------------------------------------------
   //
-  // The live views a tap opens while the simulation runs. A watch is a second
-  // board: its levels are fresh copies of the inner circuit, so its elements
-  // carry the copy's ids and its camera is the copy project's.
+  // A watch is a second board: its levels are fresh copies of the inner
+  // circuit, so its elements carry the copy's ids and its camera is the copy
+  // project's.
 
   /** Opens (or focuses) a component's inspection, as a tap on it would. */
   public inspectOpen(componentId: number): InspectionInfo {
@@ -976,7 +1200,7 @@ export class AutomationApiService {
 
   /**
    * Moves and/or resizes the hosting window, clamped to the board it floats
-   * over — `null` when the inspection is not in a window (the compact sheet).
+   * over; `null` when the inspection is in the compact sheet instead.
    */
   public inspectSetBounds(
     inspectionId: number,
@@ -997,15 +1221,176 @@ export class AutomationApiService {
   }
 
   /**
-   * Taps a component of the visible watch level — the watch's one gesture:
-   * drives an inner lever/button, drills into a nested custom (pushing a
-   * breadcrumb level), or opens the component's own inspection.
+   * Taps a component of the visible watch level: drives an inner lever/pulse button,
+   * drills into a nested custom, or opens the component's own inspection. A
+   * user input a tap cannot operate is refused ({@link tapRefusal}); it goes
+   * through {@link inspectSetInput}.
    */
   public inspectActivate(
     inspectionId: number,
     componentId: number
   ): InspectionInfo {
     const watch = this.requireWatch(inspectionId);
+    const component = this.requireWatchComponent(
+      watch,
+      inspectionId,
+      componentId
+    );
+    const refusal = tapRefusal(component);
+    if (refusal) {
+      throw new Error(`logigator: component ${componentId} ${refusal}`);
+    }
+    watch.activate(component);
+    return this.inspectionInfo(this.requireInspection(inspectionId));
+  }
+
+  /**
+   * {@link simSetInput} for a user input of the visible watch level: the same
+   * absolute semantics and values, through the unit the watch index resolves.
+   */
+  public async inspectSetInput(
+    inspectionId: number,
+    componentId: number,
+    value: InputValue,
+    input?: InputSlot
+  ): Promise<void> {
+    const watch = this.requireWatch(inspectionId);
+    const component = this.requireWatchComponent(
+      watch,
+      inspectionId,
+      componentId
+    );
+    const notAnInput = () =>
+      new Error(
+        `logigator: component ${componentId} is not a user input of the visible level of inspection ${inspectionId}`
+      );
+    if (component instanceof KeyboardComponent) {
+      throw new Error(
+        `logigator: component ${componentId} is a keyboard — use inspect.type or inspect.setKey`
+      );
+    }
+    if (!isUserInput(component) || !watch.isLevelInput(component)) {
+      throw notAnInput();
+    }
+    const writes = resolveInputWrites(component, value, input);
+    const applied = Array.isArray(value)
+      ? watch.setInputs(
+          component,
+          writes.map((write) => write.value)
+        )
+      : watch.setInput(component, writes[0].value, writes[0].slot);
+    if (!applied) {
+      throw notAnInput();
+    }
+    await this.nextFrame();
+  }
+
+  /** {@link simType} for a keyboard of the visible watch level. */
+  public async inspectType(
+    inspectionId: number,
+    componentId: number,
+    text: string
+  ): Promise<void> {
+    const codes = keyboardTextCodes(text);
+    const { keyboard, route } = this.requireWatchKeyboard(
+      inspectionId,
+      componentId
+    );
+    typeKeyboardText(keyboard, route, codes);
+    await this.nextFrame();
+  }
+
+  /** {@link simSetKey} for a keyboard of the visible watch level. */
+  public async inspectSetKey(
+    inspectionId: number,
+    componentId: number,
+    key: string | null
+  ): Promise<void> {
+    const code = keyboardKeyCode(key);
+    const { keyboard, route } = this.requireWatchKeyboard(
+      inspectionId,
+      componentId
+    );
+    setKeyboardKey(keyboard, route, code);
+    await this.nextFrame();
+  }
+
+  /** {@link simCancelKeys} for a keyboard of the visible watch level. */
+  public async inspectCancelKeys(
+    inspectionId: number,
+    componentId: number
+  ): Promise<void> {
+    const { keyboard, route } = this.requireWatchKeyboard(
+      inspectionId,
+      componentId
+    );
+    keyboard.cancelKeys(route);
+    await this.nextFrame();
+  }
+
+  /** {@link simReadTerminal} for a terminal of the visible watch level. */
+  public async inspectReadTerminal(
+    inspectionId: number,
+    componentId: number
+  ): Promise<TerminalReadout> {
+    const watch = this.requireWatch(inspectionId);
+    const level = watch.activeLevel();
+    const terminal = this.requireWatchComponent(
+      watch,
+      inspectionId,
+      componentId
+    );
+    const bodyIndex = level.session.components.indexOf(terminal);
+    if (
+      !(terminal instanceof TerminalComponent) ||
+      level.session.info.recordUnitFor(bodyIndex) === undefined
+    ) {
+      throw new Error(
+        `logigator: component ${componentId} is not a terminal of the visible level of inspection ${inspectionId}`
+      );
+    }
+    await this.settledFrame();
+    return terminalReadout(terminal);
+  }
+
+  /** A keyboard copy of the visible watch level, with the route to its unit. */
+  private requireWatchKeyboard(
+    inspectionId: number,
+    componentId: number
+  ): { keyboard: KeyboardComponent; route: AutomationKeyRoute } {
+    const watch = this.requireWatch(inspectionId);
+    const keyboard = this.requireWatchComponent(
+      watch,
+      inspectionId,
+      componentId
+    );
+    if (
+      !(keyboard instanceof KeyboardComponent) ||
+      !watch.isLevelInput(keyboard)
+    ) {
+      throw new Error(
+        `logigator: component ${componentId} is not a keyboard of the visible level of inspection ${inspectionId}`
+      );
+    }
+    return {
+      keyboard,
+      route: {
+        send: (frames) => {
+          watch.sendFrames(keyboard, frames);
+        },
+        cancel: (frames) => {
+          watch.cancelFrames(keyboard, frames);
+        },
+        pending: () => watch.pendingEvents(keyboard)
+      }
+    };
+  }
+
+  private requireWatchComponent(
+    watch: SubCircuitWatch,
+    inspectionId: number,
+    componentId: number
+  ): Component {
     const component = watch
       .activeLevel()
       .session.project.getComponentById(componentId);
@@ -1014,8 +1399,7 @@ export class AutomationApiService {
         `logigator: no component ${componentId} in the visible level of inspection ${inspectionId}`
       );
     }
-    watch.activate(component);
-    return this.inspectionInfo(this.requireInspection(inspectionId));
+    return component;
   }
 
   /** Breadcrumb navigation: pops every level deeper than `level`. */
@@ -1033,10 +1417,9 @@ export class AutomationApiService {
   }
 
   /**
-   * Same, for a camera write. A level that has not been on screen yet is still
-   * waiting for the renderer's one-time fit, which runs on the next frame and
-   * would overwrite whatever is placed here — so an explicit placement takes
-   * the fit's turn instead of racing it.
+   * Same, for a camera write. A level that has not been on screen yet still
+   * awaits the renderer's one-time fit, which would overwrite what is placed
+   * here — so an explicit placement takes the fit's turn instead.
    */
   private watchCameraProject(inspectionId: number): Project {
     const level = this.requireWatch(inspectionId).activeLevel();
@@ -1082,7 +1465,7 @@ export class AutomationApiService {
       componentId: entry.component.id,
       componentType: entry.component.config.type,
       kind: inspection.kind,
-      title: inspection.title(),
+      title: entryTitle(entry)(),
       ...(inspection instanceof SubCircuitWatch
         ? { trail: inspection.levels().map((level) => level.name) }
         : {}),
@@ -1092,9 +1475,8 @@ export class AutomationApiService {
 
   // -- Documents -----------------------------------------------------------
   //
-  // The tab strip and the library behind it. Switching, closing and opening a
-  // component for edit are document-level state, not chrome: the same calls the
-  // tab strip and the settings card's Edit button make.
+  // Switching, closing and opening a component for edit are document-level
+  // state, not chrome: the same calls the tab strip and settings card make.
 
   public tabList(): TabInfo[] {
     const active = this.projectService.activeProject();
@@ -1119,8 +1501,8 @@ export class AutomationApiService {
   }
 
   /**
-   * Closes a component editor. A dirty one needs `discardChanges` — the UI asks
-   * the user at this point, and a driver has nobody to ask.
+   * Closes a component editor. A dirty one needs `discardChanges`: the UI asks
+   * the user here, and a driver has nobody to ask.
    */
   public tabClose(
     index: number,
@@ -1178,10 +1560,9 @@ export class AutomationApiService {
   }
 
   /**
-   * Opens a custom component's circuit in its own tab, taking either a master's
-   * type id or a placed instance's. An instance whose master is gone — its
-   * circuit only embedded — is restored into the browser library first, which
-   * is what the settings card's Edit / Restore & edit button does.
+   * Opens a custom component's circuit in its own tab, by master type id or
+   * placed-instance type id. An instance whose master is gone is restored into
+   * the browser library first.
    */
   public async libraryEdit(type: number): Promise<TabInfo> {
     this.assertNotBusy('library.edit');
@@ -1197,8 +1578,8 @@ export class AutomationApiService {
     }
 
     // Identified by the master's id rather than "some component tab is active":
-    // a failed open from another component's tab would leave that one active and
-    // read as success. A restore mints a new id, so it is resolved afterwards.
+    // a failed open from another component's tab would read as success. A
+    // restore mints a new id, so it is resolved afterwards.
     const openedId = this.registry.resolveMaster(type)?.master.id;
     const tab = this.tabList().find(
       (candidate) => candidate.active && candidate.id === openedId
@@ -1214,8 +1595,7 @@ export class AutomationApiService {
 
   // -- Editor settings -----------------------------------------------------
   //
-  // User preferences, not project edits: they persist exactly as if the user had
-  // flipped the controls and are never history entries. The boolean half is
+  // Preferences, not project edits: never history entries. The boolean half is
   // enumerated from `EditorSettingsService.settings`, so a preference added
   // later shows up here on its own.
 
@@ -1243,8 +1623,8 @@ export class AutomationApiService {
   }
 
   /**
-   * Applies a patch of preferences. The whole patch is validated first — an
-   * unknown key or an unaccepted value rejects it and applies nothing.
+   * Applies a patch of preferences. Validated as a whole first: an unknown key
+   * or an unaccepted value applies nothing.
    */
   public settingsSet(patch: Partial<SettingsState>): SettingsState {
     const booleans = new Map(
@@ -1304,10 +1684,9 @@ export class AutomationApiService {
   }
 
   /**
-   * Why a mutation would be refused right now: no project, a running
-   * simulation, or a live drag session (the router locks the action manager for
-   * the whole session, including a paste/rotate group still floating before its
-   * first grab).
+   * Why a mutation would be refused: no project, a running simulation, or a
+   * live drag session (the router locks the action manager for its whole
+   * duration, including a paste/rotate group floating before its first grab).
    */
   private busyReason(): BusyReason | null {
     const project = this.activeProject;
@@ -1318,8 +1697,8 @@ export class AutomationApiService {
   }
 
   /**
-   * The active project, or a thrown error — for the calls whose result has no
-   * room for a refusal (the driver sees the exception through `evaluate`).
+   * The active project, or a thrown error — for calls whose result has no room
+   * for a refusal.
    */
   private requireProject(): Project {
     const project = this.activeProject;
@@ -1382,6 +1761,15 @@ function unionRect(a: Rectangle, b: Rectangle): Rectangle {
   );
 }
 
+/** A rendered PNG → the base64 picture the contract carries, with its size. */
+async function toRenderedImage(png: Blob): Promise<RenderedImage> {
+  const bitmap = await createImageBitmap(png);
+  const { width, height } = bitmap;
+  bitmap.close();
+  const bytes = new Uint8Array(await png.arrayBuffer());
+  return { width, height, png: bytesToBase64(bytes) };
+}
+
 /** Pixi `Rectangle` → the JSON rect the contract uses. */
 export function toGridRect(rect: Rectangle): GridRect {
   return {
@@ -1390,4 +1778,215 @@ export function toGridRect(rect: Rectangle): GridRect {
     width: rect.width,
     height: rect.height
   };
+}
+
+/** What `terminal` shows, as plain data. */
+function terminalReadout(terminal: TerminalComponent): TerminalReadout {
+  const screen = terminal.screen;
+  const rows = Array.from({ length: screen.rows }, (_, row) => row);
+  return {
+    componentId: terminal.id,
+    columns: screen.columns,
+    rows: screen.rows,
+    screen: rows.map((row) => screen.rowText(row)),
+    wrapped: rows.map((row) => screen.rowWrapped(row)),
+    lost: rows.map((row) => screen.rowLost(row)),
+    cursor: {
+      row: screen.cursorRow,
+      column: screen.cursorColumn,
+      pendingWrap: screen.pendingWrap
+    },
+    scrollback: screen.scrollbackEntries().map((entry) => ({ ...entry }))
+  };
+}
+
+/** A keyboard's route for `type`, `setKey` and `cancelKeys`. */
+type AutomationKeyRoute = KeyboardRoute & Pick<InputRoute, 'cancel'>;
+
+/** What the keyboard sends, for an error refusing what it does not. */
+const KEYBOARD_CHARACTERS =
+  'it sends printable Latin-1 (U+0020–U+007E, U+00A0–U+00FF), typographic quotes, dashes and "…" as their ASCII, "\\n" (a CR or CRLF counting as one), "\\t", "\\b", "\\u001b", "\\u007f", and "\\u001c"–"\\u001f" and "\\u000b" for the arrow keys and Home';
+
+/** A character as an error names it: quoted, with its code point. */
+function describeCharacter(char: string): string {
+  const point = char.codePointAt(0)!.toString(16).toUpperCase();
+  return `${JSON.stringify(char)} (U+${point.padStart(4, '0')})`;
+}
+
+/**
+ * The codes a `type` text sends, checked whole before any is queued: every
+ * character must be one the keyboard has a key for, and the text no longer
+ * than {@link KEYBOARD_TEXT_LIMIT} characters.
+ */
+function keyboardTextCodes(text: unknown): readonly number[] {
+  if (typeof text !== 'string') {
+    throw new Error(
+      `logigator: ${JSON.stringify(text) ?? String(text)} is not a text to type`
+    );
+  }
+  const read = textToCodesStrict(text);
+  if (read.kind === 'unsendable') {
+    throw new Error(
+      `logigator: the text has ${describeCharacter(read.char)} at position ${read.index}, which the keyboard has no key for — ${KEYBOARD_CHARACTERS}; nothing was queued`
+    );
+  }
+  if (read.codes.length > KEYBOARD_TEXT_LIMIT) {
+    throw new Error(
+      `logigator: the text has ${read.codes.length} characters, more than the ${KEYBOARD_TEXT_LIMIT} one call types; nothing was queued`
+    );
+  }
+  return read.codes;
+}
+
+/**
+ * The code a `setKey` key holds down, `null` for none: one character the
+ * keyboard sends as one code, or `null`.
+ */
+function keyboardKeyCode(key: unknown): number | null {
+  if (key === null) {
+    return null;
+  }
+  if (typeof key === 'string' && [...key].length === 1) {
+    const read = textToCodesStrict(key);
+    if (read.kind === 'codes' && read.codes.length === 1) {
+      return read.codes[0];
+    }
+  }
+  const named =
+    typeof key === 'string' && [...key].length === 1
+      ? describeCharacter(key)
+      : (JSON.stringify(key) ?? String(key));
+  throw new Error(
+    `logigator: ${named} is not a key of the keyboard — setKey takes one character that sends one code, or null, and ${KEYBOARD_CHARACTERS}`
+  );
+}
+
+/**
+ * Holds `code` down on the keyboard — pressed, unless it is on `D` already
+ * while a key is down — or with `null` lets go of every key down, `KD`
+ * falling unless none was. A press that does not fit behind the characters
+ * still queued is refused, queueing nothing; a release always fits.
+ */
+function setKeyboardKey(
+  keyboard: KeyboardComponent,
+  route: KeyboardRoute,
+  code: number | null
+): void {
+  if (code === null) {
+    keyboard.releaseKeys(route);
+  } else if (!keyboard.holdKey(route, code)) {
+    throw keyboardFullError(route, 'a key press does');
+  }
+}
+
+/**
+ * Types `codes` as taps, refusing them whole — never cut — where they do
+ * not fit behind the characters the keyboard is still sending.
+ */
+function typeKeyboardText(
+  keyboard: KeyboardComponent,
+  route: KeyboardRoute,
+  codes: readonly number[]
+): void {
+  if (!keyboard.tapKeys(route, codes)) {
+    throw keyboardFullError(route, `the text's ${codes.length} characters do`);
+  }
+}
+
+/**
+ * The error refusing what does not fit behind the characters a keyboard is
+ * still sending: its input holds `INPUT_QUEUE_LIMIT` event frames, three
+ * per character.
+ */
+function keyboardFullError(route: KeyboardRoute, subject: string): Error {
+  const pending = pendingCharacters(route.pending());
+  return new Error(
+    `logigator: ${subject} not fit behind the ${pending} characters the keyboard is still sending, of the ${charactersThatFit(0)} it holds at once; nothing was queued — step or run the simulation until they are sent`
+  );
+}
+
+/**
+ * The slot writes a `setInput` value stands for, validated whole before any
+ * is applied: a boolean is one write to the slot `input` addresses, an array
+ * one write per slot, in slot order, which reach the engine as one frame. An
+ * array must have one element per slot (`inputSlots`) and takes no address.
+ */
+function resolveInputWrites(
+  component: Component & UserInput,
+  value: InputValue,
+  input: InputSlot | undefined
+): { slot: number; value: boolean }[] {
+  if (typeof value === 'boolean') {
+    return [{ slot: resolveInputSlot(component, input), value }];
+  }
+  const count = component.inputSlots;
+  const expected = `component ${component.id} has ${count} slot${count === 1 ? '' : 's'}, so an array sets it with exactly ${count} boolean${count === 1 ? '' : 's'}`;
+  if (Array.isArray(value) && input !== undefined) {
+    throw new Error(
+      `logigator: an array sets every slot and takes no slot address — ${expected}`
+    );
+  }
+  if (
+    !Array.isArray(value) ||
+    value.length !== count ||
+    value.some((state) => typeof state !== 'boolean')
+  ) {
+    throw new Error(
+      `logigator: ${JSON.stringify(value)} is not a value for every slot — ${expected}`
+    );
+  }
+  return value.map((state, slot) => ({ slot, value: state }));
+}
+
+/**
+ * The slot index an address names on a user input: the index itself, or the
+ * position of a slot id in the component's `slotIds`; slot `0` without one.
+ * An address the component does not have is an error naming the ones it
+ * does.
+ */
+function resolveInputSlot(
+  component: Component & UserInput,
+  input: InputSlot | undefined
+): number {
+  if (input === undefined) {
+    return 0;
+  }
+  const count = component.inputSlots;
+  const ids = component.slotIds ?? [];
+  const slot =
+    typeof input === 'string'
+      ? ids.indexOf(input)
+      : Number.isInteger(input) && input >= 0 && input < count
+        ? input
+        : -1;
+  if (slot >= 0) {
+    return slot;
+  }
+  const indices =
+    count === 1 ? 'its only slot is 0' : `its slots are 0–${count - 1}`;
+  const named =
+    ids.length > 0 ? `, ids ${ids.map((id) => `"${id}"`).join(', ')}` : '';
+  throw new Error(
+    `logigator: component ${component.id} has no input slot ${JSON.stringify(input)} — ${indices}${named}`
+  );
+}
+
+/**
+ * Why a tap on `component` in a watch operates nothing, or null when it does.
+ * A tap reaches one slot of an input operated on the canvas, and a `hold` slot
+ * needs a press and a release rather than a tap; an input that declares an
+ * inspection opens it instead.
+ */
+function tapRefusal(component: Component): string | null {
+  if (!isUserInput(component) || component.config.inspection) {
+    return null;
+  }
+  // Read before the guard, whose false branch narrows a user input to never.
+  const slots = component.inputSlots;
+  if (!isCanvasOperatedInput(component)) {
+    return `has ${slots} slots, which a tap on its body cannot address — use inspect.setInput with a slot, or its inspection`;
+  }
+  return component.gesture === 'hold'
+    ? 'is held for as long as it is pressed, which a tap cannot express — use inspect.setInput'
+    : null;
 }

@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import {
   DialogRef,
   LgButton,
+  LgCheckbox,
   LgSelect,
   LgSelectButton,
   LgSlider,
@@ -17,14 +18,15 @@ import {
 } from '../../../rendering/image-export.service';
 import { Project } from '../../../project/project';
 import { TranslateDirective } from '../../../translation/translate.directive';
+import { WebpSupportService } from '../../../rendering/webp-support.service';
 
 /** Slider default; converted to a 0–1 quality on export. */
 const DEFAULT_QUALITY_PERCENT = 92;
 
 /**
- * Collects image-export settings (project, format, resolution, background,
- * JPEG/WebP quality) and delegates the work to {@link ImageExportService}. The
- * dialog closes once the export resolves; success/failure surfaces as a toast.
+ * Collects image-export settings and delegates the work to
+ * {@link ImageExportService}. Closes once the export resolves; the outcome
+ * surfaces as a toast.
  */
 @Component({
   selector: 'app-export-image-dialog',
@@ -35,6 +37,7 @@ const DEFAULT_QUALITY_PERCENT = 92;
     LgToggleSwitch,
     LgSlider,
     LgButton,
+    LgCheckbox,
     TranslateDirective
   ],
   templateUrl: './export-image-dialog.component.html'
@@ -46,10 +49,13 @@ export class ExportImageDialogComponent {
   private readonly imageExport = inject(ImageExportService);
   private readonly translation = inject(TranslationService);
 
+  private readonly webp = inject(WebpSupportService);
+
+  /** WebP only where the browser encodes it; elsewhere it would be a PNG. */
   protected readonly formatOptions = [
     { label: 'PNG', value: 'png' as const },
     { label: 'JPEG', value: 'jpeg' as const },
-    { label: 'WebP', value: 'webp' as const }
+    ...(this.webp.encode ? [{ label: 'WebP', value: 'webp' as const }] : [])
   ];
   protected readonly resolutionOptions = [
     { label: '1×', value: 1 },
@@ -63,9 +69,8 @@ export class ExportImageDialogComponent {
     return [...(main ? [main] : []), ...this.projectService.openComponents()];
   });
 
-  // Options carry the array index (a primitive) rather than the Project itself:
-  // a Project is a deep, circular PixiJS Container, so binding the index keeps
-  // lg-select's by-value (===) option matching cheap and Project-free.
+  // Options carry the array index rather than the Project: a Project is a deep,
+  // circular PixiJS Container, and lg-select matches options by value.
   protected readonly projectOptions = computed(() =>
     this._projects().map((project, index) => ({
       label: this._projectName(project),
@@ -81,10 +86,17 @@ export class ExportImageDialogComponent {
   protected readonly multiplier = signal(2);
   protected readonly background = signal(true);
   protected readonly quality = signal(DEFAULT_QUALITY_PERCENT);
+  /** On wherever it is offered. */
+  protected readonly lossless = signal(this.webp.lossless);
   protected readonly exporting = signal(false);
 
-  /** PNG is lossless, so the quality control only applies to JPEG/WebP. */
-  protected readonly showQuality = computed(() => this.format() !== 'png');
+  protected readonly showLossless = computed(
+    () => this.format() === 'webp' && this.webp.lossless
+  );
+  /** The quality control only applies to JPEG and lossy WebP. */
+  protected readonly showQuality = computed(
+    () => this.format() !== 'png' && !(this.showLossless() && this.lossless())
+  );
 
   protected readonly dimensions = computed(() => {
     const project = this.project();
@@ -107,7 +119,8 @@ export class ExportImageDialogComponent {
         format: this.format(),
         multiplier: this.multiplier(),
         background: this.background(),
-        quality: this.quality() / 100
+        quality: this.quality() / 100,
+        lossless: this.showLossless() && this.lossless()
       });
     } finally {
       this.exporting.set(false);

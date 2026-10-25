@@ -23,18 +23,17 @@
   }
 
   <div class="flex justify-end gap-2">
-    <lg-button
-      severity="danger"
-      [outlined]="true"
-      [label]="t('logoutDialog.discard')"
-      (onClick)="discard()"
-    />
-    <lg-button
+    <button lgButton severity="danger" [outlined]="true" (onClick)="discard()">
+      {{ t('logoutDialog.discard') }}
+    </button>
+    <button
+      lgButton
       severity="secondary"
       [outlined]="true"
-      [label]="t('logoutDialog.cancel')"
       (onClick)="cancel()"
-    />
-    <lg-button [label]="t('logoutDialog.save')" (onClick)="save()" />
+    >
+      {{ t('logoutDialog.cancel') }}
+    </button>
+    <button lgButton (onClick)="save()">{{ t('logoutDialog.save') }}</button>
   </div>
 </div>

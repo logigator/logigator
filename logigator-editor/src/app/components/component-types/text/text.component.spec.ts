@@ -3,7 +3,7 @@ import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { Component } from '../../component';
 import { Project } from '../../../project/project';
 import { QuadTreeContainer } from '../../../rendering/quad-tree-container';
-import { Direction } from '../../../utils/direction';
+import { Direction } from '@logigator/core';
 import { textComponentConfig } from './text.config';
 
 function makeText(
@@ -42,9 +42,9 @@ describe('TextComponent cull bounds', () => {
     const comp = makeText('x'.repeat(100));
     const cull = comp.cullBounds;
 
-    // The tail of the text sits far to the right of the 1×1 anchor cell, so the
-    // cull box must extend to reach it — this is what keeps the label rendered
-    // once the anchor cell pans off the left viewport edge.
+    // The tail sits far right of the 1×1 anchor cell, so the cull box must
+    // reach it to keep the label rendered once the anchor cell pans off the
+    // left viewport edge.
     expect(cull.x).toBe(0);
     expect(cull.width).toBeGreaterThan(40);
     expect(cull.contains(40, 0.5)).toBe(true);
@@ -87,6 +87,58 @@ describe('TextComponent cull bounds', () => {
 
     single.destroy({ children: true });
     multi.destroy({ children: true });
+  });
+});
+
+describe('TextComponent pick bounds', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  it('covers the glyph run, which the 1×1 footprint does not reach', () => {
+    // Ten glyphs at 12px (0.6 em advance, 16px grid) ≈ 4.5 grid units of
+    // label, running right from x = 1.
+    const comp = makeText('x'.repeat(10));
+
+    expect(comp.pickBounds.contains(3, 0.5)).toBe(true);
+    expect(comp.gridBounds.contains(3, 0.5)).toBe(false);
+
+    // The anchor cell stays a target of its own.
+    expect(comp.pickBounds.contains(0.5, 0.5)).toBe(true);
+
+    comp.destroy({ children: true });
+  });
+
+  it('stays inside cullBounds, which over-covers it to whole cells', () => {
+    // Six lines take the label past the anchor cell vertically, so the two
+    // boxes differ on that axis too.
+    const comp = makeText('l1\nl2\nl3\nl4\nl5\nl6');
+    const pick = comp.pickBounds;
+    const cull = comp.cullBounds;
+
+    expect(pick.x).toBeGreaterThanOrEqual(cull.x);
+    expect(pick.y).toBeGreaterThanOrEqual(cull.y);
+    expect(pick.right).toBeLessThanOrEqual(cull.right);
+    expect(pick.bottom).toBeLessThanOrEqual(cull.bottom);
+
+    comp.destroy({ children: true });
+  });
+
+  it('hangs the pick box off the anchor cell the way the label is drawn', () => {
+    const label = 'l1\nl2\nl3\nl4\nl5\nl6';
+    const east = makeText(label, Direction.E);
+    const west = makeText(label, Direction.W);
+
+    // Same string, so the box is the same size — reflected onto the far side
+    // of the dot, and with it the way the lines hang off the anchor row.
+    expect(west.pickBounds.width).toBe(east.pickBounds.width);
+    expect(east.pickBounds.right).toBeGreaterThan(east.gridBounds.right);
+    expect(west.pickBounds.x).toBeLessThan(west.gridBounds.x);
+    expect(east.pickBounds.bottom).toBeGreaterThan(east.gridBounds.bottom);
+    expect(west.pickBounds.y).toBeLessThan(west.gridBounds.y);
+
+    east.destroy({ children: true });
+    west.destroy({ children: true });
   });
 });
 

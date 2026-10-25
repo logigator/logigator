@@ -1,0 +1,34 @@
+<nav *webTranslate="let t" [attr.aria-label]="t('pages.docs.navLabel')">
+  <!-- Not live: there is nowhere on a page to put results, so submitting goes
+       to the index, which is where they are shown. -->
+  <web-docs-search-field class="mb-3 block px-1" />
+
+  <a
+    class="block rounded px-3 py-2 text-sm font-semibold text-text-hover transition-colors hover:bg-content-hover"
+    [routerLink]="indexHref()"
+    >{{ t('pages.docs.title') }}</a
+  >
+
+  @for (section of sections; track section.id) {
+  <p
+    class="mt-4 px-3 pb-1 text-xs font-semibold tracking-wide text-muted uppercase"
+  >
+    {{ t(sectionTitles[section.id]) }}
+  </p>
+  <ul>
+    @for (page of section.pages; track page) {
+    <li>
+      <a
+        class="block rounded px-3 py-1.5 text-sm transition-colors hover:bg-content-hover"
+        [class.text-muted]="page !== current()"
+        [class.font-medium]="page === current()"
+        [class.text-primary]="page === current()"
+        [attr.aria-current]="page === current() ? 'page' : null"
+        [routerLink]="hrefs()[page]"
+        >{{ t(pageTitles[page]) }}</a
+      >
+    </li>
+    }
+  </ul>
+  }
+</nav>

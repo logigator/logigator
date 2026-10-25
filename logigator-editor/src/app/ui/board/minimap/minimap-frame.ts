@@ -8,9 +8,8 @@ import { clamp } from '../../../utils/math';
 export interface MapFit {
   /** CSS px per grid unit. */
   scale: number;
-  /** Letterbox offset (CSS px) of the region's left edge inside the panel. */
+  /** Letterbox offsets (CSS px) of the region inside the panel. */
   offsetX: number;
-  /** Letterbox offset (CSS px) of the region's top edge inside the panel. */
   offsetY: number;
 }
 
@@ -23,14 +22,13 @@ export interface PanelRect {
 }
 
 /**
- * While the content region keeps covering at least this fraction of the
- * current frame's area, the frame is kept — shrinking content doesn't twitch
- * the map, only a substantial shrink re-frames.
+ * The frame is kept while the content region still covers this fraction of its
+ * area, so shrinking content only re-frames once the shrink is substantial.
  */
 const MIN_COVERAGE = 0.5;
 /** Slack added around a fresh frame, as a fraction of its larger dimension. */
 const SLACK_FACTOR = 0.1;
-/** Lower bound (grid units) on the slack so tiny circuits get real headroom. */
+/** Lower bound (grid units) so tiny circuits get real headroom. */
 const SLACK_MIN_GRID = 2;
 
 /** `contain`-fits a region into a panel box. */
@@ -51,10 +49,9 @@ export function fitRegion(
 }
 
 /**
- * Frame hysteresis: keeps the current frame while the content region still
- * fits inside it and covers enough of it, otherwise re-frames to the region
- * plus slack — so a burst of edits at the content edge re-frames once, not on
- * every action.
+ * Frame hysteresis: keeps the current frame while the content region fits
+ * inside it and covers enough of it, otherwise re-frames to the region plus
+ * slack. A burst of edits at the content edge re-frames once, not per action.
  */
 export function nextFrame(
   current: Rectangle | null,
@@ -83,8 +80,7 @@ export function nextFrame(
 /**
  * Maps the visible viewport (grid units) into panel coordinates: clips at the
  * panel edges when the camera is outside the frame, then enforces a minimum
- * on-screen size so a deep zoom-in stays visible, keeping the result inside
- * the panel.
+ * on-screen size so a deep zoom-in stays visible.
  */
 export function mapViewportRect(
   viewOrigin: { x: number; y: number },
@@ -102,9 +98,9 @@ export function mapViewportRect(
     height: viewSize.y * fit.scale
   };
 
-  // Clip to the panel. When the viewport is entirely off-map this collapses
-  // to a zero-size box pinned at the nearest edge; the min-size pass below
-  // re-inflates it into an edge-hugging marker.
+  // Clip to the panel. A viewport entirely off-map collapses to a zero-size box
+  // pinned at the nearest edge, which the min-size pass below re-inflates into
+  // an edge-hugging marker.
   const left = clamp(raw.x, 0, panelWidth);
   const top = clamp(raw.y, 0, panelHeight);
   const right = clamp(raw.x + raw.width, 0, panelWidth);

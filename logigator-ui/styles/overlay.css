@@ -1,21 +1,17 @@
 /*
- * @logigator/ui — overlay structural overrides.
- *
- * Tweaks on top of CDK's prebuilt overlay stylesheet (overlay-prebuilt.css),
- * which apps load first. Import this alongside it so the library's overlays
- * (dialog, drawer, menu, …) render with the design's backdrop.
+ * @logigator/ui — overlay structural overrides on top of CDK's prebuilt
+ * overlay stylesheet, which apps load first.
  */
 
 @import '@angular/cdk/overlay-prebuilt.css';
 
-/* Deepen CDK's modal backdrop from its 0.32 default to the 0.6 the design uses. */
+/* CDK's modal backdrop defaults to 0.32; the design uses 0.6. */
 .cdk-overlay-dark-backdrop {
   background: rgb(0 0 0 / 0.6);
 }
 
-/* Drop CDK's hardcoded z-index (1000) into the shared layering scale (layers.css)
-   so every anchored/modal overlay sits in the `overlay` band — above the floating
-   windows, below the toasts. Panes still stack among themselves by open order. */
+/* CDK hardcodes 1000; the shared scale puts every overlay in the `overlay`
+   band instead. Panes still stack among themselves by open order. */
 .cdk-overlay-container {
   z-index: var(--lg-z-overlay);
 }

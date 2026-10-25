@@ -8,6 +8,7 @@ import { LoggingService } from './logging.service';
 import { ToastService } from './toast.service';
 import { BugReportService } from '../bug-report/bug-report.service';
 import { AnalyticsService } from '../analytics/analytics.service';
+import { configureTestBed } from '../../testing/configure-test-bed';
 
 describe('GlobalErrorHandler', () => {
   let handler: GlobalErrorHandler;
@@ -29,8 +30,8 @@ describe('GlobalErrorHandler', () => {
         { provide: LoggingService, useValue: loggingSpy },
         { provide: ToastService, useValue: toastSpy },
         { provide: TranslationService, useValue: translocoSpy },
-        // Force the report service unavailable so these cover the early-boot
-        // fallback (toast) path; the delegation path is covered below.
+        // Report service forced unavailable, covering the early-boot toast
+        // fallback; delegation is covered below.
         { provide: BugReportService, useValue: null }
       ]
     });
@@ -116,11 +117,68 @@ describe('GlobalErrorHandler', () => {
       const [, reportId] = bugReport.handleUncaughtError.mock.calls[0];
       expect(analyticsId).toBe(reportId);
 
-      // A second error gets a fresh id — ids correlate one error's sinks, not
+      // A second error gets a fresh id: ids correlate one error's sinks, not
       // the session.
       handlerWithReport.handleError(new Error('again'));
       const [, secondId] = bugReport.handleUncaughtError.mock.calls[1];
       expect(secondId).not.toBe(reportId);
     });
+  });
+});
+
+/**
+ * The editor is zoneless with `"polyfills": []`, so nothing patches
+ * `addEventListener`: a throw inside `PointerController`'s raw canvas
+ * listeners, a PixiJS ticker callback or a floated promise crosses no
+ * Angular-managed boundary. `provideBrowserGlobalErrorListeners()` in
+ * `appConfig` is the only thing that carries those into `ErrorHandler`, so
+ * these drive the real provider set through `configureTestBed` — dropping the
+ * provider is exactly what has to fail here.
+ */
+describe('the window listeners appConfig installs', () => {
+  let bugReport: { handleUncaughtError: Mock };
+
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    bugReport = { handleUncaughtError: vi.fn() };
+    configureTestBed([
+      { provide: BugReportService, useValue: bugReport },
+      { provide: LoggingService, useValue: { error: vi.fn() } }
+    ]);
+  });
+
+  it('reports an exception thrown outside Angular', () => {
+    const error = new RangeError('Maximum call stack size exceeded');
+
+    window.dispatchEvent(
+      // Cancelable, as the browser's own is: the listener calls
+      // `preventDefault()`, which is what keeps a reported error from also
+      // reaching the console.
+      new ErrorEvent('error', {
+        error,
+        message: error.message,
+        cancelable: true
+      })
+    );
+
+    expect(bugReport.handleUncaughtError).toHaveBeenCalledWith(
+      error,
+      expect.any(String)
+    );
+  });
+
+  it('reports the reason of a rejection nothing handled', () => {
+    const reason = new Error('the floated promise rejected');
+    const event = new Event('unhandledrejection', { cancelable: true });
+    // jsdom has no `PromiseRejectionEvent`; the listener reads `reason` off
+    // whatever the event is.
+    Object.defineProperty(event, 'reason', { value: reason });
+
+    window.dispatchEvent(event);
+
+    expect(bugReport.handleUncaughtError).toHaveBeenCalledWith(
+      reason,
+      expect.any(String)
+    );
   });
 });

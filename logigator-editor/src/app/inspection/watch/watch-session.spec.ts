@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { makeSwitch } from '../../../testing/factories';
+import { makeLed, makeSwitch } from '../../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
@@ -11,6 +11,7 @@ import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { SwitchComponent } from '../../components/component-types/switch/switch.component';
 import { outputComponentConfig } from '../../components/component-types/output/output.config';
+import { ledMatrixComponentConfig } from '../../components/component-types/led-matrix/led-matrix.config';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { Project } from '../../project/project';
 import { ProjectService } from '../../project/project.service';
@@ -19,10 +20,12 @@ import { SimulationService } from '../../simulation/simulation.service';
 import { packSnapshot } from '../../simulation/worker/protocol';
 import {
   FRAME_SCHEDULER,
-  SIMULATION_WORKER_FACTORY
+  SIMULATION_WORKER_FACTORY,
+  SimulationWorkerService
 } from '../../simulation/worker/simulation-worker.service';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
+import { InspectionUnavailableError } from '../../components/component-inspection';
 import { WatchSession } from './watch-session';
 
 /** Wire spanning the two given half-grid termination points (axis-aligned). */
@@ -68,9 +71,14 @@ describe('WatchSession', () => {
     project.destroy({ children: true });
   });
 
-  /** Snapshot with a switch driving its single output plug. */
+  /**
+   * Snapshot with a switch driving its single output plug, plus a stray LED
+   * whose input carries a negation bubble.
+   */
   function registerSwitchBox(): number {
     const switchComp = makeSwitch(0, 0);
+    const led = makeLed(4, 4);
+    led.setPortNegated('in', 0, true);
     const plug = Component.deserialize(
       { pos: [8, 0], options: { label: '', index: 0 } },
       outputComponentConfig
@@ -85,16 +93,18 @@ describe('WatchSession', () => {
         type: s.type,
         pos: s.pos,
         ...(s.direction ? { direction: s.direction } : {}),
+        ...(s.negInputs ? { negInputs: s.negInputs } : {}),
         options: s.options
       };
     };
     const w = Wire.serialize(wire);
     const circuit = {
-      components: [serialize(switchComp), serialize(plug)],
+      components: [serialize(switchComp), serialize(plug), serialize(led)],
       wires: [{ pos: w.pos, direction: w.direction, length: w.length }]
     };
     switchComp.destroy({ children: true });
     plug.destroy({ children: true });
+    led.destroy({ children: true });
     wire.destroy();
     return registry.registerSnapshot({
       kind: 'snapshot',
@@ -126,7 +136,7 @@ describe('WatchSession', () => {
     const board = simulation.board!;
     const info = board.watch.infoFor(String(instanceId))!;
     const definition = registry.getDefinition(info.typeId)!;
-    return new WatchSession(definition.circuit!, info, board.descriptor.links);
+    return new WatchSession(definition.circuit!, info, board.linkCount);
   }
 
   /** Full-snapshot bits with exactly the given links powered. */
@@ -156,7 +166,7 @@ describe('WatchSession', () => {
     const copiedSwitch = session.components[0] as SwitchComponent;
     const setPowered = vi.spyOn(copiedWire, 'setPowered');
 
-    // The board's only unit is the inner switch; its output link is powered.
+    // The board's only unit is the inner switch.
     const switchLink = simulation.board!.descriptor.components[0].outputs[0];
     fakeWorker.emit({
       kind: 'snapshot',
@@ -166,16 +176,118 @@ describe('WatchSession', () => {
       ...packSnapshot(
         undefined,
         null,
-        fullBits(simulation.board!.descriptor.links, [switchLink])
+        fullBits(simulation.board!.linkCount, [switchLink])
       )
     });
 
     expect(setPowered).toHaveBeenCalledWith(true);
-    // First frame after the seed: needs a render and poses the switch.
+    // The first frame after the seed poses the switch.
     expect(session.onFrame()).toBe(true);
-    expect(copiedSwitch.isOn).toBe(true);
-    // Nothing changed since — no render needed.
+    expect(copiedSwitch.isActive(0)).toBe(true);
+    // Nothing changed since.
     expect(session.onFrame()).toBe(false);
+    session.destroy();
+  });
+
+  it('lights an LED matrix copy’s cells from their unit’s outputs', async () => {
+    const matrix = Component.deserialize(
+      { pos: [0, 0], options: { size: 4 } },
+      ledMatrixComponentConfig
+    );
+    const s = Component.serialize(matrix);
+    matrix.destroy({ children: true });
+    const box = registry.registerSnapshot({
+      kind: 'snapshot',
+      source: 'browser',
+      name: 'MatrixBox',
+      symbol: 'MB',
+      description: '',
+      numInputs: 0,
+      numOutputs: 0,
+      labels: [],
+      circuit: {
+        components: [{ type: s.type, pos: s.pos, options: s.options }],
+        wires: []
+      }
+    });
+    const instance = Component.deserialize(
+      { pos: [0, 0], options: {} },
+      provider.getComponent(box)!
+    );
+    project.addComponent(instance);
+    simulation.enter();
+    await vi.waitFor(() => expect(simulation.state()).toBe('ready'));
+    const session = openSession(instance.id);
+    const copy = session.components[0];
+
+    const cells = simulation.board!.descriptor.components[0].outputs;
+    fakeWorker.emit({
+      kind: 'snapshot',
+      reqId: 99,
+      tick: 1,
+      isDelta: false,
+      ...packSnapshot(
+        undefined,
+        null,
+        fullBits(simulation.board!.linkCount, [cells[5]])
+      )
+    });
+
+    expect(cells).toHaveLength(16);
+    cells.forEach((_, cellIndex) => {
+      expect(copy.isPortPowered(copy.numInputs + cellIndex)).toBe(
+        cellIndex === 5
+      );
+    });
+    session.destroy();
+  });
+
+  it('has a synced-on switch copy set low by stop, sending nothing to sync it', async () => {
+    const { instanceId } = await enterWithInstance();
+    const session = openSession(instanceId);
+    const copiedSwitch = session.components[0] as SwitchComponent;
+    const switchLink = simulation.board!.descriptor.components[0].outputs[0];
+    fakeWorker.emit({
+      kind: 'snapshot',
+      reqId: 99,
+      tick: 1,
+      isDelta: false,
+      ...packSnapshot(
+        undefined,
+        null,
+        fullBits(simulation.board!.linkCount, [switchLink])
+      )
+    });
+    session.onFrame();
+    expect(copiedSwitch.isActive(0)).toBe(true);
+    // The engine already holds it high.
+    expect(fakeWorker.postedOfKind('submitInput')).toHaveLength(0);
+
+    const reset = vi.spyOn(TestBed.inject(SimulationWorkerService), 'reset');
+    simulation.stop();
+    await reset.mock.results[0].value;
+    expect(copiedSwitch.isActive(0)).toBe(false);
+
+    // Set low against the rebuilt engine (the board's only unit is the
+    // switch), and no longer tracked: a second stop sends nothing for it.
+    expect(fakeWorker.sentFrames()).toEqual([
+      { comp: 0, state: [false], coalesce: true }
+    ]);
+    simulation.stop();
+    await reset.mock.results[1].value;
+    expect(fakeWorker.sentFrames()).toHaveLength(1);
+    session.destroy();
+  });
+
+  it('opens its copies inside the session, so a negated display inverts', async () => {
+    // The copies are built after enter(), so its setSimulating pass never
+    // walked them.
+    const { instanceId } = await enterWithInstance();
+    const session = openSession(instanceId);
+
+    const led = session.components[2];
+    expect(led.isPortNegated('in', 0)).toBe(true);
+    expect(led.isInputHigh(0)).toBe(true);
     session.destroy();
   });
 
@@ -194,7 +306,7 @@ describe('WatchSession', () => {
       ...packSnapshot(
         undefined,
         null,
-        fullBits(simulation.board!.descriptor.links, [switchLink])
+        fullBits(simulation.board!.linkCount, [switchLink])
       )
     });
 
@@ -211,8 +323,8 @@ describe('WatchSession', () => {
       wires: []
     };
 
-    expect(
-      () => new WatchSession(mutilated, info, board.descriptor.links)
-    ).toThrow(/does not match/);
+    expect(() => new WatchSession(mutilated, info, board.linkCount)).toThrow(
+      InspectionUnavailableError
+    );
   });
 });

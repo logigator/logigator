@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "name": "Segment display",
+  "components": [
+    {
+      "type": 201,
+      "x": [0, 0, 0, 0],
+      "y": [0, 1, 1, 1]
+    },
+    {
+      "type": 203,
+      "x": [7],
+      "y": [0],
+      "opt": {
+        "numInputs": [4],
+        "base": [0]
+      }
+    }
+  ],
+  "wires": "6,0:w5;0,1:w5;0,1:w5;0,1:w5",
+  "definitions": []
+}

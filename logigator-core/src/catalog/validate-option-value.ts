@@ -1,0 +1,81 @@
+import { OptionSchema } from './option-schema';
+
+/**
+ * Why `value` is not acceptable for `schema`, or `null` when it is. Callers
+ * reject rather than silently accept, so a write never reports success while
+ * storing something else.
+ */
+export function validateOptionValue(
+  schema: OptionSchema,
+  value: unknown
+): string | null {
+  switch (schema.kind) {
+    case 'number':
+      if (typeof value !== 'number' || !Number.isFinite(value)) {
+        return 'expected a finite number';
+      }
+      // Numeric options are integer-valued and round on write, so a fraction
+      // would be stored as something other than what was sent.
+      if (!Number.isInteger(value)) {
+        return 'expected an integer';
+      }
+      if (value < schema.min || value > schema.max) {
+        return `out of range [${schema.min}, ${schema.max}]`;
+      }
+      return null;
+
+    case 'select-button':
+    case 'select-dropdown': {
+      const values = schema.values.map((v) => v.value);
+      return values.includes(value)
+        ? null
+        : `not one of ${JSON.stringify(values)}`;
+    }
+
+    case 'text': {
+      if (typeof value !== 'string') return 'expected a string';
+      if (schema.maxLength !== undefined && value.length > schema.maxLength) {
+        return `longer than ${schema.maxLength} characters`;
+      }
+      // A fresh RegExp per test: a shared /g instance carries lastIndex.
+      if (
+        schema.forbiddenChars &&
+        new RegExp(schema.forbiddenChars).test(value)
+      ) {
+        return `contains forbidden characters (/${schema.forbiddenChars}/)`;
+      }
+      return null;
+    }
+
+    case 'textarea':
+      if (typeof value !== 'string') return 'expected a string';
+      return value.length > schema.maxLength
+        ? `longer than ${schema.maxLength} characters`
+        : null;
+
+    case 'memory':
+      return typeof value === 'string' ? null : 'expected a base64 blob string';
+
+    case 'name-map': {
+      if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+        return 'expected an object of names';
+      }
+      for (const [key, name] of Object.entries(value)) {
+        if (!schema.keys.includes(key)) {
+          return `unknown key "${key}", not one of ${JSON.stringify(schema.keys)}`;
+        }
+        if (typeof name !== 'string') return `"${key}": expected a string`;
+        if (name.length > schema.maxLength) {
+          return `"${key}": longer than ${schema.maxLength} characters`;
+        }
+        if (
+          schema.forbiddenChars &&
+          new RegExp(schema.forbiddenChars).test(name)
+        ) {
+          return `"${key}": contains forbidden characters (/${schema.forbiddenChars}/)`;
+        }
+      }
+      return null;
+    }
+  }
+}

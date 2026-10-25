@@ -18,21 +18,18 @@ export interface TranslateContext {
 
 /**
  * Hands its content a strictly typed `t`, making templates as key-safe as the
- * TypeScript that goes through {@link TranslationService}:
+ * TypeScript going through {@link TranslationService}:
  * `<div *appTranslate="let t">{{ t('common.save') }}</div>`.
  *
- * It stands in for `*transloco`, whose `t` is untyped and cannot be typed from
- * the outside: transloco declares its context's `$implicit` as a *property* of
- * an unexported `(key: string) => any` type alias, so neither declaration
- * merging (aliases don't merge) nor a narrower `ngTemplateContextGuard` in a
+ * Transloco's own `t` cannot be typed from the outside: its context declares
+ * `$implicit` as a *property* of an unexported `(key: string) => any` alias, so
+ * neither declaration merging nor a narrower `ngTemplateContextGuard` in a
  * subclass type-checks — a function-typed property is contravariant in its
- * parameters. Hence a context type of our own, unrelated to transloco's.
+ * parameters. Hence a context type of our own.
  *
  * Language switches need no re-render plumbing: `t` delegates to
  * {@link TranslationService.translate}, whose post-load signal read makes this
- * embedded view a reactive consumer, so its expressions re-run once the new
- * bundle has resolved. Where `*transloco` destroyed and recreated the view, the
- * bindings now update in place.
+ * embedded view a reactive consumer, so bindings update in place.
  */
 @Directive({
   selector: '[appTranslate]'
@@ -48,7 +45,7 @@ export class TranslateDirective implements OnInit {
     ...params: TranslateArgs<T>
   ): TranslationResult<T> => this.translation.translate(key, ...params);
 
-  /** Tells the template type checker what `let t` is; never called at runtime. */
+  /** Tells the template type checker what `let t` is. */
   public static ngTemplateContextGuard(
     directive: TranslateDirective,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

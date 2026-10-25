@@ -17,7 +17,8 @@ describe('TogglePortNegationAction', () => {
       setPortNegated: vi.fn().mockName('Component.setPortNegated')
     } as unknown as MockedObject<Component>;
     project = {
-      getComponentById: vi.fn().mockName('Project.getComponentById')
+      getComponentById: vi.fn().mockName('Project.getComponentById'),
+      triggerTicker: vi.fn().mockName('Project.triggerTicker')
     } as unknown as MockedObject<Project>;
     project.getComponentById.mockReturnValue(component);
   });
@@ -37,6 +38,18 @@ describe('TogglePortNegationAction', () => {
     action.undo(project);
 
     expect(component.setPortNegated).toHaveBeenCalledWith('out', 0, false);
+  });
+
+  it('requests a frame on undo and redo, since the redraw touches no ports', () => {
+    const action = new TogglePortNegationAction(7, 'in', 1, true);
+
+    action.undo(project);
+    expect(project.triggerTicker).toHaveBeenCalledTimes(1);
+    expect(project.triggerTicker).toHaveBeenLastCalledWith('single');
+
+    action.do(project);
+    expect(project.triggerTicker).toHaveBeenCalledTimes(2);
+    expect(project.triggerTicker).toHaveBeenLastCalledWith('single');
   });
 
   it('round-trips a turn-off toggle (post-state false)', () => {

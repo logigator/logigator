@@ -1,6 +1,8 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { InteractivityChecker } from '@angular/cdk/a11y';
 import { Component, input, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { LgHelpAction } from '../../tokens/help-action';
 import { LgDrawer } from './drawer';
 
 @Component({
@@ -9,10 +11,11 @@ import { LgDrawer } from './drawer';
     <lg-drawer
       [visible]="visible()"
       (visibleChange)="onVisibleChange($event)"
-      position="bottom"
+      [position]="position()"
       header="Palette"
       styleClass="h-[90vh]!"
       [modal]="modal()"
+      [help]="help()"
     >
       <div class="content">Drawer body</div>
     </lg-drawer>
@@ -20,7 +23,9 @@ import { LgDrawer } from './drawer';
 })
 class HostComponent {
   readonly modal = input(true);
+  readonly position = input<'bottom' | 'left'>('bottom');
   readonly visible = signal(false);
+  readonly help = signal<LgHelpAction | null>(null);
   readonly changes: boolean[] = [];
 
   onVisibleChange(value: boolean): void {
@@ -99,6 +104,42 @@ describe('LgDrawer', () => {
     expect(f.componentInstance.changes).toContain(false);
   });
 
+  it('draws a help button only when given one, and runs it without closing', () => {
+    const f = setup();
+    f.componentInstance.visible.set(true);
+    f.detectChanges();
+    expect(container()?.querySelector('[aria-label=Help]')).toBeNull();
+
+    let helped = 0;
+    f.componentInstance.help.set({ label: 'Help', command: () => helped++ });
+    f.detectChanges();
+    (
+      container()?.querySelector('[aria-label=Help]') as HTMLButtonElement
+    ).click();
+    f.detectChanges();
+    expect(helped).toBe(1);
+    expect(f.componentInstance.changes).toEqual([]);
+    expect(panel()).not.toBeNull();
+  });
+
+  it('opens with focus on the close button, past the help button', () => {
+    // jsdom lays nothing out, and the checker counts an element without
+    // geometry as hidden, so nothing would be focusable.
+    class LaidOutChecker extends InteractivityChecker {
+      override isVisible(): boolean {
+        return true;
+      }
+    }
+    TestBed.configureTestingModule({
+      providers: [{ provide: InteractivityChecker, useClass: LaidOutChecker }]
+    });
+    const f = setup();
+    f.componentInstance.help.set({ label: 'Help', command: () => undefined });
+    f.componentInstance.visible.set(true);
+    f.detectChanges();
+    expect(document.activeElement?.getAttribute('aria-label')).toBe('Close');
+  });
+
   it('non-modal: no backdrop, no focus trap, no aria-modal', () => {
     const previouslyFocused = document.activeElement;
     const f = setup();
@@ -130,5 +171,82 @@ describe('LgDrawer', () => {
     f.componentInstance.visible.set(true);
     f.detectChanges();
     expect(panel()).not.toBeNull();
+  });
+
+  describe('over an on-screen keyboard', () => {
+    let viewport: EventTarget & {
+      height: number;
+      offsetTop: number;
+      scale: number;
+    };
+
+    beforeEach(() => {
+      viewport = Object.assign(new EventTarget(), {
+        height: 800,
+        offsetTop: 0,
+        scale: 1
+      });
+      Object.defineProperty(window, 'visualViewport', {
+        configurable: true,
+        value: viewport
+      });
+    });
+
+    afterEach(() => {
+      delete (window as { visualViewport?: unknown }).visualViewport;
+    });
+
+    /** Opens the drawer in a layout viewport 800px tall. */
+    function open(position: 'bottom' | 'left') {
+      const f = setup();
+      f.componentRef.setInput('modal', false);
+      f.componentRef.setInput('position', position);
+      f.componentInstance.visible.set(true);
+      f.detectChanges();
+      Object.defineProperty(container(), 'clientHeight', { value: 800 });
+      return f;
+    }
+
+    function resize(height: number, offsetTop = 0): void {
+      viewport.height = height;
+      viewport.offsetTop = offsetTop;
+      viewport.dispatchEvent(new Event('resize'));
+    }
+
+    it('lifts a bottom sheet above the keyboard and caps it to what stays visible', () => {
+      const f = open('bottom');
+      resize(480);
+      f.detectChanges();
+      expect(panel()!.style.marginBottom).toBe('320px');
+      expect(panel()!.style.maxHeight).toBe('calc(480px - 2.5rem)');
+
+      resize(800);
+      f.detectChanges();
+      expect(panel()!.style.marginBottom).toBe('');
+      expect(panel()!.style.maxHeight).toBe('');
+    });
+
+    it('measures the viewport afresh each time it opens', () => {
+      const f = open('bottom');
+      resize(480);
+      f.componentInstance.visible.set(false);
+      f.detectChanges();
+      resize(800);
+      f.componentInstance.visible.set(true);
+      f.detectChanges();
+      expect(panel()!.style.marginBottom).toBe('');
+
+      resize(480);
+      f.detectChanges();
+      expect(panel()!.style.marginBottom).toBe('320px');
+    });
+
+    it('leaves a side drawer where it is', () => {
+      const f = open('left');
+      resize(480);
+      f.detectChanges();
+      expect(panel()!.style.marginBottom).toBe('');
+      expect(panel()!.style.maxHeight).toBe('');
+    });
   });
 });

@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "name": "OR gate",
+  "components": [
+    {
+      "type": 3,
+      "x": [7],
+      "y": [0],
+      "opt": {
+        "numInputs": [2]
+      }
+    },
+    {
+      "type": 201,
+      "x": [0, 0],
+      "y": [0, 1]
+    },
+    {
+      "type": 202,
+      "x": [15],
+      "y": [0]
+    }
+  ],
+  "wires": "6,0:w5;8,0:w5;-8,1:w5",
+  "definitions": []
+}

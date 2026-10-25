@@ -1,10 +1,12 @@
 import { NgTemplateOutlet } from '@angular/common';
+import { DataSource } from '@angular/cdk/collections';
 import {
   CdkFixedSizeVirtualScroll,
   CdkVirtualForOf,
   CdkVirtualScrollViewport
 } from '@angular/cdk/scrolling';
 import {
+  AfterViewInit,
   afterNextRender,
   Component,
   contentChild,
@@ -17,17 +19,17 @@ import {
 } from '@angular/core';
 
 /**
- * Fixed-size virtual scroller over `cdk/scrolling`. Renders only the visible
- * window of `items` (each `itemSize` px tall) inside a `scrollHeight`-tall
- * viewport, projecting the `#item` template per row (`$implicit` = the item).
- * Exposes {@link scrollToIndex} (obtained via `viewChild`). Vertical, fixed-size
- * only — no lazy mode or autosize.
+ * Fixed-size virtual scroller over `cdk/scrolling`, projecting the `#item`
+ * template per visible row. Vertical and fixed-size only: no lazy mode, no
+ * autosize.
  *
  * Only the vertical axis is virtualized, but the viewport is a regular
- * two-axis scroll container: rows wider than it overflow horizontally without
- * growing it (the CDK content wrapper is absolutely positioned). Hosts that
- * drive or mirror that horizontal axis get the raw scroll events via
- * {@link scrolled} and the container itself via {@link viewportElement}.
+ * two-axis scroll container — rows wider than it overflow horizontally
+ * without growing it, since the CDK content wrapper is absolutely positioned.
+ * A host driving that axis reads {@link scrolled} and {@link viewportElement}.
+ * A host that loads what its rows show reads {@link renderedRangeChange}.
+ * A host whose list is long and changes often hands over a `DataSource`
+ * emitting the list, which the viewport reads without copying it.
  */
 @Component({
   selector: 'lg-scroller',
@@ -58,8 +60,8 @@ import {
     </cdk-virtual-scroll-viewport>
   `
 })
-export class LgScroller {
-  readonly items = input<readonly unknown[]>([]);
+export class LgScroller implements AfterViewInit {
+  readonly items = input<readonly unknown[] | DataSource<unknown>>([]);
   readonly itemSize = input.required<number>();
   readonly scrollHeight = input<string>();
   readonly style = input<Record<string, string> | null>(null);
@@ -67,19 +69,21 @@ export class LgScroller {
   /** `tabindex` of the viewport element — set to make it keyboard-scrollable. */
   readonly tabindex = input<string | null>(null);
 
-  /** Native `scroll` events of the viewport element (both axes). */
   readonly scrolled = output<Event>();
+  /**
+   * The item indexes `[start, end)` the viewport has rendered — the rows on
+   * screen plus the CDK's buffer — on every change: the first layout, a
+   * scroll, a resize, a change of items.
+   */
+  readonly renderedRangeChange = output<{ start: number; end: number }>();
 
   protected readonly itemTemplate = contentChild<TemplateRef<unknown>>('item');
   private readonly viewport = viewChild.required(CdkVirtualScrollViewport);
 
   constructor() {
-    // The CDK viewport re-measures its size only on window resize (via its
-    // `ViewportRuler`), not when its own container is resized — e.g. a flexed
-    // or percent-height viewport growing because the host `LgWindow` was dragged
-    // taller. Without a re-measure it keeps rendering only the rows that filled
-    // the first-render height, leaving the grown space empty. Observe the
-    // container and re-check on every size change.
+    // The CDK viewport re-measures only on window resize, not when its own
+    // container grows. Without this it keeps rendering the rows that filled
+    // the first-render height and leaves the grown space empty.
     const destroyRef = inject(DestroyRef);
     afterNextRender(() => {
       // Guarded for test environments without ResizeObserver.
@@ -92,12 +96,27 @@ export class LgScroller {
     });
   }
 
+  ngAfterViewInit(): void {
+    // Subscribed before the viewport's first layout, which runs on a
+    // microtask after its init. The stream completes with the viewport.
+    this.viewport().renderedRangeStream.subscribe(({ start, end }) =>
+      this.renderedRangeChange.emit({ start, end })
+    );
+  }
+
   /** The scroll container element, for reading or driving the horizontal axis. */
   get viewportElement(): HTMLElement {
     return this.viewport().elementRef.nativeElement;
   }
 
-  /** Scroll the row at `index` into view. */
+  /**
+   * Re-reads the viewport's size and scroll offset and renders the rows now
+   * in view, for a host that moved `scrollTop` itself.
+   */
+  checkViewportSize(): void {
+    this.viewport().checkViewportSize();
+  }
+
   scrollToIndex(index: number, behavior?: ScrollBehavior): void {
     this.viewport().scrollToIndex(index, behavior);
   }

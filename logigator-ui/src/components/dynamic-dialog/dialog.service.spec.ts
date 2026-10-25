@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { InteractivityChecker } from '@angular/cdk/a11y';
 import {
   ApplicationRef,
   Component,
@@ -64,7 +65,7 @@ function panel(): HTMLElement | null {
   return document.querySelector('.cdk-overlay-container [role=dialog]');
 }
 
-/** Open a dialog and run one CD pass so the container's ngAfterViewInit fires. */
+/** Opens, then runs one CD pass so the container's ngAfterViewInit fires. */
 function open(
   config: DialogConfig<unknown, TestDialogChild> = {}
 ): DialogRef<unknown, TestDialogChild> {
@@ -76,11 +77,9 @@ function open(
   return ref;
 }
 
-// Type-level guard: `inputValues` is type-checked against the opened
-// component's `input()` signals. This locks in `DialogInputs` — a regression
-// that widens it back to `{}` (silently dropping every check) would let the
-// `@ts-expect-error` lines compile clean and fail this build. Never invoked
-// (the fake `svc` would deref null); it exists only to be type-checked.
+// Type-level guard on `DialogInputs`: widening it to `{}` would silently drop
+// every check, and the `@ts-expect-error` lines would then fail this build.
+// Never invoked — the fake `svc` would deref null.
 // eslint-disable-next-line @typescript-eslint/no-unused-expressions
 () => {
   const svc = null as unknown as DialogService;
@@ -90,10 +89,8 @@ function open(
   // @ts-expect-error `saved` is an output, not a settable input
   svc.open(TestDialogChild, { inputValues: { saved: 'x' } });
 
-  // A contract component (extends LgDialogContent) has its `data` and result
-  // inferred from the component alone — no type arguments. The assignment holds
-  // only if `onClose` is typed `ContractResult | undefined` (not `unknown`); the
-  // `@ts-expect-error` lines hold only if `data` is checked against ContractData.
+  // A contract component infers `data` and result from the component alone.
+  // The assignment holds only if `onClose` is `ContractResult | undefined`.
   const ref = svc.open(ContractChild, { data: { name: 'x' } });
   const result: Promise<ContractResult | undefined> = firstValueFrom(
     ref.onClose
@@ -195,6 +192,63 @@ describe('DialogService', () => {
     expect(panel()).toBeNull();
   });
 
+  it('runs the help command from the header and stays open', () => {
+    let helped = 0;
+    const ref = open({
+      closable: false,
+      help: { label: 'Help', command: () => helped++ },
+      inputValues: { wordSize: 1 }
+    });
+    let closed = false;
+    ref.onClose.subscribe(() => (closed = true));
+    (
+      container()?.querySelector('[aria-label=Help]') as HTMLButtonElement
+    ).click();
+    expect(helped).toBe(1);
+    expect(closed).toBe(false);
+    expect(panel()).not.toBeNull();
+  });
+
+  describe('initial focus', () => {
+    // jsdom lays nothing out, and the checker counts an element without
+    // geometry as hidden, so nothing would be focusable.
+    class LaidOutChecker extends InteractivityChecker {
+      override isVisible(): boolean {
+        return true;
+      }
+    }
+
+    const help = { label: 'Help', command: () => undefined };
+
+    beforeEach(() => {
+      TestBed.configureTestingModule({
+        providers: [{ provide: InteractivityChecker, useClass: LaidOutChecker }]
+      });
+    });
+
+    it('passes over the help button to the close button', () => {
+      open({ header: 'ROM', help, inputValues: { wordSize: 1 } });
+      expect(document.activeElement?.getAttribute('aria-label')).toBe('Close');
+    });
+
+    it('passes over the help button into the content when not closable', () => {
+      TestBed.inject(DialogService).open(ConfigReadingChild, {
+        closable: false,
+        help
+      });
+      TestBed.inject(ApplicationRef).tick();
+      expect(document.activeElement).toBe(
+        container()?.querySelector('.self-close')
+      );
+    });
+
+    it('opens no tooltip when the help button is all there is to focus', () => {
+      open({ closable: false, help, inputValues: { wordSize: 1 } });
+      expect(document.activeElement?.getAttribute('aria-label')).toBe('Help');
+      expect(document.querySelector('.lg-tooltip')).toBeNull();
+    });
+  });
+
   it('ignores width sizing while fullscreen', () => {
     open({ width: '40rem', fullscreen: true, inputValues: { wordSize: 1 } });
     expect(panel()!.style.width).toBe('');
@@ -271,8 +325,7 @@ describe('DialogService', () => {
     }
 
     // The close notification cannot ride the service's `Subscription` bag: the
-    // disposer unsubscribes it before `onClose` emits. This is what a refactor
-    // of that teardown order breaks silently.
+    // disposer unsubscribes it before `onClose` emits.
     it('reports the close of a dialog that resolves a result', () => {
       const { opens, closes } = record();
       const ref = open({ inputValues: { wordSize: 1 }, telemetryId: 'demo' });

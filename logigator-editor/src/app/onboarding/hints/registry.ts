@@ -11,9 +11,8 @@ const portsPanel = 'ports-panel';
 const mobilePorts = 'mobile-ports';
 
 /**
- * The Tier-1 just-in-time hints — the non-obvious behaviours the flagship
- * tutorial doesn't teach. Each fires once, on the first occurrence of its
- * trigger. See `plans/onboarding.md`.
+ * The just-in-time hints: the non-obvious behaviours the flagship tutorial does
+ * not teach. Each fires once, on the first occurrence of its trigger.
  */
 export const HINTS: readonly Hint[] = [
   {
@@ -21,7 +20,7 @@ export const HINTS: readonly Hint[] = [
     trigger: { kind: 'workMode', mode: WorkMode.WIRE_TOOL },
     target: { desktop: wireTool, compact: wireTool },
     text: 'onboarding.hints.wireTapActions',
-    docsPage: 'wires-and-connections'
+    docs: { page: 'wires-and-connections' }
   },
   {
     id: 'scissor-select',
@@ -43,13 +42,20 @@ export const HINTS: readonly Hint[] = [
     trigger: { kind: 'workMode', mode: WorkMode.SIMULATION },
     target: { desktop: simControls, compact: simControls },
     text: 'onboarding.hints.simControls',
-    docsPage: 'simulation'
+    docs: { page: 'simulation', anchor: 'run-controls' }
+  },
+  {
+    id: 'wire-conflict',
+    // Floats: the conflict is somewhere on the board, which no target names.
+    trigger: { kind: 'wireConflict' },
+    text: 'onboarding.hints.wireConflict',
+    docs: { page: 'simulation', anchor: 'conflicting-signals' }
   },
   {
     id: 'selection-actions',
     trigger: { kind: 'select' },
-    // The keyboard shortcuts are the payload; the buttons exist only on desktop
-    // and arrow-key move has no button at all, so this is desktop-only.
+    // Desktop-only: the payload is keyboard shortcuts, and arrow-key move has
+    // no button at all.
     platforms: ['desktop'],
     target: { desktop: selectionRotate },
     text: 'onboarding.hints.selectionActions'
@@ -61,23 +67,23 @@ export const HINTS: readonly Hint[] = [
       desktop: 'onboarding.hints.pastePlacementDesktop',
       compact: 'onboarding.hints.pastePlacementCompact'
     },
-    docsPage: 'board-and-tools'
+    docs: { page: 'board-and-tools', anchor: 'copy-paste-and-delete' }
   },
   {
     id: 'ports-panel',
     trigger: { kind: 'componentEditor' },
-    // Desktop points at the panel itself; compact at the HUD button that opens
-    // it, since there the panel only exists inside its drawer.
+    // Compact points at the HUD button, since there the panel exists only
+    // inside its drawer.
     target: { desktop: portsPanel, compact: mobilePorts },
-    // Beside the panel, over the board: the side bar is only as wide as the
-    // panel, so below it the hint would cover the palette it points past. Above
-    // the button on compact — the HUD already sits on the bottom edge.
+    // Beside the panel, over the board: below it the hint would cover the
+    // palette it points past. Above the button on compact, where the HUD owns
+    // that edge.
     side: { desktop: 'right', compact: 'top' },
     text: {
       desktop: 'onboarding.hints.portsPanelDesktop',
       compact: 'onboarding.hints.portsPanelCompact'
     },
-    docsPage: 'custom-components'
+    docs: { page: 'custom-components', anchor: 'ports' }
   },
   {
     id: 'pan-zoom-compact',
@@ -88,7 +94,7 @@ export const HINTS: readonly Hint[] = [
   }
 ];
 
-/** The hint wired to `trigger`, if any — trigger→hint wiring lives only here. */
+/** The hint wired to `trigger`, if any. */
 export function hintForTrigger(trigger: HintTrigger): Hint | undefined {
   return HINTS.find((candidate) =>
     candidate.trigger.kind === 'workMode' && trigger.kind === 'workMode'

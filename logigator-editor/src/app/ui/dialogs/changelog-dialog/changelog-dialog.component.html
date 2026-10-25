@@ -1,7 +1,22 @@
 <div *appTranslate="let t" class="flex flex-col gap-4">
-  @if (markdown(); as md) {
+  @if (releases(); as releases) {
     <div class="max-h-[60vh] overflow-y-auto pr-1">
-      <lg-markdown [data]="md" />
+      @for (release of releases; track release.version) {
+        <section
+          class="flex flex-col gap-3 border-border py-6 first:pt-0 last:pb-0 not-first:border-t"
+        >
+          <div>
+            <h3 class="font-mono text-lg font-bold text-text-hover">
+              {{ release.version }}
+            </h3>
+            <time class="text-sm text-muted" [attr.datetime]="release.date">
+              {{ release.dateLabel }}
+            </time>
+          </div>
+
+          <lg-markdown class="min-w-0" [data]="release.body" />
+        </section>
+      }
     </div>
   } @else if (failed()) {
     <p class="text-muted text-sm">{{ t('changelogDialog.loadError') }}</p>
@@ -10,6 +25,8 @@
   }
 
   <div class="flex justify-end">
-    <lg-button [label]="t('changelogDialog.close')" (onClick)="close()" />
+    <button lgButton (onClick)="close()">
+      {{ t('changelogDialog.close') }}
+    </button>
   </div>
 </div>

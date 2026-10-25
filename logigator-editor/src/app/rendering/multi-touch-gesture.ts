@@ -1,9 +1,6 @@
 import { Point } from 'pixi.js';
 
-/**
- * The board operations the multi-touch gesture drives. Kept as a narrow
- * interface so the gesture logic is unit-testable without a real Project.
- */
+/** The board operations the gesture drives, narrow enough to fake in specs. */
 export interface GestureTarget {
   /** Pan by a screen-space delta. */
   pan(delta: Point): void;
@@ -16,17 +13,14 @@ export interface GestureTarget {
 }
 
 /**
- * Two-finger navigation: pan by the centroid delta and pinch-zoom by the spread
- * ratio, available in any work mode. Coordinates are screen space (canvas-local
- * pixels), matching what `Project.pan`/`zoomBy` expect.
+ * Two-finger navigation in any work mode: pan by the centroid delta, pinch by
+ * the spread ratio. Coordinates are canvas-local screen pixels.
  *
- * The gesture activates the moment a second pointer lands, aborting any
- * single-pointer tool drag so a finger never both operates a tool and
- * navigates. Dropping below two pointers ends the gesture; the cancelled tool
- * drag is not resumed (the user committed to navigating).
+ * A second pointer landing activates the gesture and aborts any single-pointer
+ * tool drag, so a finger never both operates a tool and navigates; the
+ * cancelled drag is not resumed. Dropping below two pointers ends it.
  *
- * Pointer-source filtering (touch vs. mouse) is the caller's concern; this
- * tracks whatever ids it is given.
+ * Filtering touch from mouse is the caller's concern.
  */
 export class MultiTouchGesture {
   private readonly _pointers = new Map<number, Point>();
@@ -46,7 +40,7 @@ export class MultiTouchGesture {
     if (!this.isActive) return;
 
     if (!wasActive) {
-      // Second finger just landed: take over from any single-pointer tool drag.
+      // Take over from any single-pointer tool drag.
       this.target.abortActiveDrag();
       this.target.setActive(true);
     }
@@ -82,10 +76,9 @@ export class MultiTouchGesture {
     this._pointers.delete(id);
 
     if (this.isActive) {
-      // Still a multi-touch gesture (3→2); rebase to avoid a jump.
+      // Still multi-touch (3→2): rebase to avoid a jump.
       this._resetBaseline();
     } else if (wasActive) {
-      // Dropped below two pointers — the gesture is over.
       this._lastCentroid = null;
       this._lastSpread = 0;
       this.target.setActive(false);

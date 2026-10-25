@@ -19,9 +19,12 @@
     <div class="flex flex-col gap-1">
       <span class="text-sm text-muted">{{ t('portsPanel.inputs') }}</span>
       @if (inputRows().length === 0) {
-        <span class="text-sm text-muted italic">{{
-          t('portsPanel.noInputs')
-        }}</span>
+        <span class="flex flex-wrap items-baseline gap-x-2">
+          <span class="text-sm text-muted italic">{{
+            t('portsPanel.noInputs')
+          }}</span>
+          <app-docs-link [target]="docs.ports" />
+        </span>
       }
       <div
         cdkDropList
@@ -63,9 +66,12 @@
     <div class="flex flex-col gap-1">
       <span class="text-sm text-muted">{{ t('portsPanel.outputs') }}</span>
       @if (outputRows().length === 0) {
-        <span class="text-sm text-muted italic">{{
-          t('portsPanel.noOutputs')
-        }}</span>
+        <span class="flex flex-wrap items-baseline gap-x-2">
+          <span class="text-sm text-muted italic">{{
+            t('portsPanel.noOutputs')
+          }}</span>
+          <app-docs-link [target]="docs.ports" />
+        </span>
       }
       <div
         cdkDropList

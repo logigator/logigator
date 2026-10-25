@@ -1,0 +1,78 @@
+import * as z from 'zod';
+import {
+  authorSchema,
+  circuitDocumentSchema,
+  documentDependencySchema,
+  forkAttributionSchema
+} from '../document/document.contract';
+import { componentSummarySchema } from '../document/component.contract';
+import { projectSummarySchema } from '../document/project.contract';
+
+/**
+ * What a share link resolves to. A discriminated union rather than one shape
+ * with optional component fields, so a client that narrowed on `kind` is not
+ * still asking whether `numInputs` is there.
+ *
+ * The endpoint needs no session, and it answers for every document but a
+ * private one — which answers for its owner alone. `kind` is part of the
+ * address rather than something the server works out, `/share/{kind}/{link}`,
+ * the two documents of that name living in two tables.
+ */
+const shareFields = {
+  document: circuitDocumentSchema,
+  dependencies: z.array(documentDependencySchema),
+  /** Fork lineage, root-first, derived from the server's own records. */
+  attribution: z.array(forkAttributionSchema),
+  author: authorSchema,
+  /**
+   * The lifetime tally, so a landing page for a shared link can draw what the
+   * composed card already draws. Spelled as the community listings spell it —
+   * there is no `starred` beside it, this read having no caller to answer for.
+   */
+  stars: z.number().int().nonnegative()
+} as const;
+
+export const shareResponseSchema = z.discriminatedUnion('kind', [
+  z
+    .object({
+      kind: z.literal('project'),
+      project: projectSummarySchema,
+      ...shareFields
+    })
+    .loose(),
+  z
+    .object({
+      kind: z.literal('component'),
+      component: componentSummarySchema,
+      ...shareFields
+    })
+    .loose()
+]);
+
+export type ShareResponse = z.infer<typeof shareResponseSchema>;
+
+/**
+ * What cloning a share produced, in the caller's account. `dependencies` are
+ * the library components the clone brought with it: a document embeds its
+ * dependencies' circuits, but a working copy needs its own masters to keep
+ * editing them, so the transitive graph is cloned and the copy's snapshots
+ * re-pointed at the new ids.
+ */
+export const cloneResponseSchema = z.discriminatedUnion('kind', [
+  z
+    .object({
+      kind: z.literal('project'),
+      project: projectSummarySchema,
+      dependencies: z.array(componentSummarySchema)
+    })
+    .loose(),
+  z
+    .object({
+      kind: z.literal('component'),
+      component: componentSummarySchema,
+      dependencies: z.array(componentSummarySchema)
+    })
+    .loose()
+]);
+
+export type CloneResponse = z.infer<typeof cloneResponseSchema>;

@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "name": "Clock",
+  "components": [
+    {
+      "type": 6,
+      "x": [8],
+      "y": [1],
+      "opt": {
+        "mode": ["square"],
+        "speed": [1]
+      }
+    },
+    {
+      "type": 201,
+      "x": [1],
+      "y": [1]
+    },
+    {
+      "type": 202,
+      "x": [18],
+      "y": [1]
+    }
+  ],
+  "wires": "2,1:e5;9,0:e6",
+  "definitions": []
+}

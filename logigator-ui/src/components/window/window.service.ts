@@ -2,7 +2,6 @@ import { Injectable, signal, Type, WritableSignal } from '@angular/core';
 import { WindowConfig } from './window-config';
 import { WindowRef } from './window-ref';
 
-/** One open window, as rendered by {@link LgWindowOutlet}. */
 export interface OpenWindow {
   readonly id: number;
   readonly component: Type<unknown>;
@@ -15,13 +14,11 @@ export interface OpenWindow {
 }
 
 /**
- * Opens components in floating, draggable, resizable windows — non-modal
- * panels stacked over the app's own content rather than a `cdk/overlay`. The
- * windows render inside the {@link LgWindowOutlet} the host app places (the
- * outlet's element is also the drag/resize bounds), so without an outlet in
- * the tree nothing shows. Any number of windows can be open at once; focusing
- * one (or pressing it) raises it above the rest. There is no backdrop and no
- * focus trap — the content behind the windows stays interactive.
+ * Opens components in floating, draggable, resizable windows: non-modal panels
+ * stacked over the app's own content rather than a `cdk/overlay`. They render
+ * inside the {@link LgWindowOutlet} the host app places, whose element is also
+ * their drag/resize bounds, so without an outlet nothing shows. There is no
+ * backdrop and no focus trap, so the content behind stays interactive.
  */
 @Injectable({ providedIn: 'root' })
 export class WindowService {
@@ -54,7 +51,7 @@ export class WindowService {
     return ref;
   }
 
-  /** Close every open window (each ref's `onClose` still resolves). */
+  /** Close every open window; each ref's `onClose` still resolves. */
   closeAll(): void {
     for (const window of [...this.openWindows()]) {
       window.ref.close();

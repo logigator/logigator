@@ -28,9 +28,8 @@ export class DragCollisionState {
 
   update(): void {
     const offset = this._dragLayer.position;
-    // The bounds getters hand back a fresh rect each call, so the drag offset
-    // goes on in place — this runs over the whole dragged set on every pointer
-    // move, where a copy per element per check is pure garbage.
+    // The bounds getters hand back a fresh rect each call, so the offset goes
+    // on in place: this runs over the whole dragged set on every pointer move.
     const collision =
       this._components.some((c) => {
         const bodyBounds = offsetRectInPlace(c.bodyGridBounds, offset);
@@ -54,20 +53,18 @@ export class DragCollisionState {
 
     const changed = collision !== this._hasCollision;
     this._hasCollision = collision;
-    // While colliding, the tint is re-applied on every update — not only on
-    // transitions: a mid-session rotate rebuilds each component's children,
-    // and the rebuild's refreshTint restores the selection tint over the
-    // invalid one. Tint writes are a per-frame-safe fast path, so the
-    // redundant re-apply during a colliding move costs nothing.
+    // Re-applied on every update, not only on transitions: a mid-session
+    // rotate rebuilds each component's children and its refreshTint restores
+    // the selection tint over the invalid one. Tint writes are a
+    // per-frame-safe fast path, so the redundant re-apply costs nothing.
     if (collision || changed) {
       this._applyTint();
     }
   }
 
   /**
-   * Restores the elements' own tints if a collision tint is still applied.
-   * Sessions call this before reattaching the elements to the project, so a
-   * cancel mid-collision does not leak the invalid tint back onto the board.
+   * Restores the elements' own tints. Sessions call this before reattaching,
+   * so a cancel mid-collision does not leak the invalid tint onto the board.
    */
   reset(): void {
     if (!this._hasCollision) return;
@@ -76,8 +73,8 @@ export class DragCollisionState {
   }
 
   private _applyTint(): void {
-    // Iterates the drag layer instead of _components/_wires so captured
-    // junction dots riding along in the layer get the same treatment.
+    // The drag layer, not _components/_wires, so captured junction dots
+    // riding along get the same treatment.
     for (const child of this._dragLayer.children) {
       applyInvalidTint(child, this._hasCollision);
     }

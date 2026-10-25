@@ -4,12 +4,11 @@ import { getStaticDI } from '../../utils/get-di';
 import { ThemingService } from '../../theming/theming.service';
 
 /**
- * A button's full body (legacy look): a plain square outline — not the
- * chamfered standard body — with an inset inner square that fills with the
- * wire color while the button is pressed.
+ * A button's body: a plain square outline, not the chamfered standard body,
+ * with an inset circle that fills while the button is held.
  */
 export class ButtonGraphics extends StaticGraphicsContext {
-  constructor(scale: number, pressed: boolean) {
+  constructor(scale: number, held: boolean) {
     super();
 
     const theme = getStaticDI(ThemingService).currentTheme();
@@ -19,8 +18,8 @@ export class ButtonGraphics extends StaticGraphicsContext {
     this.fill(theme.background);
     this.stroke({ color: theme.wire, width: PX / scale });
 
-    this.rect(inset, inset, 1 - 2 * inset, 1 - 2 * inset);
-    if (pressed) {
+    this.smoothCircle(0.5, 0.5, 0.5 - inset);
+    if (held) {
       this.fill(theme.wire);
     }
     this.stroke({ color: theme.wire, width: PX / scale });

@@ -1,17 +1,9 @@
+import type { InputWrite } from '@logigator/sim/wasm';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
 
-// The WASM package exports `InputEvent`/`SimState` as types only (no runtime
-// values), so the wire values live here.
-/** Set-and-hold input event (switchComp). */
-export const INPUT_EVENT_CONT = 0;
-/** One-tick pulse input event (button). */
-export const INPUT_EVENT_PULSE = 1;
-export type InputEventKind = typeof INPUT_EVENT_CONT | typeof INPUT_EVENT_PULSE;
-
 /**
- * Worker-paced run modes. Sync-to-frame is not a worker mode: the bridge
- * drives it with one `step` per rendered frame, so the worker stays idle
- * between messages.
+ * Worker-paced run modes. Sync-to-frame is not one: the bridge drives it with
+ * one `step` per rendered frame, so the worker stays idle between messages.
  */
 export type RunRequest =
   { mode: 'continuous' } | { mode: 'target'; hz: number };
@@ -24,20 +16,78 @@ export type MainToWorkerMessage =
   | { kind: 'pause'; reqId: number }
   /** One deterministic tick. */
   | { kind: 'step'; reqId: number }
-  /** Reset: destroy and rebuild from the kept descriptor (the engine has no reset). */
+  /** Destroy and rebuild from the kept descriptor; the engine has no reset. */
   | { kind: 'stop'; reqId: number }
-  | {
-      kind: 'triggerInput';
-      reqId: number;
-      componentIndex: number;
-      event: InputEventKind;
-      state: boolean[];
-    }
-  /** `full` forces a full snapshot (seeds a freshly-registered watch applier). */
+  /**
+   * Frames for the engine's inputs, handed to `submitInput` as they are: the
+   * engine queues and sequences them, and refuses the whole request on any
+   * error.
+   */
+  | { kind: 'submitInput'; reqId: number; writes: InputWrite[] }
+  /**
+   * Starts reading a range of a unit's engine state with every snapshot, or
+   * moves the range of a watch already started under the same id.
+   */
+  | { kind: 'watchState'; reqId: number; watch: StateWatchRequest }
+  /** Stops a watch; an id the worker does not hold is ignored. */
+  | { kind: 'unwatchState'; reqId: number; id: number }
+  /**
+   * Starts reading a recorder unit's records with every snapshot, from
+   * `since` on, or restarts the watch already under the same id there.
+   */
+  | { kind: 'watchRecords'; reqId: number; watch: RecordWatchRequest }
+  /** Stops a record watch; an id the worker does not hold is ignored. */
+  | { kind: 'unwatchRecords'; reqId: number; id: number }
+  /** `full` forces a full snapshot, seeding a fresh watch applier. */
   | { kind: 'requestSnapshot'; reqId: number; full?: boolean }
   | { kind: 'requestStatus'; reqId: number }
   /** Pool refill: hands a transferred snapshot buffer back to the worker. */
   | { kind: 'returnBuffer'; buffer: ArrayBuffer };
+
+/**
+ * A byte range of one engine unit's state the main thread watches, under an
+ * id of its own: two views of one unit are two watches.
+ */
+export interface StateWatchRequest {
+  id: number;
+  /** The unit's board submission index, the engine's component id. */
+  unit: number;
+  /** The range `[offset, offset + length)` of the unit's state bytes. */
+  offset: number;
+  length: number;
+}
+
+/**
+ * A watched range read beside a snapshot, so the bytes belong to the tick the
+ * snapshot shows. `bytes` is the engine's own copy, its buffer transferred.
+ */
+export interface StateRead {
+  id: number;
+  offset: number;
+  bytes: Uint8Array;
+}
+
+/** A recorder unit the main thread reads, under an id of its own. */
+export interface RecordWatchRequest {
+  id: number;
+  /** The unit's board submission index, the engine's component id. */
+  unit: number;
+  /** The index of the first record to read, normally 0. */
+  since: number;
+}
+
+/**
+ * Records of a watched recorder read beside a snapshot, so they belong to the
+ * tick the snapshot shows: records `first … first + values.length`, never
+ * empty. A `first` past where the last read ended (or past the watch's
+ * `since`) means the engine overwrote the records in between. `values` is
+ * the engine's own copy, its buffer transferred.
+ */
+export interface RecordRead {
+  id: number;
+  first: number;
+  values: Uint32Array;
+}
 
 export interface SnapshotMessage {
   kind: 'snapshot';
@@ -46,10 +96,37 @@ export interface SnapshotMessage {
   isDelta: boolean;
   /** Byte length of the changed-id `u32` array; `0` for full snapshots. */
   idsByteLength: number;
-  /** Delta: packed changed-link values (bit `i` ↔ id `i`). Full: packed link bits (byte `l>>3`, bit `l&7`). */
+  /**
+   * Byte length of the `u32` ids of every link in conflict (the engine's
+   * invalid links), ascending — the whole set, delta or full; usually `0`.
+   */
+  invalidByteLength: number;
+  /**
+   * Delta: packed changed-link values (bit `i` ↔ id `i`). Full: packed link
+   * bits (byte `l>>3`, bit `l&7`).
+   */
   valuesByteLength: number;
-  /** Transferred payload: ids at offset 0, values right after. */
+  /**
+   * Transferred payload: ids at offset 0, the invalid ids right after, then
+   * the values.
+   */
   buffer: ArrayBuffer;
+  /**
+   * `[unit, event frames not yet applied]` for every input holding one,
+   * present only when some input's count changed since the last snapshot —
+   * an empty list then means none holds one any more.
+   */
+  inputProgress?: [unit: number, pending: number][];
+  /**
+   * The watched ranges whose unit's state version moved since each was last
+   * sent, or that were started or moved since; absent when there are none.
+   */
+  state?: StateRead[];
+  /**
+   * The records watched recorders hold that no read carried yet, one read per
+   * recorder that has some; absent when none has.
+   */
+  records?: RecordRead[];
 }
 
 export type WorkerToMainMessage =
@@ -62,7 +139,7 @@ export type WorkerToMainMessage =
       message: string;
       /**
        * Set when the failure has a translatable main-thread message; `message`
-       * then carries the raw detail for logging. The worker cannot translate.
+       * then carries the raw detail. The worker cannot translate.
        */
       code?: 'engineInitFailed';
     }
@@ -71,6 +148,12 @@ export type WorkerToMainMessage =
       kind: 'status';
       reqId: number;
       tick: number;
+      /**
+       * The worker's `performance.now()` when `tick` was read, so a rate taken
+       * between two reports carries no delay of the message to the main
+       * thread.
+       */
+      at: number;
       componentCount: number;
       linkCount: number;
     };
@@ -88,23 +171,28 @@ export type MainRequest = DistributiveOmit<
 export interface PackedSnapshot {
   buffer: ArrayBuffer;
   idsByteLength: number;
+  invalidByteLength: number;
   valuesByteLength: number;
 }
 
 /**
- * Copies a snapshot's bytes into `pool` (reused when large enough, otherwise
- * a fresh buffer): ids at offset 0, values right after. `ids` are the raw
- * bytes of the changed-id `u32` array; `null` for full snapshots. Copying is
- * mandatory — the source views point into WASM linear memory and are valid
+ * Copies a snapshot's bytes into `pool` (reused when large enough): ids at
+ * offset 0, invalid ids right after, then values. `ids` are the raw bytes of
+ * the changed-id `u32` array, `null` for full snapshots; `invalid` the raw
+ * bytes of the invalid-id `u32` array, omitted when there are none. Copying
+ * is mandatory — the source views point into WASM linear memory and are valid
  * only until the next tick.
  */
 export function packSnapshot(
   pool: ArrayBuffer | undefined,
   ids: Uint8Array | null,
-  values: Uint8Array
+  values: Uint8Array,
+  invalid?: Uint8Array
 ): PackedSnapshot {
   const idsByteLength = ids?.byteLength ?? 0;
-  const needed = idsByteLength + values.byteLength;
+  const invalidByteLength = invalid?.byteLength ?? 0;
+  const valuesOffset = idsByteLength + invalidByteLength;
+  const needed = valuesOffset + values.byteLength;
   const buffer =
     pool !== undefined && pool.byteLength >= needed
       ? pool
@@ -113,16 +201,26 @@ export function packSnapshot(
   if (ids) {
     target.set(ids, 0);
   }
-  target.set(values, idsByteLength);
-  return { buffer, idsByteLength, valuesByteLength: values.byteLength };
+  if (invalid) {
+    target.set(invalid, idsByteLength);
+  }
+  target.set(values, valuesOffset);
+  return {
+    buffer,
+    idsByteLength,
+    invalidByteLength,
+    valuesByteLength: values.byteLength
+  };
 }
 
 /**
- * Views into a snapshot message's transferred buffer. `ids` is `null` for
- * full snapshots; the id offset is 0, so the `u32` view is always aligned.
+ * Views into a snapshot message's transferred buffer. `ids` is `null` for full
+ * snapshots; both id arrays start at a multiple of 4 (the first at 0, the
+ * second after whole `u32`s), so their views are always aligned.
  */
 export function unpackSnapshot(msg: SnapshotMessage): {
   ids: Uint32Array | null;
+  invalid: Uint32Array;
   values: Uint8Array;
 } {
   return {
@@ -130,6 +228,15 @@ export function unpackSnapshot(msg: SnapshotMessage): {
       msg.idsByteLength > 0
         ? new Uint32Array(msg.buffer, 0, msg.idsByteLength / 4)
         : null,
-    values: new Uint8Array(msg.buffer, msg.idsByteLength, msg.valuesByteLength)
+    invalid: new Uint32Array(
+      msg.buffer,
+      msg.idsByteLength,
+      msg.invalidByteLength / 4
+    ),
+    values: new Uint8Array(
+      msg.buffer,
+      msg.idsByteLength + msg.invalidByteLength,
+      msg.valuesByteLength
+    )
   };
 }

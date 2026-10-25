@@ -1,4 +1,5 @@
 import { Signal } from '@angular/core';
+import { LgHelpAction } from '../../tokens/help-action';
 
 export interface WindowSize {
   width: number;
@@ -10,7 +11,6 @@ export interface WindowPoint {
   y: number;
 }
 
-/** A window's outer box in viewport CSS px. */
 export interface WindowRect extends WindowPoint, WindowSize {}
 
 /** One segment of a structured window title (e.g. a breadcrumb). */
@@ -20,22 +20,25 @@ export interface WindowTitlePart {
   command?: () => void;
 }
 
-/** Configuration for a floating window ({@link WindowService.open}). */
 export interface WindowConfig {
   /** Title-bar text. A signal keeps the title live while the window is open. */
   title?: string | Signal<string>;
   /**
-   * Structured title segments rendered as a breadcrumb trail (separated by
-   * `›`, segments with a `command` clickable). When present and non-empty it
-   * replaces the plain {@link title} in the title bar; `title` still feeds
-   * the window's aria-label.
+   * Title segments rendered as a `›`-separated breadcrumb. When non-empty it
+   * takes the title bar over from {@link title}, which still feeds the
+   * window's aria-label.
    */
   titleParts?: Signal<readonly WindowTitlePart[]>;
   /**
-   * Inputs applied to the content component via `setInput()` before its first
-   * change detection, so `input.required` signals resolve.
+   * Applied to the content component before its first change detection, so
+   * `input.required` signals resolve.
    */
   inputValues?: Record<string, unknown>;
+  /**
+   * A help button in the title bar, in both outlet modes. A signal keeps its
+   * label live while the window is open; `null` from it hides the button.
+   */
+  help?: LgHelpAction | Signal<LgHelpAction | null>;
   /** Show a close button and close on Escape. Defaults to true. */
   closable?: boolean;
   /** Content-box size on open. Defaults to 440×360. */
@@ -44,10 +47,7 @@ export interface WindowConfig {
   minSize?: WindowSize;
   /** Largest size the user can resize to. Unbounded by default. */
   maxSize?: WindowSize;
-  /**
-   * Top-left position inside the outlet. Defaults to a cascade — each open
-   * window sits a step below/right of the previous one.
-   */
+  /** Top-left position inside the outlet. Defaults to a cascade. */
   initialPosition?: WindowPoint;
   /** Classes for the content region, replacing the default `p-3` padding. */
   bodyClass?: string;

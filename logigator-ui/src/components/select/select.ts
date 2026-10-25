@@ -24,6 +24,7 @@ import {
   externalTeardown
 } from '../../internal/overlay';
 import { createListKeyManager } from '../../internal/key-manager';
+import { LgTooltip } from '../tooltip/tooltip';
 import { FORM_FIELD_BASE } from '../../tokens/form-field';
 import { CONTROL_PADDING_MD } from '../../tokens/size';
 
@@ -55,21 +56,23 @@ let nextId = 0;
 
 /**
  * A single-select dropdown. `ControlValueAccessor` whose value is the
- * **`optionValue` primitive** (string/number), or the whole option when
- * `optionValue` is unset. Options are matched by **strict `===` on that
- * resolved value — never a structural compare** (strict `===` dodges a
- * deep-equals over a heavy object like a PixiJS `Project`).
+ * `optionValue` primitive, or the whole option when `optionValue` is unset.
+ * Options are matched by **strict `===` on that resolved value, never a
+ * structural compare**, which dodges a deep-equals over a heavy object.
  *
- * The trigger is a `role="combobox"` button skinned like the other form fields;
- * the panel is a `role="listbox"` `cdk/overlay`, with keyboard navigation
- * (arrows / Home / End / type-ahead) via the shared `ListKeyManager` and the
- * active-descendant pattern (focus stays on the trigger). Two optional content
- * slots: `#selectedItem` (closed trigger) and `#item` (each row), each with the
- * option as `$implicit`.
+ * The trigger is a `role="combobox"` button skinned like the other form
+ * fields; the panel is a `role="listbox"` `cdk/overlay` navigated through the
+ * shared `ListKeyManager` and the active-descendant pattern, so focus stays on
+ * the trigger. Optional `#selectedItem` and `#item` slots take the option as
+ * `$implicit`.
+ *
+ * An option whose `optionDisabled` property is truthy is listed but cannot be
+ * chosen, and keyboard navigation skips it; it stays hoverable, so an
+ * `optionTooltip` can say why.
  */
 @Component({
   selector: 'lg-select',
-  imports: [NgTemplateOutlet, LgFadeIn],
+  imports: [NgTemplateOutlet, LgFadeIn, LgTooltip],
   host: { class: 'inline-flex', '[class.w-full]': 'fluid()' },
   providers: [
     {
@@ -136,7 +139,11 @@ let nextId = 0;
             tabindex="-1"
             [id]="optionId(i)"
             [attr.aria-selected]="isSelected(option)"
-            [class]="optionClasses(i, isSelected(option))"
+            [attr.aria-disabled]="isOptionDisabled(option) || null"
+            [class]="
+              optionClasses(i, isSelected(option), isOptionDisabled(option))
+            "
+            [lgTooltip]="tooltipOf(option)"
             (click)="selectOption(option)"
             (mouseenter)="activeIndex.set(i)"
           >
@@ -161,6 +168,8 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
   readonly optionLabel = input<string>();
   readonly optionValue = input<string>();
   readonly optionIcon = input<string>();
+  readonly optionDisabled = input<string>();
+  readonly optionTooltip = input<string>();
   readonly inputId = input<string>();
   readonly ariaLabel = input<string>();
   readonly fluid = input(false, { transform: booleanAttribute });
@@ -220,17 +229,20 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
   }
 
   /**
-   * Per-option classes. The selected row gets a primary-tinted highlight
-   * (primary-100/primary-800 in light, a translucent primary wash in dark);
-   * the keyboard/hover-active row that is *not* selected gets the neutral
-   * content-hover surface.
+   * Per-option classes: a primary-tinted highlight for the selected row, the
+   * neutral content-hover surface for an active but unselected one.
    */
-  protected optionClasses(index: number, selected: boolean): string {
+  protected optionClasses(
+    index: number,
+    selected: boolean,
+    disabled: boolean
+  ): string {
     return [
-      'flex w-full cursor-pointer items-center gap-2 rounded px-3 py-2 text-left',
+      'flex w-full items-center gap-2 rounded px-3 py-2 text-left',
+      disabled ? 'cursor-default text-muted opacity-60' : 'cursor-pointer',
       selected
         ? 'bg-primary-100 text-primary-800 dark:bg-primary/24 dark:text-text'
-        : index === this.activeIndex()
+        : index === this.activeIndex() && !disabled
           ? 'bg-content-hover'
           : ''
     ]
@@ -251,11 +263,21 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
     return raw == null ? '' : String(raw);
   }
 
-  /** The option's icon class (`optionIcon` field), or undefined for none. */
   protected iconOf(option: unknown): string | undefined {
     const key = this.optionIcon();
     const raw = key ? (option as Record<string, unknown>)[key] : undefined;
     return typeof raw === 'string' && raw !== '' ? raw : undefined;
+  }
+
+  protected isOptionDisabled(option: unknown): boolean {
+    const key = this.optionDisabled();
+    return key ? Boolean((option as Record<string, unknown>)[key]) : false;
+  }
+
+  protected tooltipOf(option: unknown): string | null {
+    const key = this.optionTooltip();
+    const raw = key ? (option as Record<string, unknown>)[key] : undefined;
+    return typeof raw === 'string' && raw !== '' ? raw : null;
   }
 
   protected isSelected(option: unknown): boolean {
@@ -271,6 +293,9 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
   }
 
   protected selectOption(option: unknown): void {
+    if (this.isOptionDisabled(option)) {
+      return;
+    }
     this.value.set(this.optionValueOf(option));
     this.onChange(this.value());
     this.onTouched();
@@ -278,9 +303,8 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
     this.focusTrigger();
   }
 
-  // Enter/Space are handled here (open / navigate / select). A native button
-  // also synthesises a click from Space on *keyup*, which keydown's
-  // preventDefault can't cancel — the template's `(keyup.space)` does, so the
+  // A native button synthesises a click from Space on *keyup*, which keydown's
+  // preventDefault cannot cancel; the template's `(keyup.space)` does, so the
   // synthesised click never re-toggles the panel.
   protected onTriggerKeydown(event: KeyboardEvent): void {
     if (this.isDisabled()) {
@@ -360,7 +384,7 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
   private buildKeyManager(): void {
     const options = this.options();
     const keys: OptionKey[] = options.map((option) => ({
-      disabled: false,
+      disabled: this.isOptionDisabled(option),
       getLabel: () => this.label(option)
     }));
     this.keyManager = createListKeyManager(keys, {
@@ -372,7 +396,11 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
     const selected = options.findIndex(
       (option) => this.optionValueOf(option) === this.value()
     );
-    this.keyManager.setActiveItem(selected >= 0 ? selected : 0);
+    if (selected >= 0) {
+      this.keyManager.setActiveItem(selected);
+    } else {
+      this.keyManager.setFirstItemActive();
+    }
   }
 
   private focusTrigger(): void {

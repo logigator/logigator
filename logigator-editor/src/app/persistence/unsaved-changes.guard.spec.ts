@@ -49,8 +49,8 @@ describe('UnsavedChangesGuard', () => {
   }
 
   describe('binds only while there is something to lose', () => {
-    // The bfcache invariant: a registered beforeunload listener disqualifies the
-    // page whether or not it fires, so a clean editor must register nothing.
+    // A registered beforeunload listener disqualifies the page from bfcache
+    // whether or not it fires, so a clean editor registers nothing.
     it('registers no listener while nothing is dirty', () => {
       guard.attach();
       TestBed.tick();
@@ -88,7 +88,6 @@ describe('UnsavedChangesGuard', () => {
       anyDirty.set(true);
       TestBed.tick();
 
-      // A second edit re-notifies the effect without changing the answer.
       anyDirty.set(true);
       TestBed.tick();
 
@@ -118,7 +117,7 @@ describe('UnsavedChangesGuard', () => {
       const bound = handler()!;
 
       // Effects are scheduled, so the handler can outlive the dirty state it
-      // was bound for; it must re-check rather than assume.
+      // was bound for.
       anyDirty.set(false);
       const event = unloadEvent();
       bound(event);

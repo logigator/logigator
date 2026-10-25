@@ -40,6 +40,28 @@ describe('simulation worker protocol', () => {
     expect([...unpacked.values]).toEqual([0xff, 0x01]);
   });
 
+  it('carries the invalid ids between the changed ids and the values', () => {
+    const ids = new Uint8Array(new Uint32Array([4, 9]).buffer);
+    const invalid = new Uint8Array(new Uint32Array([1, 9, 300]).buffer);
+    // A stale pooled buffer: nothing of what it held may show through.
+    const pool = new ArrayBuffer(64);
+    new Uint8Array(pool).fill(0xff);
+    const packed = packSnapshot(pool, ids, new Uint8Array([0b10]), invalid);
+
+    const unpacked = unpackSnapshot(snapshotMessage(packed, true));
+    expect([...unpacked.ids!]).toEqual([4, 9]);
+    expect([...unpacked.invalid]).toEqual([1, 9, 300]);
+    expect([...unpacked.values]).toEqual([0b10]);
+  });
+
+  it('reports no invalid ids when a snapshot carries none', () => {
+    const packed = packSnapshot(undefined, null, new Uint8Array([0b1]));
+
+    const unpacked = unpackSnapshot(snapshotMessage(packed, false));
+    expect(unpacked.invalid).toHaveLength(0);
+    expect([...unpacked.values]).toEqual([0b1]);
+  });
+
   it('reuses a pooled buffer that is large enough', () => {
     const pool = new ArrayBuffer(64);
     const packed = packSnapshot(pool, null, new Uint8Array([1, 2, 3]));

@@ -1,0 +1,19 @@
+/* Type-check config for @logigator/core. The package is never built: the editor
+   and the API both compile its source (via the workspace tsconfig `paths`
+   mapping), the same way `@logigator/ui` is consumed.
+
+   It drops every `paths` mapping, so core can only ever reach its own files and
+   real dependencies — an Angular, PixiJS or sibling-package import fails here
+   before any consumer sees it, and `rootDir` makes a relative escape into a
+   sibling package fail too. */
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "src",
+    "types": [],
+    "paths": {}
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
+}

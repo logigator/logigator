@@ -1,6 +1,6 @@
+import { andMeta } from '@logigator/core';
 import { ComponentConfig } from '../../component-config.model';
-import { BuiltInComponentType } from '../../component-type.enum';
-import { ComponentCategory } from '../../component-category.enum';
+import { configFromMeta } from '../../config-from-meta';
 import { ComponentOption } from '../../component-option';
 import { NumberComponentOption } from '../../component-options/number/number.component-option';
 import { AndComponent } from './and.component';
@@ -10,15 +10,7 @@ export interface AndOptions {
   numInputs: NumberComponentOption;
 }
 
-export const andComponentConfig: ComponentConfig<AndOptions> = {
-  type: BuiltInComponentType.AND,
-  category: ComponentCategory.BASIC,
-  symbol: '&',
-  name: 'components.def.AND.name',
-  description: 'components.def.AND.description',
-  options: {
-    numInputs: new NumberComponentOption('components.options.inputs', 2, 64, 2)
-  },
-  legacyV0Slots: { i: 'numInputs' },
-  create: (options) => new AndComponent(options)
-};
+export const andComponentConfig: ComponentConfig<AndOptions> = configFromMeta(
+  andMeta,
+  { create: (options) => new AndComponent(options) }
+);

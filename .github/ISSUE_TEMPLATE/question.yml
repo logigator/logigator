@@ -1,0 +1,19 @@
+name: Question
+description: Ask how something works, when the documentation doesn't answer it.
+labels: ['question']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The [documentation](https://logigator.com/en/docs) covers every component and most of the editor; it's worth a look first.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What you're building or trying to do, and a share link to the circuit if it helps.

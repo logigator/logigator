@@ -1,4 +1,5 @@
 import { Component } from '../../component';
+import { halfAdderMeta } from '@logigator/core';
 import {
   halfAdderComponentConfig,
   HalfAdderOptions
@@ -8,25 +9,12 @@ export class HalfAdderComponent extends Component<HalfAdderOptions> {
   public readonly config = halfAdderComponentConfig;
 
   constructor(options: HalfAdderOptions) {
-    super(2, 2, options);
+    super(halfAdderMeta, options);
   }
 
   protected override get symbol(): string {
     // Module-level config: evaluated before the `config` field is assigned.
     return halfAdderComponentConfig.symbol;
-  }
-
-  protected get inputLabels(): string[] {
-    return ['A', 'B'];
-  }
-
-  protected get outputLabels(): string[] {
-    return ['S', 'C'];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
-  protected get bodyGridWidth(): number {
-    return 3;
   }
 
   protected draw(): void {

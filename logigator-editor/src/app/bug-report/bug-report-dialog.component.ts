@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   LgButton,
@@ -7,7 +7,6 @@ import {
   LgTextarea
 } from '@logigator/ui';
 import { TranslateDirective } from '../translation/translate.directive';
-import { LegacyEditorService } from '../ui/legacy-editor.service';
 
 /** Error details surfaced when the dialog is opened by the global handler. */
 export interface BugReportErrorContext {
@@ -30,12 +29,10 @@ export interface BugReportDialogData {
 const MESSAGE_MAX_LENGTH = 512;
 
 /**
- * Collects a free-text description for a bug report. Opened either manually
- * from the badge or automatically when an uncaught error is caught. Returns the
- * typed message on send; dismissing (✕ / Escape / backdrop / Cancel) resolves
- * to `undefined`, which the caller treats as "send nothing". The surrounding
- * context (project, client info, logs, error) is assembled by
- * `BugReportService` — this dialog only owns the message.
+ * Collects a free-text description for a bug report, opened manually or by an
+ * uncaught error. Returns the typed message on send; any dismissal resolves to
+ * `undefined`, meaning send nothing. `BugReportService` assembles the
+ * surrounding context — this dialog owns only the message.
  */
 @Component({
   selector: 'app-bug-report-dialog',
@@ -46,8 +43,6 @@ export class BugReportDialogComponent extends LgDialogContent<
   BugReportDialogData,
   string
 > {
-  private readonly legacyEditor = inject(LegacyEditorService);
-
   protected readonly maxLength = MESSAGE_MAX_LENGTH;
   protected readonly mode = this.dialogData?.mode ?? 'manual';
   protected readonly error = this.dialogData?.error;
@@ -60,10 +55,6 @@ export class BugReportDialogComponent extends LgDialogContent<
   protected send(): void {
     if (!this.canSend()) return;
     this.dialogRef.close(this.message().trim());
-  }
-
-  protected openLegacyEditor(): void {
-    this.legacyEditor.open('bug-report');
   }
 
   protected cancel(): void {

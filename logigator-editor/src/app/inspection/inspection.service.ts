@@ -1,7 +1,19 @@
-import { effect, inject, Injectable, signal, untracked } from '@angular/core';
+import {
+  effect,
+  ErrorHandler,
+  inject,
+  Injectable,
+  signal,
+  untracked
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { Component } from '../components/component';
+import {
+  InputRoute,
+  InspectionUnavailableError,
+  StateRoute
+} from '../components/component-inspection';
 import { LayoutService } from '../layout/layout.service';
 import { ToastService } from '../logging/toast.service';
 import { ProjectService } from '../project/project.service';
@@ -16,15 +28,14 @@ import { AnalyticsEvent } from '../analytics/analytics.mapping';
 
 /**
  * Orchestrates live component inspections: while a simulation runs, tapping an
- * inspectable component (its config declares an `inspection` factory) opens a
- * live view of it — at most one per component instance; a second tap focuses
- * the existing one. Views are framed by an {@link InspectionPresenter} —
- * floating windows on desktop, the shared bottom sheet on compact, re-homed
- * live when the breakpoint flips. Leaving simulation mode closes everything.
+ * inspectable component opens a live view of it — at most one per instance, a
+ * second tap focuses the existing one. An {@link InspectionPresenter} frames
+ * the views and re-homes them when the breakpoint flips. Leaving simulation
+ * mode closes everything.
  *
  * Live data is pull-based: {@link SimulationService.frame$} fires after each
- * applied snapshot and this service fans it out to every open inspection's
- * `onFrame`, which re-reads main-thread state (options, port power).
+ * applied snapshot and fans out to every open inspection's `onFrame`, which
+ * re-reads main-thread state (options, port power).
  */
 @Injectable({ providedIn: 'root' })
 export class InspectionService {
@@ -35,6 +46,8 @@ export class InspectionService {
   private readonly windowPresenter = inject(WindowInspectionPresenter);
   private readonly sheetPresenter = inject(SheetInspectionPresenter);
   private readonly analytics = inject(AnalyticsService);
+  private readonly simulation = inject(SimulationService);
+  private readonly errorHandler = inject(ErrorHandler);
 
   private readonly _open = signal<readonly OpenInspection[]>([]);
   /** The open inspections, in opening order. */
@@ -43,20 +56,16 @@ export class InspectionService {
   private requestSub?: Subscription;
 
   constructor() {
-    const simulationService = inject(SimulationService);
-    simulationService.frame$
+    this.simulation.frame$
       .pipe(takeUntilDestroyed())
       .subscribe(() => this._onFrame());
 
-    // Simulation mode drives the session: listen for inspect taps on the
-    // active project while simulating, tear everything down on exit.
+    // Listen for inspect taps while simulating, tear down on exit.
     effect(() => {
       const simulating = this.workModeService.mode() === WorkMode.SIMULATION;
       untracked(() => this._onSimulationToggled(simulating));
     });
 
-    // Re-home open inspections when the breakpoint flips mid-session:
-    // windows become sheet tabs and back.
     let wasCompact = this.layout.isCompact();
     effect(() => {
       const compact = this.layout.isCompact();
@@ -68,8 +77,21 @@ export class InspectionService {
     });
   }
 
-  /** Opens (or focuses) the inspection for an inspectable component. */
-  public openFor(component: Component): void {
+  /**
+   * Opens (or focuses) the inspection for an inspectable component. `input`
+   * routes the presses played in it, and `state` the engine state it reads;
+   * without them both go to the top-level board, as a press on the canvas
+   * does. `place` names the watch levels a copy lives in, which lead its
+   * title.
+   */
+  public openFor(
+    component: Component,
+    context?: {
+      input?: InputRoute;
+      state?: StateRoute;
+      place?: readonly string[];
+    }
+  ): void {
     const existing = this._open().find(
       (entry) => entry.component === component
     );
@@ -83,18 +105,28 @@ export class InspectionService {
     }
     let inspection;
     try {
-      inspection = factory(component);
+      inspection = factory(component, {
+        input: context?.input ?? this._topLevelRoute(component),
+        state: context?.state ?? {
+          watch: (onRead) => this.simulation.watchState(component.id, onRead)
+        }
+      });
     } catch (err) {
-      // A watch can legitimately fail to open (e.g. the definition no longer
-      // matches the compiled board) — surface it instead of crashing the tap.
-      this.toastService.error(
-        err instanceof Error ? err.message : String(err),
-        'InspectionService',
-        err
-      );
+      // A watch can legitimately fail to open (the definition no longer
+      // matches the compiled board), which is told; anything else is a bug
+      // and goes to the bug report. Neither breaks the tap stream.
+      if (err instanceof InspectionUnavailableError) {
+        this.toastService.error(err.message, 'InspectionService', err);
+      } else {
+        this.errorHandler.handleError(err);
+      }
       return;
     }
-    const entry: OpenInspection = { component, inspection };
+    const entry: OpenInspection = {
+      component,
+      inspection,
+      ...(context?.place?.length ? { place: context.place } : {})
+    };
     this._open.update((entries) => [...entries, entry]);
     this._presenterFor(entry).show(entry, () => this._remove(entry));
     this.analytics.capture(AnalyticsEvent.InspectionOpened, {
@@ -114,10 +146,9 @@ export class InspectionService {
   }
 
   /**
-   * The presenter framing an entry: windows on desktop; on compact, the
-   * shared sheet — except `compactPresentation: 'fullscreen'` inspections
-   * (watches), which stay windows everywhere (the compact window outlet
-   * renders them as fullscreen takeovers).
+   * The presenter framing an entry: windows on desktop; on compact, the shared
+   * sheet — except `compactPresentation: 'fullscreen'` inspections, which stay
+   * windows everywhere and render as fullscreen takeovers.
    */
   private _presenterFor(
     entry: OpenInspection,
@@ -130,9 +161,9 @@ export class InspectionService {
   }
 
   /**
-   * Moves every open inspection from the previous presenter to the new one.
-   * Entries whose presenter doesn't change (watches — windows on both
-   * breakpoints) keep their window entry; only the outlet swaps around them.
+   * Moves every open inspection to the presenter the new breakpoint calls for.
+   * Entries framed by windows on both breakpoints keep their window entry;
+   * only the outlet swaps around them.
    */
   private _rehome(compact: boolean): void {
     for (const entry of this._open()) {
@@ -162,6 +193,21 @@ export class InspectionService {
     for (const entry of this._open()) {
       entry.inspection.onFrame?.();
     }
+  }
+
+  /**
+   * The route of a top-level component: operations drive its slots as a
+   * press on the canvas does, and frames go to the component's own engine
+   * input.
+   */
+  private _topLevelRoute(component: Component): InputRoute {
+    return {
+      operate: (operations) =>
+        this.simulation.operateInput(component.id, operations),
+      send: (frames) => this.simulation.sendFrames(component.id, frames),
+      cancel: (frames) => this.simulation.cancelFrames(component.id, frames),
+      pending: () => this.simulation.pendingEvents(component.id)
+    };
   }
 
   /** Idempotent removal — safe when the entry is already gone. */
