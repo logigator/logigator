@@ -268,6 +268,25 @@ liveness probe; `GET /api/health/ready` checks Postgres and Redis. `src/` layers
   allowlist; `sharp` stays external; `output.clean` stays off (the watcher loses `main.js`).
 - `fastify` is pinned to `@nestjs/platform-fastify`'s exact version, and Drizzle to an exact `1.0.0-rc`.
 
+## Commit Messages
+
+The subject is `[area] what the commit does`, a present-tense verb phrase that completes "This
+commit …": lowercase, no full stop, at most 72 characters.
+
+```
+[editor] keep the selection when a rotated group is pasted
+```
+
+- **Areas are a closed list:** `editor`, `web`, `api`, `ui`, `core`, `contract`, `docs`,
+  `screenshots`, `workspace` (tooling, CI, dependencies, anything repository-wide). Older areas in
+  the history (`backend`, `components`, `build`, …) are retired. Dependabot writes `[workspace]`.
+- **Two areas are `[editor+ui]`**, never a comma or a space. More than two is `[workspace]` or a
+  split into one commit per area.
+- **The body is optional** and follows a blank line, wrapped at 72: what the code does and why.
+  Prose for one idea, `- ` bullets for several independent ones. A subject that says it all has no
+  body.
+- **No untracked files** (plans, notes) and **no call sites** of the changed code are named.
+
 ## Releasing
 
 The product version is the root `package.json`'s (every member stays `0.0.0`); the editor and the

@@ -106,16 +106,23 @@ A change to the database schema needs a migration: edit the Drizzle schema in
 ### Commit messages
 
 Start the subject line with the area it touches in brackets, then say what the commit does in the
-present tense:
+present tense, so it completes "This commit …". Keep it lowercase, without a full stop, and at most
+72 characters long:
 
 ```
 [editor] keep the selection when a rotated group is pasted
 
-An optional body says why, when the subject alone doesn't make it obvious.
+An optional body says what the code does and why, when the subject alone
+doesn't make it obvious. It follows a blank line and wraps at 72 columns.
 ```
 
-The areas in use are `[editor]`, `[web]`, `[api]`, `[ui]`, `[core]`, `[contract]`, `[docs]`,
-`[screenshots]` and `[workspace]` (tooling, CI, dependencies, anything repository-wide).
+The areas are `[editor]`, `[web]`, `[api]`, `[ui]`, `[core]`, `[contract]`, `[docs]`,
+`[screenshots]` and `[workspace]` (tooling, CI, dependencies, anything repository-wide). A commit
+that touches two areas names both, as `[editor+ui]`; one that touches more is either `[workspace]`
+or better split into one commit per area.
+
+Write the body as prose when it explains one idea, and as a `- ` list when the commit makes several
+independent changes. Don't refer to files that aren't in the repository, such as personal notes.
 
 ## Opening a pull request
 
