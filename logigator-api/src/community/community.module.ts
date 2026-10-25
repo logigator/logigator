@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { ReportsModule } from '../reports/reports.module';
 import { UsersModule } from '../users/users.module';
 import { CommunityController } from './community.controller';
 import { CommunityService } from './community.service';
@@ -14,7 +15,7 @@ import { CommunityService } from './community.service';
  * else's business can be answered.
  */
 @Module({
-  imports: [AuthModule, UsersModule],
+  imports: [AuthModule, UsersModule, ReportsModule],
   controllers: [CommunityController],
   providers: [CommunityService],
   exports: [CommunityService]

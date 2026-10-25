@@ -7,6 +7,7 @@ import {
   communityProjectPageSchema,
   documentTranslationResponseSchema,
   publicProfileSchema,
+  reportDocumentResponseSchema,
   stargazerPageSchema,
   starResponseSchema,
   type CommunityComponentDetail,
@@ -16,6 +17,8 @@ import {
   type CommunityQuery,
   type DocumentTranslationResponse,
   type PublicProfile,
+  type ReportDocumentRequest,
+  type ReportDocumentResponse,
   type StargazerPage,
   type StarResponse
 } from '@logigator/contract';
@@ -201,6 +204,22 @@ export class CommunityApiService {
     return starred
       ? this.api.put(path, starResponseSchema)
       : this.api.delete(path, starResponseSchema);
+  }
+
+  /**
+   * POST /api/community/{projects,components}/:link/report — a notice about a
+   * document, taken from anybody its link resolves for, signed in or not.
+   */
+  public report(
+    kind: CommunityKind,
+    link: string,
+    body: ReportDocumentRequest
+  ): Observable<ReportDocumentResponse> {
+    return this.api.post(
+      `/api/community/${kind}/${link}/report`,
+      reportDocumentResponseSchema,
+      body
+    );
   }
 }
 

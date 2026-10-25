@@ -1,4 +1,8 @@
-import type { CommunityProject, PublicProfile } from '@logigator/contract';
+import type {
+  CommunityProject,
+  CommunityProjectDetail,
+  PublicProfile
+} from '@logigator/contract';
 
 /**
  * The fewest top-level elements a document needs before its page is offered to
@@ -22,15 +26,18 @@ export const MIN_INDEXED_COMPONENTS = 4;
  * linkable; it only stays out of an index.
  *
  * Visibility is not part of it: the sitemap only ever sees public rows, and
- * the page asks that first.
+ * the page asks that first. A hidden document is never indexed; only its
+ * owner's read carries `hidden`, and no listing row is hidden.
  */
 export function documentIsIndexable(
   document: Pick<
     CommunityProject,
     'componentCount' | 'wireCount' | 'description' | 'stars'
-  >
+  > &
+    Partial<Pick<CommunityProjectDetail, 'hidden'>>
 ): boolean {
   return (
+    !document.hidden &&
     document.componentCount >= MIN_INDEXED_COMPONENTS &&
     document.wireCount > 0 &&
     (document.description.trim() !== '' || document.stars > 0)

@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import type { CircuitDependencyEdge } from '@logigator/core';
 import type { DocumentDependency } from '@logigator/contract';
 import { DB, type Database, type Queryable } from '../database/database.module';
@@ -67,10 +67,15 @@ export class DependenciesService {
    * The masters a document embeds, as they stand now. An inner join, so a
    * deleted master is absent rather than a null-filled row — the client's cue
    * that its snapshot is all there is. `version` tells it an update exists.
+   *
+   * A master moderation has hidden is absent the same way for anybody but its
+   * owner: the snapshot keeps the dependent working, and the master's current
+   * text is no longer anybody else's to read.
    */
   async summaries(
     table: EdgeTable,
-    dependentId: string
+    dependentId: string,
+    viewerId: string | null
   ): Promise<DocumentDependency[]> {
     return this.db
       .select({
@@ -86,7 +91,14 @@ export class DependenciesService {
       })
       .from(table)
       .innerJoin(components, eq(components.id, table.dependencyId))
-      .where(eq(table.dependentId, dependentId));
+      .where(
+        and(
+          eq(table.dependentId, dependentId),
+          viewerId === null
+            ? isNull(components.hiddenAt)
+            : sql`(${isNull(components.hiddenAt)} or ${eq(components.userId, viewerId)})`
+        )
+      );
   }
 
   private async existing(

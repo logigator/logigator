@@ -41,7 +41,8 @@ export interface MyDocumentCommand {
  * which is one of three states rather than a published-or-not pair — and when
  * it was last edited. A published document with nothing on it says so in the
  * render's other corner: the community leaves it out of every listing, and the
- * shelf is where its owner looks for it first. The corner carries the controls for the things a shelf
+ * shelf is where its owner looks for it first. A document moderation has hidden
+ * says that in the same corner instead. The corner carries the controls for the things a shelf
  * does with a row — the three it can do *to* one, and the page it has.
  *
  * The card itself opens the editor, which is a separate deployment sharing this
@@ -91,7 +92,20 @@ export interface MyDocumentCommand {
               <span class="truncate font-mono text-xs">{{ tile.edited }}</span>
             </span>
 
-            @if (tile.empty) {
+            @if (tile.hidden; as hidden) {
+              <!-- Ahead of the empty badge, which it outranks: a hidden
+                   document is in no listing whatever is on it. -->
+              <span
+                lgCircuitTileBadge
+                class="inline-flex h-8 items-center gap-1.5 rounded-md border border-warn-border bg-warn-surface px-2 text-xs whitespace-nowrap text-warn-text"
+                [title]="
+                  t('pages.my.list.hiddenHint', { reason: hidden.reason })
+                "
+              >
+                <i class="ph ph-prohibit text-sm" aria-hidden="true"></i>
+                {{ t('pages.my.list.hidden') }}
+              </span>
+            } @else if (tile.empty) {
               <!-- Over the render rather than in the meta row, which has no
                    width to spare — and an empty document's render is the
                    placeholder, so the corner hides nothing. Styled as the menu
@@ -163,6 +177,7 @@ export class MyDocumentTiles {
       id: row.id,
       name: row.name,
       visibility: row.visibility,
+      hidden: row.hidden ?? null,
       empty: isPublishedButEmpty(row),
       edited: dates.format(new Date(row.lastEditedAt)),
       editorHref: this.links.editorDocument(kind, row.id),

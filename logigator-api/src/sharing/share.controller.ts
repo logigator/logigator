@@ -50,8 +50,8 @@ export class ShareController {
    *
    * One route per kind for every consumer: the pages of a listed document name
    * it in their `og:image`, and an unlisted document's link unfurls the same
-   * way. A private one's composes for nobody but its owner, which is the same
-   * predicate the read carries — a card is the document, drawn.
+   * way. A private or hidden one's composes for nobody but its owner, which is
+   * the same predicate the read carries — a card is the document, drawn.
    *
    * It is also the reason `robots.txt` carries an `Allow:` for this path —
    * fetchers honour the `Disallow: /api/` above it to varying degrees, and a
@@ -74,8 +74,8 @@ export class ShareController {
     reply
       .header('ETag', etag)
       // `public` only where anybody could have fetched this: a card composed
-      // for a private document's owner is that owner's alone, and a shared
-      // cache is exactly the holder the read's own predicate refuses.
+      // for a private or hidden document's owner is that owner's alone, and a
+      // shared cache is exactly the holder the read's own predicate refuses.
       .header(
         'Cache-Control',
         publiclyReadable

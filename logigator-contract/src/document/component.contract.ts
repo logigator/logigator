@@ -7,6 +7,7 @@ import {
   componentSymbolSchema,
   documentDependencySchema,
   documentDescriptionSchema,
+  documentHiddenSchema,
   documentNameSchema,
   documentVisibilitySchema,
   forkAttributionSchema,
@@ -35,8 +36,10 @@ export const componentSummarySchema = z.object(componentFields).loose();
 export type ComponentSummary = z.infer<typeof componentSummarySchema>;
 
 /** A component in its owner's own listing; see `ownedProjectSummarySchema`. */
-export const ownedComponentSummarySchema =
-  componentSummarySchema.extend(ownerTextFields);
+export const ownedComponentSummarySchema = componentSummarySchema.extend({
+  ...ownerTextFields,
+  hidden: documentHiddenSchema
+});
 
 export type OwnedComponentSummary = z.infer<typeof ownedComponentSummarySchema>;
 

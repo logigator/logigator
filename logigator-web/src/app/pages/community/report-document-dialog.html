@@ -1,0 +1,97 @@
+<ng-container *webTranslate="let t">
+  @if (sent()) {
+  <div class="flex flex-col gap-4" role="status">
+    <p class="leading-relaxed text-text">
+      {{ t('pages.community.report.done') }}
+    </p>
+    <div class="flex justify-end">
+      <button lgButton type="button" (click)="close()">
+        {{ t('common.close') }}
+      </button>
+    </div>
+  </div>
+  } @else { @let reasonMessage = reasonError(); @let explanationMessage =
+  explanationError(); @let emailMessage = emailError();
+
+  <form class="flex flex-col gap-4" [formGroup]="form" (ngSubmit)="submit()">
+    <p class="text-sm leading-relaxed text-muted">
+      {{ t('pages.community.report.lede') }}
+    </p>
+
+    @if (formError(); as message) {
+    <lg-message severity="danger">{{ t(message) }}</lg-message>
+    }
+
+    <lg-form-field
+      inputId="report-document-reason"
+      required
+      [label]="t('pages.community.report.reasonLabel')"
+      [error]="reasonMessage ? t(reasonMessage) : undefined"
+    >
+      <lg-select
+        inputId="report-document-reason"
+        fluid
+        optionLabel="label"
+        optionValue="value"
+        formControlName="reason"
+        [options]="reasons()"
+      />
+    </lg-form-field>
+
+    <lg-form-field
+      #explanationField="lgFormField"
+      inputId="report-document-explanation"
+      required
+      [label]="t('pages.community.report.explanationLabel')"
+      [hint]="t('pages.community.report.explanationHint')"
+      [error]="explanationMessage ? t(explanationMessage) : undefined"
+    >
+      <textarea
+        lgTextarea
+        id="report-document-explanation"
+        rows="5"
+        class="w-full"
+        formControlName="explanation"
+        [attr.maxlength]="MAX_EXPLANATION_LENGTH"
+        [invalid]="!!explanationMessage"
+        [attr.aria-describedby]="explanationField.describedBy()"
+      ></textarea>
+    </lg-form-field>
+
+    <lg-form-field
+      #emailField="lgFormField"
+      inputId="report-document-email"
+      [label]="t('pages.community.report.emailLabel')"
+      [hint]="t('pages.community.report.emailHint')"
+      [error]="emailMessage ? t(emailMessage) : undefined"
+    >
+      <input
+        lgInputText
+        id="report-document-email"
+        type="email"
+        autocomplete="email"
+        class="w-full"
+        maxlength="254"
+        formControlName="contactEmail"
+        [invalid]="!!emailMessage"
+        [attr.aria-describedby]="emailField.describedBy()"
+      />
+    </lg-form-field>
+
+    <div class="flex justify-end gap-2">
+      <button
+        lgButton
+        outlined
+        severity="secondary"
+        type="button"
+        (click)="close()"
+      >
+        {{ t('pages.community.report.cancel') }}
+      </button>
+      <button lgButton type="submit" [loading]="sending()">
+        {{ t('pages.community.report.submit') }}
+      </button>
+    </div>
+  </form>
+  }
+</ng-container>

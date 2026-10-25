@@ -51,7 +51,15 @@
              both look exactly like a listed one's — so this chip is the only
              thing reconciling the two, and a reader who arrived by a link they
              were handed has no other way to know. -->
-      @if (!isPublic()) {
+      @if (hidden(); as hold) {
+      <!-- Only the owner is answered a hidden document, so this is said to
+             them alone: the page stands, nobody else can open it, and the
+             visibility they pick does not change that. -->
+      <lg-message class="mb-4 w-full" severity="warn">
+        {{ t('pages.community.document.hiddenNotice', { reason: hold.reason })
+        }}
+      </lg-message>
+      } @else if (!isPublic()) {
       <web-visibility-tag class="mb-3" [visibility]="doc.visibility" />
       } @else if (emptyNotice()) {
       <!-- The one published state the chip cannot explain: the owner picked
@@ -173,6 +181,17 @@
         [image]="cardUrl()"
         [title]="doc.name"
       />
+      } @if (!isOwner()) {
+      <!-- Open to whoever can read the page, signed in or not. Quiet, since
+             nearly every reader has no use for it. -->
+      <button
+        type="button"
+        class="mt-4 inline-flex items-center gap-1.5 text-sm text-muted hover:text-text hover:underline"
+        (click)="openReport()"
+      >
+        <i class="ph ph-flag" aria-hidden="true"></i>
+        {{ t('pages.community.document.report') }}
+      </button>
       } @if (actionFailureKey(); as failure) {
       <p class="mt-3 text-sm text-error" role="alert">{{ t(failure) }}</p>
       } @if (doc.forkedFrom; as parent) {

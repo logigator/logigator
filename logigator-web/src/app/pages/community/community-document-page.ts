@@ -11,6 +11,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
+  DialogService,
   hasLiveLink,
   LgAvatar,
   LgButton,
@@ -40,6 +41,7 @@ import { SessionService } from '../../user/session.service';
 import { apiKindOf } from './community-kind';
 import { CommunityDocumentService } from './community-document.service';
 import { StarIcon } from './star-icon';
+import { ReportDocumentDialog } from './report-document-dialog';
 import { realLanguage, textLangAttribute } from './text-language';
 
 /**
@@ -91,6 +93,7 @@ export class CommunityDocumentPage {
   private readonly router = inject(Router);
   private readonly translation = inject(TranslationService);
   private readonly communityApi = inject(CommunityApiService);
+  private readonly dialogs = inject(DialogService);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly origin = inject(SITE_ORIGIN).replace(/\/+$/, '');
 
@@ -211,8 +214,21 @@ export class CommunityDocumentPage {
    * anything else would offer an action the server refuses.
    */
   protected readonly isPublic = computed(
-    () => this.document()?.visibility === 'public'
+    () => this.document()?.visibility === 'public' && !this.hidden()
   );
+
+  /** Whether the reader is the document's owner, who is never offered a report. */
+  protected readonly isOwner = computed(() => {
+    const document = this.document();
+    return !!document && document.author.id === this.session.user()?.id;
+  });
+
+  /**
+   * Moderation's hold on the document. Only its owner is ever answered a
+   * hidden document, so this is the owner's notice: the page is theirs alone,
+   * with no star, no stargazers and nothing to share, whatever the visibility.
+   */
+  protected readonly hidden = computed(() => this.document()?.hidden ?? null);
 
   /**
    * Whether to tell the reader their published document is in no listing
@@ -222,11 +238,7 @@ export class CommunityDocumentPage {
    */
   protected readonly emptyNotice = computed(() => {
     const document = this.document();
-    return (
-      !!document &&
-      document.author.id === this.session.user()?.id &&
-      isPublishedButEmpty(document)
-    );
+    return !!document && this.isOwner() && isPublishedButEmpty(document);
   });
 
   /**
@@ -235,13 +247,15 @@ export class CommunityDocumentPage {
    * ask of the same three states — the rule that says which state a link
    * resolves in is one rule, and a second spelling is how it comes to differ.
    *
-   * A private document is the one it withholds: nobody but its owner can open
-   * it, so a share sheet or an embed snippet would be offering to pass on a URL
-   * that opens nothing.
+   * A private or hidden document is the one it withholds: nobody but its owner
+   * can open it, so a share sheet or an embed snippet would be offering to pass
+   * on a URL that opens nothing.
    */
   protected readonly hasLink = computed(() => {
     const visibility = this.document()?.visibility;
-    return visibility !== undefined && hasLiveLink(visibility);
+    return (
+      visibility !== undefined && hasLiveLink(visibility) && !this.hidden()
+    );
   });
 
   /**
@@ -405,6 +419,21 @@ export class CommunityDocumentPage {
     } finally {
       this.translating.set(false);
     }
+  }
+
+  /**
+   * The report form, for anybody but the owner. Signing in is not asked for:
+   * a notice about a document has to be open to whoever can read it.
+   */
+  protected openReport(): void {
+    const document = this.document();
+    if (!document) return;
+    this.dialogs.open(ReportDocumentDialog, {
+      header: this.translation.translate('pages.community.report.heading'),
+      width: '32rem',
+      closeLabel: this.translation.translate('common.close'),
+      data: { kind: document.kind, link: document.link }
+    });
   }
 
   protected showOriginal(): void {

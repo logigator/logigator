@@ -359,7 +359,32 @@ const es: TranslationSchema = {
         translate: 'Traducir',
         machineTranslatedFrom: 'Traducción automática del {{language}}',
         machineTranslated: 'Traducción automática',
-        showOriginal: 'Ver original'
+        showOriginal: 'Ver original',
+        report: 'Denunciar',
+        hiddenNotice:
+          'La moderación ha ocultado este circuito. Solo tú puedes verlo y no aparece en ninguna lista de la comunidad. Motivo: {{reason}}'
+      },
+      report: {
+        heading: 'Denunciar este circuito',
+        lede: 'Cuéntanos qué tiene de malo este circuito. Una persona lee cada denuncia.',
+        reasonLabel: 'Motivo',
+        reasons: {
+          illegal: 'Contenido ilegal',
+          copyright: 'Infracción de derechos de autor',
+          personal_data: 'Datos personales',
+          harassment: 'Acoso u odio',
+          spam: 'Spam',
+          other: 'Otro motivo'
+        },
+        explanationLabel: 'Qué ocurre',
+        explanationHint:
+          'Explica qué has encontrado y dónde. Si se trata de derechos de autor, indica la obra original.',
+        emailLabel: 'Correo electrónico',
+        emailHint:
+          'Opcional. Solo se usa para responderte sobre esta denuncia.',
+        cancel: 'Cancelar',
+        submit: 'Enviar denuncia',
+        done: 'Gracias. Tu denuncia se ha enviado y será revisada.'
       },
       stargazers: {
         title: 'Estrellas',
@@ -441,6 +466,8 @@ const es: TranslationSchema = {
         emptyNotListed: 'No listado',
         emptyNotListedHint:
           'Este circuito está vacío, así que todavía no aparece en la comunidad.',
+        hidden: 'Oculto',
+        hiddenHint: 'Ocultado por la moderación: {{reason}}',
         delete: 'Eliminar'
       },
       edit: {

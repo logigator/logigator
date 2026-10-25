@@ -87,7 +87,7 @@ export class ComponentsService {
   async open(userId: string, id: string): Promise<ComponentResponse> {
     const row = await this.require(userId, id);
     const [dependencies, lineage, versions] = await Promise.all([
-      this.dependencies.summaries(COMPONENT_EDGES, row.id),
+      this.dependencies.summaries(COMPONENT_EDGES, row.id, userId),
       forkLineage(this.db, components, row),
       humanVersionsOf(this.db, components, [row.id])
     ]);

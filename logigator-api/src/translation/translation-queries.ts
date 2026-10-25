@@ -62,8 +62,9 @@ interface ClaimedRow extends Record<string, unknown> {
  *
  * Pending is `translated_digest IS DISTINCT FROM text_digest`, so every write
  * path that changes the text makes the row pending again by itself. A private
- * document is never taken: it may not leave the database. A text that failed
- * {@link MAX_TRANSLATION_ATTEMPTS} times is parked until its digest moves.
+ * or hidden document is never taken: it may not leave the database. A text
+ * that failed {@link MAX_TRANSLATION_ATTEMPTS} times is parked until its digest
+ * moves.
  */
 export async function claimPending(
   db: Database,
@@ -71,23 +72,29 @@ export async function claimPending(
   options: { debounceSeconds: number; batch: number }
 ): Promise<ClaimedDocument[]> {
   const documentId = sql`${sql.identifier(getTableName(table))}.id`;
+  // `RETURNING` follows the update's plan, not the subquery's order, so the
+  // claimed rows are put back in edit order around it.
   const result = await db.execute<ClaimedRow>(sql`
-    UPDATE ${table} SET translation_claimed_at = now()
-     WHERE id IN (
-       SELECT id FROM ${table}
-        WHERE translated_digest IS DISTINCT FROM text_digest
-          AND visibility <> 'private'
-          AND last_edited_at < now() - make_interval(secs => ${options.debounceSeconds})
-          AND (translation_claimed_at IS NULL OR translation_claimed_at < now() - ${LEASE})
-          AND NOT (translation_attempt_digest = text_digest
-                   AND translation_attempts >= ${MAX_ATTEMPTS})
-        ORDER BY last_edited_at
-        LIMIT ${options.batch}
-        FOR UPDATE SKIP LOCKED)
-    RETURNING id, user_id, name, description, text_digest, text_language_hint,
-              ${authoredInEveryLocale(table, documentId, 'name')} AS name_authored,
-              ${authoredInEveryLocale(table, documentId, 'description')} AS description_authored,
-              translation_claimed_at::text AS claimed_at
+    WITH claimed AS (
+      UPDATE ${table} SET translation_claimed_at = now()
+       WHERE id IN (
+         SELECT id FROM ${table}
+          WHERE translated_digest IS DISTINCT FROM text_digest
+            AND visibility <> 'private'
+            AND hidden_at IS NULL
+            AND last_edited_at < now() - make_interval(secs => ${options.debounceSeconds})
+            AND (translation_claimed_at IS NULL OR translation_claimed_at < now() - ${LEASE})
+            AND NOT (translation_attempt_digest = text_digest
+                     AND translation_attempts >= ${MAX_ATTEMPTS})
+          ORDER BY last_edited_at
+          LIMIT ${options.batch}
+          FOR UPDATE SKIP LOCKED)
+      RETURNING id, user_id, name, description, text_digest, text_language_hint,
+                ${authoredInEveryLocale(table, documentId, 'name')} AS name_authored,
+                ${authoredInEveryLocale(table, documentId, 'description')} AS description_authored,
+                translation_claimed_at::text AS claimed_at, last_edited_at
+    )
+    SELECT * FROM claimed ORDER BY last_edited_at, id
   `);
   return result.rows.map((row) => ({
     id: row.id,
@@ -106,8 +113,9 @@ export async function claimPending(
 
 /**
  * Renews the claim right before its call, if the text may still be sent: the
- * document is not private, its text is the one claimed, and the claim is still
- * this worker's. Returns the renewed claim, or null when it may not be sent.
+ * document is neither private nor hidden, its text is the one claimed, and the
+ * claim is still this worker's. Returns the renewed claim, or null when it may
+ * not be sent.
  *
  * A batch is translated one document after another, so a document can be made
  * private while those before it are in flight, and the lease the batch was
@@ -123,6 +131,7 @@ export async function renewForCall(
     UPDATE ${table} SET translation_claimed_at = now()
      WHERE id = ${claim.id}
        AND visibility <> 'private'
+       AND hidden_at IS NULL
        AND text_digest = ${claim.textDigest}
        AND translation_claimed_at = ${claim.claimedAt}::timestamptz
     RETURNING translation_claimed_at::text AS claimed_at

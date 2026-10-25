@@ -98,7 +98,8 @@ export function starCountSince(
  * public number, which publishes a total that includes work nobody is allowed
  * to see — and an unpublished document's page is not one a reader could reach
  * to find out what the number was made of. The count therefore falls when a
- * document is unpublished, which is the same rule the listings follow.
+ * document is unpublished or hidden, which is the same rule the listings
+ * follow.
  *
  * `count(*)` is `bigint`, so `pg` hands the sum over as a string; callers
  * convert, the way they do for `starCount`.
@@ -117,11 +118,13 @@ export function receivedStarCount(circuitOwner: Column): SQL<number> {
       JOIN ${projects} project ON project.id = project_star.project_id
      WHERE project.user_id = ${owner}
        AND project.visibility = 'public'
+       AND project.hidden_at IS NULL
   ) + (
     SELECT count(*) FROM ${componentStars} component_star
       JOIN ${components} component ON component.id = component_star.component_id
      WHERE component.user_id = ${owner}
        AND component.visibility = 'public'
+       AND component.hidden_at IS NULL
   )`;
 }
 

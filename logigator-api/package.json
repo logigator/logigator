@@ -20,6 +20,7 @@
     "db:migrate": "rspack build && node ../dist/logigator-api/migrate.js",
     "db:renormalize": "rspack build && node ../dist/logigator-api/renormalize.js",
     "db:seed-examples": "rspack build && cd .. && node dist/logigator-api/seed-examples.js",
+    "db:moderate": "rspack build && node ../dist/logigator-api/moderate.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",

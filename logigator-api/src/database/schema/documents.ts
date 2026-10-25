@@ -103,6 +103,15 @@ function circuitColumns() {
      */
     visibility: documentVisibility('visibility').notNull().default('unlisted'),
     /**
+     * Set when moderation takes the document out of the community, and only
+     * by the moderation CLI. A hidden document resolves for its owner alone
+     * and is in no listing, whatever `visibility` says; the owner can still
+     * change that, which does not unhide it. Both columns are written together.
+     */
+    hiddenAt: timestamp('hidden_at', { withTimezone: true }),
+    /** Why it was hidden, as shown to its owner. */
+    hiddenReason: varchar('hidden_reason', { length: 500 }),
+    /**
      * Id of the preview's directory on the served volume; the renders stay
      * files behind a cache-friendly `<img>` path. One pointer for both themes,
      * since the editor uploads the light and dark variant together and they are
@@ -166,8 +175,8 @@ export const MAX_TRANSLATION_ATTEMPTS = 3;
 
 /**
  * What the translation worker scans: pending rows that may leave the
- * database, oldest edit first. Private documents are never sent to a
- * translator, and a parked text is not taken until it is edited, so both are
+ * database, oldest edit first. Private and hidden documents are never sent to
+ * a translator, and a parked text is not taken until it is edited, so both are
  * outside the index as well as the claim; otherwise every claim would step
  * over every parked row before it reached one it may take.
  *
@@ -178,10 +187,11 @@ function translationPendingWhere(t: {
   translatedDigest: AnyPgColumn;
   textDigest: AnyPgColumn;
   visibility: AnyPgColumn;
+  hiddenAt: AnyPgColumn;
   translationAttemptDigest: AnyPgColumn;
   translationAttempts: AnyPgColumn;
 }) {
-  return sql`${t.translatedDigest} IS DISTINCT FROM ${t.textDigest} AND ${t.visibility} <> 'private' AND NOT (${t.translationAttemptDigest} = ${t.textDigest} AND ${t.translationAttempts} >= ${sql.raw(String(MAX_TRANSLATION_ATTEMPTS))})`;
+  return sql`${t.translatedDigest} IS DISTINCT FROM ${t.textDigest} AND ${t.visibility} <> 'private' AND ${t.hiddenAt} IS NULL AND NOT (${t.translationAttemptDigest} = ${t.textDigest} AND ${t.translationAttempts} >= ${sql.raw(String(MAX_TRANSLATION_ATTEMPTS))})`;
 }
 
 /** A board: a circuit that is opened and simulated, never embedded in another. */

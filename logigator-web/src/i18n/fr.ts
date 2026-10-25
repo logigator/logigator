@@ -356,7 +356,32 @@ const fr: TranslationSchema = {
         machineTranslatedFrom:
           'Traduction automatique, original en {{language}}',
         machineTranslated: 'Traduction automatique',
-        showOriginal: 'Afficher l’original'
+        showOriginal: 'Afficher l’original',
+        report: 'Signaler',
+        hiddenNotice:
+          'Ce circuit a été masqué par la modération. Vous seul pouvez le voir, et il n’apparaît dans aucune liste de la communauté. Motif : {{reason}}'
+      },
+      report: {
+        heading: 'Signaler ce circuit',
+        lede: 'Dites-nous ce qui ne va pas avec ce circuit. Chaque signalement est lu par une personne.',
+        reasonLabel: 'Motif',
+        reasons: {
+          illegal: 'Contenu illicite',
+          copyright: 'Atteinte au droit d’auteur',
+          personal_data: 'Données personnelles',
+          harassment: 'Harcèlement ou haine',
+          spam: 'Spam',
+          other: 'Autre chose'
+        },
+        explanationLabel: 'Ce qui ne va pas',
+        explanationHint:
+          'Indiquez ce que vous avez trouvé et où. Pour le droit d’auteur, nommez l’œuvre originale.',
+        emailLabel: 'E-mail',
+        emailHint:
+          'Facultatif. Utilisé uniquement pour vous répondre au sujet de ce signalement.',
+        cancel: 'Annuler',
+        submit: 'Envoyer le signalement',
+        done: 'Merci. Votre signalement a été envoyé et sera examiné.'
       },
       stargazers: {
         title: 'Étoiles',
@@ -438,6 +463,8 @@ const fr: TranslationSchema = {
         emptyNotListed: 'Non listé',
         emptyNotListedHint:
           'Ce circuit est vide, il n’apparaît donc pas encore dans les listes communautaires.',
+        hidden: 'Masqué',
+        hiddenHint: 'Masqué par la modération : {{reason}}',
         delete: 'Supprimer'
       },
       edit: {

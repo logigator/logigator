@@ -1,6 +1,7 @@
 import { defineRelations } from 'drizzle-orm';
 import { componentDependencies, projectDependencies } from './dependencies';
 import { components, projects } from './documents';
+import { documentReports } from './reports';
 import { componentStars, projectStars } from './stars';
 import { componentTexts, projectTexts } from './texts';
 import { users } from './users';
@@ -14,7 +15,8 @@ export const tables = {
   projectStars,
   componentStars,
   projectTexts,
-  componentTexts
+  componentTexts,
+  documentReports
 };
 
 /**

@@ -363,7 +363,32 @@ const de: TranslationSchema = {
         machineTranslatedFrom:
           'Maschinell übersetzt, Original auf {{language}}',
         machineTranslated: 'Maschinell übersetzt',
-        showOriginal: 'Original anzeigen'
+        showOriginal: 'Original anzeigen',
+        report: 'Melden',
+        hiddenNotice:
+          'Diese Schaltung wurde von der Moderation ausgeblendet. Nur du kannst sie sehen, und sie erscheint in keiner Community-Liste. Grund: {{reason}}'
+      },
+      report: {
+        heading: 'Schaltung melden',
+        lede: 'Sag uns, was mit dieser Schaltung nicht stimmt. Jede Meldung wird von einem Menschen gelesen.',
+        reasonLabel: 'Grund',
+        reasons: {
+          illegal: 'Rechtswidriger Inhalt',
+          copyright: 'Urheberrechtsverletzung',
+          personal_data: 'Personenbezogene Daten',
+          harassment: 'Belästigung oder Hass',
+          spam: 'Spam',
+          other: 'Etwas anderes'
+        },
+        explanationLabel: 'Was stimmt nicht',
+        explanationHint:
+          'Beschreib, was du gefunden hast und wo. Nenn bei einer Urheberrechtsverletzung das Originalwerk.',
+        emailLabel: 'E-Mail',
+        emailHint:
+          'Optional. Wird nur genutzt, um dir zu dieser Meldung zu antworten.',
+        cancel: 'Abbrechen',
+        submit: 'Meldung senden',
+        done: 'Danke. Deine Meldung wurde gesendet und wird geprüft.'
       },
       stargazers: {
         title: 'Sterne',
@@ -445,6 +470,8 @@ const de: TranslationSchema = {
         emptyNotListed: 'Nicht gelistet',
         emptyNotListedHint:
           'Diese Schaltung ist leer und wird deshalb noch nicht in der Community gelistet.',
+        hidden: 'Ausgeblendet',
+        hiddenHint: 'Von der Moderation ausgeblendet: {{reason}}',
         delete: 'Löschen'
       },
       edit: {

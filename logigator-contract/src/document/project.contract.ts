@@ -6,6 +6,7 @@ import {
   circuitFields,
   documentDependencySchema,
   documentDescriptionSchema,
+  documentHiddenSchema,
   documentNameSchema,
   documentVisibilitySchema,
   forkAttributionSchema,
@@ -19,11 +20,14 @@ export const projectSummarySchema = z.object(circuitFields).loose();
 export type ProjectSummary = z.infer<typeof projectSummarySchema>;
 
 /**
- * A project in its owner's own listing, with the languages of its texts and
- * the versions its author wrote in other languages.
+ * A project in its owner's own listing, with the languages of its texts, the
+ * versions its author wrote in other languages, and whether moderation has
+ * hidden it.
  */
-export const ownedProjectSummarySchema =
-  projectSummarySchema.extend(ownerTextFields);
+export const ownedProjectSummarySchema = projectSummarySchema.extend({
+  ...ownerTextFields,
+  hidden: documentHiddenSchema
+});
 
 export type OwnedProjectSummary = z.infer<typeof ownedProjectSummarySchema>;
 

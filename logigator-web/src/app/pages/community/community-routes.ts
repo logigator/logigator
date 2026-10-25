@@ -94,8 +94,10 @@ const profileNoindex = (): boolean => {
  * otherwise name the document on that 404 — a step for its trail and its card
  * for the image, neither of which is in front of the reader.
  */
-const stargazersPageExists = (): boolean =>
-  inject(CommunityDocumentService).document()?.visibility === 'public';
+const stargazersPageExists = (): boolean => {
+  const document = inject(CommunityDocumentService).document();
+  return document?.visibility === 'public' && !document.hidden;
+};
 
 /**
  * The listing and the document, as the two steps between the home page and a

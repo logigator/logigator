@@ -1,6 +1,7 @@
 import type {
   Author,
   ComponentSummary,
+  DocumentHidden,
   DocumentTextVersion,
   ForkAttribution,
   OwnedComponentSummary,
@@ -66,18 +67,33 @@ export function toOwnerTextFields(
   };
 }
 
+/** Moderation's hold on a document, for its owner's eyes only. */
+export function toHidden(row: CircuitRow): DocumentHidden {
+  return row.hiddenAt
+    ? { at: row.hiddenAt.toISOString(), reason: row.hiddenReason ?? '' }
+    : null;
+}
+
 export function toOwnedProjectSummary(
   row: ProjectRow,
   texts: readonly DocumentTextVersion[]
 ): OwnedProjectSummary {
-  return { ...toProjectSummary(row), ...toOwnerTextFields(row, texts) };
+  return {
+    ...toProjectSummary(row),
+    ...toOwnerTextFields(row, texts),
+    hidden: toHidden(row)
+  };
 }
 
 export function toOwnedComponentSummary(
   row: ComponentRow,
   texts: readonly DocumentTextVersion[]
 ): OwnedComponentSummary {
-  return { ...toComponentSummary(row), ...toOwnerTextFields(row, texts) };
+  return {
+    ...toComponentSummary(row),
+    ...toOwnerTextFields(row, texts),
+    hidden: toHidden(row)
+  };
 }
 
 export function mapPage<TRow, TEntry>(

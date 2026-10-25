@@ -74,7 +74,10 @@ const variables = z.object({
    */
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().min(1).default('Logigator <noreply@logigator.com>'),
-  /** Where client-side error reports are mailed. Unset means logged only. */
+  /**
+   * Where client-side error reports and document reports are mailed. Unset
+   * means logged only; document reports are stored either way.
+   */
   REPORT_MAIL_TO: z.string().optional(),
 
   /**

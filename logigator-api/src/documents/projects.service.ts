@@ -93,7 +93,7 @@ export class ProjectsService {
   async open(userId: string, id: string): Promise<ProjectResponse> {
     const row = await this.require(userId, id);
     const [dependencies, lineage, versions] = await Promise.all([
-      this.dependencies.summaries(PROJECT_EDGES, row.id),
+      this.dependencies.summaries(PROJECT_EDGES, row.id, userId),
       forkLineage(this.db, projects, row),
       humanVersionsOf(this.db, projects, [row.id])
     ]);

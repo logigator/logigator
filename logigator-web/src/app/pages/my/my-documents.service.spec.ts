@@ -26,7 +26,8 @@ function row(id: string, name: string): OwnedProjectSummary {
     lastEditedAt: '2026-01-01T00:00:00.000Z',
     nameLanguage: null,
     descriptionLanguage: null,
-    texts: []
+    texts: [],
+    hidden: null
   };
 }
 

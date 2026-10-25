@@ -1,7 +1,10 @@
 import * as z from 'zod';
 import { imageVariantSchema } from '../image/image.contract';
 import { pageQuerySchema, pageSchema } from '../page/page.contract';
-import { authorSchema } from '../document/document.contract';
+import {
+  authorSchema,
+  documentHiddenSchema
+} from '../document/document.contract';
 import {
   documentTextFields,
   textLanguageQuerySchema
@@ -81,18 +84,25 @@ export type CommunityComponentPage = z.infer<
   typeof communityComponentPageSchema
 >;
 
-/** A public document's own page: the listing entry plus its fork parent. */
-export const communityProjectDetailSchema = communityProjectSchema.extend({
-  forkedFrom: forkedFromSchema
-});
+/**
+ * What a document's own page adds to its listing entry: its fork parent, and
+ * for its owner alone whether moderation has hidden it. `hidden` is absent for
+ * anybody else, who is never answered a hidden document at all.
+ */
+const detailFields = {
+  forkedFrom: forkedFromSchema,
+  hidden: documentHiddenSchema.optional()
+} as const;
+
+export const communityProjectDetailSchema =
+  communityProjectSchema.extend(detailFields);
 
 export type CommunityProjectDetail = z.infer<
   typeof communityProjectDetailSchema
 >;
 
-export const communityComponentDetailSchema = communityComponentSchema.extend({
-  forkedFrom: forkedFromSchema
-});
+export const communityComponentDetailSchema =
+  communityComponentSchema.extend(detailFields);
 
 export type CommunityComponentDetail = z.infer<
   typeof communityComponentDetailSchema

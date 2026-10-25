@@ -97,6 +97,7 @@ export {
   componentSymbolSchema,
   documentDependencySchema,
   documentDescriptionSchema,
+  documentHiddenSchema,
   documentNameSchema,
   documentVisibilitySchema,
   forkAttributionSchema,
@@ -105,6 +106,7 @@ export {
   type Author,
   type CircuitPreview,
   type DocumentDependency,
+  type DocumentHidden,
   type DocumentVisibility,
   type ForkAttribution,
   type SaveCircuitRequest
@@ -184,10 +186,16 @@ export {
   type StarResponse
 } from './community/community.contract';
 export {
+  documentReportReasonSchema,
   reportClientInfoSchema,
+  reportDocumentRequestSchema,
+  reportDocumentResponseSchema,
   reportErrorRequestSchema,
   reportErrorResponseSchema,
+  type DocumentReportReason,
   type ReportClientInfo,
+  type ReportDocumentRequest,
+  type ReportDocumentResponse,
   type ReportErrorRequest,
   type ReportErrorResponse
 } from './report/report.contract';

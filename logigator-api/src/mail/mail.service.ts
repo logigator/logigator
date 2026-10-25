@@ -76,17 +76,47 @@ export class MailService {
     body: string;
     circuit?: string;
   }): Promise<boolean> {
+    return this.sendToOperator({
+      subject: report.subject,
+      text: report.body,
+      attachments: report.circuit
+        ? [{ filename: 'circuit.json', content: report.circuit }]
+        : []
+    });
+  }
+
+  /**
+   * Mails a report about a document to the same operator address. A reporter
+   * who left an address is the reply-to, so answering them is a reply.
+   *
+   * @returns whether a mail was sent.
+   */
+  async sendDocumentReport(report: {
+    subject: string;
+    body: string;
+    replyTo?: string;
+  }): Promise<boolean> {
+    return this.sendToOperator({
+      subject: report.subject,
+      text: report.body,
+      ...(report.replyTo ? { replyTo: report.replyTo } : {})
+    });
+  }
+
+  private async sendToOperator(mail: {
+    subject: string;
+    text: string;
+    replyTo?: string;
+    attachments?: { filename: string; content: string }[];
+  }): Promise<boolean> {
     if (!this.env.REPORT_MAIL_TO) return false;
 
     await this.transport.sendMail({
       from: this.env.MAIL_FROM,
       to: this.env.REPORT_MAIL_TO,
+      ...mail,
       // A crash message can be any length, and a subject line cannot.
-      subject: report.subject.slice(0, 160),
-      text: report.body,
-      attachments: report.circuit
-        ? [{ filename: 'circuit.json', content: report.circuit }]
-        : []
+      subject: mail.subject.slice(0, 160)
     });
     return true;
   }

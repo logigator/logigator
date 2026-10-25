@@ -4,12 +4,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { RETURN_PATH_PARAM } from '@logigator/core';
+import { DialogService } from '@logigator/ui';
 import { communityRow } from '../../../testing/community-rows';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { TranslationService } from '../../translation/translation.service';
 import { SessionService } from '../../user/session.service';
 import { CommunityDocumentPage } from './community-document-page';
 import { CommunityDocumentService } from './community-document.service';
+import { ReportDocumentDialog } from './report-document-dialog';
 
 const LINK = '11111111-1111-4111-8111-111111111111';
 const DETAIL_URL = `/api/community/projects/${LINK}`;
@@ -270,6 +272,52 @@ describe('CommunityDocumentPage', () => {
     // Nothing resolves the link but its owner, so a share sheet or an embed
     // snippet would be offering to pass on a URL that opens nothing.
     expect(el.querySelector('web-share-controls')).toBeNull();
+  });
+
+  it('tells the owner of a hidden document why, and offers nothing a listing has', async () => {
+    const owner = communityRow('Half adder', LINK).author;
+    const { el, detectChanges } = await render({
+      hidden: { at: '2026-02-01T00:00:00.000Z', reason: 'Copyright notice' }
+    });
+    TestBed.inject(SessionService).signedIn({
+      id: owner.id,
+      username: owner.username
+    } as never);
+    detectChanges();
+
+    expect(el.querySelector('lg-message')?.textContent).toContain(
+      'Copyright notice'
+    );
+    // Public by its own state, yet resolvable by nobody else: no star, no
+    // stargazers, and no link worth handing on.
+    expect(starControl(el)).toBeNull();
+    expect(el.textContent).not.toContain('Stargazers');
+    expect(el.querySelector('web-share-controls')).toBeNull();
+  });
+
+  it('offers a report to every reader but the owner', async () => {
+    const owner = communityRow('Half adder', LINK).author;
+    const { el, detectChanges } = await render();
+    const open = vi
+      .spyOn(TestBed.inject(DialogService), 'open')
+      .mockReturnValue(undefined as never);
+
+    button(el, 'Report').click();
+    expect(open).toHaveBeenCalledWith(
+      ReportDocumentDialog,
+      expect.objectContaining({ data: { kind: 'projects', link: LINK } })
+    );
+
+    TestBed.inject(SessionService).signedIn({
+      id: owner.id,
+      username: owner.username
+    } as never);
+    detectChanges();
+    expect(
+      [...el.querySelectorAll('button')].some((candidate) =>
+        candidate.textContent?.includes('Report')
+      )
+    ).toBe(false);
   });
 
   it('renders the site’s 404 for a link that names nothing this reader may open', async () => {

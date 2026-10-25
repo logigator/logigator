@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { emailSchema } from '../user/user.contract';
 
 /**
  * A client-side error report. The shape is fixed from outside — shipped editors
@@ -70,3 +71,41 @@ export const reportErrorResponseSchema = z
   .loose();
 
 export type ReportErrorResponse = z.infer<typeof reportErrorResponseSchema>;
+
+/**
+ * Why somebody reports a document. A short closed list a reader can choose
+ * from without knowing the law; `other` and the explanation cover the rest.
+ * The database holds the same set as a type of its own.
+ */
+export const documentReportReasonSchema = z.enum([
+  'illegal',
+  'copyright',
+  'personal_data',
+  'harassment',
+  'spam',
+  'other'
+]);
+
+export type DocumentReportReason = z.infer<typeof documentReportReasonSchema>;
+
+/**
+ * A notice about a document, open to anybody the document's link resolves for,
+ * signed in or not. The explanation is required, since a reason alone does not
+ * say what to look at; the address is optional and only for a reply.
+ */
+export const reportDocumentRequestSchema = z.object({
+  reason: documentReportReasonSchema,
+  explanation: z.string().trim().min(1).max(2000),
+  contactEmail: emailSchema.optional()
+});
+
+export type ReportDocumentRequest = z.infer<typeof reportDocumentRequestSchema>;
+
+/** Acknowledgement only, as for an error report. */
+export const reportDocumentResponseSchema = z
+  .object({ received: z.boolean() })
+  .loose();
+
+export type ReportDocumentResponse = z.infer<
+  typeof reportDocumentResponseSchema
+>;

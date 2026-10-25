@@ -85,7 +85,9 @@ Database scripts run from the API package (`yarn workspace logigator-api run …
 (Drizzle schema → new SQL migration in `logigator-api/drizzle/`), `db:check`, `db:migrate` (the same
 runner the E2E harness and a release use), `db:renormalize` (re-normalize older-format documents;
 `--all` re-extracts every derived row), `db:seed-examples` (writes `logigator-api/examples/` into
-the seed account, idempotent; `--previews` re-uploads previews).
+the seed account, idempotent; `--previews` re-uploads previews), `db:moderate` (lists open document
+reports, `hide`/`unhide <kind> <link>`, `resolve <report-id>`; the only moderation surface, no
+admin role).
 
 `@logigator/ui` has no build script; its ng-packagr target in `angular.json` must stay, because the
 unit-test builder reads its build options from it.
@@ -234,7 +236,8 @@ and provided under the `ENV` token; providers never read `process.env`. `GET /ap
 liveness probe; `GET /api/health/ready` checks Postgres and Redis. `src/` layers: `config/`,
 `database/` (Drizzle over `pg`, `schema/`, `migrate.ts`, startup migration gate), `redis/`,
 `session/`, `auth/`, `users/`, `mail/`, `storage/` (images, `share-card/`), `documents/`, `sharing/`,
-`community/`, `reports/`, `translation/` (OpenRouter client and worker), `common/`, plus `app.setup.ts`
+`community/`, `reports/` (error reports and document reports), `moderation/` (the `db:moderate`
+service), `translation/` (OpenRouter client and worker), `common/`, plus `app.setup.ts`
 (shared by `main.ts` and the E2E harness).
 
 **Invariants:**
@@ -245,8 +248,12 @@ liveness probe; `GET /api/health/ready` checks Postgres and Redis. `src/` layers
   from a value read in an earlier statement.
 - **A document's link is its address, not a capability**: `private` resolves for its owner alone,
   `unlisted` for whoever holds the link, `public` for everyone, listed and indexed. Link reads use
-  the one predicate `linkResolvesFor`; every listing carries `visibility = 'public'`. Stars are public-only. Rotating a link is refused while public; visibility changes
-  never touch the link.
+  the one predicate `linkResolvesFor`; every listing carries `visibility = 'public'`. Stars are
+  public-only. Rotating a link is refused while public; visibility changes never touch the link.
+- **A hidden document (`hidden_at`, set only by `db:moderate`) is owner-only whatever its
+  visibility**: `linkResolvesFor` and every listing predicate exclude it, its stars stop counting,
+  the translation worker skips it, and dependents and clones keep its snapshot but not its master.
+  The hidden state reaches its owner alone (owned summaries, and `hidden` on their own detail read).
 - **Uploads are decoded and re-encoded** by sharp, never stored as sent; the volume is served under
   one root, `/files`.
 - **The startup gate refuses a database whose applied migrations differ from the build's**, in
@@ -261,7 +268,8 @@ liveness probe; `GET /api/health/ready` checks Postgres and Redis. `src/` layers
   every description as the source it was given.
 
 **Build: Rspack** (`rspack.config.mjs`), ESM output, entries for the server plus `migrate`,
-`renormalize` and `seed-examples`. Its comments explain each setting; the ones that break silently:
+`renormalize`, `seed-examples` and `moderate`. Its comments explain each setting; the ones that
+break silently:
 
 - `tsconfig.json` holds the workspace aliases (`resolve.tsConfig` points at it), and Vitest finds it
   **by name** for `emitDecoratorMetadata`. Rename it and DI breaks.

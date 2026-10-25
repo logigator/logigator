@@ -1,9 +1,11 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
   Header,
   Param,
+  Post,
   Put,
   Query,
   UseGuards
@@ -12,6 +14,7 @@ import {
   communityPageQuerySchema,
   communityQuerySchema,
   pageQuerySchema,
+  reportDocumentRequestSchema,
   textLanguageQuerySchema,
   type Author,
   type CommunityComponent,
@@ -24,14 +27,18 @@ import {
   type Page,
   type PageQuery,
   type PublicProfile,
+  type ReportDocumentRequest,
+  type ReportDocumentResponse,
   type StarResponse,
   type TextLanguageQuery
 } from '@logigator/contract';
 import type { LanguageId } from '@logigator/core';
 import { AuthGuard, CurrentUser, SessionUserId } from '../auth/auth.guard';
+import { RateLimit, RateLimitGuard } from '../common/rate-limit.guard';
 import { SiteLanguageParam } from '../common/site-language-param.pipe';
 import { UuidParam } from '../common/uuid-param.pipe';
 import type { UserRow } from '../database/schema';
+import { DocumentReportsService } from '../reports/document-reports.service';
 import { CommunityService } from './community.service';
 
 /**
@@ -47,7 +54,10 @@ import { CommunityService } from './community.service';
  */
 @Controller('community')
 export class CommunityController {
-  constructor(private readonly community: CommunityService) {}
+  constructor(
+    private readonly community: CommunityService,
+    private readonly reports: DocumentReportsService
+  ) {}
 
   @Get('projects')
   listProjects(
@@ -170,6 +180,36 @@ export class CommunityController {
     @Param('link', UuidParam) link: string
   ): Promise<StarResponse> {
     return this.community.setComponentStar(user.id, link, false);
+  }
+
+  /**
+   * A report about a document, from anybody its link resolves for. No session
+   * needed, since a notice about illegal content has to be open to everybody;
+   * the session is recorded when there is one. Limited by address and sized
+   * for a classroom behind one, which is far more reports than it ever sends.
+   */
+  @Post('projects/:link/report')
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ limit: 30, windowSeconds: 3600, scope: 'report-document' })
+  async reportProject(
+    @Param('link', UuidParam) link: string,
+    @Body({ schema: reportDocumentRequestSchema }) body: ReportDocumentRequest,
+    @SessionUserId() callerId: string | null
+  ): Promise<ReportDocumentResponse> {
+    await this.reports.report('project', link, body, callerId);
+    return { received: true };
+  }
+
+  @Post('components/:link/report')
+  @UseGuards(RateLimitGuard)
+  @RateLimit({ limit: 30, windowSeconds: 3600, scope: 'report-document' })
+  async reportComponent(
+    @Param('link', UuidParam) link: string,
+    @Body({ schema: reportDocumentRequestSchema }) body: ReportDocumentRequest,
+    @SessionUserId() callerId: string | null
+  ): Promise<ReportDocumentResponse> {
+    await this.reports.report('component', link, body, callerId);
+    return { received: true };
   }
 
   @Get('projects/:link/stargazers')

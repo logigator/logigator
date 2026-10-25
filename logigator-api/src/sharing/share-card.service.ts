@@ -136,7 +136,8 @@ export class ShareCardService {
     // The state this request resolved, not the one a cached card was composed
     // under: it is the resolved state that says whether a stranger could have
     // fetched this at all.
-    const publiclyReadable = target.row.visibility !== 'private';
+    const publiclyReadable =
+      target.row.visibility !== 'private' && target.row.hiddenAt === null;
 
     const cached = this.cache.get(key);
     if (cached?.etag === etag) return { ...cached, publiclyReadable };

@@ -11,6 +11,7 @@ import { DocumentsModule } from './documents/documents.module';
 import { HealthModule } from './health/health.module';
 import { MailModule } from './mail/mail.module';
 import { MetaModule } from './meta/meta.module';
+import { ModerationModule } from './moderation/moderation.module';
 import { RedisModule } from './redis/redis.module';
 import { ReportsModule } from './reports/reports.module';
 import { SessionModule } from './session/session.module';
@@ -35,6 +36,7 @@ import { UsersModule } from './users/users.module';
     SharingModule,
     CommunityModule,
     ReportsModule,
+    ModerationModule,
     HealthModule,
     MetaModule
   ],

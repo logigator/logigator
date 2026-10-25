@@ -71,6 +71,21 @@ export const documentVisibilitySchema = z.enum([
 export type DocumentVisibility = z.infer<typeof documentVisibilitySchema>;
 
 /**
+ * Moderation's hold on a document: when it was taken out of the community and
+ * why, or `null`. A hidden document resolves for its owner alone, so this is
+ * only ever answered to them, on the responses that are theirs.
+ */
+export const documentHiddenSchema = z
+  .object({
+    at: z.string(),
+    reason: z.string()
+  })
+  .loose()
+  .nullable();
+
+export type DocumentHidden = z.infer<typeof documentHiddenSchema>;
+
+/**
  * The circuit document a write carries — checked here only for being an object.
  * The format has a versioned, migration-aware validator of its own in
  * `@logigator/core`; a second description in zod would drift. zod's job at this

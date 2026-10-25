@@ -39,7 +39,8 @@ export type ShareTarget =
 /**
  * Reading a document through its share link. The link is the document's
  * address, and what it resolves to is the state its owner put it in: everything
- * but a private document, which resolves for its owner alone. Holding the URL
+ * but a private document, which resolves for its owner alone, as a document
+ * moderation has hidden does. Holding the URL
  * is what lets a stranger read an unlisted one — no session needed — and
  * revoking one is the explicit act of minting a new token. A state change only
  * masks the address: a private document is one nobody else can open by it, and
@@ -107,7 +108,8 @@ export class ShareService {
       this.author(target.row.userId),
       this.dependencies.summaries(
         target.kind === 'project' ? PROJECT_EDGES : COMPONENT_EDGES,
-        target.row.id
+        target.row.id,
+        callerId
       ),
       forkLineage(this.db, table, target.row),
       this.stars(target)

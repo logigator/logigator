@@ -1,12 +1,22 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import type { ComponentSummary, ProjectSummary } from '@logigator/contract';
+import type {
+  ComponentSummary,
+  DocumentHidden,
+  ProjectSummary
+} from '@logigator/contract';
 import type { CommunityKind } from '../../api/services/community-api.service';
 import { DocumentsApiService } from '../../api/services/documents-api.service';
 import { contentSection } from '../../transfer/content-section';
 import { MY_PAGE_SIZE, MyListingQuery } from './my-listing-query';
 
-/** A row on the reader's own shelf; a component carries its ports beside. */
-export type MyDocumentRow = ProjectSummary | ComponentSummary;
+/**
+ * A row on the reader's own shelf; a component carries its ports beside.
+ * `hidden` comes with the listing and is absent on a row just created here,
+ * which nothing has hidden.
+ */
+export type MyDocumentRow = (ProjectSummary | ComponentSummary) & {
+  hidden?: DocumentHidden;
+};
 
 /** What a metadata edit can change about a row without re-reading the page. */
 export type MyDocumentPatch = Partial<

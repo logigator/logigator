@@ -370,7 +370,32 @@ const en = {
         /** `language` is the source language's name, from `Intl.DisplayNames`. */
         machineTranslatedFrom: 'Machine-translated from {{language}}',
         machineTranslated: 'Machine-translated',
-        showOriginal: 'Show original'
+        showOriginal: 'Show original',
+        report: 'Report',
+        hiddenNotice:
+          'This circuit was hidden by moderation. Only you can see it, and it is in no community listing. Reason: {{reason}}'
+      },
+      report: {
+        heading: 'Report this circuit',
+        lede: 'Tell us what is wrong with this circuit. Every report is read by a person.',
+        reasonLabel: 'Reason',
+        /** One per `documentReportReasonSchema` value, in its spelling. */
+        reasons: {
+          illegal: 'Illegal content',
+          copyright: 'Copyright infringement',
+          personal_data: 'Personal data',
+          harassment: 'Harassment or hate',
+          spam: 'Spam',
+          other: 'Something else'
+        },
+        explanationLabel: 'What is wrong',
+        explanationHint:
+          'Say what you found and where. For a copyright claim, name the original work.',
+        emailLabel: 'Email',
+        emailHint: 'Optional. Only used to reply to you about this report.',
+        cancel: 'Cancel',
+        submit: 'Send report',
+        done: 'Thank you. Your report was sent and will be reviewed.'
       },
       stargazers: {
         title: 'Stargazers',
@@ -455,6 +480,8 @@ const en = {
         emptyNotListed: 'Not listed',
         emptyNotListedHint:
           'This circuit is empty, so the community doesn’t list it yet.',
+        hidden: 'Hidden',
+        hiddenHint: 'Hidden by moderation: {{reason}}',
         delete: 'Delete'
       },
       edit: {

@@ -1,4 +1,4 @@
-import { and, count, desc, eq, ne, sql, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, isNull, ne, sql, type SQL } from 'drizzle-orm';
 import type { Page, PageQuery } from '@logigator/contract';
 import type { Queryable } from '../database/database.module';
 import {
@@ -91,8 +91,9 @@ export async function findByLink(
 
 /**
  * The predicate every read addressed by a link carries: everything but a
- * private document, which resolves for its owner alone. A visitor (`null`)
- * holds no account to match, so that half of the rule cannot be satisfied.
+ * private or hidden document, which resolves for its owner alone. A visitor
+ * (`null`) holds no account to match, so that half of the rule cannot be
+ * satisfied.
  *
  * Stated once because the share read, its composed card, its clone and the
  * community page are four routes to one document, addressed by the same token
@@ -104,7 +105,7 @@ export function linkResolvesFor(
   table: CircuitTable,
   callerId: string | null
 ): SQL {
-  const openToEverybody = ne(table.visibility, 'private');
+  const openToEverybody = sql`(${ne(table.visibility, 'private')} and ${isNull(table.hiddenAt)})`;
   if (callerId === null) return openToEverybody;
 
   // Written out as SQL rather than through drizzle's `or()`, which is typed

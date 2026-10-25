@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type { CloneResponse, ComponentSummary } from '@logigator/contract';
 import type { CurrentCircuitFile } from '@logigator/core';
@@ -82,7 +82,7 @@ export class CloneService {
     // out of its private state; anybody else's has to be one the link resolves
     // for them.
     const target = await this.share.resolve(kind, link, userId);
-    const sources = await this.dependencyRows(target);
+    const sources = await this.dependencyRows(target, userId);
     const idMap = new Map(sources.map((row) => [row.id, randomUUID()]));
     const previews = await this.copyPreviews([target.row, ...sources]);
 
@@ -162,15 +162,29 @@ export class CloneService {
    * The masters the copy will need, read outside the transaction: a clone
    * captures a snapshot either way, so holding one across the walk would only
    * contend with whoever is editing the original.
+   *
+   * A master moderation has hidden is not copied unless it is the cloner's
+   * own: the copy keeps its snapshot, which then names no master.
    */
-  private async dependencyRows(target: ShareTarget): Promise<ComponentRow[]> {
+  private async dependencyRows(
+    target: ShareTarget,
+    userId: string
+  ): Promise<ComponentRow[]> {
     const ids = await transitiveDependencyIds(this.db, {
       kind: target.kind,
       id: target.row.id
     });
     if (ids.length === 0) return [];
 
-    return this.db.select().from(components).where(inArray(components.id, ids));
+    return this.db
+      .select()
+      .from(components)
+      .where(
+        and(
+          inArray(components.id, ids),
+          sql`(${isNull(components.hiddenAt)} or ${eq(components.userId, userId)})`
+        )
+      );
   }
 
   private async copyProject(
@@ -282,9 +296,9 @@ function textColumns(source: ProjectRow | ComponentRow) {
 
 /**
  * Re-points a document's embedded snapshots at the copies of their masters. A
- * source missing from the map names a master that does not exist, so its
- * `source` is dropped — a snapshot without one is self-contained, which the
- * format already has a meaning for.
+ * source missing from the map names a master that does not exist or was not
+ * copied, so its `source` is dropped — a snapshot without one is
+ * self-contained, which the format already has a meaning for.
  */
 function remapSources(
   document: CurrentCircuitFile,

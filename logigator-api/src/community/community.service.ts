@@ -5,6 +5,7 @@ import {
   desc,
   eq,
   gt,
+  isNull,
   ne,
   sql,
   type Column,
@@ -48,6 +49,7 @@ import {
 import {
   toAuthor,
   toComponentSummary,
+  toHidden,
   toProjectSummary
 } from '../documents/circuit-responses';
 import { machineTextFor, textOn } from '../documents/document-text-queries';
@@ -125,7 +127,8 @@ type StarTable = typeof projectStars | typeof componentStars;
  * site's examples rather than community work: its profile, its documents'
  * pages and a member's starred tab still show them. A **read
  * addressed by a link** carries `linkResolvesFor`, which answers an unlisted
- * document for whoever holds the URL and a private one for its owner alone.
+ * document for whoever holds the URL and a private or hidden one for its owner
+ * alone, so a hidden document is in no listing and its page is its owner's.
  * The two are separate questions about the same rows, which is why these
  * queries live apart from the owner-scoped ones rather than being those with a
  * clause flipped: sharing no query means no place to forget one.
@@ -251,7 +254,8 @@ export class CommunityService {
 
     return {
       ...this.toCommunityProject(row, language),
-      forkedFrom: await this.parentOf(projects, row.circuit)
+      forkedFrom: await this.parentOf(projects, row.circuit),
+      ...ownerFields(row.circuit, callerId)
     };
   }
 
@@ -269,7 +273,8 @@ export class CommunityService {
 
     return {
       ...this.toCommunityComponent(row, language),
-      forkedFrom: await this.parentOf(components, row.circuit)
+      forkedFrom: await this.parentOf(components, row.circuit),
+      ...ownerFields(row.circuit, callerId)
     };
   }
 
@@ -769,17 +774,17 @@ export class CommunityService {
    * star, and the list of who gave one. `linkResolvesFor` is deliberately not
    * what is asked here — an unlisted document's link resolves, and it is still
    * not in any listing for a star to hang off. Calling the state by its name is
-   * the whole rule.
+   * the whole rule, and a hidden document is in no listing either.
    */
   private async requirePublicProject(link: string): Promise<ProjectRow> {
     const row = await findByLink(this.db, projects, link);
-    if (row?.visibility !== 'public') throw notPublished();
+    if (!row || !isListedState(row)) throw notPublished();
     return row;
   }
 
   private async requirePublicComponent(link: string): Promise<ComponentRow> {
     const row = await findByLink(this.db, components, link);
-    if (row?.visibility !== 'public') throw notPublished();
+    if (!row || !isListedState(row)) throw notPublished();
     return row;
   }
 
@@ -807,8 +812,8 @@ export class CommunityService {
 }
 
 /**
- * The predicate every listing carries: published, and not empty. A document
- * with neither a component nor a wire on it — the blank board the shelf's
+ * The predicate every listing carries: published, not hidden by moderation,
+ * and not empty. A document with neither a component nor a wire on it — the blank board the shelf's
  * _New project_ creates, or one its author cleared — has nothing to show a
  * stranger, and publishing it is more often a slip than a statement. Its page
  * still resolves by its link and it can still be starred there: emptiness only
@@ -820,7 +825,23 @@ export class CommunityService {
  * an `undefined` inside the caller's `and()` would drop the rule silently.
  */
 function listed(table: typeof projects | typeof components): SQL {
-  return sql`(${eq(table.visibility, 'public')} and (${gt(table.componentCount, 0)} or ${gt(table.wireCount, 0)}))`;
+  return sql`(${eq(table.visibility, 'public')} and ${isNull(table.hiddenAt)} and (${gt(table.componentCount, 0)} or ${gt(table.wireCount, 0)}))`;
+}
+
+/** {@link listed}'s state half, for a row already in hand. */
+function isListedState(row: ProjectRow | ComponentRow): boolean {
+  return row.visibility === 'public' && row.hiddenAt === null;
+}
+
+/**
+ * What a document's page tells its owner alone. Anybody else is never answered
+ * a hidden document, so for them the field is left out rather than `null`.
+ */
+function ownerFields(
+  row: ProjectRow | ComponentRow,
+  callerId: string | null
+): { hidden?: ReturnType<typeof toHidden> } {
+  return row.userId === callerId ? { hidden: toHidden(row) } : {};
 }
 
 function notPublished(): ApiException {

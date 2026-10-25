@@ -8,4 +8,5 @@ export * from './documents';
 export * from './dependencies';
 export * from './stars';
 export * from './texts';
+export * from './reports';
 export { relations, tables } from './relations';

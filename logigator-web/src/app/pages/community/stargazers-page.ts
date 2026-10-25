@@ -63,7 +63,7 @@ export class StargazersPage {
    * then offering a retry for a read that can never succeed would leave a page
    * whose only content is an action with no outcome, and it would name a
    * document nobody published. The owner of a private one is not an exception:
-   * there is no list for them either.
+   * there is no list for them either, nor for the owner of a hidden one.
    *
    * A read of the document that *failed* is deliberately not this. Nothing is
    * known about the document yet, so the retry is the honest thing to offer —
@@ -71,7 +71,9 @@ export class StargazersPage {
    */
   protected readonly missing = computed(() => {
     const document = this.document();
-    return document ? document.visibility !== 'public' : this.content.missing();
+    return document
+      ? document.visibility !== 'public' || !!document.hidden
+      : this.content.missing();
   });
 
   protected readonly documentFailureKey = this.content.failureKey;
