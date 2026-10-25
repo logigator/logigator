@@ -5,6 +5,7 @@ import {
   pathInLanguage
 } from './app/translation/language-url';
 import { escapeXml } from './escape-xml';
+import { environment } from './environments/environment';
 
 /**
  * One page of the site, as the sitemap describes it. The path is unprefixed:
@@ -18,6 +19,11 @@ export interface SitemapPage {
   lastModified?: string;
   /** `<priority>`, relative to the rest of this file. */
   priority: number;
+  /**
+   * `false` for a page that has one address for every language, written as it
+   * is: one entry with no alternates.
+   */
+  localized?: false;
 }
 
 /**
@@ -38,6 +44,8 @@ export interface SitemapPage {
  */
 export const STATIC_PAGES: readonly SitemapPage[] = [
   { path: '/', priority: 1 },
+  // Served beside the site, one address for every language.
+  { path: environment.editorUrl, priority: 0.8, localized: false },
   { path: '/examples', priority: 0.7 },
   { path: '/docs', priority: 0.7 },
   ...DOC_PAGE_IDS.map((page) => ({ path: `/docs/${page}`, priority: 0.6 })),
@@ -51,7 +59,7 @@ export const STATIC_PAGES: readonly SitemapPage[] = [
 ];
 
 /**
- * The sitemap, one `<url>` per language per page.
+ * The sitemap, one `<url>` per language per localized page.
  *
  * A page could be one entry naming the unprefixed URL instead, which is what
  * the legacy hand-maintained file did — but that URL is the negotiating `302`,
@@ -70,6 +78,9 @@ export function renderSitemap(
   pages: readonly SitemapPage[]
 ): string {
   const entries = pages.flatMap((page) => {
+    if (page.localized === false) {
+      return [renderUrl(origin, page, page.path)];
+    }
     // Identical for all four of a page's entries — it names the whole set, not
     // the one being written — so it is built once per page rather than per URL.
     const alternates = languageAlternates(page.path)
@@ -97,7 +108,7 @@ function renderUrl(
   origin: string,
   page: SitemapPage,
   path: string,
-  alternates: string
+  alternates?: string
 ): string {
   return [
     '  <url>',
@@ -106,7 +117,7 @@ function renderUrl(
       ? [`    <lastmod>${page.lastModified}</lastmod>`]
       : []),
     `    <priority>${page.priority.toFixed(1)}</priority>`,
-    alternates,
+    ...(alternates ? [alternates] : []),
     '  </url>'
   ].join('\n');
 }
@@ -154,6 +165,9 @@ export function sitemapFiles(
 export function sitemapFilePath(name: string): string {
   return `/sitemaps/${name}.xml`;
 }
+
+/** The path {@link sitemapFilePath} writes; the first group is the name. */
+export const SITEMAP_FILE_PATH = /^\/sitemaps\/([a-z0-9-]+)\.xml$/;
 
 /**
  * The sitemap index `/sitemap.xml` answers, which is what `robots.txt` names.

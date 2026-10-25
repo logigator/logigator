@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { ActivatedRouteSnapshot, convertToParamMap } from '@angular/router';
-import { listingParams, listingQuery } from './listing-query';
+import {
+  listingCanonicalQuery,
+  listingParams,
+  listingQuery
+} from './listing-query';
 
 /** A snapshot carrying only what `listingQuery` reads. */
 function route(params: Record<string, string>): ActivatedRouteSnapshot {
@@ -57,5 +61,25 @@ describe('listingParams', () => {
 
     const read = listingQuery(route(written as Record<string, string>));
     expect(read).toEqual({ page: 3, search: 'adder', orderBy: 'stars' });
+  });
+});
+
+describe('listingCanonicalQuery', () => {
+  const canonical = (query: string): string =>
+    listingCanonicalQuery(new URLSearchParams(query));
+
+  it('keeps a page past the first, so it canonicalizes to itself', () => {
+    expect(canonical('page=3')).toBe('?page=3');
+    expect(canonical('page=3&orderBy=latest')).toBe('?page=3');
+  });
+
+  it('names the first page, however it was written, without a page', () => {
+    for (const query of ['', 'page=1', 'page=0', 'page=nine']) {
+      expect(canonical(query), query).toBe('');
+    }
+  });
+
+  it('folds a search, every page of it, into the plain listing', () => {
+    expect(canonical('search=adder&page=3')).toBe('');
   });
 });

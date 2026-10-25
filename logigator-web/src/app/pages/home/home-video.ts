@@ -10,13 +10,8 @@ export interface HomeVideo {
   title: string;
   /** As it reads on YouTube; `isoDuration` derives the schema.org form. */
   duration: string;
-  /**
-   * ISO 8601 date the video was published, for the `VideoObject` a page
-   * embedding it emits. Google's video result wants it and the site has no way
-   * to derive it, so it is read off YouTube the way the duration was — absent
-   * until someone does, never guessed.
-   */
-  uploadDate?: string;
+  /** When it was published, as YouTube states it (ISO 8601). */
+  uploadDate: string;
   /** Self-hosted, so no third party is contacted before the visitor clicks. */
   poster: string;
 }
@@ -28,6 +23,7 @@ const VIDEOS: Record<'en' | 'de', HomeVideo> = {
     language: 'en',
     title: 'Logic Gates — Explained',
     duration: '3:34',
+    uploadDate: '2020-04-12T09:01:54-07:00',
     poster: posterEn
   },
   de: {
@@ -35,6 +31,7 @@ const VIDEOS: Record<'en' | 'de', HomeVideo> = {
     language: 'de',
     title: 'Logische Gatter — Erklärt',
     duration: '3:37',
+    uploadDate: '2020-02-20T02:24:41-08:00',
     poster: posterDe
   }
 };

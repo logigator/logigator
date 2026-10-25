@@ -1,4 +1,8 @@
 import { CommunityKind } from './app/api/services/community-api.service';
+import {
+  languageFromPath,
+  pathWithoutLanguage
+} from './app/translation/language-url';
 
 /**
  * Where every legacy URL went. The structural freedom Phase 5 took was bought
@@ -8,9 +12,10 @@ import { CommunityKind } from './app/api/services/community-api.service';
  * It lives in the app's own server rather than in Caddy because it changes with
  * the app's routes and therefore has to deploy with them.
  *
- * Paths here are **unprefixed**. The language segment is stripped before a
- * lookup and put back on the answer, so one entry covers all five forms of a
- * legacy URL — the bare one and the four localized ones.
+ * Paths here are **unprefixed**. A lookup ignores the language segment, and the
+ * caller puts one back on the answer, so one entry covers all five forms of a
+ * legacy URL — the bare one and the four localized ones. The paged listings
+ * below are the one exception.
  */
 
 /** A segment the legacy app generated: a uuid, for every id and every link. */
@@ -105,6 +110,20 @@ const RULES: readonly RedirectRule[] = [
   }
 ];
 
+/**
+ * Listings whose path survived while their `page` moved from counting from
+ * zero to counting from one. The legacy pages wrote the parameter into the
+ * address bar on every page change, the first page included, but never under a
+ * language prefix — so only the unprefixed form with a `page` is read as
+ * legacy, and the site never names that form itself.
+ */
+const PAGED_LISTINGS: ReadonlySet<string> = new Set([
+  '/community/projects',
+  '/community/components',
+  '/my/projects',
+  '/my/components'
+]);
+
 /** The tab a legacy profile URL named, as the section path it is now. */
 const PROFILE_TABS: Record<string, string> = {
   projects: '',
@@ -125,18 +144,17 @@ export interface LegacyRedirect {
  * The successor of a legacy path, with its query rewritten, or `null` for a
  * path this map does not name — which is every path that still exists.
  *
- * Both arguments and the location are unprefixed. The caller re-prefixes with
- * the language the request carried, and a request that carried none is
- * answered unprefixed too, so the language redirect below it negotiates one:
- * two hops, each with the status that is true of it, rather than a `301` whose
- * target depends on who asked.
+ * The path is the one requested, prefixed or not; the location is unprefixed,
+ * for the caller to put the request's language on, or a negotiated one.
  */
 export function legacyRedirect(
   pathname: string,
   query: URLSearchParams
 ): LegacyRedirect | null {
-  const pending = PENDING.get(pathname);
-  const path = pending ?? matchPath(pathname, query);
+  const unprefixed = pathWithoutLanguage(pathname);
+  const pending = PENDING.get(unprefixed);
+  const path =
+    pending ?? matchPath(unprefixed, query) ?? legacyListing(pathname, query);
   if (path === null) {
     return null;
   }
@@ -162,15 +180,26 @@ function matchPath(pathname: string, query: URLSearchParams): string | null {
   return null;
 }
 
+function legacyListing(
+  pathname: string,
+  query: URLSearchParams
+): string | null {
+  return !languageFromPath(pathname) &&
+    PAGED_LISTINGS.has(pathname) &&
+    query.has('page')
+    ? pathname
+    : null;
+}
+
 /**
  * The query a listing keeps. `search` and `orderBy=latest` mean the same thing
  * on both sides; `page` does not — it counted from zero in the legacy URLs and
  * counts from one here, a first page called `0` not being something to explain
  * to whoever reads the address bar.
  *
- * `tab` is dropped: it is part of the path now. Everything else goes too — a
- * parameter the new pages do not read would only survive as noise in a
- * canonical.
+ * `tab` is dropped: it is part of the path now. Campaign tags (`utm_*`) stay
+ * for analytics to read. Everything else goes — a parameter the new pages do
+ * not read would only survive as noise in a canonical.
  */
 function rewriteQuery(query: URLSearchParams): URLSearchParams {
   const params = new URLSearchParams();
@@ -185,6 +214,11 @@ function rewriteQuery(query: URLSearchParams): URLSearchParams {
   }
   if (query.get('orderBy') === 'latest') {
     params.set('orderBy', 'latest');
+  }
+  for (const [name, value] of query) {
+    if (name.startsWith('utm_')) {
+      params.append(name, value);
+    }
   }
   return params;
 }

@@ -39,16 +39,35 @@ export interface ListingQuery {
  */
 export function listingQuery(route: ActivatedRouteSnapshot): ListingQuery {
   const params = route.queryParamMap;
-  const page = Number.parseInt(params.get('page') ?? '', 10);
   const orderBy = params.get('orderBy');
 
   return {
-    // One-based in the URL, zero-based in the API: a first page called `0` is
-    // not something to explain to whoever reads the address bar.
-    page: Number.isFinite(page) && page > 1 ? page - 1 : 0,
+    page: pageIndex(params.get('page')),
     search: (params.get('search') ?? '').trim(),
     orderBy: isCommunityOrder(orderBy) ? orderBy : DEFAULT_ORDER
   };
+}
+
+/**
+ * The query a listing's canonical keeps: its page, so each page is indexed as
+ * itself rather than folded into the first. The ranking is dropped like
+ * everywhere else, and a search folds the whole result into the plain listing.
+ */
+export function listingCanonicalQuery(query: URLSearchParams): string {
+  if (query.get('search')?.trim()) {
+    return '';
+  }
+  const { page } = listingParams({ page: pageIndex(query.get('page')) });
+  return page ? `?page=${page}` : '';
+}
+
+/**
+ * One-based in the URL, zero-based in the API: a first page called `0` is not
+ * something to explain to whoever reads the address bar.
+ */
+function pageIndex(value: string | null): number {
+  const page = Number.parseInt(value ?? '', 10);
+  return Number.isFinite(page) && page > 1 ? page - 1 : 0;
 }
 
 /**

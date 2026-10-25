@@ -14,6 +14,7 @@ import { communityDocumentGuard } from './community-document.guard';
 import { CommunityDocumentService } from './community-document.service';
 import { apiKindOf, CommunityRouteData } from './community-kind';
 import { profileJsonLd } from './profile-json-ld';
+import { listingCanonicalQuery } from './listing-query';
 import { ProfileListing } from './profile-listing';
 import { ProfilePage } from './profile-page';
 import {
@@ -167,7 +168,8 @@ function profileTab(
             : null;
         },
         noindex: profileNoindex,
-        jsonLd: profileJsonLd
+        jsonLd: profileJsonLd,
+        canonicalQuery: listingCanonicalQuery
       } satisfies PageMeta
     } satisfies ProfileRouteData & { seo: PageMeta }
   };
@@ -194,7 +196,11 @@ function documentRoutes(
       runGuardsAndResolvers: ON_QUERY_CHANGE,
       data: {
         communityKind: kind,
-        seo: { titleKey, descriptionKey: ledeKey } satisfies PageMeta
+        seo: {
+          titleKey,
+          descriptionKey: ledeKey,
+          canonicalQuery: listingCanonicalQuery
+        } satisfies PageMeta
       } satisfies CommunityRouteData & { seo: PageMeta }
     },
     {
@@ -245,7 +251,8 @@ function documentRoutes(
           // name the document, while here the two states it was added for are
           // now the site's 404 — and a 404 is already no index entry, which is
           // what the catch-all 404 route relies on as well.
-          trail: () => (stargazersPageExists() ? documentTrail() : [])
+          trail: () => (stargazersPageExists() ? documentTrail() : []),
+          canonicalQuery: listingCanonicalQuery
         } satisfies PageMeta
       } satisfies CommunityRouteData & { seo: PageMeta }
     }

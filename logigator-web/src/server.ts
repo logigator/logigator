@@ -14,20 +14,19 @@ import { loadDocPage } from './app/pages/docs/doc-content';
 import { loadChangelog } from './app/pages/changelog/changelog-content';
 import { renderChangelogFeed } from './app/pages/changelog/changelog-feed';
 import { requestOrigin } from './request-origin';
-import {
-  languageFromPath,
-  pathInLanguage,
-  pathWithoutLanguage,
-  urlInLanguage
-} from './app/translation/language-url';
+import { pathInLanguage } from './app/translation/language-url';
 import { negotiateRequestLanguage } from './app/translation/language-negotiation';
-import { canonicalPath } from './canonical-path';
-import { legacyRedirect } from './legacy-redirects';
+import {
+  NOT_FOUND,
+  redirectHeaders,
+  requestRedirect
+} from './request-redirect';
 import { renderRobotsTxt } from './robots';
 import { communityPages } from './community-sitemap';
 import {
   renderSitemap,
   renderSitemapIndex,
+  SITEMAP_FILE_PATH,
   sitemapFiles,
   STATIC_PAGES,
   type SitemapFile
@@ -87,25 +86,38 @@ app.use(
 );
 
 /**
- * A URL whose path is not canonical is redirected to the one that is,
- * before anything reads a segment out of it.
+ * A URL that is not the address of what it names is redirected to the one that
+ * is, in a single hop, before anything reads a segment out of it — and a file
+ * the static handler did not have ends here as a bare `404`.
  *
- * It runs after the static handler and before the language redirect, so a file
- * is answered by its own name and the prefix is added to a settled path.
+ * Every page lives under a language segment, so a URL without one goes to the
+ * visitor's language: their `preferences` cookie, then `Accept-Language`. A
+ * real redirect rather than a client-side one: the browser (and a crawler)
+ * should be told the URL that names a language.
  *
- * `301`, unlike the redirect below: the canonical form of a path is the same
- * for everyone.
+ * A URL the legacy app answered goes to whatever answers it now: no address
+ * that was ever in an inbox or a bookmark stops resolving.
  */
 app.use((req, res, next) => {
-  const canonical =
+  const answer =
     req.method === 'GET' || req.method === 'HEAD'
-      ? canonicalPath(req.path)
+      ? requestRedirect(req.path, req.originalUrl.slice(req.path.length), () =>
+          negotiateRequestLanguage({
+            cookie: req.headers.cookie,
+            acceptLanguage: req.headers['accept-language']
+          })
+        )
       : null;
-  if (canonical === null) {
+  if (answer === null) {
     next();
     return;
   }
-  res.redirect(301, canonical + req.originalUrl.slice(req.path.length));
+  if (answer === NOT_FOUND) {
+    res.sendStatus(404);
+    return;
+  }
+  res.set(redirectHeaders(answer));
+  res.redirect(answer.status, answer.location);
 });
 
 /**
@@ -168,17 +180,13 @@ app.get('/sitemap.xml', (req, res, next) => {
     .catch(next);
 });
 
-/** `/sitemaps/<file>.xml`, one file of the set the index names. */
-const SITEMAP_FILE_PATH = /^\/sitemaps\/([a-z0-9-]+)\.xml$/;
-
 /**
  * One file of the set, read from the same walk the index was — it is held for
  * as long as either response may be, so a crawler following the index within
  * that window reads the files it was told about.
  *
  * A name the set does not have is a plain `404` rather than a page: a file the
- * set no longer needs is one a crawler should drop, and the language redirect
- * would hand it a rendered 404 one hop later.
+ * set no longer needs is one a crawler should drop.
  */
 app.use((req, res, next) => {
   const match =
@@ -202,64 +210,6 @@ app.use((req, res, next) => {
     .catch(next);
 });
 
-/**
- * A URL the legacy app answered, sent to whatever answers it now. Phase 5 took
- * full structural freedom over the route tree and this is what paid for it: no
- * address that was ever in an inbox or a bookmark stops resolving.
- *
- * Registered before the language redirect, so a legacy URL that carried no
- * prefix is answered unprefixed and negotiates one below — two hops, each with
- * the status that is true of it. A prefixed one keeps its language and takes
- * only the first.
- */
-app.use((req, res, next) => {
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    next();
-    return;
-  }
-  const lang = languageFromPath(req.path);
-  const [, query = ''] = req.originalUrl.split('?');
-  const target = legacyRedirect(
-    pathWithoutLanguage(req.path),
-    new URLSearchParams(query)
-  );
-  if (target === null) {
-    next();
-    return;
-  }
-  const { location, status } = target;
-  res.redirect(status, lang ? urlInLanguage(lang, location) : location);
-});
-
-/**
- * Every page lives under a language segment, so a URL without one is redirected
- * to the visitor's language — their `preferences` cookie, then
- * `Accept-Language`. The legacy middleware did the same, except it stripped the
- * segment before routing rather than redirecting to it.
- *
- * A real redirect rather than a client-side one: it is the answer to a request
- * that named no language, so the browser (and a crawler) should be told the
- * URL that does. It is `302`, not `301`, because the target depends on who is
- * asking.
- */
-app.use((req, res, next) => {
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    next();
-    return;
-  }
-  if (languageFromPath(req.path)) {
-    next();
-    return;
-  }
-
-  const lang = negotiateRequestLanguage({
-    cookie: req.headers.cookie,
-    acceptLanguage: req.headers['accept-language']
-  });
-  const query = req.originalUrl.slice(req.path.length);
-  res.redirect(302, pathInLanguage(lang, req.path) + query);
-});
-
 /** `/<lang>/docs/<page>.md`, the raw-markdown twin of a documentation page. */
 const DOC_TWIN_PATH = /^\/([a-z]{2})\/docs\/([a-z0-9-]+)\.md$/;
 
@@ -275,6 +225,9 @@ const DOC_TWIN_PATH = /^\/([a-z]{2})\/docs\/([a-z0-9-]+)\.md$/;
  * carries no `<base>`, so a relative `media/…` would resolve under this URL's
  * own folder. The headings' `{#id}`s come off: they are the renderer's syntax,
  * not markdown, and would read as part of the heading.
+ *
+ * Its `Link` header names the rendered page as canonical, so what a search
+ * engine learns from the twin is credited to the page.
  */
 app.use((req, res, next) => {
   const match =
@@ -297,6 +250,13 @@ app.use((req, res, next) => {
         (target) => pathInLanguage(lang, `/docs/${target}.md`),
         rootRelative
       );
+      const origin = requestOrigin(req);
+      if (origin) {
+        res.setHeader(
+          'Link',
+          `<${origin}${pathInLanguage(lang, `/docs/${page}`)}>; rel="canonical"`
+        );
+      }
       res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
       res.setHeader(
         'Cache-Control',

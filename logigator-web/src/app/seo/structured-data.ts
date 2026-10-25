@@ -84,11 +84,9 @@ export interface SoftwareApplicationNode extends JsonLdNode {
 }
 
 /**
- * A video the page embeds. `uploadDate` is optional because it is data the site
- * does not hold: Google's video result wants it, and it has to be read off
- * YouTube the way the durations were rather than guessed. A property with
- * nothing behind it is left out rather than emitted empty, which is also why
- * `duration` can be absent.
+ * A video the page embeds. `uploadDate` is required: Google's video result
+ * rejects an item without it. A `duration` that cannot be read is left out
+ * rather than emitted empty.
  */
 export interface VideoObjectNode extends JsonLdNode {
   '@type': 'VideoObject';
@@ -98,7 +96,8 @@ export interface VideoObjectNode extends JsonLdNode {
   embedUrl: string;
   /** ISO 8601, e.g. `PT3M34S`. */
   duration?: string;
-  uploadDate?: string;
+  /** ISO 8601. */
+  uploadDate: string;
   inLanguage: LanguageId;
 }
 

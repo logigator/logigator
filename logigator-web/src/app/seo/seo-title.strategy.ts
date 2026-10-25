@@ -1,6 +1,5 @@
 import { inject, Injectable } from '@angular/core';
 import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
-import { pathnameFromUrl } from '../translation/language-url';
 import { PageMeta, SeoService } from './seo.service';
 
 /**
@@ -22,7 +21,7 @@ export class SeoTitleStrategy extends TitleStrategy {
     }
     const page = route.data['seo'] as PageMeta | undefined;
     if (page) {
-      this.seo.apply(page, pathnameFromUrl(snapshot.url));
+      this.seo.apply(page, snapshot.url);
     }
   }
 }

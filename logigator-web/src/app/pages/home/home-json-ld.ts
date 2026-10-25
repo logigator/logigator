@@ -47,10 +47,10 @@ export function homeJsonLd(context: JsonLdContext): JsonLdNode[] {
     thumbnailUrl: context.absolute(video.poster),
     embedUrl: videoEmbedUrl(video),
     inLanguage: video.language,
-    // Both are absent rather than empty when unknown: a property carrying no
-    // value is worse than one a consumer never sees.
-    ...(duration ? { duration } : {}),
-    ...(video.uploadDate ? { uploadDate: video.uploadDate } : {})
+    uploadDate: video.uploadDate,
+    // Absent rather than empty when unreadable: a property carrying no value
+    // is worse than one a consumer never sees.
+    ...(duration ? { duration } : {})
   };
 
   return [application, explainer];

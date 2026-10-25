@@ -11,6 +11,7 @@ import {
   languageAlternates,
   languageFromPath,
   pathInLanguage,
+  pathnameFromUrl,
   pathWithoutLanguage
 } from '../translation/language-url';
 import { TranslationService } from '../translation/translation.service';
@@ -116,6 +117,13 @@ export interface PageMeta {
    */
   trail?: () => readonly { name: string; path: string }[];
   /**
+   * The part of the URL's query the canonical keeps, as `?…` or empty; without
+   * it the canonical is the bare path. A query-carrying canonical names no
+   * `x-default`: the unprefixed form of a listing with a `page` is a legacy
+   * address, whose page counted from zero.
+   */
+  canonicalQuery?: (query: URLSearchParams) => string;
+  /**
    * Unprefixed path of the page's raw-markdown twin, where it has one. It is
    * announced in the head rather than left to be guessed, which is what makes
    * a reader that prefers the source able to find it.
@@ -155,7 +163,8 @@ export class SeoService {
   private readonly origin = inject(SITE_ORIGIN).replace(/\/+$/, '');
 
   /** Applies a page's head for the URL currently being rendered. */
-  public apply(page: PageMeta, pathname: string): void {
+  public apply(page: PageMeta, url: string): void {
+    const pathname = pathnameFromUrl(url);
     const siteName = this.translation.translate('site.name');
     // A page describing stored content names it; every other page names a key.
     const pageTitle =
@@ -178,7 +187,8 @@ export class SeoService {
     // describes rather than of whatever the translation service holds.
     const lang = languageFromPath(pathname) ?? this.translation.getActiveLang();
     const canonicalPath = pathWithoutLanguage(pathname);
-    const canonicalUrl = `${this.origin}${pathInLanguage(lang, canonicalPath)}`;
+    const canonicalQuery = page.canonicalQuery?.(queryOf(url)) ?? '';
+    const canonicalUrl = `${this.origin}${pathInLanguage(lang, canonicalPath)}${canonicalQuery}`;
 
     // The page's own picture where it has one — a composed card for a published
     // document — and the site's everywhere else. Set here rather than left in
@@ -221,7 +231,9 @@ export class SeoService {
       this.setLink(
         'alternate',
         alternate.hreflang,
-        `${this.origin}${alternate.path}`
+        alternate.hreflang === 'x-default' && canonicalQuery
+          ? null
+          : `${this.origin}${alternate.path}${canonicalQuery}`
       );
     }
     // The page's other representations, each in the language this URL names.
@@ -409,11 +421,19 @@ export class SeoService {
     }
   }
 
-  private setLink(rel: string, hreflang: string | undefined, href: string) {
+  private setLink(
+    rel: string,
+    hreflang: string | undefined,
+    href: string | null
+  ) {
     const selector = hreflang
       ? `link[rel="${rel}"][hreflang="${hreflang}"]`
       : `link[rel="${rel}"]`;
     let link = this.document.head.querySelector<HTMLLinkElement>(selector);
+    if (href === null) {
+      link?.remove();
+      return;
+    }
     if (!link) {
       link = this.document.createElement('link');
       link.rel = rel;
@@ -424,4 +444,9 @@ export class SeoService {
     }
     link.href = href;
   }
+}
+
+/** The query of a router URL, without its fragment. */
+function queryOf(url: string): URLSearchParams {
+  return new URLSearchParams(/\?([^#]*)/.exec(url)?.[1] ?? '');
 }

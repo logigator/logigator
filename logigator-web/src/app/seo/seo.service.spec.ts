@@ -73,6 +73,49 @@ describe('SeoService', () => {
     ]);
   });
 
+  it('keeps the part of the query a page declares, in every alternate', () => {
+    const seo = TestBed.inject(SeoService);
+    const listing: PageMeta = {
+      titleKey: 'pages.community.browse.projectsTitle',
+      canonicalQuery: (query) =>
+        query.has('page') ? `?page=${query.get('page')}` : ''
+    };
+
+    seo.apply(listing, '/de/community/projects?orderBy=latest&page=3#top');
+
+    const page3 = '/community/projects?page=3';
+    expect(links('canonical')).toEqual([
+      { hreflang: '', href: `${ORIGIN}/de${page3}` }
+    ]);
+    expect(metaContent('og:url')).toEqual([`${ORIGIN}/de${page3}`]);
+    // The unprefixed form of a paged listing is a legacy address, so no
+    // x-default is named for it.
+    expect(links('alternate')).toEqual([
+      { hreflang: 'en', href: `${ORIGIN}/en${page3}` },
+      { hreflang: 'de', href: `${ORIGIN}/de${page3}` },
+      { hreflang: 'fr', href: `${ORIGIN}/fr${page3}` },
+      { hreflang: 'es', href: `${ORIGIN}/es${page3}` }
+    ]);
+
+    seo.apply(listing, '/de/community/projects');
+
+    expect(links('alternate')).toContainEqual({
+      hreflang: 'x-default',
+      href: `${ORIGIN}/community/projects`
+    });
+  });
+
+  it('drops the query from a canonical unless the page keeps some', () => {
+    TestBed.inject(SeoService).apply(
+      { titleKey: 'pages.examples.title' },
+      '/en/examples?utm_source=mail'
+    );
+
+    expect(links('canonical')).toEqual([
+      { hreflang: '', href: `${ORIGIN}/en/examples` }
+    ]);
+  });
+
   it('reports the page locale and the ones it translates to', () => {
     TestBed.inject(SeoService).apply(
       { titleKey: 'pages.home.title' },

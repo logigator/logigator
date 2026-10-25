@@ -130,6 +130,23 @@ describe('legacyRedirect', () => {
       ).toBe('/community/projects?search=adder&orderBy=latest');
     });
 
+    it('reads a page on an unprefixed listing as the legacy count', () => {
+      // The legacy pages wrote `page` into the address bar, counted from zero
+      // and never under a prefix; the prefixed form is the site's own.
+      expect(redirect('/community/projects?page=1&orderBy=latest')).toBe(
+        '/community/projects?page=2&orderBy=latest'
+      );
+      expect(redirect('/my/components?page=0')).toBe('/my/components');
+      expect(redirect('/de/community/projects?page=1')).toBeNull();
+      expect(redirect('/community/projects?search=adder')).toBeNull();
+    });
+
+    it('keeps campaign tags', () => {
+      expect(
+        redirect('/community/project/' + LINK + '?utm_source=mail&utm_medium=x')
+      ).toBe(`/community/projects/${LINK}?utm_source=mail&utm_medium=x`);
+    });
+
     it('drops a parameter the new page does not read', () => {
       expect(redirect('/community/projects/page?orderBy=nonsense&x=1')).toBe(
         '/community/projects'
@@ -138,6 +155,12 @@ describe('legacyRedirect', () => {
         `/community/users/${USER}/components?page=4`
       );
     });
+  });
+
+  it('ignores the language segment and answers unprefixed', () => {
+    expect(redirect(`/de/community/project/${LINK}`)).toBe(
+      `/community/projects/${LINK}`
+    );
   });
 
   it('answers only a path it names, so a near miss falls to the 404', () => {

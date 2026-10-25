@@ -25,8 +25,11 @@ describe('renderSitemap', () => {
     );
   });
 
-  it('never names the unprefixed URL as a location', () => {
-    const xml = renderSitemap(ORIGIN, STATIC_PAGES);
+  it('never names the unprefixed URL of a localized page as a location', () => {
+    const xml = renderSitemap(
+      ORIGIN,
+      STATIC_PAGES.filter((page) => page.localized !== false)
+    );
 
     // It is the negotiating `302`, so it is nothing's canonical — and a `<loc>`
     // a crawler has to be redirected away from is not the address of anything.
@@ -50,6 +53,15 @@ describe('renderSitemap', () => {
         `<xhtml:link rel="alternate" hreflang="x-default" href="${ORIGIN}/"/>`
       );
     }
+  });
+
+  it('names a page with one address for every language once, as it is', () => {
+    const xml = renderSitemap(ORIGIN, [
+      { path: '/editor', priority: 0.8, localized: false }
+    ]);
+
+    expect(locations(xml)).toEqual([`${ORIGIN}/editor`]);
+    expect(xml).not.toContain('<xhtml:link');
   });
 
   it('emits lastmod only where the page has one', () => {
