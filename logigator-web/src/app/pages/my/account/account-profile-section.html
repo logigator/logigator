@@ -58,7 +58,24 @@
       [formGroup]="form"
       (ngSubmit)="submit()"
     >
-      @if (formError(); as message) {
+      @if (stale()) {
+      <div class="flex flex-col items-start gap-3">
+        <lg-message severity="warn">
+          {{ t('pages.my.account.profile.stale') }}
+        </lg-message>
+        <button
+          lgButton
+          outlined
+          severity="secondary"
+          size="sm"
+          type="button"
+          [loading]="loadingSaved()"
+          (onClick)="loadSaved()"
+        >
+          {{ t('pages.my.account.profile.loadSaved') }}
+        </button>
+      </div>
+      } @if (formError(); as message) {
       <lg-message severity="danger">{{ t(message) }}</lg-message>
       } @else if (saved()) {
       <lg-message severity="success">

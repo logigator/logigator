@@ -16,6 +16,7 @@ import { firstValueFrom, Observable } from 'rxjs';
 import {
   ApiRequestError,
   bioSchema,
+  isApiError,
   socialUrlSchema,
   updateUserRequestSchema,
   usernameSchema,
@@ -66,6 +67,11 @@ const LINK_FIELDS = ['link0', 'link1', 'link2'] as const;
  * typed here is what the API will store — including the normalization: a link
  * pasted with its tracking parameters comes back from the write without them,
  * and the field is redrawn from the answer rather than from what was typed.
+ *
+ * A save presents the profile version the fields were drawn from, so a profile
+ * saved from another tab since is not silently overwritten: the save is
+ * refused, what was typed stays in the fields, and loading the saved profile
+ * is the member's call.
  */
 @Component({
   selector: 'web-account-profile-section',
@@ -103,7 +109,7 @@ export class AccountProfileSection {
     }),
     websiteUrl: new FormControl(this.session.user()?.websiteUrl ?? '', {
       nonNullable: true,
-      validators: [zodValidator(socialUrlSchema)]
+      validators: [zodValidator(socialUrlSchema, { optional: true })]
     }),
     link0: this.linkControl(0),
     link1: this.linkControl(1),
@@ -144,6 +150,12 @@ export class AccountProfileSection {
   protected readonly saved = signal(false);
   protected readonly formError = signal<TranslationKey | null>(null);
 
+  /** The version the fields were drawn from, which a save presents. */
+  private profileVersion = this.session.user()?.profileVersion;
+  /** A save was refused because the profile was saved elsewhere since. */
+  protected readonly stale = signal(false);
+  protected readonly loadingSaved = signal(false);
+
   protected readonly avatarBusy = signal(false);
   protected readonly avatarError = signal<TranslationKey | null>(null);
 
@@ -161,13 +173,14 @@ export class AccountProfileSection {
   private linkControl(index: number): FormControl<string> {
     return new FormControl(this.storedLinks()[index]?.url ?? '', {
       nonNullable: true,
-      validators: [zodValidator(socialUrlSchema)]
+      validators: [zodValidator(socialUrlSchema, { optional: true })]
     });
   }
 
   protected async submit(): Promise<void> {
     this.form.markAllAsTouched();
     this.formError.set(null);
+    this.stale.set(false);
     this.saved.set(false);
 
     // The body is the request schema's own output, so what is sent is what the
@@ -182,7 +195,8 @@ export class AccountProfileSection {
       // member's links, and the order of the ones they filled in is kept.
       socialLinks: LINK_FIELDS.map((name) =>
         this.form.controls[name].value.trim()
-      ).filter((url) => url !== '')
+      ).filter((url) => url !== ''),
+      profileVersion: this.profileVersion
     });
     if (!body.success || this.form.invalid) return;
 
@@ -196,9 +210,30 @@ export class AccountProfileSection {
       // No branch for a name somebody else has: `users.username` carries an
       // index rather than a unique constraint, so there is no such failure to
       // report and a duplicate is simply allowed.
-      this.formError.set(genericFailureKey(error));
+      if (isApiError(error, 'version_conflict')) {
+        this.stale.set(true);
+      } else {
+        this.formError.set(genericFailureKey(error));
+      }
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  /** Replaces the fields with the profile as it is stored now. */
+  protected async loadSaved(): Promise<void> {
+    if (this.loadingSaved()) return;
+    this.loadingSaved.set(true);
+    this.formError.set(null);
+    try {
+      const user = await firstValueFrom(this.userApi.get());
+      this.session.updated(user);
+      this.redraw(user);
+      this.stale.set(false);
+    } catch (error) {
+      this.formError.set(genericFailureKey(error));
+    } finally {
+      this.loadingSaved.set(false);
     }
   }
 
@@ -218,6 +253,7 @@ export class AccountProfileSection {
       link2: user.socialLinks[2]?.url ?? ''
     });
     this.form.markAsPristine();
+    this.profileVersion = user.profileVersion;
   }
 
   protected async onFile(event: Event): Promise<void> {

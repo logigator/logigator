@@ -1,11 +1,12 @@
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { users } from '../src/database/schema';
 import { assetFilePath } from './assets';
 import { CookieJar } from './cookie-jar';
 import { startE2eApp, type E2eApp } from './harness';
+import { whileRowLocked } from './row-lock';
 
 /** An 8×8 PNG, so an avatar upload carries something a client would send. */
 const PNG = Buffer.from(
@@ -439,6 +440,60 @@ describe('the signed-in user', () => {
         socialLinks: [],
         bio: 'Ada'
       });
+    });
+
+    it('refuses a write against a profile saved since it was read', async () => {
+      const { profileVersion } = await readBack();
+
+      const first = await api.inject({
+        method: 'PATCH',
+        url: '/api/user',
+        headers: jar.headers(),
+        payload: { bio: 'From the first tab', profileVersion }
+      });
+      expect(first.statusCode).toBe(200);
+      expect(first.json().user.profileVersion).toBe(profileVersion + 1);
+
+      // The second tab drew its form from the same read.
+      const second = await api.inject({
+        method: 'PATCH',
+        url: '/api/user',
+        headers: jar.headers(),
+        payload: { bio: 'From the second tab', profileVersion }
+      });
+
+      expect(second.statusCode).toBe(409);
+      expect(second.json().code).toBe('version_conflict');
+      expect((await readBack()).bio).toBe('From the first tab');
+    });
+
+    it('refuses a stale write that reaches the row after another one', async () => {
+      const { id, profileVersion } = await readBack();
+
+      // The request's own read of the account sees the old version, so only
+      // the guarded statement can notice the write that committed under it.
+      const response = await whileRowLocked(
+        api.db,
+        (tx) =>
+          tx
+            .update(users)
+            .set({
+              bio: 'From the other tab',
+              profileVersion: sql`${users.profileVersion} + 1`
+            })
+            .where(eq(users.id, id)),
+        () =>
+          api.inject({
+            method: 'PATCH',
+            url: '/api/user',
+            headers: jar.headers(),
+            payload: { bio: 'From this tab', profileVersion }
+          })
+      );
+
+      expect(response.statusCode).toBe(409);
+      expect(response.json().code).toBe('version_conflict');
+      expect((await readBack()).bio).toBe('From the other tab');
     });
   });
 

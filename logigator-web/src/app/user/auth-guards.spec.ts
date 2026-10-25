@@ -15,6 +15,7 @@ const USER = {
   bio: '',
   websiteUrl: null,
   socialLinks: [],
+  profileVersion: 1,
   memberSince: '2026-01-01T00:00:00.000Z',
   hasPassword: true,
   googleLinked: false

@@ -53,6 +53,10 @@ describe('updateUserRequestSchema', () => {
 
   it('still refuses a body with nothing to update', () => {
     expect(updateUserRequestSchema.safeParse({}).success).toBe(false);
+    // The version guards a write; on its own it names nothing to write.
+    expect(
+      updateUserRequestSchema.safeParse({ profileVersion: 1 }).success
+    ).toBe(false);
   });
 });
 

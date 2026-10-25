@@ -513,6 +513,9 @@ const en = {
           linkLabel: 'Link {{n}}',
           save: 'Save',
           saved: 'Your profile was saved.',
+          stale:
+            'Your profile was changed in another tab or window, so these edits were not saved. Loading the saved profile replaces what you typed here.',
+          loadSaved: 'Load the saved profile',
           avatarRejected:
             'That image could not be used. Try a smaller PNG, JPEG or WebP.'
         },

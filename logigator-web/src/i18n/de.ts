@@ -503,6 +503,9 @@ const de: TranslationSchema = {
           linkLabel: 'Link {{n}}',
           save: 'Speichern',
           saved: 'Dein Profil wurde gespeichert.',
+          stale:
+            'Dein Profil wurde in einem anderen Tab oder Fenster geändert, deshalb wurden diese Änderungen nicht gespeichert. Wenn du das gespeicherte Profil lädst, wird ersetzt, was du hier eingegeben hast.',
+          loadSaved: 'Gespeichertes Profil laden',
           avatarRejected:
             'Dieses Bild konnte nicht verwendet werden. Versuche ein kleineres PNG, JPEG oder WebP.'
         },

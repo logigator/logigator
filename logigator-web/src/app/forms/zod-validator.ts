@@ -1,6 +1,15 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import type * as z from 'zod';
 
+export interface ZodValidatorOptions {
+  /**
+   * The field may be left empty and its submit trims it, so a value of only
+   * whitespace is an empty field rather than a value to check. A required
+   * field leaves this off: there, `'  '` is a value its schema has to refuse.
+   */
+  optional?: boolean;
+}
+
 /**
  * Validates a control against a schema from `@logigator/contract`, so a field's
  * rules are the ones the API enforces rather than a second copy that can drift
@@ -10,13 +19,19 @@ import type * as z from 'zod';
  * text: those messages are English, and this site answers in four languages.
  * `fieldErrorKey` turns a code into a translation key.
  */
-export function zodValidator(schema: z.ZodType): ValidatorFn {
+export function zodValidator(
+  schema: z.ZodType,
+  options: ZodValidatorOptions = {}
+): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const value: unknown = control.value;
     // An empty field is `Validators.required`'s to report. Running the schema
     // over it too would answer "not a valid address" to somebody who has not
     // typed anything yet.
     if (value === null || value === undefined || value === '') return null;
+    if (options.optional && typeof value === 'string' && value.trim() === '') {
+      return null;
+    }
 
     const result = schema.safeParse(value);
     return result.success

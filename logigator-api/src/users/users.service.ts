@@ -1,10 +1,18 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type { UserResponse } from '@logigator/contract';
 import { DB, type Database } from '../database/database.module';
 import { users, type NewUserRow, type UserRow } from '../database/schema';
 import { AVATAR_VARIANTS, variantUrls } from '../storage/image-variants';
 import { toSocialLinks } from './social-links';
+
+/** The columns `profileVersion` counts writes of. */
+const PROFILE_COLUMNS = [
+  'username',
+  'bio',
+  'websiteUrl',
+  'socialLinks'
+] as const;
 
 /**
  * Reads and writes of the `users` table. Addresses are normalized to lower case
@@ -54,19 +62,38 @@ export class UsersService {
    * Applies a partial change and answers with the stored row, or `null` when
    * there is no such row any more — an account can be deleted between the guard
    * loading it and a handler writing to it.
+   *
+   * A change to any profile column bumps `profileVersion` in the same
+   * statement. Given `expectedProfileVersion`, only a row still at that version
+   * is written, so `null` can also mean the profile has moved on.
    */
   async update(
     id: string,
-    changes: Partial<Omit<NewUserRow, 'id'>>
+    changes: Partial<Omit<NewUserRow, 'id' | 'profileVersion'>>,
+    expectedProfileVersion?: number
   ): Promise<UserRow | null> {
+    const profileWritten = PROFILE_COLUMNS.some(
+      (column) => changes[column] !== undefined
+    );
     const [user] = await this.db
       .update(users)
-      .set(
-        changes.email === undefined
-          ? changes
-          : { ...changes, email: normalizeEmail(changes.email) }
+      .set({
+        ...changes,
+        ...(changes.email === undefined
+          ? {}
+          : { email: normalizeEmail(changes.email) }),
+        ...(profileWritten
+          ? { profileVersion: sql`${users.profileVersion} + 1` }
+          : {})
+      })
+      .where(
+        expectedProfileVersion === undefined
+          ? eq(users.id, id)
+          : and(
+              eq(users.id, id),
+              eq(users.profileVersion, expectedProfileVersion)
+            )
       )
-      .where(eq(users.id, id))
       .returning();
     return user ?? null;
   }
@@ -98,6 +125,7 @@ export function toUserResponse(user: UserRow): UserResponse {
     bio: user.bio,
     websiteUrl: user.websiteUrl,
     socialLinks: toSocialLinks(user.socialLinks),
+    profileVersion: user.profileVersion,
     memberSince: user.memberSince.toISOString(),
     hasPassword: user.passwordHash !== null,
     googleLinked: user.googleUserId !== null

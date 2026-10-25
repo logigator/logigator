@@ -25,6 +25,7 @@ const USER = fixture('user', {
   bio: '',
   websiteUrl: null,
   socialLinks: [],
+  profileVersion: 1,
   memberSince: '2024-03-04T09:00:00.000Z',
   hasPassword: true,
   googleLinked: false

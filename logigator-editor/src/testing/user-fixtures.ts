@@ -17,6 +17,7 @@ export function makeUser(id: string): UserResponse {
     bio: '',
     websiteUrl: null,
     socialLinks: [],
+    profileVersion: 1,
     memberSince: '2024-01-01T00:00:00.000Z',
     hasPassword: true,
     googleLinked: false

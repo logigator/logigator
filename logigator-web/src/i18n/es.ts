@@ -498,6 +498,9 @@ const es: TranslationSchema = {
           linkLabel: 'Enlace {{n}}',
           save: 'Guardar',
           saved: 'Tu perfil se guardó.',
+          stale:
+            'Tu perfil se cambió en otra pestaña o ventana, así que estos cambios no se guardaron. Al cargar el perfil guardado se reemplaza lo que escribiste aquí.',
+          loadSaved: 'Cargar el perfil guardado',
           avatarRejected:
             'No se pudo usar esa imagen. Prueba con un PNG, JPEG o WebP más pequeño.'
         },

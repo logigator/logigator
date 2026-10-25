@@ -107,6 +107,8 @@ export const userResponseSchema = z
      * reader is told what each one is.
      */
     socialLinks: z.array(socialLinkSchema),
+    /** The counter a profile write presents as `profileVersion`. */
+    profileVersion: z.number().int(),
     memberSince: z.string(),
     hasPassword: z.boolean(),
     googleLinked: z.boolean()
@@ -120,6 +122,11 @@ export type UserResponse = z.infer<typeof userResponseSchema>;
  * that has a password requires `currentPassword`: a session alone is not proof
  * of intent for anything that moves control of the account. An address change
  * takes effect only once the mailed verification link is opened.
+ *
+ * `profileVersion` is optional, and a client writing back fields it loaded
+ * sends it: the update is then refused with `version_conflict` if the profile
+ * has been written since. A body naming only the fields it changes has no
+ * stale value to write and can leave it out.
  */
 export const updateUserRequestSchema = z
   .object({
@@ -141,9 +148,10 @@ export const updateUserRequestSchema = z
     socialLinks: z
       .array(socialUrlSchema)
       .max(MAX_SOCIAL_LINKS, `may hold at most ${MAX_SOCIAL_LINKS} links`)
-      .optional()
+      .optional(),
+    profileVersion: z.number().int().positive().optional()
   })
-  .refine((body) => Object.keys(body).length > 0, {
+  .refine((body) => Object.keys(body).some((key) => key !== 'profileVersion'), {
     message: 'must contain at least one field to update'
   });
 

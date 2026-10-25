@@ -50,6 +50,15 @@ export class ProfileService {
     locale: Locale,
     currentSessionId?: string
   ): Promise<ProfileUpdateResult> {
+    // Checked against the row the guard loaded so a stale form is refused
+    // before anything is hashed or mailed; the guarded write decides a race.
+    if (
+      body.profileVersion !== undefined &&
+      body.profileVersion !== user.profileVersion
+    ) {
+      throw profileVersionConflict();
+    }
+
     const changes: Partial<
       Pick<
         UserRow,
@@ -96,7 +105,8 @@ export class ProfileService {
 
     const updated =
       Object.keys(changes).length > 0
-        ? ((await this.users.update(user.id, changes)) ?? accountGone())
+        ? ((await this.users.update(user.id, changes, body.profileVersion)) ??
+          (await this.writeMissed(user.id, body.profileVersion)))
         : user;
 
     if (body.password !== undefined) {
@@ -106,6 +116,17 @@ export class ProfileService {
     }
 
     return { user: updated, emailVerificationSent };
+  }
+
+  /** Tells a profile that moved on from an account that is gone. */
+  private async writeMissed(
+    id: string,
+    profileVersion: number | undefined
+  ): Promise<never> {
+    if (profileVersion !== undefined && (await this.users.findById(id))) {
+      throw profileVersionConflict();
+    }
+    return accountGone();
   }
 
   /**
@@ -217,6 +238,19 @@ export class ProfileService {
       );
     }
   }
+}
+
+/**
+ * The profile was written elsewhere, another tab or device, since the client
+ * read it. The server does not merge: the client holds both what the member
+ * typed and the means to load what is stored now.
+ */
+function profileVersionConflict(): ApiException {
+  return new ApiException(
+    HttpStatus.CONFLICT,
+    'version_conflict',
+    'Your profile has been changed elsewhere since you opened it. Reload to see the current version.'
+  );
 }
 
 /**

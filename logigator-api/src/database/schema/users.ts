@@ -1,6 +1,7 @@
 import {
   boolean,
   index,
+  integer,
   jsonb,
   pgTable,
   timestamp,
@@ -72,6 +73,13 @@ export const users = pgTable(
      * or filtered.
      */
     socialLinks: jsonb('social_links').$type<string[]>().notNull().default([]),
+    /**
+     * Optimistic-concurrency counter over the profile fields the account form
+     * writes as one section: `username`, `bio`, `websiteUrl` and
+     * `socialLinks`. Bumped by every write of any of them; the avatar and the
+     * credentials are written on their own and leave it alone.
+     */
+    profileVersion: integer('profile_version').notNull().default(1),
     memberSince: timestamp('member_since', { withTimezone: true })
       .notNull()
       .defaultNow()

@@ -19,6 +19,7 @@ const USER: UserResponse = {
   bio: '',
   websiteUrl: null,
   socialLinks: [],
+  profileVersion: 1,
   memberSince: '2026-01-01T00:00:00.000Z',
   hasPassword: true,
   googleLinked: false
@@ -77,12 +78,13 @@ describe('the account sections', () => {
     expect(request.request.method).toBe('PATCH');
     // The section's fields, written together: every one is on screen and one
     // Save is what the form offers. The account's own empty profile is what
-    // the untouched fields send back.
+    // the untouched fields send back, against the version they were drawn from.
     expect(request.request.body).toEqual({
       username: 'ada_l',
       bio: '',
       websiteUrl: null,
-      socialLinks: []
+      socialLinks: [],
+      profileVersion: 1
     });
     request.flush({
       user: { ...USER, username: 'ada_l' },
@@ -107,7 +109,7 @@ describe('the account sections', () => {
     await settle();
 
     const request = http.expectOne('/api/user');
-    expect(request.request.body).toEqual({
+    expect(request.request.body).toMatchObject({
       username: 'ada',
       bio: 'Relays and old microprocessors.',
       websiteUrl: 'https://ada.example/blog?page=2',
@@ -132,6 +134,60 @@ describe('the account sections', () => {
     expect(request.request.body).toMatchObject({
       websiteUrl: null,
       socialLinks: ['https://github.com/ada']
+    });
+  });
+
+  it('saves a website field holding only spaces as no website', async () => {
+    render(AccountProfileSection, {
+      ...USER,
+      websiteUrl: 'https://ada.example/'
+    });
+    type('account-website', '   ');
+    root.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await settle();
+
+    expect(http.expectOne('/api/user').request.body).toMatchObject({
+      websiteUrl: null
+    });
+  });
+
+  /**
+   * Another tab saved the profile since these fields were drawn. The refusal
+   * leaves what was typed in place, and only the member's own request replaces
+   * it with the saved profile, whose version the next save then presents.
+   */
+  it('keeps the typed profile through a stale save and loads the saved one on request', async () => {
+    render(AccountProfileSection);
+    type('account-bio', 'Typed in this tab.');
+    root.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await settle();
+
+    http
+      .expectOne('/api/user')
+      .flush(
+        { code: 'version_conflict', message: 'Changed elsewhere.' },
+        { status: 409, statusText: 'Conflict' }
+      );
+    await settle();
+
+    const bio = root.querySelector('#account-bio') as HTMLTextAreaElement;
+    expect(bio.value).toBe('Typed in this tab.');
+
+    (root.querySelector('form button[type="button"]') as HTMLElement).click();
+    await settle();
+    const read = http.expectOne('/api/user');
+    expect(read.request.method).toBe('GET');
+    read.flush({ ...USER, bio: 'Saved in another tab.', profileVersion: 2 });
+    await settle();
+
+    expect(bio.value).toBe('Saved in another tab.');
+    expect(session.user()?.profileVersion).toBe(2);
+
+    root.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await settle();
+    expect(http.expectOne('/api/user').request.body).toMatchObject({
+      bio: 'Saved in another tab.',
+      profileVersion: 2
     });
   });
 
