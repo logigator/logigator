@@ -21,9 +21,11 @@ export interface RateLimitOptions {
 }
 
 /**
- * Caps how often one address may call a handler. Applied to the endpoints that
- * take credentials or send mail — password guessing and using someone else's
- * address as a mail relay are what an unauthenticated caller can do at volume.
+ * Caps how often one address may call a handler, counting every request: it
+ * suits endpoints whose cost is the request itself, such as a mail sent or a
+ * report stored. A school behind one NAT is one address, so a limit has to
+ * leave room for a classroom. Wrong passwords are budgeted where they are
+ * checked, since only the handler knows an attempt failed.
  */
 export const RateLimit = (options: RateLimitOptions) =>
   SetMetadata(RATE_LIMIT, options);
@@ -48,14 +50,16 @@ export class RateLimitGuard implements CanActivate {
       options.windowSeconds
     );
 
-    if (hits > options.limit) {
-      throw new ApiException(
-        HttpStatus.TOO_MANY_REQUESTS,
-        'rate_limited',
-        'Too many attempts. Please try again later.'
-      );
-    }
+    if (hits > options.limit) throw rateLimited();
 
     return true;
   }
+}
+
+export function rateLimited(): ApiException {
+  return new ApiException(
+    HttpStatus.TOO_MANY_REQUESTS,
+    'rate_limited',
+    'Too many attempts. Please try again later.'
+  );
 }

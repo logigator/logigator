@@ -13,6 +13,7 @@ import { MailService } from '../mail/mail.service';
 import { SessionService } from '../session/session.service';
 import { UsersService } from '../users/users.service';
 import { AuthTokenService } from './auth-token.service';
+import { LoginAttemptsService } from './login-attempts.service';
 import { PasswordService } from './password.service';
 
 /** Local (email + password) authentication. */
@@ -25,7 +26,8 @@ export class AuthService {
     private readonly passwords: PasswordService,
     private readonly tokens: AuthTokenService,
     private readonly mail: MailService,
-    private readonly sessions: SessionService
+    private readonly sessions: SessionService,
+    private readonly attempts: LoginAttemptsService
   ) {}
 
   /**
@@ -64,8 +66,8 @@ export class AuthService {
    * wrong password is one error; only the unverified address is distinguished,
    * because the client has something to offer there.
    */
-  async login(body: LoginRequest): Promise<UserRow> {
-    const user = await this.authenticate(body.email, body.password);
+  async login(body: LoginRequest, ip: string): Promise<UserRow> {
+    const user = await this.authenticate(body.email, body.password, ip);
 
     if (!user.emailVerified) {
       throw new ApiException(
@@ -81,9 +83,10 @@ export class AuthService {
   /** Sends the confirmation mail again, for an account that never opened it. */
   async resendVerification(
     body: ResendVerificationRequest,
+    ip: string,
     locale: Locale
   ): Promise<void> {
-    const user = await this.authenticate(body.email, body.password);
+    const user = await this.authenticate(body.email, body.password, ip);
     if (user.emailVerified) return;
 
     await this.sendVerification(user, locale);
@@ -166,26 +169,50 @@ export class AuthService {
   }
 
   /**
-   * Checks an email and password pair.
+   * Checks an email and password pair, within the client address' budget of
+   * wrong passwords.
+   */
+  private async authenticate(
+    email: string,
+    password: string,
+    ip: string
+  ): Promise<UserRow> {
+    await this.attempts.admit(ip, email);
+
+    let user: UserRow | null;
+    try {
+      user = await this.matchPassword(email, password);
+    } catch (error) {
+      await this.attempts.forgive(ip, email);
+      throw error;
+    }
+    if (!user) throw invalidCredentials();
+
+    await this.attempts.forgive(ip, email);
+    return user;
+  }
+
+  /**
+   * Answers the account an email and password pair belongs to, or null.
    *
    * An unknown address and an account with no password (a Google-only login)
    * both still run a verification against a hash that matches nothing: the
    * answer has to take the same time in every case, or the response time alone
    * reveals which addresses have accounts.
    */
-  private async authenticate(
+  private async matchPassword(
     email: string,
     password: string
-  ): Promise<UserRow> {
+  ): Promise<UserRow | null> {
     const user = await this.users.findByEmail(email);
 
     if (!user?.passwordHash) {
       await this.passwords.verifyNothing(password);
-      throw invalidCredentials();
+      return null;
     }
 
     if (!(await this.passwords.verify(password, user.passwordHash))) {
-      throw invalidCredentials();
+      return null;
     }
 
     if (this.passwords.needsRehash(user.passwordHash)) {

@@ -32,9 +32,10 @@ import { toUserResponse } from '../users/users.service';
 import { AuthService } from './auth.service';
 
 /**
- * The credential endpoints, all JSON. Each one that takes a password or sends a
- * mail is rate limited per address, and the budgets are shared by scope, so
- * spreading attempts across `login` and `resend-verification` buys nothing.
+ * The credential endpoints, all JSON. Each one that sends a mail or redeems a
+ * token is rate limited per address. A password check counts only wrong
+ * passwords, against one budget for `login` and `resend-verification` alike,
+ * so spreading guesses across the two buys nothing.
  */
 @Controller('auth')
 @UseGuards(RateLimitGuard)
@@ -46,7 +47,7 @@ export class AuthController {
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
-  @RateLimit({ limit: 5, windowSeconds: 3600, scope: 'register' })
+  @RateLimit({ limit: 30, windowSeconds: 3600, scope: 'register' })
   async register(
     @Body({ schema: registerRequestSchema }) body: RegisterRequest,
     @Req() request: FastifyRequest
@@ -57,12 +58,11 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @RateLimit({ limit: 10, windowSeconds: 600, scope: 'credentials' })
   async login(
     @Body({ schema: loginRequestSchema }) body: LoginRequest,
     @Req() request: FastifyRequest
   ): Promise<LoginResponse> {
-    const user = await this.auth.login(body);
+    const user = await this.auth.login(body, request.ip);
     await this.session.signIn(request, user.id);
     return toUserResponse(user);
   }
@@ -79,18 +79,23 @@ export class AuthController {
 
   @Post('resend-verification')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @RateLimit({ limit: 10, windowSeconds: 600, scope: 'credentials' })
+  @RateLimit({ limit: 30, windowSeconds: 600, scope: 'resend-verification' })
   async resendVerification(
     @Body({ schema: resendVerificationRequestSchema })
     body: ResendVerificationRequest,
     @Req() request: FastifyRequest
   ): Promise<void> {
-    await this.auth.resendVerification(body, localeFromRequest(request));
+    await this.auth.resendVerification(
+      body,
+      request.ip,
+      localeFromRequest(request)
+    );
   }
 
   @Post('verify-email')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @RateLimit({ limit: 20, windowSeconds: 600, scope: 'token' })
+  // Tokens are unguessable, so this limit bounds load rather than guessing.
+  @RateLimit({ limit: 100, windowSeconds: 600, scope: 'token' })
   async verifyEmail(
     @Body({ schema: verifyEmailRequestSchema })
     body: VerifyEmailRequest
@@ -100,7 +105,7 @@ export class AuthController {
 
   @Post('password-reset')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @RateLimit({ limit: 5, windowSeconds: 3600, scope: 'password-reset' })
+  @RateLimit({ limit: 30, windowSeconds: 3600, scope: 'password-reset' })
   async requestPasswordReset(
     @Body({ schema: requestPasswordResetSchema })
     body: RequestPasswordReset,
@@ -114,7 +119,7 @@ export class AuthController {
 
   @Post('password-reset/confirm')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @RateLimit({ limit: 20, windowSeconds: 600, scope: 'token' })
+  @RateLimit({ limit: 100, windowSeconds: 600, scope: 'token' })
   async confirmPasswordReset(
     @Body({ schema: confirmPasswordResetSchema })
     body: ConfirmPasswordReset

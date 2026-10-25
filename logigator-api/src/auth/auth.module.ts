@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { AuthTokenService } from './auth-token.service';
 import { GoogleAuthController } from './google-auth.controller';
 import { GoogleAuthService } from './google-auth.service';
+import { LoginAttemptsService } from './login-attempts.service';
 import { PasswordService } from './password.service';
 
 /**
@@ -22,6 +23,7 @@ import { PasswordService } from './password.service';
     AuthService,
     AuthTokenService,
     GoogleAuthService,
+    LoginAttemptsService,
     PasswordService,
     AuthGuard,
     RateLimitGuard

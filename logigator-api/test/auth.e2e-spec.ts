@@ -476,34 +476,130 @@ describe('what a password reset does to sessions', () => {
   });
 });
 
-describe('credential rate limiting', () => {
+describe('wrong-password budgets', () => {
   let api: E2eApp;
+  const GRACE = { email: 'grace@example.com', password: 'hopper123' };
 
   beforeAll(async () => {
     api = await startE2eApp();
+    for (const [username, account] of [
+      ['Ada', CREDENTIALS],
+      ['Grace', GRACE]
+    ] as const) {
+      await api.inject({
+        method: 'POST',
+        url: '/api/auth/register',
+        payload: { username, ...account }
+      });
+      await api.inject({
+        method: 'POST',
+        url: '/api/auth/verify-email',
+        payload: { token: api.mail.lastToken() }
+      });
+    }
   });
 
   afterAll(async () => {
     await api.close();
   });
 
-  it('cuts off repeated attempts from one address', async () => {
-    // Ten per ten minutes on the shared `credentials` budget, whether or not
-    // the address exists.
+  /** Each test signs in from its own client address, so budgets don't leak. */
+  function login(
+    remoteAddress: string,
+    payload: { email: string; password: string }
+  ) {
+    return api.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      remoteAddress,
+      payload
+    });
+  }
+
+  it('never runs out for logins that succeed', async () => {
+    // A classroom behind one NAT: more sign-ins than either budget holds.
+    for (let attempt = 0; attempt < 120; attempt += 1) {
+      expect((await login('198.51.100.1', CREDENTIALS)).statusCode).toBe(200);
+    }
+
+    const wrong = await login('198.51.100.1', {
+      ...CREDENTIALS,
+      password: 'guess1234'
+    });
+    expect(wrong.statusCode).toBe(401);
+  });
+
+  it('locks one account on one address after ten wrong passwords', async () => {
+    const address = '198.51.100.2';
     const attempts = await Promise.all(
-      Array.from({ length: 11 }, () =>
-        api.inject({
-          method: 'POST',
-          url: '/api/auth/login',
-          payload: { email: 'nobody@example.com', password: 'guess1234' }
+      Array.from({ length: 11 }, (_, attempt) =>
+        login(address, {
+          // One mailbox, however its address is spelled.
+          email: attempt % 2 ? 'Ada@Example.COM' : CREDENTIALS.email,
+          password: 'guess1234'
         })
       )
     );
-
     const statuses = attempts.map((response) => response.statusCode);
     expect(statuses.filter((status) => status === 401)).toHaveLength(10);
     expect(statuses.filter((status) => status === 429)).toHaveLength(1);
-    expect(attempts.at(-1)?.json().code).toBe('rate_limited');
+    expect(
+      attempts.find((response) => response.statusCode === 429)?.json().code
+    ).toBe('rate_limited');
+
+    // The right password is refused too: answering it differently would tell a
+    // guesser which guess was right.
+    expect((await login(address, CREDENTIALS)).statusCode).toBe(429);
+    const resend = await api.inject({
+      method: 'POST',
+      url: '/api/auth/resend-verification',
+      remoteAddress: address,
+      payload: CREDENTIALS
+    });
+    expect(resend.statusCode).toBe(429);
+
+    // Another account on the same address, and the same account elsewhere.
+    expect((await login(address, GRACE)).statusCode).toBe(200);
+    expect((await login('198.51.100.3', CREDENTIALS)).statusCode).toBe(200);
+  });
+
+  it('counts wrong passwords on resend-verification against the same budget', async () => {
+    const address = '198.51.100.4';
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const response = await api.inject({
+        method: 'POST',
+        url: '/api/auth/resend-verification',
+        remoteAddress: address,
+        payload: { ...CREDENTIALS, password: 'guess1234' }
+      });
+      expect(response.statusCode).toBe(401);
+    }
+
+    expect((await login(address, CREDENTIALS)).statusCode).toBe(429);
+  });
+
+  it('refuses an address that tries too many accounts, whichever it tries next', async () => {
+    const address = '198.51.100.5';
+    const sprayed = await Promise.all(
+      Array.from({ length: 100 }, (_, attempt) =>
+        login(address, {
+          email: `nobody${attempt}@example.com`,
+          password: 'guess1234'
+        })
+      )
+    );
+    expect(sprayed.every((response) => response.statusCode === 401)).toBe(true);
+
+    expect(
+      (
+        await login(address, {
+          email: 'somebody@example.com',
+          password: 'guess1234'
+        })
+      ).statusCode
+    ).toBe(429);
+    expect((await login(address, GRACE)).statusCode).toBe(429);
+    expect((await login('198.51.100.6', GRACE)).statusCode).toBe(200);
   });
 });
 

@@ -83,13 +83,41 @@ export class RedisService {
    * than sliding the window of a client that keeps knocking.
    */
   async countInWindow(key: string, windowSeconds: number): Promise<number> {
-    const namespaced = this.key(key);
-    const [count] = await this.client
-      .multi()
-      .incr(namespaced)
-      .expire(namespaced, windowSeconds, 'NX')
-      .exec();
-    return Number(count);
+    const [count = 0] = await this.countInWindows([key], windowSeconds);
+    return count;
+  }
+
+  /** {@link countInWindow} for several counters, all in one transaction. */
+  async countInWindows(
+    keys: string[],
+    windowSeconds: number
+  ): Promise<number[]> {
+    return this.stepWindows(keys, windowSeconds, 1);
+  }
+
+  /**
+   * Takes back a hit {@link countInWindows} counted. A window that ended in
+   * between starts over at -1 with a fresh expiry, which is one hit of slack
+   * rather than a counter that never expires.
+   */
+  async uncountInWindows(keys: string[], windowSeconds: number): Promise<void> {
+    await this.stepWindows(keys, windowSeconds, -1);
+  }
+
+  private async stepWindows(
+    keys: string[],
+    windowSeconds: number,
+    step: 1 | -1
+  ): Promise<number[]> {
+    const multi = this.client.multi();
+    for (const key of keys) {
+      const namespaced = this.key(key);
+      if (step === 1) multi.incr(namespaced);
+      else multi.decr(namespaced);
+      multi.expire(namespaced, windowSeconds, 'NX');
+    }
+    const replies = await multi.exec();
+    return keys.map((_, index) => Number(replies[index * 2]));
   }
 
   /**

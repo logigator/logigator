@@ -21,10 +21,10 @@ describe('the community surface', () => {
   /**
    * A registered, signed-in member.
    *
-   * **At most five per spec file**: registration is rate-limited per address,
-   * and every request here comes from one. The status is asserted rather than
-   * discarded, so a sixth is a rate-limit failure at this line instead of a
-   * member with no session in whichever test asked for one.
+   * **At most thirty per spec file**: registration is rate-limited per
+   * address, and every request here comes from one. The status is asserted
+   * rather than discarded, so one more is a rate-limit failure at this line
+   * instead of a member with no session in whichever test asked for one.
    */
   async function signUp(email: string, username: string): Promise<CookieJar> {
     const password = 'lovelace1';

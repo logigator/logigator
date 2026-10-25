@@ -100,7 +100,7 @@ describe('error reports', () => {
     const fresh = await startE2eApp();
     try {
       const results: number[] = [];
-      for (let attempt = 0; attempt < 12; attempt += 1) {
+      for (let attempt = 0; attempt < 32; attempt += 1) {
         results.push(
           (
             await fresh.inject({
@@ -112,7 +112,7 @@ describe('error reports', () => {
         );
       }
 
-      expect(results.filter((status) => status === 201)).toHaveLength(10);
+      expect(results.filter((status) => status === 201)).toHaveLength(30);
       expect(results.at(-1)).toBe(429);
     } finally {
       await fresh.close();

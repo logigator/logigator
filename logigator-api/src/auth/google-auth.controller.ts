@@ -52,7 +52,7 @@ export class GoogleAuthController {
    * make an unauthenticated open redirect out of a real Logigator link.
    */
   @Get()
-  @RateLimit({ limit: 20, windowSeconds: 600, scope: 'oauth' })
+  @RateLimit({ limit: 200, windowSeconds: 600, scope: 'oauth' })
   async start(
     @Query() query: Record<string, string>,
     @Req() request: FastifyRequest,
@@ -71,7 +71,7 @@ export class GoogleAuthController {
    * reason attached.
    */
   @Get('callback')
-  @RateLimit({ limit: 20, windowSeconds: 600, scope: 'oauth' })
+  @RateLimit({ limit: 200, windowSeconds: 600, scope: 'oauth' })
   async callback(
     @Query() query: Record<string, string>,
     @Req() request: FastifyRequest,

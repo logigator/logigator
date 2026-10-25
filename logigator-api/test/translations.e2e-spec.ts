@@ -35,7 +35,7 @@ describe('document texts in other languages', () => {
   let grace: CookieJar;
   let graceId: string;
 
-  /** A registered, signed-in member. At most five per spec file. */
+  /** A registered, signed-in member. At most thirty per spec file. */
   async function signUp(email: string, username: string): Promise<CookieJar> {
     const password = 'lovelace1';
     const registered = await api.inject({
