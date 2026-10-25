@@ -88,7 +88,8 @@ function formatLifetime(minutes: number, locale: Locale): string {
  * inline style cannot say (dark mode, narrow screens), and a client that drops
  * it still gets the light layout. The logo is a PNG under the site's
  * `public/`, since several clients render no SVG and a mail keeps its URL for
- * as long as it sits in an inbox.
+ * as long as it sits in an inbox; `/assets/logo.png` is also the address every
+ * older Logigator mail names.
  */
 export function renderMail(
   kind: MailKind,
@@ -141,7 +142,7 @@ export function renderMail(
 <tr><td align="center" style="background:${LIGHT.bar};padding:12px 16px">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px">
 <tr><td>
-<a href="${escapeHtml(site)}"><img src="${publicUrl}/assets/mail/logo.png" alt="Logigator" width="145" height="32" style="display:block;border:0;outline:none;width:145px;height:32px"></a>
+<a href="${escapeHtml(site)}"><img src="${publicUrl}/assets/logo.png" alt="Logigator" width="145" height="32" style="display:block;border:0;outline:none;width:145px;height:32px"></a>
 </td></tr>
 </table>
 </td></tr>
