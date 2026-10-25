@@ -118,6 +118,8 @@ Schaltungen während der Simulation Eingaben an und geben Text aus.
   ist, statt übersprungen zu werden.
 - Eine LED-Matrix in einer benutzerdefinierten Komponente leuchtet jetzt in
   deren Beobachtung.
+- Editor-Links mit angehängten Parametern, etwa von Facebook oder einer
+  Kampagne, öffnen die geteilte oder gespeicherte Schaltung, statt nicht zu laden.
 
 ### 🔒 Sicherheit
 

@@ -120,6 +120,8 @@ entrées et d'afficher du texte pendant la simulation.
   lieu d'être sauté.
 - Une matrice de LED à l'intérieur d'un composant personnalisé s'allume désormais
   dans sa surveillance.
+- Les liens vers l'éditeur avec des paramètres ajoutés, comme ceux de Facebook
+  ou d'une campagne, ouvrent le circuit partagé ou enregistré au lieu d'échouer.
 
 ### 🔒 Sécurité
 

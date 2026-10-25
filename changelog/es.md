@@ -114,6 +114,8 @@ circuitos reciben entradas y muestran texto mientras se simulan.
   saltarse.
 - Una matriz de LEDs dentro de un componente personalizado ahora se enciende
   en su monitor.
+- Los enlaces al editor con parámetros añadidos, como los de Facebook o de una
+  campaña, abren el circuito compartido o guardado en vez de fallar al cargar.
 
 ### 🔒 Seguridad
 

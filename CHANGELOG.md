@@ -107,6 +107,8 @@ and print text while they run.
   skipped.
 - An LED Matrix inside a custom component now lights up in the component's
   watch.
+- Editor links with added parameters, such as the ones Facebook or a campaign
+  appends, open the shared or saved circuit instead of failing to load.
 
 ### 🔒 Security
 
