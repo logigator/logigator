@@ -17,7 +17,10 @@ async function bootstrap(): Promise<void> {
   );
 
   await configureApiApp(app, env);
-  app.enableShutdownHooks();
+  // A signal drains the server and runs every shutdown hook, then exits. Nest
+  // would otherwise re-raise the signal at itself, which the kernel ignores
+  // for PID 1 — the process the container runs.
+  app.enableShutdownHooks([], { useProcessExit: true });
 
   await app.listen({ host: env.HOST, port: env.PORT });
 }

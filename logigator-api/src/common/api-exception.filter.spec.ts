@@ -1,4 +1,4 @@
-import { beforeAll, afterAll, describe, expect, it } from 'vitest';
+import { beforeAll, afterAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   Body,
   ConflictException,
@@ -83,6 +83,8 @@ class ProbeController {
 
 describe('ApiExceptionFilter', () => {
   let app: NestFastifyApplication;
+  /** What the request logger wrote at `error` and above, one record a line. */
+  let logged: Record<string, unknown>[] = [];
 
   beforeAll(async () => {
     // Registered here rather than by importing `AppModule`, whose graph reaches
@@ -93,9 +95,14 @@ describe('ApiExceptionFilter', () => {
     }).compile();
 
     app = moduleRef.createNestApplication<NestFastifyApplication>(
-      // Small enough that a modest payload trips the body limit.
-      new FastifyAdapter({ bodyLimit: 128, logger: false }),
-      // The defect cases log a stack by design; silence it.
+      new FastifyAdapter({
+        // Small enough that a modest payload trips the body limit.
+        bodyLimit: 128,
+        logger: {
+          level: 'error',
+          stream: { write: (line: string) => logged.push(JSON.parse(line)) }
+        }
+      }),
       { logger: false }
     );
     await app.init();
@@ -104,6 +111,10 @@ describe('ApiExceptionFilter', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    logged = [];
   });
 
   // Every one of these reaches the filter, including the failures Fastify
@@ -193,6 +204,27 @@ describe('ApiExceptionFilter', () => {
     const body = apiErrorSchema.parse(response.json());
     expect(body.code).toBe(code);
     expect(body.message).not.toHaveLength(0);
+    // A server failure is one log line; a client's mistake is none.
+    expect(logged).toHaveLength(status >= 500 ? 1 : 0);
+  });
+
+  it('logs a defect with its request, route and stack', async () => {
+    await app.inject({ method: 'GET', url: '/probe/boom' });
+
+    expect(logged).toEqual([
+      expect.objectContaining({
+        msg: 'request failed',
+        reqId: expect.any(String),
+        req: expect.objectContaining({ method: 'GET', url: '/probe/boom' }),
+        res: { statusCode: 500 },
+        route: '/probe/boom',
+        err: expect.objectContaining({
+          type: 'TypeError',
+          message: 'a defect with a leaky message',
+          stack: expect.stringContaining('TypeError')
+        })
+      })
+    ]);
   });
 
   it('keeps the message of an unhandled defect off the wire', async () => {

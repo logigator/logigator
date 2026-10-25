@@ -1,5 +1,6 @@
 import fastifyCompress from '@fastify/compress';
 import fastifyMultipart from '@fastify/multipart';
+import { randomUUID } from 'node:crypto';
 import type { FastifyServerOptions } from 'fastify';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import type { Env } from './config/env';
@@ -12,10 +13,17 @@ import { registerSessionPlugins } from './session/session.plugin';
  *
  * `bodyLimit` is set because Fastify's own default is 1 MiB, which a large
  * board exceeds: the parser refuses it before any handler, pipe or guard runs.
+ *
+ * Every log line of a request carries its `reqId`: Cloudflare's `Cf-Ray` for
+ * the request when the edge sent one, which names the same request in
+ * Cloudflare's own logs, and a random UUID otherwise. Fastify's default is a
+ * counter that starts over with every process.
  */
 export function apiServerOptions(env: Env): FastifyServerOptions {
   return {
     logger: { level: env.LOG_LEVEL },
+    requestIdHeader: 'cf-ray',
+    genReqId: () => randomUUID(),
     trustProxy: env.TRUST_PROXY,
     bodyLimit: env.REQUEST_MAX_BYTES
   };

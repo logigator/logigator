@@ -14,6 +14,7 @@ import { loadDocPage } from './app/pages/docs/doc-content';
 import { loadChangelog } from './app/pages/changelog/changelog-content';
 import { renderChangelogFeed } from './app/pages/changelog/changelog-feed';
 import { requestOrigin } from './request-origin';
+import { createErrorHandler, logProcessFailures } from './server-errors';
 import { pathInLanguage } from './app/translation/language-url';
 import { negotiateRequestLanguage } from './app/translation/language-negotiation';
 import {
@@ -329,14 +330,26 @@ app.use((req, res, next) => {
     .catch(next);
 });
 
+/** A failed render or read: one log line and a plain `500`. */
+app.use(createErrorHandler());
+
 /**
  * Start the server when this module is the entry point. The CLI's dev server
  * imports `reqHandler` instead and runs the same middleware chain, so a
  * redirect or a static path behaves the same in development.
+ *
+ * A stop signal closes the listener and lets the requests in flight finish
+ * before the process exits. Without a handler of its own the process ignores
+ * the signal — it runs as PID 1 in its container — and is killed only once
+ * the runtime's grace period has run out.
  */
 if (isMainModule(import.meta.url)) {
+  logProcessFailures();
   const port = Number(process.env['PORT'] ?? 4000);
-  app.listen(port, () => undefined);
+  const server = app.listen(port, () => undefined);
+  for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+    process.once(signal, () => server.close(() => process.exit(0)));
+  }
 }
 
 export const reqHandler = createNodeRequestHandler(app);

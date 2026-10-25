@@ -3,10 +3,9 @@ import {
   Catch,
   type ExceptionFilter,
   HttpException,
-  HttpStatus,
-  Logger
+  HttpStatus
 } from '@nestjs/common';
-import type { FastifyReply } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { ApiError, ApiErrorCode } from '@logigator/contract';
 import { ApiException } from './api-exception';
 
@@ -70,16 +69,34 @@ function clientErrorStatus(exception: unknown): number | null {
  * are three different shapes and none carries a `code`, and everything reaches
  * here — the 404 for an unmatched route and the transport-level failures
  * Fastify raises before a handler runs included.
+ *
+ * Every 5xx is logged as one line through the request's own logger, which
+ * carries its `reqId`: the `request failed` record the website's server writes
+ * for its own failures, in the same shape. A 4xx is the caller's business and
+ * stays quiet; Fastify's request log already counts it.
  */
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(ApiExceptionFilter.name);
-
   catch(exception: unknown, host: ArgumentsHost): void {
-    const reply = host.switchToHttp().getResponse<FastifyReply>();
-    const body = this.toBody(exception);
+    const http = host.switchToHttp();
+    const request = http.getRequest<FastifyRequest>();
+    const reply = http.getResponse<FastifyReply>();
+    const status = this.statusFor(exception);
 
-    void reply.status(this.statusFor(exception)).send(body);
+    void reply.status(status);
+    if (status >= 500) {
+      request.log.error(
+        {
+          req: request,
+          res: reply,
+          route: request.routeOptions.url,
+          err: exception
+        },
+        'request failed'
+      );
+    }
+
+    void reply.send(this.toBody(exception));
   }
 
   private statusFor(exception: unknown): number {
@@ -115,10 +132,8 @@ export class ApiExceptionFilter implements ExceptionFilter {
       };
     }
 
-    // A defect, not a client mistake: log the stack, answer with a fixed
-    // message so nothing internal leaks.
-    this.logger.error('Unhandled exception', exception);
-
+    // A defect, not a client mistake: answer with a fixed message so nothing
+    // internal leaks.
     return { code: 'internal', message: 'Internal server error.' };
   }
 }

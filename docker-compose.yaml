@@ -60,7 +60,7 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - ./:/app
     working_dir: /app
@@ -95,6 +95,11 @@ services:
       - net
     ports:
       - 127.0.0.1:6379:6379
+    healthcheck:
+      test: ['CMD-SHELL', 'test "$$(redis-cli ping)" = PONG']
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
 volumes:
   caddy_data:

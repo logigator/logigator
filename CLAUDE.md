@@ -258,6 +258,9 @@ service), `translation/` (OpenRouter client and worker), `common/`, plus `app.se
   one root, `/files`.
 - **The startup gate refuses a database whose applied migrations differ from the build's**, in
   either direction. Nothing migrates on boot.
+- **Migrations are expand/contract.** A deploy's `migrate` runs while the previous API still serves,
+  so each migration leaves that API working: add first; drop, rename or tighten in a later release.
+  A previous API restarted in that window is refused by the gate.
 - `AuthGuard` is per-route, never global.
 - **Machine-translated text leaves the API only through
   `GET /api/community/{kind}/:link/translation/:lang`**, never on a document or listing response. A

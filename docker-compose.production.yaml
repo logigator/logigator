@@ -22,6 +22,12 @@
 # fetches (`latest` without it); a local `up --build` builds them instead,
 # under the same names. Either way, `up` migrates the database and seeds the
 # examples through `migrate` before the API starts.
+#
+# Every long-running service has a healthcheck, and a service starts only once
+# what it forwards to reports healthy: the edge or the tunnel after the proxy,
+# the proxy after the site and the API. The two Node images carry no curl or
+# wget, so their checks are a one-line `fetch` in Node itself. The checks only
+# report; nothing restarts a container that turns unhealthy.
 
 x-api-environment: &api-environment
   DATABASE_URL: postgresql://logigator:${POSTGRES_PASSWORD:-logigator}@postgres:5432/logigator
@@ -49,7 +55,8 @@ services:
     networks:
       - net
     depends_on:
-      - proxy
+      proxy:
+        condition: service_healthy
     command: tunnel --no-autoupdate run
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:-}
@@ -62,7 +69,8 @@ services:
     networks:
       - net
     depends_on:
-      - proxy
+      proxy:
+        condition: service_healthy
     command: >-
       caddy reverse-proxy --from ${SITE_HOST:-logigator.test} --to proxy:8080
       --internal-certs --header-up "Cf-Connecting-Ip: {http.request.remote.host}"
@@ -83,12 +91,23 @@ services:
     networks:
       - net
     depends_on:
-      - web
-      - api
+      web:
+        condition: service_healthy
+      api:
+        condition: service_healthy
     volumes:
       # What the API writes, read-only: Caddy serves these files, and only the
       # API ever produces them.
       - storage:/srv/files:ro
+    # The editor's shell, which Caddy serves itself: the check is of the proxy
+    # alone, not of what it forwards to.
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:8080/editor']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+      start_interval: 2s
     restart: unless-stopped
 
   web:
@@ -103,11 +122,28 @@ services:
       - API_ORIGIN=http://api:3000
       - NG_ALLOWED_HOSTS=${SITE_HOST:-logigator.test}
       - NG_TRUST_PROXY_HEADERS=x-forwarded-host,x-forwarded-proto,x-forwarded-for
+    # Answered by the server itself, without a render or an API read.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4000/robots.txt').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+      start_interval: 2s
     restart: unless-stopped
 
   # Brings the database to the migrations this build carries, then writes the
   # examples it was built with. Both are idempotent, so every `up` runs them;
   # the API refuses to start on a database whose migrations differ from its own.
+  #
+  # On a deploy this runs while the previous API still serves, so every
+  # migration has to leave that API working: expand first (a new table, a
+  # nullable column), contract (drop, rename, tighten) in a later release. An
+  # API of the previous release restarted in that window is refused by the gate.
   migrate:
     image: ghcr.io/logigator/logigator-api:${LOGIGATOR_VERSION:-latest}
     build:
@@ -120,7 +156,7 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - storage:/data/storage
     environment: *api-environment
@@ -140,6 +176,20 @@ services:
     volumes:
       - storage:/data/storage
     environment: *api-environment
+    # Liveness: answered without reaching Postgres or Redis, so an outage of
+    # either does not mark the API itself unhealthy. Readiness,
+    # `/api/health/ready`, is for a monitor outside the stack.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/meta').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+      start_interval: 2s
     restart: unless-stopped
 
   postgres:
@@ -167,6 +217,13 @@ services:
       - net
     volumes:
       - redis_data:/data
+    # Only `PONG` is ready: while a snapshot is still loading, `ping` answers
+    # `LOADING`.
+    healthcheck:
+      test: ['CMD-SHELL', 'test "$$(redis-cli ping)" = PONG']
+      interval: 5s
+      timeout: 5s
+      retries: 10
     restart: unless-stopped
 
 volumes:
