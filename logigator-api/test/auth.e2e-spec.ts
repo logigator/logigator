@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
+import { sign, unsign } from '@fastify/cookie';
 import { userResponseSchema } from '@logigator/contract';
 import { users } from '../src/database/schema';
 import { CookieJar } from './cookie-jar';
@@ -694,5 +695,70 @@ describe('a session refreshed on every response', () => {
 
     expect(firstExpiry).toBeInstanceOf(Date);
     expect(laterExpiry?.getTime()).toBeGreaterThan(firstExpiry!.getTime());
+  });
+});
+
+describe('a session secret rotated in', () => {
+  const CURRENT = 'c'.repeat(32);
+  const RETIRED = 'r'.repeat(32);
+
+  let api: E2eApp;
+  let sessionId: string;
+
+  beforeAll(async () => {
+    api = await startE2eApp({ SESSION_SECRET: `${CURRENT},${RETIRED}` });
+    await api.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { username: 'Ada', ...CREDENTIALS }
+    });
+    await api.inject({
+      method: 'POST',
+      url: '/api/auth/verify-email',
+      payload: { token: api.mail.lastToken() }
+    });
+    const login = await api.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: CREDENTIALS
+    });
+    const cookie = login.cookies.find((c) => c.name === 'lg_sid')!.value;
+    sessionId = unsign(cookie, CURRENT).value!;
+  });
+
+  afterAll(async () => {
+    await api.close();
+  });
+
+  /** The session as a browser holds it, signed with `secret`. */
+  function signedWith(secret: string): Record<string, string> {
+    return { cookie: `lg_sid=${encodeURIComponent(sign(sessionId, secret))}` };
+  }
+
+  it('keeps a session the retired secret signed, and signs it anew', async () => {
+    // Off the millisecond sign-in stamped, so the re-sign changes a field.
+    await nextMillisecond();
+    const response = await api.inject({
+      method: 'GET',
+      url: '/api/user',
+      headers: signedWith(RETIRED)
+    });
+
+    expect(response.statusCode).toBe(200);
+    const cookie = response.cookies.find((c) => c.name === 'lg_sid');
+    expect(cookie?.value).toBe(sign(sessionId, CURRENT));
+    expect(
+      response.cookies.find((c) => c.name === 'isAuthenticated')?.value
+    ).toBe('true');
+  });
+
+  it('refuses a cookie signed by a secret no longer listed', async () => {
+    const response = await api.inject({
+      method: 'GET',
+      url: '/api/user',
+      headers: signedWith('u'.repeat(32))
+    });
+
+    expect(response.statusCode).toBe(401);
   });
 });

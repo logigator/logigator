@@ -32,7 +32,7 @@ describe('loadEnv', () => {
       STORAGE_DIR: 'data/storage',
       STORAGE_SWEEP_GRACE_MINUTES: 1440,
       UPLOAD_MAX_BYTES: 10 * 1024 * 1024,
-      SESSION_SECRET: DEVELOPMENT_SESSION_SECRET,
+      SESSION_SECRET: [DEVELOPMENT_SESSION_SECRET],
       SESSION_COOKIE_NAME: 'lg_sid',
       SESSION_MAX_AGE_DAYS: 30,
       SESSION_TOUCH_INTERVAL_MINUTES: 60,
@@ -73,7 +73,23 @@ describe('loadEnv', () => {
     expect(() =>
       loadEnv({ ...PRODUCTION, SESSION_SECRET: undefined })
     ).toThrowError(/SESSION_SECRET/);
-    expect(loadEnv(PRODUCTION).SESSION_SECRET).toBe('x'.repeat(32));
+    // Verifying with it is as bad as signing with it.
+    expect(() =>
+      loadEnv({
+        ...PRODUCTION,
+        SESSION_SECRET: `${'x'.repeat(32)},${DEVELOPMENT_SESSION_SECRET}`
+      })
+    ).toThrowError(/SESSION_SECRET/);
+    expect(loadEnv(PRODUCTION).SESSION_SECRET).toEqual(['x'.repeat(32)]);
+  });
+
+  it('reads a list of session secrets, the signing one first', () => {
+    const current = 'n'.repeat(32);
+    const retired = 'o'.repeat(32);
+
+    expect(
+      loadEnv({ SESSION_SECRET: ` ${current} , ${retired},` }).SESSION_SECRET
+    ).toEqual([current, retired]);
   });
 
   it('rejects half-configured Google credentials', () => {
@@ -140,6 +156,12 @@ describe('loadEnv', () => {
 
   it('rejects a session secret too short to sign a cookie with', () => {
     expect(() => loadEnv({ SESSION_SECRET: 'short' })).toThrowError(
+      /SESSION_SECRET/
+    );
+    expect(() =>
+      loadEnv({ SESSION_SECRET: `${'x'.repeat(32)},short` })
+    ).toThrowError(/SESSION_SECRET/);
+    expect(() => loadEnv({ SESSION_SECRET: ',' })).toThrowError(
       /SESSION_SECRET/
     );
   });

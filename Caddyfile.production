@@ -58,10 +58,22 @@
 	# directory and a new pointer — so the URLs are safe to cache forever, and
 	# serving them here keeps a static read off the application entirely. Only a
 	# file that exists is: the edge would otherwise hold a 404 for a year.
+	#
+	# Avatars excepted: a deleted one has to stop being served, so the edge and
+	# the browser keep one an hour and then revalidate, which a deleted file
+	# answers with a 404.
 	handle_path /files/* {
 		root * /srv/files
-		@present file
-		header @present Cache-Control "public, max-age=31536000, immutable"
+		@forever {
+			file
+			not path /profile/*
+		}
+		@avatar {
+			file
+			path /profile/*
+		}
+		header @forever Cache-Control "public, max-age=31536000, immutable"
+		header @avatar Cache-Control "public, max-age=3600"
 		file_server
 	}
 

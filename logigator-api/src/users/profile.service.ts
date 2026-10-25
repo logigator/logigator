@@ -2,14 +2,24 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import type { UpdateUserRequest } from '@logigator/contract';
 import { ApiException } from '../common/api-exception';
 import type { Locale } from '../common/locale';
+import { rateLimited } from '../common/rate-limit.guard';
 import type { UserRow } from '../database/schema';
 import { AuthTokenService } from '../auth/auth-token.service';
 import { PasswordService } from '../auth/password.service';
 import { MailService } from '../mail/mail.service';
+import { RedisService } from '../redis/redis.service';
 import { SessionService } from '../session/session.service';
 import { FileStorageService } from '../storage/file-storage.service';
 import { ImageService } from '../storage/image.service';
 import { UsersService } from './users.service';
+
+/**
+ * Address changes one account may ask for per window. Each one mails an
+ * address of the caller's choosing, so it is budgeted per account: a classroom
+ * shares an address but never an account.
+ */
+const EMAIL_CHANGES_PER_WINDOW = 5;
+const EMAIL_CHANGE_WINDOW_SECONDS = 3600;
 
 /** Whether the update is still waiting on a confirmation mail. */
 export interface ProfileUpdateResult {
@@ -37,7 +47,8 @@ export class ProfileService {
     private readonly mail: MailService,
     private readonly files: FileStorageService,
     private readonly images: ImageService,
-    private readonly sessions: SessionService
+    private readonly sessions: SessionService,
+    private readonly redis: RedisService
   ) {}
 
   /**
@@ -188,6 +199,14 @@ export class ProfileService {
     locale: Locale
   ): Promise<boolean> {
     if (email === user.email) return false;
+
+    // Counted before the lookup, which answers whether the address has an
+    // account.
+    const changes = await this.redis.countInWindow(
+      `rate:email-change:${user.id}`,
+      EMAIL_CHANGE_WINDOW_SECONDS
+    );
+    if (changes > EMAIL_CHANGES_PER_WINDOW) throw rateLimited();
 
     if (await this.users.findByEmail(email)) {
       throw new ApiException(

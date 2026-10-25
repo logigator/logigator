@@ -53,6 +53,8 @@ const IMMUTABLE_PATH =
 const MUTABLE_ASSET_MAX_AGE = 300;
 
 const app = express();
+// Names the framework to every response for no reader's benefit.
+app.disable('x-powered-by');
 const angularApp = new AngularNodeAppEngine();
 
 /** The served path of a file, as {@link IMMUTABLE_PATH} expects to see it. */

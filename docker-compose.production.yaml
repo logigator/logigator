@@ -14,8 +14,9 @@
 #   COMPOSE_PROFILES=local    # a staging run on this machine
 #
 # The same `.env` holds the values below. SESSION_SECRET is required (32+
-# characters): the API refuses to start in production without one. On the
-# server, also set SITE_HOST, POSTGRES_PASSWORD and CLOUDFLARE_TUNNEL_TOKEN.
+# characters): the API refuses to start in production without one. To rotate
+# it, set `new,old` and drop `old` once SESSION_MAX_AGE_DAYS have passed. On
+# the server, also set SITE_HOST, POSTGRES_PASSWORD and CLOUDFLARE_TUNNEL_TOKEN.
 #
 # On the server, LOGIGATOR_VERSION names the release whose images a `pull`
 # fetches (`latest` without it); a local `up --build` builds them instead,

@@ -47,13 +47,20 @@ export class SessionService {
    * Writing the field is the whole mechanism: with `rolling` off,
    * `@fastify/session` saves and re-sends the cookie exactly when the session's
    * own fields have changed.
+   *
+   * A cookie signed by a secret that is no longer first is refreshed at once.
+   * Left alone, `@fastify/session` would see a cookie unlike the one it signs
+   * now and clear it, signing the session out on its first request.
    */
   touchIfStale(request: FastifyRequest): void {
     const session = request.session;
     if (!session?.userId) return;
 
     const interval = this.env.SESSION_TOUCH_INTERVAL_MINUTES * MINUTE_IN_MS;
-    if (Date.now() - (session.touchedAt ?? 0) >= interval) {
+    const resign =
+      request.cookies[this.env.SESSION_COOKIE_NAME] !==
+      session.encryptedSessionId;
+    if (resign || Date.now() - (session.touchedAt ?? 0) >= interval) {
       session.touchedAt = Date.now();
     }
   }

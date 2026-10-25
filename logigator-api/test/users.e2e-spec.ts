@@ -223,6 +223,73 @@ describe('the signed-in user', () => {
     expect(confirmation.json().code).toBe('conflict');
   });
 
+  it('caps the address changes one account asks for, and only those', async () => {
+    // Two accounts on one client address, the way a classroom arrives.
+    const signedIn = async (username: string, email: string) => {
+      await api.inject({
+        method: 'POST',
+        url: '/api/auth/register',
+        payload: { username, email, password: 'hopper123' }
+      });
+      await api.inject({
+        method: 'POST',
+        url: '/api/auth/verify-email',
+        payload: { token: api.mail.lastToken() }
+      });
+      const account = new CookieJar();
+      account.store(
+        await api.inject({
+          method: 'POST',
+          url: '/api/auth/login',
+          payload: { email, password: 'hopper123' }
+        })
+      );
+      return account;
+    };
+    const restless = await signedIn('Restless', 'restless@example.com');
+    const neighbour = await signedIn('Neighbour', 'neighbour@example.com');
+    api.mail.clear();
+
+    const changeAddress = (account: CookieJar, email: string) =>
+      api.inject({
+        method: 'PATCH',
+        url: '/api/user',
+        headers: account.headers(),
+        payload: { email, currentPassword: 'hopper123' }
+      });
+
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      const response = await changeAddress(
+        restless,
+        `restless${attempt}@example.com`
+      );
+      expect(response.statusCode).toBe(200);
+    }
+    expect(api.mail.sent).toHaveLength(5);
+
+    const refused = await changeAddress(restless, 'restless6@example.com');
+    expect(refused.statusCode).toBe(429);
+    expect(refused.json().code).toBe('rate_limited');
+    expect(api.mail.sent).toHaveLength(5);
+
+    // An update that mails nobody is no change of address.
+    const renamed = await api.inject({
+      method: 'PATCH',
+      url: '/api/user',
+      headers: restless.headers(),
+      payload: {
+        username: 'Settled',
+        email: 'restless@example.com',
+        currentPassword: 'hopper123'
+      }
+    });
+    expect(renamed.statusCode).toBe(200);
+
+    expect(
+      (await changeAddress(neighbour, 'neighbour2@example.com')).statusCode
+    ).toBe(200);
+  });
+
   it('changes the password only with the current one', async () => {
     // A second signed-in device, to watch what the change does to it.
     const phone = new CookieJar();

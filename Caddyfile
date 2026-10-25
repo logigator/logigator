@@ -25,13 +25,17 @@ logigator.test {
 	# The API's storage volume: avatars and circuit previews. Every file under it
 	# is written once under a name nothing reuses — replacing an asset means a new
 	# directory and a new pointer — so the URLs are safe to cache forever, and
-	# serving them here keeps a static read off the application entirely.
+	# serving them here keeps a static read off the application entirely. Avatars
+	# excepted: a deleted one has to stop being served, so it is kept an hour.
 	@storage path /files/*
 	handle @storage {
 		root * /srv
 		uri strip_prefix /files
 		file_server
-		header Cache-Control "public, max-age=31536000, immutable"
+		@forever not path /files/profile/*
+		@avatar path /files/profile/*
+		header @forever Cache-Control "public, max-age=31536000, immutable"
+		header @avatar Cache-Control "public, max-age=3600"
 	}
 
 	# The website, at the origin root, including the icons the editor links to by

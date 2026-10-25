@@ -114,8 +114,22 @@ const variables = z.object({
    */
   STORAGE_SWEEP_GRACE_MINUTES: z.coerce.number().int().min(0).default(1440),
 
-  /** Signs the session cookie; `@fastify/session` requires 32+ characters. */
-  SESSION_SECRET: z.string().min(32).default(DEVELOPMENT_SESSION_SECRET),
+  /**
+   * Signs the session cookie: a comma-separated list, each of 32+ characters.
+   * The first signs and every one verifies, so a new secret goes in front and
+   * the one it replaces stays listed until `SESSION_MAX_AGE_DAYS` have passed;
+   * a session that comes back in between is re-signed with the new one.
+   */
+  SESSION_SECRET: z
+    .string()
+    .transform((value) =>
+      value
+        .split(',')
+        .map((secret) => secret.trim())
+        .filter(Boolean)
+    )
+    .pipe(z.array(z.string().min(32)).min(1))
+    .default([DEVELOPMENT_SESSION_SECRET]),
   SESSION_COOKIE_NAME: z.string().min(1).default('lg_sid'),
   /** How long a session survives its last refresh. */
   SESSION_MAX_AGE_DAYS: z.coerce.number().int().min(1).default(30),
@@ -204,7 +218,7 @@ export const envSchema = variables
   .check((ctx) => {
     if (
       ctx.value.NODE_ENV === 'production' &&
-      ctx.value.SESSION_SECRET === DEVELOPMENT_SESSION_SECRET
+      ctx.value.SESSION_SECRET.includes(DEVELOPMENT_SESSION_SECRET)
     ) {
       ctx.issues.push({
         code: 'custom',

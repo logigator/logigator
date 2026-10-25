@@ -12,8 +12,9 @@ export type ImageFormat = z.infer<typeof imageFormatSchema>;
 /**
  * One encoding of one image at one size. Every image the API serves is a list
  * of these rather than one URL: the server owns the ladder, the client picks
- * from it, so neither side encodes the other's rules. Every URL is immutable
- * and safe to cache forever; replacing the image replaces the list.
+ * from it, so neither side encodes the other's rules. What a URL names never
+ * changes, and replacing the image replaces the list. A deleted image's URL
+ * stops resolving, so avatars are cached for an hour rather than forever.
  */
 export const imageVariantSchema = z
   .object({
