@@ -227,7 +227,8 @@ app.use((req, res, next) => {
     next();
     return;
   }
-  res.redirect(301, lang ? urlInLanguage(lang, target) : target);
+  const { location, status } = target;
+  res.redirect(status, lang ? urlInLanguage(lang, location) : location);
 });
 
 /**

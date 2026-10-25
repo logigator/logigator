@@ -1,14 +1,56 @@
 import { describe, expect, it } from 'vitest';
-import { legacyRedirect } from './legacy-redirects';
+import { type LegacyRedirect, legacyRedirect } from './legacy-redirects';
 
 /** `legacyRedirect` takes the query apart from the path, as the server does. */
-function redirect(url: string): string | null {
+function answer(url: string): LegacyRedirect | null {
   const [path, query = ''] = url.split('?');
   return legacyRedirect(path, new URLSearchParams(query));
 }
 
+function redirect(url: string): string | null {
+  return answer(url)?.location ?? null;
+}
+
 const LINK = '2b6f0cc9-04d9-4d14-8d5a-8e2bb7d2b1a3';
 const USER = '9d3f1a2e-11c7-4f52-9a0e-0c3d5b7e8f41';
+
+const PAGES: readonly (readonly [string, string])[] = [
+  ['/features', '/'],
+  ['/download', '/'],
+  ['/login-electron', '/login'],
+  ['/my/account/profile', '/my/account'],
+  ['/my/account/security', '/my/account'],
+  ['/my/account/delete', '/my/account'],
+  ['/auth/logout', '/login'],
+  ['/auth/google-login', '/login'],
+  ['/auth/google-authenticate', '/login'],
+  ['/auth/twitter-login', '/login'],
+  ['/auth/twitter-authenticate', '/login']
+];
+
+const DOCUMENTS: readonly (readonly [string, string])[] = [
+  [`/community/project/${LINK}`, `/community/projects/${LINK}`],
+  [`/community/component/${LINK}`, `/community/components/${LINK}`],
+  [
+    `/community/project/${LINK}/stargazers`,
+    `/community/projects/${LINK}/stargazers`
+  ],
+  [
+    `/community/component/${LINK}/stargazers/page`,
+    `/community/components/${LINK}/stargazers`
+  ],
+  // Both were GETs that wrote, which is why neither survived as a URL.
+  [`/community/toggleStar/project/${LINK}`, `/community/projects/${LINK}`],
+  [`/community/clone/component/${LINK}`, `/community/components/${LINK}`],
+  // The partials an infinite scroll fetched are the listing they filled.
+  ['/community/projects/page', '/community/projects'],
+  ['/my/projects/page', '/my/projects'],
+  [`/my/components/info/${LINK}`, '/my/components'],
+  [`/my/projects/edit-popup/${LINK}`, '/my/projects'],
+  [`/my/projects/delete-popup/${LINK}`, '/my/projects'],
+  [`/my/components/share-popup/${LINK}`, '/my/components'],
+  ['/my/projects/create-popup', '/my/projects']
+];
 
 describe('legacyRedirect', () => {
   it('leaves a path that still exists alone', () => {
@@ -35,46 +77,15 @@ describe('legacyRedirect', () => {
     }
   });
 
-  it.each([
-    ['/features', '/'],
-    ['/download', '/'],
-    ['/login-electron', '/login'],
-    ['/my/account/profile', '/my/account'],
-    ['/my/account/security', '/my/account'],
-    ['/my/account/delete', '/my/account'],
-    ['/auth/logout', '/login'],
-    ['/auth/google-login', '/login'],
-    ['/auth/google-authenticate', '/login'],
-    ['/auth/twitter-login', '/login'],
-    ['/auth/twitter-authenticate', '/login']
-  ])('maps %s to %s', (from, to) => {
+  it.each([...PAGES, ...DOCUMENTS])('maps %s to %s', (from, to) => {
     expect(redirect(from)).toBe(to);
   });
 
-  it.each([
-    [`/community/project/${LINK}`, `/community/projects/${LINK}`],
-    [`/community/component/${LINK}`, `/community/components/${LINK}`],
-    [
-      `/community/project/${LINK}/stargazers`,
-      `/community/projects/${LINK}/stargazers`
-    ],
-    [
-      `/community/component/${LINK}/stargazers/page`,
-      `/community/components/${LINK}/stargazers`
-    ],
-    // Both were GETs that wrote, which is why neither survived as a URL.
-    [`/community/toggleStar/project/${LINK}`, `/community/projects/${LINK}`],
-    [`/community/clone/component/${LINK}`, `/community/components/${LINK}`],
-    // The partials an infinite scroll fetched are the listing they filled.
-    ['/community/projects/page', '/community/projects'],
-    ['/my/projects/page', '/my/projects'],
-    [`/my/components/info/${LINK}`, '/my/components'],
-    [`/my/projects/edit-popup/${LINK}`, '/my/projects'],
-    [`/my/projects/delete-popup/${LINK}`, '/my/projects'],
-    [`/my/components/share-popup/${LINK}`, '/my/components'],
-    ['/my/projects/create-popup', '/my/projects']
-  ])('maps %s to %s', (from, to) => {
-    expect(redirect(from)).toBe(to);
+  it('sends /features and /download home only until their pages exist', () => {
+    for (const [from] of [...PAGES, ...DOCUMENTS]) {
+      const temporary = from === '/features' || from === '/download';
+      expect(answer(from)?.status, from).toBe(temporary ? 302 : 301);
+    }
   });
 
   describe("a member's tabs, which were a query and are routes now", () => {

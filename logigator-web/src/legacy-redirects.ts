@@ -16,14 +16,23 @@ import { CommunityKind } from './app/api/services/community-api.service';
 /** A segment the legacy app generated: a uuid, for every id and every link. */
 const TOKEN = '[A-Za-z0-9-]+';
 
-/** The legacy path of a page that simply moved, in whole. */
-const MOVED: ReadonlyMap<string, string> = new Map([
+/**
+ * The legacy path of a page that has no successor yet, answered with a `302`.
+ * A `301` to the home page reads to a crawler as a soft 404, and a browser
+ * keeps it with no expiry, so it would still send a visitor home once the page
+ * is back.
+ */
+const PENDING: ReadonlyMap<string, string> = new Map([
   // The features page comes back as a tour with the capture harness; until then
   // what it advertised is the home page's own bands.
   ['/features', '/'],
-  // Dropped outright: the page already said the desktop version was gone, and
-  // it returns with the Electron app rather than as a port of itself.
-  ['/download', '/'],
+  // The page already said the desktop version was gone, and it returns with
+  // the Electron app rather than as a port of itself.
+  ['/download', '/']
+]);
+
+/** The legacy path of a page that simply moved, in whole. */
+const MOVED: ReadonlyMap<string, string> = new Map([
   // The Electron sign-in page was the same form with no chrome around it.
   ['/login-electron', '/login'],
   // The account is one page of sections now rather than three pages.
@@ -106,27 +115,37 @@ const PROFILE_TABS: Record<string, string> = {
   staredComponents: '/starred/components'
 };
 
+/** Where a legacy URL is sent, and whether for good. */
+export interface LegacyRedirect {
+  readonly location: string;
+  readonly status: 301 | 302;
+}
+
 /**
  * The successor of a legacy path, with its query rewritten, or `null` for a
  * path this map does not name — which is every path that still exists.
  *
- * Both arguments and the result are unprefixed. The caller re-prefixes with the
- * language the request carried, and a request that carried none is answered
- * unprefixed too, so the language redirect below it negotiates one: two hops,
- * each with the status that is true of it, rather than a `301` whose target
- * depends on who asked.
+ * Both arguments and the location are unprefixed. The caller re-prefixes with
+ * the language the request carried, and a request that carried none is
+ * answered unprefixed too, so the language redirect below it negotiates one:
+ * two hops, each with the status that is true of it, rather than a `301` whose
+ * target depends on who asked.
  */
 export function legacyRedirect(
   pathname: string,
   query: URLSearchParams
-): string | null {
-  const path = matchPath(pathname, query);
+): LegacyRedirect | null {
+  const pending = PENDING.get(pathname);
+  const path = pending ?? matchPath(pathname, query);
   if (path === null) {
     return null;
   }
   const params = rewriteQuery(query);
   const rest = params.toString();
-  return rest ? `${path}?${rest}` : path;
+  return {
+    location: rest ? `${path}?${rest}` : path,
+    status: pending ? 302 : 301
+  };
 }
 
 function matchPath(pathname: string, query: URLSearchParams): string | null {
