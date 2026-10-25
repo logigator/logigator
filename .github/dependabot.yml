@@ -1,0 +1,157 @@
+# Weekly version updates, grouped so a week is a handful of pull requests, with
+# a cooldown so a release has a week to be yanked before it is proposed.
+# Security updates ignore both the schedule and the cooldown.
+#
+# Only the Yarn workspace, the images and the workflows are covered:
+# logigator-editor-legacy/, logigator-backend/ and the capture tool keep their
+# own lockfiles and get no version updates.
+version: 2
+
+multi-ecosystem-groups:
+  # node:24 is both the compose dev image and the Dockerfile's base, so the two
+  # ecosystems land in one pull request.
+  containers:
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    labels:
+      - 'dependencies'
+
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+    # Manifests name the version they were tested with, as the hand-edited
+    # ones do.
+    versioning-strategy: 'increase'
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: '[workspace] '
+    labels:
+      - 'dependencies'
+    ignore:
+      # Angular's compiler, ng-packagr and typescript-eslint all cap it at 6.0.x.
+      - dependency-name: 'typescript'
+        update-types:
+          - 'version-update:semver-major'
+          - 'version-update:semver-minor'
+      # Transloco depends on one exact beta; any other version duplicates it.
+      - dependency-name: '@jsverse/utils'
+      # Pinned to @nestjs/platform-fastify's exact version; moves with Nest.
+      - dependency-name: 'fastify'
+      # Patched under .yarn/patches/; a bump means regenerating the patch.
+      - dependency-name: 'pixi.js'
+      # Node majors move with the images and CI, never on their own.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+    groups:
+      # Dependabot puts a dependency in the first group it matches.
+      security:
+        applies-to: 'security-updates'
+        patterns: ['*']
+      # Framework and CLI run on two version trains; each package goes to its
+      # own latest, and the libraries tied to Angular majors move with it.
+      angular:
+        patterns:
+          - '@angular/*'
+          - '@angular-devkit/*'
+          - 'angular-eslint'
+          - '@angular-eslint/*'
+          - 'ng-packagr'
+          - 'ngx-markdown'
+          - 'ngxtension'
+      nestjs:
+        patterns:
+          - '@nestjs/*'
+          - '@fastify/*'
+        # Its decompressor is what bounds an inflated request body, so a bump
+        # gets a pull request of its own.
+        exclude-patterns:
+          - '@fastify/compress'
+      drizzle:
+        patterns:
+          - 'drizzle-orm'
+          - 'drizzle-kit'
+      milkdown:
+        patterns:
+          - '@milkdown/*'
+      transloco:
+        patterns:
+          - '@jsverse/*'
+      lint-and-format:
+        patterns:
+          - 'eslint'
+          - '@eslint/*'
+          - 'typescript-eslint'
+          - 'prettier'
+      test:
+        patterns:
+          - 'vitest'
+          - 'vitest-*'
+          - 'jsdom'
+      build:
+        patterns:
+          - '@rspack/*'
+          - 'tailwindcss'
+          - '@tailwindcss/*'
+          - 'postcss'
+      # Everything else, minor and patch only; a major gets a pull request of
+      # its own.
+      minor-and-patch:
+        patterns: ['*']
+        exclude-patterns:
+          - '@fastify/compress'
+        update-types: ['minor', 'patch']
+
+  - package-ecosystem: 'docker'
+    directory: '/'
+    multi-ecosystem-group: 'containers'
+    patterns: ['*']
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: '[workspace] '
+    ignore:
+      # LTS majors only, moved together with @types/node and CI by hand.
+      - dependency-name: 'node'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: 'docker-compose'
+    directory: '/'
+    multi-ecosystem-group: 'containers'
+    patterns: ['*']
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: '[workspace] '
+    ignore:
+      - dependency-name: 'node'
+        update-types: ['version-update:semver-major']
+      # A Postgres or Redis major means upgrading the data it keeps.
+      - dependency-name: 'postgres'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'redis'
+        update-types: ['version-update:semver-major']
+
+  # The workflows, plus the composite action under .github/actions/.
+  - package-ecosystem: 'github-actions'
+    directories:
+      - '/'
+      - '/.github/actions/*'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: '[workspace] '
+    labels:
+      - 'dependencies'
+    groups:
+      actions:
+        patterns: ['*']
