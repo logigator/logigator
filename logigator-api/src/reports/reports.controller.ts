@@ -29,7 +29,7 @@ export class ReportsController {
    * nobody can read.
    */
   @Post()
-  @RateLimit({ limit: 30, windowSeconds: 600, scope: 'report-error' })
+  @RateLimit({ limit: 10, windowSeconds: 600, scope: 'report-error' })
   async report(
     @Body({ schema: reportErrorRequestSchema })
     body: ReportErrorRequest,
