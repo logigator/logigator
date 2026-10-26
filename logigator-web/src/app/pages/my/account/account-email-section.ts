@@ -21,6 +21,10 @@ import { zodValidator } from '../../../forms/zod-validator';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationKey } from '../../../translation/translation-key.model';
 import { SessionService } from '../../../user/session.service';
+import {
+  AccountReauthentication,
+  googleReauthentication
+} from './account-reauthentication';
 import { AccountSection } from './account-section';
 
 /**
@@ -29,8 +33,9 @@ import { AccountSection } from './account-section';
  * Gated on the current password exactly as a password change is: the two
  * together are a complete takeover — a stolen session cookie points the address
  * at a mailbox the thief owns, confirms it from there, and then resets the
- * password with a link the owner never sees. An account with no password has
- * nothing to prove with, so the field is not shown for one.
+ * password with a link the owner never sees. An account with no password signs
+ * in with Google again instead, when its session is older than the API
+ * accepts, and comes back here with the address it typed to send the mail.
  *
  * The change does not land here. The API mails the *new* address a
  * confirmation and keeps the old one until that link is opened, so a typo
@@ -40,6 +45,7 @@ import { AccountSection } from './account-section';
 @Component({
   selector: 'web-account-email-section',
   imports: [
+    AccountReauthentication,
     AccountSection,
     LgButton,
     LgFormField,
@@ -81,10 +87,21 @@ export class AccountEmailSection {
   /** The address a confirmation link went to, once one is on its way. */
   protected readonly awaitingConfirmation = signal<string | null>(null);
 
+  /** Back from signing in again, the address typed before it is sent. */
+  protected readonly reauthentication = googleReauthentication('email', {
+    draft: () => this.form.controls.email.value,
+    onReturn: ({ failure, draft }) => {
+      if (draft) this.form.controls.email.setValue(draft);
+      if (failure) this.formError.set(failure);
+      else if (draft) void this.submit();
+    }
+  });
+
   protected async submit(): Promise<void> {
     this.form.markAllAsTouched();
     this.formError.set(null);
     this.awaitingConfirmation.set(null);
+    this.reauthentication.dismiss();
 
     const email = emailSchema.safeParse(this.form.controls.email.value);
     const currentPassword = this.form.controls.currentPassword.value;
@@ -136,6 +153,9 @@ export class AccountEmailSection {
           this.form.controls.email,
           'pages.my.account.email.taken'
         );
+        return;
+      case 'reauthentication_required':
+        this.reauthentication.require();
         return;
       case 'service_unavailable':
         // Nothing has moved — the address lives on the token, which was never

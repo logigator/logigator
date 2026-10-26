@@ -73,3 +73,17 @@ export const confirmPasswordResetSchema = z.object({
 });
 
 export type ConfirmPasswordReset = z.infer<typeof confirmPasswordResetSchema>;
+
+/**
+ * `DELETE /auth/google` takes the account's password: it changes how the
+ * account is signed into. Optional only so an account without one reaches the
+ * refusal that says it needs one first; the body as a whole reads as `{}` when
+ * absent, the way a deletion's does.
+ */
+export const unlinkGoogleRequestSchema = z
+  .object({
+    password: z.string().min(1).optional()
+  })
+  .default({});
+
+export type UnlinkGoogleRequest = z.infer<typeof unlinkGoogleRequestSchema>;

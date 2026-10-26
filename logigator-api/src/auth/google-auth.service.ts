@@ -52,7 +52,8 @@ export type GoogleAuthFailure =
   | 'google_state_invalid'
   | 'google_email_taken'
   | 'google_already_linked'
-  | 'google_account_mismatch';
+  | 'google_account_mismatch'
+  | 'google_reauthentication_required';
 
 export class GoogleAuthError extends Error {
   constructor(
@@ -62,6 +63,13 @@ export class GoogleAuthError extends Error {
   ) {
     super(failure);
   }
+}
+
+/** The session a flow starts from, when the caller is signed in. */
+export interface SignedInCaller {
+  userId: string;
+  /** See `SessionService.signedInRecently`. */
+  signedInRecently: boolean;
 }
 
 /** What a completed round trip leaves the controller to act on. */
@@ -108,18 +116,34 @@ export class GoogleAuthService {
    * Starts a flow and answers the URL to send the browser to. The verifier and
    * nonce stay server-side, keyed by the `state` that comes back, so a callback
    * that cannot name a flow this server started goes nowhere.
+   *
+   * A signed-in caller whose account has no Google identity yet is starting a
+   * link, which changes how the account is signed into and so needs a recent
+   * sign-in: the redirect has no way to carry a password. One whose account
+   * has an identity can only sign in again with it, at any age of the session.
    */
   async createAuthorizationUrl(
-    signedInUserId?: string,
+    caller: SignedInCaller | undefined,
     returnPath?: string | null
   ): Promise<string> {
+    // Checked here rather than trusted from the caller: this is the value the
+    // callback redirects to, and it never leaves this server in between.
+    const destination = safeReturnPath(returnPath);
+    if (caller && !caller.signedInRecently) {
+      const account = await this.users.findById(caller.userId);
+      if (!account?.googleUserId) {
+        throw new GoogleAuthError(
+          'google_reauthentication_required',
+          destination ?? undefined
+        );
+      }
+    }
+
     const configuration = await this.load();
     const verifier = randomPKCECodeVerifier();
     const state = randomState();
     const nonce = randomNonce();
-    // Checked here rather than trusted from the caller: this is the value the
-    // callback redirects to, and it never leaves this server in between.
-    const destination = safeReturnPath(returnPath);
+    const signedInUserId = caller?.userId;
 
     await this.redis.setJson(
       flowKey(state),

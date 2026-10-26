@@ -1,4 +1,12 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi
+} from 'vitest';
 import { eq } from 'drizzle-orm';
 import { users } from '../src/database/schema';
 import { CookieJar } from './cookie-jar';
@@ -75,7 +83,7 @@ describe('Google sign-in callbacks', () => {
   });
 });
 
-describe('unlinking Google', () => {
+describe('Google on a signed-in account', () => {
   let api: E2eApp;
 
   const password = 'hopper42';
@@ -85,7 +93,7 @@ describe('unlinking Google', () => {
   async function makeAccount(
     email: string,
     username: string,
-    googleUserId: string
+    googleUserId: string | null
   ): Promise<CookieJar> {
     await api.inject({
       method: 'POST',
@@ -117,12 +125,18 @@ describe('unlinking Google', () => {
     return jar;
   }
 
-  function unlink(jar: CookieJar) {
+  function unlink(jar: CookieJar, payload?: object) {
     return api.inject({
       method: 'DELETE',
       url: '/api/auth/google',
-      headers: jar.headers()
+      headers: jar.headers(),
+      ...(payload ? { payload } : {})
     });
+  }
+
+  function elevenMinutesLater(): void {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(Date.now() + 11 * 60 * 1000);
   }
 
   function readAccount(jar: CookieJar) {
@@ -145,7 +159,34 @@ describe('unlinking Google', () => {
     await api.close();
   });
 
-  it('needs a session of its own', async () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('sends a session that signed in long ago back to sign in again before linking', async () => {
+    // The redirect cannot carry a password, so a stolen cookie would otherwise
+    // attach its holder's Google account and keep a way in.
+    const jar = await makeAccount('linus@example.com', 'Linus', null);
+    elevenMinutesLater();
+
+    const response = await api.inject({
+      method: 'GET',
+      url: '/api/auth/google?returnUrl=%2Fen%2Fmy%2Faccount',
+      headers: jar.headers()
+    });
+
+    expect(response.statusCode).toBe(302);
+    const location = new URL(response.headers.location as string);
+    expect(location.origin + location.pathname).toBe(
+      'http://logigator.test/login'
+    );
+    expect(location.searchParams.get('error')).toBe(
+      'google_reauthentication_required'
+    );
+    expect(location.searchParams.get('returnUrl')).toBe('/en/my/account');
+  });
+
+  it('needs a session of its own to unlink', async () => {
     const response = await api.inject({
       method: 'DELETE',
       url: '/api/auth/google'
@@ -162,7 +203,7 @@ describe('unlinking Google', () => {
     );
     const elsewhere = await signIn('grace@example.com');
 
-    const response = await unlink(jar);
+    const response = await unlink(jar, { password });
 
     expect(response.statusCode).toBe(200);
     expect(response.json().googleLinked).toBe(false);
@@ -170,6 +211,24 @@ describe('unlinking Google', () => {
     // store indexes by account, so the rule is all of them but the caller's.
     expect((await readAccount(elsewhere)).statusCode).toBe(401);
     expect((await readAccount(jar)).statusCode).toBe(200);
+  });
+
+  it('takes the password to unlink, at any age of the session', async () => {
+    const jar = await makeAccount(
+      'edsger@example.com',
+      'Edsger',
+      'google-sub-edsger'
+    );
+    elevenMinutesLater();
+
+    const withoutProof = await unlink(jar);
+    expect(withoutProof.statusCode).toBe(401);
+    expect(withoutProof.json().code).toBe('invalid_credentials');
+    expect((await readAccount(jar)).json().googleLinked).toBe(true);
+
+    const response = await unlink(jar, { password });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().googleLinked).toBe(false);
   });
 
   it('refuses while Google is the only way back in', async () => {

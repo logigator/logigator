@@ -6,7 +6,8 @@ const GOOGLE_ERRORS: Record<string, TranslationKey> = {
   google_state_invalid: 'auth.googleErrors.stateInvalid',
   google_email_taken: 'auth.googleErrors.emailTaken',
   google_already_linked: 'auth.googleErrors.alreadyLinked',
-  google_account_mismatch: 'auth.googleErrors.accountMismatch'
+  google_account_mismatch: 'auth.googleErrors.accountMismatch',
+  google_reauthentication_required: 'auth.googleErrors.reauthenticationRequired'
 };
 
 /**
@@ -14,9 +15,9 @@ const GOOGLE_ERRORS: Record<string, TranslationKey> = {
  *
  * Shared by the sign-in page and the account page: the same callback answers
  * both — a caller with a session is linking or signing in again rather than
- * signing in — so a failure reads the same either way, and two of them
- * (`already_linked`, `account_mismatch`) can only ever happen to the account
- * page.
+ * signing in — so a failure reads the same either way, and three of them
+ * (`already_linked`, `account_mismatch`, `reauthentication_required`) can only
+ * ever happen to the account page.
  */
 export function googleErrorKey(code: string | null): TranslationKey | null {
   if (!code) return null;

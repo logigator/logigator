@@ -175,7 +175,9 @@ const en = {
       alreadyLinked:
         'That Google account belongs to another Logigator account.',
       accountMismatch:
-        'That is not the Google account linked to this Logigator account.'
+        'That is not the Google account linked to this Logigator account.',
+      reauthenticationRequired:
+        'Your last sign-in was too long ago to link Google. Sign in again first.'
     }
   },
   pages: {
@@ -563,7 +565,9 @@ const en = {
           taken: 'That email address already has an account.',
           unchanged: 'That is already your address.',
           mailFailed:
-            'The confirmation email could not be sent. Nothing has changed — please try again.'
+            'The confirmation email could not be sent. Nothing has changed — please try again.',
+          reauthenticate:
+            'Sign in with Google again to change your address. You come back here afterwards to finish.'
         },
         password: {
           heading: 'Password',
@@ -575,7 +579,9 @@ const en = {
           submit: 'Change password',
           setSubmit: 'Set password',
           saved: 'Your password was changed.',
-          sessionsNotice: 'Your other sessions are signed out. This one stays.'
+          sessionsNotice: 'Your other sessions are signed out. This one stays.',
+          reauthenticate:
+            'Sign in with Google again to set a password. You come back here afterwards to finish.'
         },
         google: {
           heading: 'Google',
@@ -587,7 +593,9 @@ const en = {
           unlinkConfirm:
             'Signing in with Google stops working. You can link it again at any time.',
           needsPassword:
-            'Set a password first — Google is currently the only way into this account.'
+            'Set a password first — Google is currently the only way into this account.',
+          reauthenticate:
+            'Your last sign-in was a while ago. Enter your password to go on linking Google.'
         },
         delete: {
           heading: 'Delete account',

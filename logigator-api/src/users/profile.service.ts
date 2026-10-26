@@ -6,6 +6,7 @@ import { rateLimited } from '../common/rate-limit.guard';
 import type { UserRow } from '../database/schema';
 import { AuthTokenService } from '../auth/auth-token.service';
 import { PasswordService } from '../auth/password.service';
+import { ReauthenticationService } from '../auth/reauthentication.service';
 import { MailService } from '../mail/mail.service';
 import { RedisService } from '../redis/redis.service';
 import { SessionService } from '../session/session.service';
@@ -21,6 +22,14 @@ import { UsersService } from './users.service';
 const EMAIL_CHANGES_PER_WINDOW = 5;
 const EMAIL_CHANGE_WINDOW_SECONDS = 3600;
 
+/** The session a request arrived on, as far as a change of account needs it. */
+export interface RequestSession {
+  /** Spared when a password change signs the account's other sessions out. */
+  id?: string;
+  /** See `SessionService.signedInRecently`. */
+  signedInRecently: boolean;
+}
+
 /** Whether the update is still waiting on a confirmation mail. */
 export interface ProfileUpdateResult {
   user: UserRow;
@@ -32,10 +41,10 @@ export interface ProfileUpdateResult {
  *
  * A session alone is not proof of intent for anything that moves control of the
  * account: the password, the address and deletion all need the current
- * password, and deletion a fresh sign-in where there is none. Leaving the
- * address off that list turns a stolen session cookie into a takeover —
- * change the address, confirm from the new mailbox, then reset the password,
- * none of it gated by anything the owner knows.
+ * password, or a fresh sign-in where there is none. Leaving the address off
+ * that list turns a stolen session cookie into a takeover — change the
+ * address, confirm from the new mailbox, then reset the password, none of it
+ * gated by anything the owner knows.
  */
 @Injectable()
 export class ProfileService {
@@ -44,6 +53,7 @@ export class ProfileService {
   constructor(
     private readonly users: UsersService,
     private readonly passwords: PasswordService,
+    private readonly reauthentication: ReauthenticationService,
     private readonly tokens: AuthTokenService,
     private readonly mail: MailService,
     private readonly files: FileStorageService,
@@ -52,15 +62,11 @@ export class ProfileService {
     private readonly redis: RedisService
   ) {}
 
-  /**
-   * @param currentSessionId the session making the request, which a password
-   * change spares when it signs the account's other sessions out.
-   */
   async update(
     user: UserRow,
     body: UpdateUserRequest,
     locale: Locale,
-    currentSessionId?: string
+    session: RequestSession
   ): Promise<ProfileUpdateResult> {
     // Checked against the row the guard loaded so a stale form is refused
     // before anything is hashed or mailed; the guarded write decides a race.
@@ -81,7 +87,14 @@ export class ProfileService {
     // Once for both: bcrypt is deliberately expensive, and a combined change
     // would otherwise verify the same password twice.
     if (body.password !== undefined || body.email !== undefined) {
-      await this.assertPasswordAllowed(user, body.currentPassword);
+      await this.reauthentication.assertProven(
+        user,
+        body.currentPassword,
+        session.signedInRecently,
+        body.password !== undefined
+          ? 'Sign in again to set a password.'
+          : 'Sign in again to change the email address.'
+      );
     }
 
     if (body.username !== undefined) {
@@ -124,7 +137,7 @@ export class ProfileService {
     if (body.password !== undefined) {
       // The password that let the other sessions in is gone, so they go with
       // it. This one stays: the identity did not change.
-      await this.sessions.signOutEverywhere(user.id, currentSessionId);
+      await this.sessions.signOutEverywhere(user.id, session.id);
     }
 
     return { user: updated, emailVerificationSent };
@@ -172,36 +185,21 @@ export class ProfileService {
    * Deletes the account and everything it owns. The cascade does the work in
    * one statement, so an account cannot be left half-deleted.
    *
-   * The proof asked for is the password where the account has one, and
-   * otherwise a sign-in within the last few minutes: a Google-only member
-   * signs in through Google again, which a stolen session cookie cannot do.
-   *
-   * @param signedInRecently whether the session asking signed in within the
-   * window {@link SessionService.signedInRecently} names.
+   * It takes the password, or a fresh sign-in where there is none: a
+   * Google-only member signs in through Google again, which a stolen session
+   * cookie cannot do.
    */
   async deleteAccount(
     user: UserRow,
     password: string | undefined,
-    signedInRecently: boolean
+    session: RequestSession
   ): Promise<void> {
-    if (user.passwordHash) {
-      if (
-        !password ||
-        !(await this.passwords.verify(password, user.passwordHash))
-      ) {
-        throw new ApiException(
-          HttpStatus.UNAUTHORIZED,
-          'invalid_credentials',
-          'The password is incorrect.'
-        );
-      }
-    } else if (!signedInRecently) {
-      throw new ApiException(
-        HttpStatus.FORBIDDEN,
-        'reauthentication_required',
-        'Sign in again to delete this account.'
-      );
-    }
+    await this.reauthentication.assertProven(
+      user,
+      password,
+      session.signedInRecently,
+      'Sign in again to delete this account.'
+    );
 
     await this.users.delete(user.id);
     if (user.avatarId) await this.files.removeAsset('profile', user.avatarId);
@@ -251,29 +249,6 @@ export class ProfileService {
       );
     }
     return true;
-  }
-
-  /**
-   * An account that has a password must prove it knows it, for a change of
-   * password or of address alike. One that does not — a Google sign-in — has
-   * nothing to prove with, and its session is the only proof available.
-   */
-  private async assertPasswordAllowed(
-    user: UserRow,
-    currentPassword: string | undefined
-  ): Promise<void> {
-    if (!user.passwordHash) return;
-
-    if (
-      !currentPassword ||
-      !(await this.passwords.verify(currentPassword, user.passwordHash))
-    ) {
-      throw new ApiException(
-        HttpStatus.UNAUTHORIZED,
-        'invalid_credentials',
-        'The current password is incorrect.'
-      );
-    }
   }
 }
 

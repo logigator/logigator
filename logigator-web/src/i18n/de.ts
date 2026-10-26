@@ -169,7 +169,9 @@ const de: TranslationSchema = {
       alreadyLinked:
         'Dieses Google-Konto gehört bereits zu einem anderen Logigator-Konto.',
       accountMismatch:
-        'Das ist nicht das Google-Konto, das mit diesem Logigator-Account verknüpft ist.'
+        'Das ist nicht das Google-Konto, das mit diesem Logigator-Account verknüpft ist.',
+      reauthenticationRequired:
+        'Deine letzte Anmeldung ist zu lange her, um Google zu verknüpfen. Melde dich zuerst noch einmal an.'
     }
   },
   pages: {
@@ -552,7 +554,9 @@ const de: TranslationSchema = {
           taken: 'Zu dieser E-Mail-Adresse gibt es schon einen Account.',
           unchanged: 'Das ist bereits deine Adresse.',
           mailFailed:
-            'Die Bestätigungsmail konnte nicht gesendet werden. Es hat sich nichts geändert – bitte versuche es erneut.'
+            'Die Bestätigungsmail konnte nicht gesendet werden. Es hat sich nichts geändert – bitte versuche es erneut.',
+          reauthenticate:
+            'Melde dich noch einmal mit Google an, um deine Adresse zu ändern. Danach kommst du hierher zurück und schließt es ab.'
         },
         password: {
           heading: 'Passwort',
@@ -566,7 +570,9 @@ const de: TranslationSchema = {
           setSubmit: 'Passwort festlegen',
           saved: 'Dein Passwort wurde geändert.',
           sessionsNotice:
-            'Deine anderen Sitzungen werden abgemeldet. Diese bleibt.'
+            'Deine anderen Sitzungen werden abgemeldet. Diese bleibt.',
+          reauthenticate:
+            'Melde dich noch einmal mit Google an, um ein Passwort festzulegen. Danach kommst du hierher zurück und schließt es ab.'
         },
         google: {
           heading: 'Google',
@@ -578,7 +584,9 @@ const de: TranslationSchema = {
           unlinkConfirm:
             'Die Anmeldung mit Google funktioniert dann nicht mehr. Du kannst sie jederzeit wieder verknüpfen.',
           needsPassword:
-            'Lege zuerst ein Passwort fest – Google ist gerade der einzige Weg in diesen Account.'
+            'Lege zuerst ein Passwort fest – Google ist gerade der einzige Weg in diesen Account.',
+          reauthenticate:
+            'Deine letzte Anmeldung ist schon eine Weile her. Gib dein Passwort ein, um Google weiter zu verknüpfen.'
         },
         delete: {
           heading: 'Account löschen',

@@ -68,13 +68,18 @@
           [attr.aria-describedby]="passwordField.describedBy()"
         />
       </lg-form-field>
-      }
-
+      } @if (reauthentication.required()) {
+      <web-account-reauthentication
+        [message]="t('pages.my.account.email.reauthenticate')"
+        [flow]="reauthentication"
+      />
+      } @else {
       <div>
         <button lgButton type="submit" [loading]="submitting()">
           {{ t('pages.my.account.email.submit') }}
         </button>
       </div>
+      }
     </form>
   </div>
 </web-account-section>

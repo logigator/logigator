@@ -265,6 +265,9 @@ service), `translation/` (OpenRouter client and worker), `common/`, plus `app.se
   so each migration leaves that API working: add first; drop, rename or tighten in a later release.
   A previous API restarted in that window is refused by the gate.
 - `AuthGuard` is per-route, never global.
+- **Changing how an account signs in or where its mail goes** (password, address, Google link and
+  unlink, deletion) takes the current password, or a sign-in from the last ten minutes where there
+  is none; `ReauthenticationService` is the one check.
 - **Machine-translated text leaves the API only through
   `GET /api/community/{kind}/:link/translation/:lang`**, never on a document or listing response. A
   translation, and a detected language, is served only while its digest matches the document's

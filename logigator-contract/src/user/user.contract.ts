@@ -119,9 +119,11 @@ export type UserResponse = z.infer<typeof userResponseSchema>;
 
 /**
  * A partial profile update. Changing the password or the address of an account
- * that has a password requires `currentPassword`: a session alone is not proof
- * of intent for anything that moves control of the account. An address change
- * takes effect only once the mailed verification link is opened.
+ * that has a password requires `currentPassword`, and one without a password
+ * needs a recent sign-in instead, answered `reauthentication_required` without
+ * it: a session alone is not proof of intent for anything that moves control
+ * of the account. An address change takes effect only once the mailed
+ * verification link is opened.
  *
  * `profileVersion` is optional, and a client writing back fields it loaded
  * sends it: the update is then refused with `version_conflict` if the profile

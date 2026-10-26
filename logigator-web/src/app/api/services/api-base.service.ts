@@ -93,15 +93,22 @@ export class ApiBaseService {
   }
 
   /**
-   * `DELETE` with a body to validate. Removing a star answers the state it
+   * `DELETE` answering a body to validate. Removing a star answers the state it
    * produced rather than `204`, so the caller needs the count without a
-   * second read.
+   * second read. `body` is for one that takes a password.
    */
-  public delete<T>(path: string, schema: z.ZodType<T>): Observable<T> {
+  public delete<T>(
+    path: string,
+    schema: z.ZodType<T>,
+    body?: unknown
+  ): Observable<T> {
     return this.validate(
       path,
       schema,
-      this.http.delete<unknown>(this.url(path))
+      this.http.delete<unknown>(
+        this.url(path),
+        body === undefined ? {} : { body }
+      )
     );
   }
 

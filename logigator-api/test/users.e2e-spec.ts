@@ -694,11 +694,12 @@ describe('the signed-in user', () => {
 });
 
 /**
- * Deletion's proof of identity: the password where the account has one, and a
- * sign-in a few minutes old where it does not. The clock is the only thing
- * moved, so the session is the one a browser would hold.
+ * The proof of identity deletion, a new password and a new address take: the
+ * password where the account has one, and a sign-in a few minutes old where it
+ * does not. The clock is the only thing moved, so the session is the one a
+ * browser would hold.
  */
-describe('deleting an account', () => {
+describe('changes that need more than a session', () => {
   let api: E2eApp;
   const password = 'babbage42';
   const elevenMinutes = 11 * 60 * 1000;
@@ -740,6 +741,28 @@ describe('deleting an account', () => {
     return jar;
   }
 
+  function update(jar: CookieJar, payload: object) {
+    return api.inject({
+      method: 'PATCH',
+      url: '/api/user',
+      headers: jar.headers(),
+      payload
+    });
+  }
+
+  async function storedRow(email: string) {
+    const [row] = await api.db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+    return row;
+  }
+
+  function elevenMinutesLater(): void {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(Date.now() + elevenMinutes);
+  }
+
   function deleteAccount(jar: CookieJar, payload?: object) {
     return api.inject({
       method: 'DELETE',
@@ -750,11 +773,7 @@ describe('deleting an account', () => {
   }
 
   async function exists(email: string): Promise<boolean> {
-    const rows = await api.db
-      .select()
-      .from(users)
-      .where(eq(users.email, email));
-    return rows.length > 0;
+    return (await storedRow(email)) !== undefined;
   }
 
   beforeAll(async () => {
@@ -780,8 +799,7 @@ describe('deleting an account', () => {
 
   it('asks an older session without a password to sign in again', async () => {
     const jar = await passwordlessAccount('stale@example.com', 'Stale');
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(Date.now() + elevenMinutes);
+    elevenMinutesLater();
 
     const response = await deleteAccount(jar);
 
@@ -800,13 +818,72 @@ describe('deleting an account', () => {
   it('takes the password at any age of the session', async () => {
     await register('password@example.com', 'Password');
     const jar = await signIn('password@example.com');
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(Date.now() + elevenMinutes);
+    elevenMinutesLater();
 
     const response = await deleteAccount(jar, { password });
 
     expect(response.statusCode).toBe(204);
     expect(await exists('password@example.com')).toBe(false);
+  });
+
+  it('sets a first password from a session that signed in moments ago', async () => {
+    const jar = await passwordlessAccount('first@example.com', 'First');
+
+    const response = await update(jar, { password: 'turing1936' });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().user.hasPassword).toBe(true);
+  });
+
+  it('asks an older session to sign in again before setting a first password', async () => {
+    // Otherwise a stolen cookie sets a password and signs in with it for good.
+    const jar = await passwordlessAccount('lateset@example.com', 'LateSet');
+    elevenMinutesLater();
+
+    const response = await update(jar, { password: 'turing1936' });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().code).toBe('reauthentication_required');
+    expect((await storedRow('lateset@example.com'))?.passwordHash).toBeNull();
+  });
+
+  it('moves the address of an account without a password from a fresh sign-in', async () => {
+    const jar = await passwordlessAccount('moving@example.com', 'Moving');
+
+    const response = await update(jar, { email: 'moved@example.com' });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().emailVerificationSent).toBe(true);
+    expect(api.mail.last().to).toBe('moved@example.com');
+  });
+
+  it('asks an older session without a password to sign in again before moving the address', async () => {
+    const jar = await passwordlessAccount('latemove@example.com', 'LateMove');
+    api.mail.clear();
+    elevenMinutesLater();
+
+    const response = await update(jar, { email: 'elsewhere@example.com' });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().code).toBe('reauthentication_required');
+    expect(api.mail.sent).toHaveLength(0);
+  });
+
+  it('takes the current password for a new address and password at any age of the session', async () => {
+    await register('keeper@example.com', 'Keeper');
+    const jar = await signIn('keeper@example.com');
+    api.mail.clear();
+    elevenMinutesLater();
+
+    const response = await update(jar, {
+      email: 'kept@example.com',
+      password: 'turing1936',
+      currentPassword: password
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().emailVerificationSent).toBe(true);
+    expect(api.mail.last().to).toBe('kept@example.com');
   });
 
   it('ends the session a signed-in browser signs in again over', async () => {

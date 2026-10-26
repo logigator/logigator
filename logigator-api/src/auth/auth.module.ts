@@ -10,6 +10,7 @@ import { GoogleAuthController } from './google-auth.controller';
 import { GoogleAuthService } from './google-auth.service';
 import { LoginAttemptsService } from './login-attempts.service';
 import { PasswordService } from './password.service';
+import { ReauthenticationService } from './reauthentication.service';
 
 /**
  * `AuthGuard` is exported rather than registered globally: the public community
@@ -25,9 +26,16 @@ import { PasswordService } from './password.service';
     GoogleAuthService,
     LoginAttemptsService,
     PasswordService,
+    ReauthenticationService,
     AuthGuard,
     RateLimitGuard
   ],
-  exports: [AuthGuard, PasswordService, AuthTokenService, GoogleAuthService]
+  exports: [
+    AuthGuard,
+    PasswordService,
+    ReauthenticationService,
+    AuthTokenService,
+    GoogleAuthService
+  ]
 })
 export class AuthModule {}

@@ -4,6 +4,8 @@
   [heading]="t('pages.my.account.google.heading')"
   [description]="t('pages.my.account.google.description')"
 >
+  @let passwordMessage = passwordError();
+
   <div class="flex flex-col gap-4">
     @if (failureKey(); as message) {
     <lg-message severity="danger">{{ t(message) }}</lg-message>
@@ -12,8 +14,35 @@
       <i class="ph ph-check-circle text-lg text-success" aria-hidden="true"></i>
       {{ t('pages.my.account.google.linked') }}
     </p>
-
-    @if (canUnlink()) {
+    } @if (linked() && !canUnlink()) {
+    <lg-message severity="info">
+      {{ t('pages.my.account.google.needsPassword') }}
+    </lg-message>
+    } @if (signInAgain()) {
+    <lg-message severity="info">
+      {{ t('pages.my.account.google.reauthenticate') }}
+    </lg-message>
+    } @if ((linked() && canUnlink()) || signInAgain()) {
+    <lg-form-field
+      #passwordField="lgFormField"
+      inputId="account-google-password"
+      required
+      class="max-w-sm"
+      [label]="t('pages.my.account.currentPassword')"
+      [error]="passwordMessage ? t(passwordMessage) : undefined"
+    >
+      <input
+        lgInputText
+        id="account-google-password"
+        type="password"
+        autocomplete="current-password"
+        class="w-full"
+        [formControl]="password"
+        [invalid]="!!passwordMessage"
+        [attr.aria-describedby]="passwordField.describedBy()"
+      />
+    </lg-form-field>
+    } @if (linked()) { @if (canUnlink()) {
     <div>
       <button
         lgButton
@@ -26,11 +55,20 @@
         {{ t('pages.my.account.google.unlink') }}
       </button>
     </div>
+    } } @else if (signInAgain()) {
+    <div>
+      <button
+        lgButton
+        outlined
+        severity="secondary"
+        type="button"
+        [loading]="working()"
+        (onClick)="signInAgainAndLink()"
+      >
+        {{ t('auth.continueWithGoogle') }}
+      </button>
+    </div>
     } @else {
-    <lg-message severity="info">
-      {{ t('pages.my.account.google.needsPassword') }}
-    </lg-message>
-    } } @else {
     <div>
       <!-- A plain link, not a router one: the flow leaves the app for the API
            and Google, and comes back to the path it carries. -->

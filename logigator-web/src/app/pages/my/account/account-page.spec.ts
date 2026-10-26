@@ -3,11 +3,16 @@ import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import type { Type } from '@angular/core';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
+import { of } from 'rxjs';
 import { ConfirmationService } from '@logigator/ui';
 import type { UserResponse } from '@logigator/contract';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
+import { AuthProvidersService } from '../../../user/auth-providers.service';
 import { SessionService } from '../../../user/session.service';
 import { AccountDeleteSection } from './account-delete-section';
+import { AccountEmailSection } from './account-email-section';
+import { AccountGoogleSection } from './account-google-section';
+import { AccountPasswordSection } from './account-password-section';
 import { AccountProfileSection } from './account-profile-section';
 
 const USER: UserResponse = {
@@ -34,8 +39,9 @@ describe('the account sections', () => {
   /**
    * The real `SessionService`, reinstated over the anonymous stub: these
    * sections are about what a write puts back into it, and a stub that records
-   * nothing would test nothing. It costs no request — `resolve` is what reads
-   * the API, and nothing calls it here.
+   * nothing would test nothing. `resolve` is what reads the API, and is
+   * stubbed: the app initializer's call would otherwise replace the account
+   * with the anonymous answer a missing hint cookie gets.
    */
   function render<T>(
     component: Type<T>,
@@ -46,6 +52,7 @@ describe('the account sections', () => {
       [{ provide: SessionService, useClass: SessionService }],
       [component]
     );
+    vi.spyOn(SessionService.prototype, 'resolve').mockResolvedValue();
     beforeCreate?.();
     http = TestBed.inject(HttpTestingController);
     session = TestBed.inject(SessionService);
@@ -66,7 +73,42 @@ describe('the account sections', () => {
     input.dispatchEvent(new Event('input'));
   }
 
-  beforeEach(() => TestBed.resetTestingModule());
+  /** The page as a Google round trip, or the API refusing one, leaves it. */
+  function arrivingWith(query: Record<string, string>): () => void {
+    return () => {
+      const params = convertToParamMap(query);
+      TestBed.overrideProvider(ActivatedRoute, {
+        useValue: {
+          snapshot: { queryParamMap: params },
+          queryParamMap: of(params)
+        }
+      });
+      vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    };
+  }
+
+  function refuseForAge(): void {
+    http
+      .expectOne('/api/user')
+      .flush(
+        { code: 'reauthentication_required', message: 'Sign in again.' },
+        { status: 403, statusText: 'Forbidden' }
+      );
+  }
+
+  /** Where the prompt's link sends the browser back to, as a parsed URL. */
+  function returnPathOf(link: HTMLAnchorElement) {
+    const start = new URL(link.href, 'http://localhost');
+    expect(start.pathname).toBe('/api/auth/google');
+    return TestBed.inject(Router).parseUrl(
+      start.searchParams.get('returnUrl')!
+    );
+  }
+
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    sessionStorage.clear();
+  });
 
   /**
    * The bar above reads the account out of `SessionService`, so a rename that
@@ -259,20 +301,11 @@ describe('the account sections', () => {
 
       root.querySelector('button')!.click();
       await settle();
-      http
-        .expectOne('/api/user')
-        .flush(
-          { code: 'reauthentication_required', message: 'Sign in again.' },
-          { status: 403, statusText: 'Forbidden' }
-        );
+      refuseForAge();
       await settle();
 
       const link = root.querySelector('a[href]') as HTMLAnchorElement;
-      const start = new URL(link.href, 'http://localhost');
-      expect(start.pathname).toBe('/api/auth/google');
-      const router = TestBed.inject(Router);
-      const returnPath = router.parseUrl(start.searchParams.get('returnUrl')!);
-      expect(returnPath.queryParams).toEqual({ resume: 'delete' });
+      expect(returnPathOf(link).queryParams).toEqual({ resume: 'delete' });
       // Deleting again would only be refused again.
       expect(root.querySelector('button')).toBeNull();
     });
@@ -304,6 +337,120 @@ describe('the account sections', () => {
       const request = http.expectOne('/api/user');
       expect(request.request.method).toBe('DELETE');
       expect(request.request.body).toEqual({});
+    });
+
+    it('keeps the typed address through the round trip and sends it on return', async () => {
+      render(AccountEmailSection, GOOGLE_ONLY);
+      type('account-email', 'ada@elsewhere.example');
+      root.querySelector('form')!.dispatchEvent(new Event('submit'));
+      await settle();
+      refuseForAge();
+      await settle();
+
+      const link = root.querySelector('a[href]') as HTMLAnchorElement;
+      expect(returnPathOf(link).queryParams).toEqual({ resume: 'email' });
+      // The browser would leave here; the draft is kept as it does.
+      link.addEventListener('click', (event) => event.preventDefault());
+      link.click();
+
+      TestBed.resetTestingModule();
+      render(
+        AccountEmailSection,
+        GOOGLE_ONLY,
+        arrivingWith({ resume: 'email' })
+      );
+      await settle();
+
+      const request = http.expectOne('/api/user');
+      expect(request.request.method).toBe('PATCH');
+      expect(request.request.body).toEqual({ email: 'ada@elsewhere.example' });
+    });
+
+    it('never carries a new password across the round trip', async () => {
+      render(AccountPasswordSection, GOOGLE_ONLY);
+      type('account-new-password', 'turing1936');
+      type('account-new-password-repeat', 'turing1936');
+      root.querySelector('form')!.dispatchEvent(new Event('submit'));
+      await settle();
+      refuseForAge();
+      await settle();
+
+      const link = root.querySelector('a[href]') as HTMLAnchorElement;
+      expect(returnPathOf(link).queryParams).toEqual({ resume: 'password' });
+      link.addEventListener('click', (event) => event.preventDefault());
+      link.click();
+      expect(sessionStorage.length).toBe(0);
+
+      TestBed.resetTestingModule();
+      render(
+        AccountPasswordSection,
+        GOOGLE_ONLY,
+        arrivingWith({ resume: 'password' })
+      );
+      await settle();
+
+      // Nothing to send: the member types it again, starting in the field.
+      expect(http.match(() => true)).toHaveLength(0);
+      expect(document.activeElement?.id).toBe('account-new-password');
+    });
+  });
+
+  describe('the Google section', () => {
+    function withGoogle(query: Record<string, string> = {}): () => void {
+      return () => {
+        TestBed.overrideProvider(AuthProvidersService, {
+          useValue: { googleAvailable: () => true }
+        });
+        arrivingWith(query)();
+        TestBed.inject(ConfirmationService).requireConfirmation$.subscribe(
+          (request) => request.accept?.()
+        );
+      };
+    }
+
+    /**
+     * The API starts a link only from a recent sign-in and sends an older
+     * session back. Signing in again with the password, as the account's own
+     * address, is what makes the session recent before going on to Google.
+     */
+    it('signs in again as this account when a link was refused for the session age', async () => {
+      render(
+        AccountGoogleSection,
+        USER,
+        withGoogle({ error: 'google_reauthentication_required' })
+      );
+      await settle();
+
+      type('account-google-password', 'lovelace1');
+      root.querySelector('button')!.click();
+      await settle();
+
+      const request = http.expectOne('/api/auth/login');
+      expect(request.request.body).toEqual({
+        email: 'ada@example.com',
+        password: 'lovelace1'
+      });
+    });
+
+    it('unlinks with the password', async () => {
+      render(
+        AccountGoogleSection,
+        { ...USER, googleLinked: true },
+        withGoogle()
+      );
+      await settle();
+
+      type('account-google-password', 'lovelace1');
+      root.querySelector('button')!.click();
+      await settle();
+
+      const request = http.expectOne('/api/auth/google');
+      expect(request.request.method).toBe('DELETE');
+      expect(request.request.body).toEqual({ password: 'lovelace1' });
+      request.flush({ ...USER, googleLinked: false });
+      await settle();
+
+      expect(session.user()?.googleLinked).toBe(false);
     });
   });
 });

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DOCUMENT,
   inject,
   signal
 } from '@angular/core';
@@ -25,6 +26,10 @@ import { zodValidator } from '../../../forms/zod-validator';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationKey } from '../../../translation/translation-key.model';
 import { SessionService } from '../../../user/session.service';
+import {
+  AccountReauthentication,
+  googleReauthentication
+} from './account-reauthentication';
 import { AccountSection } from './account-section';
 
 /**
@@ -33,7 +38,9 @@ import { AccountSection } from './account-section';
  * An account that has one must present it, for the reason a change of address
  * must. An account signed up through Google has none, so this is where it gets
  * its first — which is also what makes unlinking Google possible, that being
- * refused while Google is the only way back in.
+ * refused while Google is the only way back in. It needs a recent sign-in for
+ * that, and comes back here from signing in with Google again to type it; the
+ * new password is never kept across the round trip.
  *
  * A change ends every other session the old password opened, sparing this one.
  * Nothing here has to act on that: the API spares the caller's session, and the
@@ -42,6 +49,7 @@ import { AccountSection } from './account-section';
 @Component({
   selector: 'web-account-password-section',
   imports: [
+    AccountReauthentication,
     AccountSection,
     LgButton,
     LgFormField,
@@ -56,6 +64,7 @@ import { AccountSection } from './account-section';
 export class AccountPasswordSection {
   private readonly userApi = inject(UserApiService);
   private readonly session = inject(SessionService);
+  private readonly document = inject(DOCUMENT);
 
   /** False for an account that arrived through Google and has never set one. */
   protected readonly hasPassword = computed(
@@ -94,10 +103,18 @@ export class AccountPasswordSection {
   protected readonly saved = signal(false);
   protected readonly formError = signal<TranslationKey | null>(null);
 
+  protected readonly reauthentication = googleReauthentication('password', {
+    onReturn: ({ failure }) => {
+      if (failure) this.formError.set(failure);
+      else this.document.getElementById('account-new-password')?.focus();
+    }
+  });
+
   protected async submit(): Promise<void> {
     this.form.markAllAsTouched();
     this.formError.set(null);
     this.saved.set(false);
+    this.reauthentication.dismiss();
 
     const currentPassword = this.form.controls.currentPassword.value;
     if (this.hasPassword() && !currentPassword) {
@@ -130,6 +147,11 @@ export class AccountPasswordSection {
           this.form.controls.currentPassword,
           'pages.my.account.passwordIncorrect'
         );
+      } else if (
+        error instanceof ApiRequestError &&
+        error.code === 'reauthentication_required'
+      ) {
+        this.reauthentication.require();
       } else {
         this.formError.set(genericFailureKey(error));
       }

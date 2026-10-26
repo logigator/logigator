@@ -25,7 +25,7 @@ import { localeFromRequest } from '../common/locale';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
 import type { UserRow } from '../database/schema';
 import { SessionService } from '../session/session.service';
-import { ProfileService } from './profile.service';
+import { ProfileService, type RequestSession } from './profile.service';
 import { toUserResponse } from './users.service';
 
 /**
@@ -56,8 +56,7 @@ export class UsersController {
       user,
       body,
       localeFromRequest(request),
-      // Spared when a password change signs the account's other sessions out.
-      request.session.sessionId
+      this.requestSession(request)
     );
 
     return {
@@ -117,8 +116,15 @@ export class UsersController {
     await this.profile.deleteAccount(
       user,
       body.password,
-      this.session.signedInRecently(request)
+      this.requestSession(request)
     );
     await this.session.signOut(request, reply);
+  }
+
+  private requestSession(request: FastifyRequest): RequestSession {
+    return {
+      id: request.session.sessionId,
+      signedInRecently: this.session.signedInRecently(request)
+    };
   }
 }

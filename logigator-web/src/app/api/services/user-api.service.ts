@@ -4,6 +4,7 @@ import {
   updateUserResponseSchema,
   userResponseSchema,
   type DeleteUserRequest,
+  type UnlinkGoogleRequest,
   type UpdateUserRequest,
   type UpdateUserResponse,
   type UserResponse
@@ -55,11 +56,11 @@ export class UserApiService {
 
   /**
    * DELETE /api/auth/google — detaches the linked identity, answering the
-   * account as it now stands. Refused where the account has no password: Google
-   * would be the only way back in.
+   * account as it now stands. Takes the account's password, and is refused
+   * where the account has none: Google would be the only way back in.
    */
-  public unlinkGoogle(): Observable<UserResponse> {
-    return this.api.delete('/api/auth/google', userResponseSchema);
+  public unlinkGoogle(body: UnlinkGoogleRequest): Observable<UserResponse> {
+    return this.api.delete('/api/auth/google', userResponseSchema, body);
   }
 
   /**

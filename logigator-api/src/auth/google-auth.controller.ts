@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
@@ -10,7 +11,11 @@ import {
   UseGuards
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import type { UserResponse } from '@logigator/contract';
+import {
+  unlinkGoogleRequestSchema,
+  type UnlinkGoogleRequest,
+  type UserResponse
+} from '@logigator/contract';
 import { RETURN_PATH_PARAM } from '@logigator/core';
 import { ApiException } from '../common/api-exception';
 import { ENV, type Env } from '../config/env';
@@ -24,6 +29,7 @@ import {
   GoogleAuthService,
   type GoogleAuthFailure
 } from './google-auth.service';
+import { ReauthenticationService } from './reauthentication.service';
 
 /**
  * Google as a sign-in method: the two browser-facing routes of the OAuth round
@@ -39,6 +45,7 @@ export class GoogleAuthController {
     private readonly google: GoogleAuthService,
     private readonly session: SessionService,
     private readonly users: UsersService,
+    private readonly reauthentication: ReauthenticationService,
     @Inject(ENV) private readonly env: Env
   ) {}
 
@@ -46,7 +53,9 @@ export class GoogleAuthController {
    * Sends the browser to Google. A caller who is already signed in is starting
    * a link rather than a sign-in, and the flow records which; coming back with
    * the identity the account already has signs that account in again, which is
-   * how a member without a password re-authenticates.
+   * how a member without a password re-authenticates. Linking a first
+   * identity needs a recent sign-in, and a session older than that is sent
+   * back with `google_reauthentication_required`.
    *
    * `returnUrl` is where the browser should end up afterwards. It is stored
    * with the flow rather than handed to Google, and only ever as a path on this
@@ -60,10 +69,22 @@ export class GoogleAuthController {
     @Req() request: FastifyRequest,
     @Res() reply: FastifyReply
   ): Promise<void> {
-    const url = await this.google.createAuthorizationUrl(
-      request.session?.userId,
-      query[RETURN_PATH_PARAM]
-    );
+    const userId = request.session?.userId;
+    let url: string;
+    try {
+      url = await this.google.createAuthorizationUrl(
+        userId
+          ? {
+              userId,
+              signedInRecently: this.session.signedInRecently(request)
+            }
+          : undefined,
+        query[RETURN_PATH_PARAM]
+      );
+    } catch (error) {
+      if (!(error instanceof GoogleAuthError)) throw error;
+      url = this.failureUrl(error.failure, error.returnPath);
+    }
     await reply.redirect(url, 302);
   }
 
@@ -104,9 +125,8 @@ export class GoogleAuthController {
    *
    * Refused where the account has no password: Google is then the only way
    * back in, and removing it would lock its owner out of an account nobody
-   * else can reach either. Re-linking is one round trip through the route
-   * above, so this is not gated on the password the way a change of address
-   * is — it hands nobody control, and a stolen session gains nothing by it.
+   * else can reach either. Otherwise it takes that password, as every change
+   * to how the account is signed into does.
    *
    * The credential set changed, so the sessions it opened end with it, sparing
    * the one that asked.
@@ -115,6 +135,7 @@ export class GoogleAuthController {
   @UseGuards(AuthGuard)
   async unlink(
     @CurrentUser() user: UserRow,
+    @Body({ schema: unlinkGoogleRequestSchema }) body: UnlinkGoogleRequest,
     @Req() request: FastifyRequest
   ): Promise<UserResponse> {
     if (!user.googleUserId) return toUserResponse(user);
@@ -126,6 +147,12 @@ export class GoogleAuthController {
         'Set a password before unlinking Google, or there is no way back in.'
       );
     }
+    await this.reauthentication.assertProven(
+      user,
+      body.password,
+      this.session.signedInRecently(request),
+      'Sign in again to unlink Google.'
+    );
 
     const updated = await this.users.update(user.id, { googleUserId: null });
     if (!updated) {

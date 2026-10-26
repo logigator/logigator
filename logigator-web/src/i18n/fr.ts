@@ -162,7 +162,9 @@ const fr: TranslationSchema = {
         'Un compte utilise déjà cette adresse e-mail. Connectez-vous avec votre mot de passe, puis associez Google depuis votre compte.',
       alreadyLinked: 'Ce compte Google appartient à un autre compte Logigator.',
       accountMismatch:
-        'Ce n’est pas le compte Google associé à ce compte Logigator.'
+        'Ce n’est pas le compte Google associé à ce compte Logigator.',
+      reauthenticationRequired:
+        'Votre dernière connexion est trop ancienne pour lier Google. Reconnectez-vous d’abord.'
     }
   },
   pages: {
@@ -546,7 +548,9 @@ const fr: TranslationSchema = {
           taken: 'Cette adresse e-mail a déjà un compte.',
           unchanged: 'C’est déjà votre adresse.',
           mailFailed:
-            'L’e-mail de confirmation n’a pas pu être envoyé. Rien n’a changé. Réessayez.'
+            'L’e-mail de confirmation n’a pas pu être envoyé. Rien n’a changé. Réessayez.',
+          reauthenticate:
+            'Reconnectez-vous avec Google pour changer votre adresse. Vous reviendrez ensuite ici pour terminer.'
         },
         password: {
           heading: 'Mot de passe',
@@ -559,7 +563,9 @@ const fr: TranslationSchema = {
           setSubmit: 'Définir le mot de passe',
           saved: 'Votre mot de passe a été changé.',
           sessionsNotice:
-            'Vos autres sessions sont déconnectées. Celle-ci reste.'
+            'Vos autres sessions sont déconnectées. Celle-ci reste.',
+          reauthenticate:
+            'Reconnectez-vous avec Google pour définir un mot de passe. Vous reviendrez ensuite ici pour terminer.'
         },
         google: {
           heading: 'Google',
@@ -571,7 +577,9 @@ const fr: TranslationSchema = {
           unlinkConfirm:
             'La connexion avec Google cessera de fonctionner. Vous pouvez la relier à tout moment.',
           needsPassword:
-            'Définissez d’abord un mot de passe : Google est actuellement le seul accès à ce compte.'
+            'Définissez d’abord un mot de passe : Google est actuellement le seul accès à ce compte.',
+          reauthenticate:
+            'Votre dernière connexion date un peu. Saisissez votre mot de passe pour continuer à lier Google.'
         },
         delete: {
           heading: 'Supprimer le compte',

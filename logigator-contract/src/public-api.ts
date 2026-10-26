@@ -73,6 +73,7 @@ export {
   verifyEmailRequestSchema,
   requestPasswordResetSchema,
   confirmPasswordResetSchema,
+  unlinkGoogleRequestSchema,
   type RegisterRequest,
   type RegisterResponse,
   type LoginRequest,
@@ -80,7 +81,8 @@ export {
   type ResendVerificationRequest,
   type VerifyEmailRequest,
   type RequestPasswordReset,
-  type ConfirmPasswordReset
+  type ConfirmPasswordReset,
+  type UnlinkGoogleRequest
 } from './auth/auth.contract';
 export {
   pageQuerySchema,

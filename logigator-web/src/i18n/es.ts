@@ -165,7 +165,9 @@ const es: TranslationSchema = {
       alreadyLinked:
         'Esa cuenta de Google pertenece a otra cuenta de Logigator.',
       accountMismatch:
-        'Esa no es la cuenta de Google vinculada a esta cuenta de Logigator.'
+        'Esa no es la cuenta de Google vinculada a esta cuenta de Logigator.',
+      reauthenticationRequired:
+        'Tu último inicio de sesión fue hace demasiado tiempo para vincular Google. Vuelve a iniciar sesión primero.'
     }
   },
   pages: {
@@ -547,7 +549,9 @@ const es: TranslationSchema = {
           taken: 'Esa dirección de correo ya tiene una cuenta.',
           unchanged: 'Esa ya es tu dirección.',
           mailFailed:
-            'No se pudo enviar el correo de confirmación. No ha cambiado nada; inténtalo de nuevo.'
+            'No se pudo enviar el correo de confirmación. No ha cambiado nada; inténtalo de nuevo.',
+          reauthenticate:
+            'Vuelve a iniciar sesión con Google para cambiar tu dirección. Después vuelves aquí para terminar.'
         },
         password: {
           heading: 'Contraseña',
@@ -559,7 +563,9 @@ const es: TranslationSchema = {
           submit: 'Cambiar contraseña',
           setSubmit: 'Establecer contraseña',
           saved: 'Tu contraseña se cambió.',
-          sessionsNotice: 'Tus otras sesiones se cierran. Esta se mantiene.'
+          sessionsNotice: 'Tus otras sesiones se cierran. Esta se mantiene.',
+          reauthenticate:
+            'Vuelve a iniciar sesión con Google para establecer una contraseña. Después vuelves aquí para terminar.'
         },
         google: {
           heading: 'Google',
@@ -571,7 +577,9 @@ const es: TranslationSchema = {
           unlinkConfirm:
             'Iniciar sesión con Google dejará de funcionar. Puedes volver a vincularla cuando quieras.',
           needsPassword:
-            'Establece antes una contraseña: Google es ahora mismo la única forma de entrar en esta cuenta.'
+            'Establece antes una contraseña: Google es ahora mismo la única forma de entrar en esta cuenta.',
+          reauthenticate:
+            'Tu último inicio de sesión fue hace un rato. Escribe tu contraseña para seguir vinculando Google.'
         },
         delete: {
           heading: 'Eliminar cuenta',

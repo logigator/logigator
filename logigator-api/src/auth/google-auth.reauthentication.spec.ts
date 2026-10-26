@@ -69,8 +69,11 @@ describe('a Google round trip from a session', () => {
   let users: FakeUsers;
   let google: InstanceType<typeof GoogleAuthService>;
 
-  async function roundTrip(signedInAs: string) {
-    await google.createAuthorizationUrl(signedInAs, '/en/my/account');
+  async function roundTrip(signedInAs: string, signedInRecently = true) {
+    await google.createAuthorizationUrl(
+      { userId: signedInAs, signedInRecently },
+      '/en/my/account'
+    );
     return google.completeCallback({ state: 'state' }, signedInAs);
   }
 
@@ -93,10 +96,10 @@ describe('a Google round trip from a session', () => {
     );
   });
 
-  it('signs the account in again with its own identity', async () => {
+  it('signs the account in again with its own identity, however old the session', async () => {
     googleSub = 'google-ada';
 
-    const result = await roundTrip('ada');
+    const result = await roundTrip('ada', false);
 
     expect(result.user?.id).toBe('ada');
   });
@@ -126,5 +129,15 @@ describe('a Google round trip from a session', () => {
 
     expect(result.user).toBeNull();
     expect(users.accounts[1]?.googleUserId).toBe('google-grace');
+  });
+
+  it('refuses to start a first link from a session that signed in long ago', async () => {
+    googleSub = 'google-stranger';
+
+    await expect(roundTrip('grace', false)).rejects.toMatchObject({
+      failure: 'google_reauthentication_required',
+      returnPath: '/en/my/account'
+    });
+    expect(users.accounts[1]?.googleUserId).toBeNull();
   });
 });
