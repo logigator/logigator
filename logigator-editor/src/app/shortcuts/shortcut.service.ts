@@ -448,19 +448,22 @@ export class ShortcutService implements OnDestroy {
     try {
       const raw = localStorage.getItem(this.STORAGE_KEY);
       if (!raw) return;
-      const parsed: Record<string, ShortcutBinding | ShortcutBinding[] | null> =
+      const parsed: Record<string, ShortcutBinding[] | ShortcutBinding | null> =
         JSON.parse(raw);
-      for (const [action, binding] of Object.entries(parsed)) {
-        if ((Object.values(ShortcutActionEnum) as string[]).includes(action)) {
-          // Migrates old bindings that only allow for one custom keybind into an array
-          if (binding)
-            this._bindings.set(
-              action as ShortcutActionEnum,
-              Array.isArray(binding) ? binding : [binding]
-            );
-          else this._bindings.set(action as ShortcutActionEnum, []);
+      let legacyDelete: ShortcutBinding | null = null;
+      for (const [key, stored] of Object.entries(parsed)) {
+        if (!(ALL_SHORTCUT_ACTIONS as readonly string[]).includes(key))
+          continue;
+        const action = key as ShortcutActionEnum;
+        if (Array.isArray(stored)) {
+          this._bindings.set(action, stored);
+          continue;
         }
+        // The pre-array format: one binding per action, null for unassigned.
+        this._bindings.set(action, stored ? [stored] : []);
+        if (action === ShortcutActionEnum.DELETE) legacyDelete = stored;
       }
+      if (legacyDelete) this._upgradeLegacyDelete(legacyDelete);
     } catch (err) {
       /* corrupted data — keep defaults */
       this.toastService.error(
@@ -471,10 +474,31 @@ export class ShortcutService implements OnDestroy {
     }
   }
 
+  /**
+   * The pre-array format saved every action, so a DELETE stored as its old
+   * single default is no choice of the user's: it gets today's defaults,
+   * Backspace included unless another action already holds Backspace. Only
+   * the legacy format: today a stored `[Delete]` is a deliberate removal.
+   */
+  private _upgradeLegacyDelete(stored: ShortcutBinding): void {
+    const [oldDefault, ...added] = DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE];
+    if (!this._bindingEqual(stored, oldDefault)) return;
+    const free = added.filter(
+      (binding) =>
+        ![...this._bindings.entries()].some(
+          ([action, bindings]) =>
+            action !== ShortcutActionEnum.DELETE &&
+            bindings.some((b) => this._bindingEqual(b, binding))
+        )
+    );
+    this._bindings.set(ShortcutActionEnum.DELETE, [oldDefault, ...free]);
+  }
+
+  /** Only what differs from the defaults; a missing action loads its default. */
   private _saveToStorage(): void {
-    const obj: Record<string, ShortcutBinding[]> = {};
-    for (const [action, binding] of this._bindings.entries()) {
-      obj[action] = binding;
+    const obj: Partial<Record<ShortcutActionEnum, ShortcutBinding[]>> = {};
+    for (const action of ALL_SHORTCUT_ACTIONS) {
+      if (!this.isDefault(action)) obj[action] = this._bindingSignals[action]();
     }
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(obj));
   }

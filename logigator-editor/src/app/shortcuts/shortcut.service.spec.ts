@@ -321,6 +321,30 @@ describe('ShortcutService', () => {
     expect(stored[ShortcutActionEnum.COPY]).toEqual([newBinding]);
   });
 
+  it('stores only the actions that differ from their defaults', () => {
+    const q: ShortcutBinding = {
+      key: 'q',
+      ctrl: false,
+      shift: false,
+      alt: false
+    };
+    service.setBinding(ShortcutActionEnum.COPY, [q]);
+    service.setBinding(ShortcutActionEnum.PASTE, []);
+    // Back to the defaults, in another order: not a customization.
+    service.setBinding(
+      ShortcutActionEnum.DELETE,
+      [...DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE]].reverse()
+    );
+
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')).toEqual({
+      [ShortcutActionEnum.COPY]: [q],
+      [ShortcutActionEnum.PASTE]: []
+    });
+
+    service.resetAll();
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')).toEqual({});
+  });
+
   describe('loading the legacy single-binding storage format', () => {
     let reloaded: ShortcutService | undefined;
 
@@ -390,6 +414,62 @@ describe('ShortcutService', () => {
       expect(shortcuts.bindings(ShortcutActionEnum.UNDO)()).toEqual([
         stored[ShortcutActionEnum.UNDO]
       ]);
+    });
+
+    it('leaves Backspace to the action legacy storage gave it', () => {
+      const backspace = DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE][1];
+      const stored = legacyStorage();
+      stored[ShortcutActionEnum.COPY] = backspace;
+      const shortcuts = reloadFrom(stored);
+
+      expect(shortcuts.bindings(ShortcutActionEnum.DELETE)()).toEqual([
+        DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE][0]
+      ]);
+      expect(shortcuts.bindings(ShortcutActionEnum.COPY)()).toEqual([
+        backspace
+      ]);
+    });
+
+    it('keeps a legacy DELETE the user rebound', () => {
+      const x: ShortcutBinding = {
+        key: 'x',
+        ctrl: false,
+        shift: false,
+        alt: false
+      };
+      const stored = legacyStorage();
+      stored[ShortcutActionEnum.DELETE] = x;
+
+      expect(reloadFrom(stored).bindings(ShortcutActionEnum.DELETE)()).toEqual([
+        x
+      ]);
+    });
+
+    it('keeps a legacy unassigned DELETE unassigned', () => {
+      const stored = legacyStorage();
+      stored[ShortcutActionEnum.DELETE] = null;
+
+      expect(reloadFrom(stored).bindings(ShortcutActionEnum.DELETE)()).toEqual(
+        []
+      );
+    });
+
+    it('keeps a current-format DELETE of just Delete, a deliberate removal', () => {
+      const del = DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE][0];
+
+      expect(
+        reloadFrom({ [ShortcutActionEnum.DELETE]: [del] }).bindings(
+          ShortcutActionEnum.DELETE
+        )()
+      ).toEqual([del]);
+    });
+
+    it('loads an action missing from storage as its default', () => {
+      const shortcuts = reloadFrom({ [ShortcutActionEnum.COPY]: [] });
+
+      expect(shortcuts.bindings(ShortcutActionEnum.DELETE)()).toEqual(
+        DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE]
+      );
     });
 
     it('deletes with Backspace after loading legacy storage', () => {
