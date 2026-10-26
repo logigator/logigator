@@ -83,41 +83,43 @@
           class="absolute top-3 left-1/2 -translate-x-1/2 z-canvas-overlay"
         />
 
-        <!-- Bottom-left stack: toasts ride in normal flow above the
-             component-settings card, so with no selection they settle into the
-             corner. The wrapper owns placement only (no z-index, so its children
-             keep their own bands) and lets pointer events fall through; each
-             child re-enables its own. The card sits in the canvas-overlay band
-             (under windows/dialogs), the toast in the toast band (on top). The
-             card's width is fixed rather than content-sized, so it does not
-             jump with every selection; a custom component's card would
-             otherwise be as narrow as its name and buttons. -->
+        <!-- Bottom-left: the component-settings card. The wrapper owns
+             placement only and lets pointer events fall through; the card
+             re-enables its own. The card's width is fixed rather than
+             content-sized, so it does not jump with every selection; a custom
+             component's card would otherwise be as narrow as its name and
+             buttons. -->
         <div
           class="pointer-events-none absolute left-3 bottom-3 flex max-w-sm flex-col items-start"
         >
-          <lg-toast
-            [embedded]="true"
-            position="bottom-left"
-            [dismissLabel]="uiLabels().dismiss"
-          />
           <app-component-settings
             class="pointer-events-auto z-canvas-overlay w-sm max-w-full"
           ></app-component-settings>
         </div>
 
-        <!-- Bottom-right stack: the bug-report badge rides above the minimap.
-             The wrapper owns placement (canvas-overlay band) and lets pointer
-             events fall through; each child re-enables its own. -->
+        <!-- Bottom-right stack: toasts ride in normal flow above the
+             bug-report badge, which rides above the minimap. The outer wrapper
+             owns placement only (no z-index, so the toast keeps its own band
+             over dialogs) and lets pointer events fall through; each child
+             re-enables its own. The inner one puts the badge and the minimap
+             in the canvas-overlay band, under windows and dialogs. -->
         <div
-          class="pointer-events-none absolute right-3 bottom-3 z-canvas-overlay flex flex-col items-end gap-2"
+          class="pointer-events-none absolute right-3 bottom-3 flex flex-col items-end"
         >
-          <app-bug-report-badge class="pointer-events-auto" />
-          @if (rendererService.available()) {
-            <app-minimap [project]="projectService.activeProject()" />
-          }
+          <lg-toast
+            [embedded]="true"
+            position="bottom-right"
+            [dismissLabel]="uiLabels().dismiss"
+          />
+          <div class="z-canvas-overlay flex flex-col items-end gap-2">
+            <app-bug-report-badge class="pointer-events-auto" />
+            @if (rendererService.available()) {
+              <app-minimap [project]="projectService.activeProject()" />
+            }
+          </div>
         </div>
       } @else {
-        <lg-toast position="bottom-left" [dismissLabel]="uiLabels().dismiss" />
+        <lg-toast position="bottom-right" [dismissLabel]="uiLabels().dismiss" />
 
         <!-- Overlays: the container lets pointer events fall through to the
              canvas; each control re-enables them for itself. -->
