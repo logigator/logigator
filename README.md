@@ -164,7 +164,7 @@ The four libraries are never built on their own: each app compiles their source 
 change to shared code shows up everywhere at once. In development and production alike, one Caddy
 server puts the website at the root, the editor under `/editor` and the API under `/api`.
 
-To go deeper, [`CLAUDE.md`](CLAUDE.md) maps the repository and the rules that span it, and
+To go deeper, [`AGENTS.md`](AGENTS.md) maps the repository and the rules that span it, and
 [`logigator-editor/docs/`](logigator-editor/docs) explains each part of the editor.
 
 ## Contributing

@@ -53,7 +53,7 @@ To work without Docker for the apps themselves, you need Node 24 with
 [corepack](https://nodejs.org/api/corepack.html) enabled (`corepack enable`); the repository pins
 its Yarn version. Postgres and Redis still come from `docker compose up postgres redis`.
 
-To find your way around, [`CLAUDE.md`](CLAUDE.md) maps the repository and the rules that span
+To find your way around, [`AGENTS.md`](AGENTS.md) maps the repository and the rules that span
 packages, and [`logigator-editor/docs/`](logigator-editor/docs) has one page per part of the
 editor. Read the page for the part you're changing first: many files explain their reasoning in
 comments, and those rules are usually load-bearing.

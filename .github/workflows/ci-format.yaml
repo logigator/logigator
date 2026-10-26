@@ -1,7 +1,7 @@
 name: 'CI format'
 
 # Prettier runs over the whole repo, so this workflow deliberately has no path
-# filter: root files (README, CLAUDE.md, the compose files, these workflows) are
+# filter: root files (README, AGENTS.md, the compose files, these workflows) are
 # checked by nothing else, and the package workflows keep their narrow filters
 # instead of rebuilding an application for a documentation typo.
 on:

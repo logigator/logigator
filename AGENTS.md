@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 This file is a map plus the rules that span files. The reasoning behind a single file lives in that
 file's comments; read them before changing it.
