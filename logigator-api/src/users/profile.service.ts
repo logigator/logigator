@@ -2,7 +2,7 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import type { UpdateUserRequest } from '@logigator/contract';
 import { ApiException } from '../common/api-exception';
 import type { Locale } from '../common/locale';
-import { rateLimited } from '../common/rate-limit.guard';
+import { spendBudgets } from '../common/rate-limit';
 import type { UserRow } from '../database/schema';
 import { AuthTokenService } from '../auth/auth-token.service';
 import { PasswordService } from '../auth/password.service';
@@ -219,11 +219,13 @@ export class ProfileService {
 
     // Counted before the lookup, which answers whether the address has an
     // account.
-    const changes = await this.redis.countInWindow(
-      `rate:email-change:${user.id}`,
+    await spendBudgets(
+      this.redis,
+      [
+        { key: `rate:email-change:${user.id}`, limit: EMAIL_CHANGES_PER_WINDOW }
+      ],
       EMAIL_CHANGE_WINDOW_SECONDS
     );
-    if (changes > EMAIL_CHANGES_PER_WINDOW) throw rateLimited();
 
     if (await this.users.findByEmail(email)) {
       throw new ApiException(

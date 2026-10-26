@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { createHash } from 'node:crypto';
-import { rateLimited } from '../common/rate-limit.guard';
+import { type Budget, refundBudgets, spendBudgets } from '../common/rate-limit';
 import { RedisService } from '../redis/redis.service';
 import { normalizeEmail } from '../users/users.service';
 
@@ -27,11 +27,6 @@ export interface PasswordAccount {
   signedInAs?: string;
 }
 
-interface Budget {
-  key: string;
-  limit: number;
-}
-
 /**
  * Budgets for wrong passwords. Only failures count, so a classroom behind one
  * address signs in freely, while guessing at one account or spraying one
@@ -50,19 +45,13 @@ export class LoginAttemptsService {
    * holds a place in every budget.
    */
   async admit(ip: string, account: PasswordAccount): Promise<void> {
-    const budgets = failureBudgets(ip, account);
-    const keys = budgets.map((budget) => budget.key);
-    const counts = await this.redis.countInWindows(keys, WINDOW_SECONDS);
-    if (budgets.some((budget, index) => (counts[index] ?? 0) > budget.limit)) {
-      // A refused attempt never reached a password, so it is no failure.
-      await this.redis.uncountInWindows(keys, WINDOW_SECONDS);
-      throw rateLimited();
-    }
+    await spendBudgets(this.redis, failureBudgets(ip, account), WINDOW_SECONDS);
   }
 
   async forgive(ip: string, account: PasswordAccount): Promise<void> {
-    await this.redis.uncountInWindows(
-      failureBudgets(ip, account).map((budget) => budget.key),
+    await refundBudgets(
+      this.redis,
+      failureBudgets(ip, account),
       WINDOW_SECONDS
     );
   }
