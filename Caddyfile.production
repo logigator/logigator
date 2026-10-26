@@ -47,8 +47,11 @@
 		# The editor's HTML never varies, so its policy is fixed. Report-only until
 		# production reports are clean. `'unsafe-eval'` is Pixi's shader code
 		# generation, `'wasm-unsafe-eval'` the simulation, `blob:` Pixi's image
-		# workers, and the hash the critical-CSS step's `onload` handler.
-		header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' 'unsafe-hashes' 'sha256-MhtPZXr7+LpJUY5qtMutB+qWfQtMaPccfe7QXtCcEYc=' https://u.logigator.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://u.logigator.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+		# workers, and the hash the critical-CSS step's `onload` handler. Reports
+		# go to the API by both mechanisms: a browser that reads `report-to` ignores
+		# `report-uri`, and the Reporting API takes an absolute URL only.
+		header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' 'unsafe-hashes' 'sha256-MhtPZXr7+LpJUY5qtMutB+qWfQtMaPccfe7QXtCcEYc=' https://u.logigator.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://u.logigator.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; report-uri /api/csp-report; report-to csp"
+		header Reporting-Endpoints `csp="https://{http.request.host}/api/csp-report"`
 		root * /srv/editor
 		uri strip_prefix /editor
 

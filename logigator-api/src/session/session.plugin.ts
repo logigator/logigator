@@ -7,6 +7,16 @@ import { SessionService } from './session.service';
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
+declare module 'fastify' {
+  interface FastifyContextConfig {
+    /**
+     * The route never reads, slides or clears a session: its requests reach
+     * the cookie and session plugins without their `Cookie` header.
+     */
+    sessionless?: boolean;
+  }
+}
+
 /**
  * Installs cookie parsing and sessions on the Fastify instance. A function so
  * the E2E suite installs exactly the same plugins on its own instance.
@@ -20,6 +30,15 @@ export async function registerSessionPlugins(
   app: NestFastifyApplication,
   env: Env
 ): Promise<void> {
+  const fastify = app.getHttpAdapter().getInstance();
+
+  // Ahead of the cookie parser's own `onRequest`, which reads the header.
+  fastify.addHook('onRequest', async (request) => {
+    if (request.routeOptions.config.sessionless) {
+      delete request.raw.headers.cookie;
+    }
+  });
+
   await app.register(fastifyCookie);
   await app.register(fastifySession, {
     secret: env.SESSION_SECRET,
@@ -43,7 +62,6 @@ export async function registerSessionPlugins(
   });
 
   const sessions = app.get<SessionService>(SessionService);
-  const fastify = app.getHttpAdapter().getInstance();
 
   // After the session plugin's own `onRequest`, so the session is resolved, and
   // before any handler, so a request that ends the session still overrules it.

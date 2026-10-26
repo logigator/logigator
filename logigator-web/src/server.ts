@@ -16,6 +16,7 @@ import { renderChangelogFeed } from './app/pages/changelog/changelog-feed';
 import {
   CONTENT_SECURITY_POLICY_HEADER,
   createCspNonce,
+  reportingEndpoints,
   siteContentSecurityPolicy,
   type RenderContext
 } from './content-security-policy';
@@ -327,14 +328,17 @@ function rootRelative(url: string): string {
  * request either way.
  *
  * The policy's nonce is new per response, and the render stamps it on the
- * inline scripts it writes.
+ * inline scripts it writes. Its reports go to the Reporting API group only
+ * where {@link requestOrigin} vouches for the host the endpoint is named on.
  */
 app.use((req, res, next) => {
   const cspNonce = createCspNonce();
+  const origin = requestOrigin(req);
   res.setHeader('Cache-Control', 'no-store');
+  if (origin) res.setHeader('Reporting-Endpoints', reportingEndpoints(origin));
   res.setHeader(
     CONTENT_SECURITY_POLICY_HEADER,
-    siteContentSecurityPolicy(cspNonce)
+    siteContentSecurityPolicy(cspNonce, { reportTo: origin !== null })
   );
   angularApp
     .handle(req, { cspNonce } satisfies RenderContext)

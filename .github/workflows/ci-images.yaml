@@ -128,6 +128,21 @@ jobs:
           expect_header "$site/editor" "Content-Security-Policy-Report-Only: .*frame-ancestors 'self'"
           expect_header "$site/en" "Content-Security-Policy-Report-Only: .*'nonce-"
 
+          # Both policies report to the API, which takes a report and answers
+          # nothing.
+          for path in /en /editor; do
+            expect_header "$site$path" "Content-Security-Policy-Report-Only: .*report-uri /api/csp-report; report-to csp"
+            expect_header "$site$path" "Reporting-Endpoints: csp=\"$site/api/csp-report\"$"
+          done
+          status=$(fetch --output /dev/null --write-out '%{http_code}' \
+            --header 'Content-Type: application/csp-report' \
+            --data '{"csp-report":{"effective-directive":"img-src","blocked-uri":"data"}}' \
+            "$site/api/csp-report" || true)
+          if [[ $status != 204 ]]; then
+            echo "::error::a CSP report is answered $status"
+            exit 1
+          fi
+
           # What the edge may keep for a year: a file that exists, under its
           # exact address, since a purge names nothing else. A seeded example's
           # preview is one.

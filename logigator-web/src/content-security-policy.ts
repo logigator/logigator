@@ -8,6 +8,20 @@ import { homeVideo, videoEmbedUrl } from './app/pages/home/home-video';
 export const CONTENT_SECURITY_POLICY_HEADER =
   'Content-Security-Policy-Report-Only';
 
+/** Where browsers send violation reports, as `report-uri` names it. */
+const CSP_REPORT_URL = `${environment.apiUrl}/api/csp-report`;
+
+/** The Reporting API group `report-to` names. */
+const CSP_REPORT_GROUP = 'csp';
+
+/**
+ * The `Reporting-Endpoints` value that defines the group, for a page served
+ * from `origin`: the Reporting API takes an absolute URL only.
+ */
+export function reportingEndpoints(origin: string): string {
+  return `${CSP_REPORT_GROUP}="${new URL(CSP_REPORT_URL, origin).href}"`;
+}
+
 /** What `server.ts` hands a render as its `REQUEST_CONTEXT`. */
 export interface RenderContext {
   cspNonce: string;
@@ -41,13 +55,21 @@ export function createCspNonce(): string {
 /**
  * The site's policy for one rendered page.
  *
+ * Reports go to `report-uri`, and to the `report-to` group where the response
+ * defines it with {@link reportingEndpoints}: a browser that reads `report-to`
+ * ignores `report-uri`, so naming a group the response leaves undefined would
+ * silence it.
+ *
  * Scripts are the bundle, PostHog's own lazily loaded scripts and the inline
  * ones the render stamps with `nonce`: event replay's contract and the loader
  * that swaps in the full stylesheet. No `'strict-dynamic'`, so the host list
  * stays in force. Styles keep `'unsafe-inline'`: components set `style`
  * attributes at runtime, and a nonce beside it would switch it off.
  */
-export function siteContentSecurityPolicy(nonce: string): string {
+export function siteContentSecurityPolicy(
+  nonce: string,
+  { reportTo }: { reportTo: boolean }
+): string {
   const posthog = new URL(environment.analytics.posthogHost).origin;
   const video = new URL(videoEmbedUrl(homeVideo('en'))).origin;
 
@@ -63,6 +85,8 @@ export function siteContentSecurityPolicy(nonce: string): string {
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "frame-ancestors 'self'"
+    "frame-ancestors 'self'",
+    `report-uri ${CSP_REPORT_URL}`,
+    ...(reportTo ? [`report-to ${CSP_REPORT_GROUP}`] : [])
   ].join('; ');
 }

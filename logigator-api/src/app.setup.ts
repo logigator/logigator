@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import type { FastifyServerOptions } from 'fastify';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import type { Env } from './config/env';
+import { registerCspReportRoute } from './reports/csp-report.route';
 import { registerSessionPlugins } from './session/session.plugin';
 
 /**
@@ -61,6 +62,7 @@ export async function configureApiApp(
     requestEncodings: ['gzip']
   });
   await registerSessionPlugins(app, env);
+  await registerCspReportRoute(app, env);
 
   // Caddy proxies `/api/*` here; controllers declare their paths without it.
   app.setGlobalPrefix('api');

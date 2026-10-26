@@ -164,7 +164,9 @@ Angular 22, standalone + zoneless, rendered per request by `@angular/ssr` behind
 - **Rendered pages answer `Cache-Control: no-store`.**
 - **Headers that are the same on every response live in both Caddyfiles**; the site's CSP comes
   from `server.ts` with a nonce per request (`content-security-policy.ts`). The site's and the
-  editor's CSPs are Report-Only until production reports are clean.
+  editor's CSPs are Report-Only until production reports are clean. Both report to
+  `/api/csp-report` by `report-uri` and `report-to csp`; a response naming the group sends
+  `Reporting-Endpoints` too, since a browser that reads `report-to` ignores `report-uri`.
 - **A one-shot mail token is redeemed in the browser** (`afterNextRender`), never during a render:
   crawlers and mail previews render links too.
 - **`returnUrl` is validated by core's `safeReturnPath`** on both site and API.
@@ -269,6 +271,10 @@ service), `translation/` (OpenRouter client and worker), `common/`, plus `app.se
   so each migration leaves that API working: add first; drop, rename or tighten in a later release.
   A previous API restarted in that window is refused by the gate.
 - `AuthGuard` is per-route, never global.
+- **`POST /api/csp-report` is a plain Fastify route in a plugin of its own**
+  (`reports/csp-report.route.ts`), so its content-type parsers and 16 KB limit reach no other route.
+  It answers an empty `204`, opens no session (`config.sessionless`), and logs only what
+  `CspReportLog`'s dedupe and caps let through, with opaque path segments hidden.
 - **Changing how an account signs in or where its mail goes** (password, address, Google link and
   unlink, deletion) takes the current password, or a sign-in from the last ten minutes where there
   is none; `ReauthenticationService` is the one check.

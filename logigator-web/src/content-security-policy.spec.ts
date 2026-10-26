@@ -3,6 +3,7 @@ import { environment } from './environments/environment';
 import { homeVideo, videoEmbedUrl } from './app/pages/home/home-video';
 import {
   createCspNonce,
+  reportingEndpoints,
   siteContentSecurityPolicy,
   stampCspNonce
 } from './content-security-policy';
@@ -18,7 +19,9 @@ function directives(policy: string): Map<string, string[]> {
 
 describe('siteContentSecurityPolicy', () => {
   const nonce = createCspNonce();
-  const policy = directives(siteContentSecurityPolicy(nonce));
+  const policy = directives(
+    siteContentSecurityPolicy(nonce, { reportTo: true })
+  );
 
   it('runs inline script only by the nonce of this response', () => {
     const scripts = policy.get('script-src');
@@ -49,6 +52,27 @@ describe('siteContentSecurityPolicy', () => {
 
   it('is framed by this origin only', () => {
     expect(policy.get('frame-ancestors')).toEqual(["'self'"]);
+  });
+
+  it('reports to the endpoint the Reporting-Endpoints group names', () => {
+    const origin = 'https://logigator.test';
+    const [reportUri] = policy.get('report-uri') ?? [];
+    const [group] = policy.get('report-to') ?? [];
+
+    expect(reportingEndpoints(origin)).toBe(
+      `${group}="${new URL(reportUri ?? '', origin).href}"`
+    );
+  });
+
+  // A browser that reads `report-to` ignores `report-uri`, so a group the
+  // response does not define would leave it reporting nowhere.
+  it('names no group where the response defines none', () => {
+    const unvouched = directives(
+      siteContentSecurityPolicy(nonce, { reportTo: false })
+    );
+
+    expect(unvouched.has('report-to')).toBe(false);
+    expect(unvouched.get('report-uri')).toEqual(policy.get('report-uri'));
   });
 });
 
