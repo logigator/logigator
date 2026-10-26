@@ -266,9 +266,9 @@ export class ShortcutService implements OnDestroy {
     );
   }
 
+  /** Like any assignment, takes the defaults from whichever action holds them. */
   public resetBinding(action: ShortcutActionEnum): void {
-    this._bindings.set(action, DEFAULT_SHORTCUTS[action]);
-    this._saveToStorage();
+    this.setBinding(action, DEFAULT_SHORTCUTS[action]);
   }
 
   public resetAll(): void {

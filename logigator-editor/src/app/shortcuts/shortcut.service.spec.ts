@@ -190,6 +190,17 @@ describe('ShortcutService', () => {
     );
   });
 
+  it('takes a reset default back from the action that held it', () => {
+    const [ctrlC] = DEFAULT_SHORTCUTS[ShortcutActionEnum.COPY];
+    const [ctrlV] = DEFAULT_SHORTCUTS[ShortcutActionEnum.PASTE];
+    service.setBinding(ShortcutActionEnum.PASTE, [ctrlV, ctrlC]);
+    expect(service.bindings(ShortcutActionEnum.COPY)()).toEqual([]);
+
+    service.resetBinding(ShortcutActionEnum.COPY);
+    expect(service.bindings(ShortcutActionEnum.COPY)()).toEqual([ctrlC]);
+    expect(service.bindings(ShortcutActionEnum.PASTE)()).toEqual([ctrlV]);
+  });
+
   it('should reset all bindings to defaults', () => {
     service.setBinding(ShortcutActionEnum.COPY, [
       {
