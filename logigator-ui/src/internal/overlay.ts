@@ -307,6 +307,10 @@ export function createGlobalOverlay(
     hasBackdrop: options.hasBackdrop ?? true,
     backdropClass: options.backdropClass ?? 'cdk-overlay-dark-backdrop',
     panelClass: options.panelClass,
-    disposeOnNavigation: true
+    disposeOnNavigation: true,
+    // Out of the browser's top layer, which no z-index reaches: the panel
+    // stays in the `overlay` band, so the `toast` band shows over a dialog.
+    // Anchored overlays keep the top layer to open over the panel they're in.
+    usePopover: false
   });
 }
