@@ -1146,10 +1146,10 @@ const de: TranslationSchema = {
       unassign: 'Zuweisung aufheben',
       edit: 'Tastenkürzel bearbeiten',
       cancelRecording: 'Aufzeichnung abbrechen',
-      recordPrompt: 'Tasten drücken…'
+      recordPrompt: 'Tasten drücken…',
+      takenFrom: 'Von „{{action}}“ übernommen, das jetzt kein Tastenkürzel hat.'
     },
     toast: {
-      reassignedFrom: 'Tastenkürzel von „{{action}}“ entfernt',
       loadFailed:
         'Deine Tastenkürzel konnten nicht geladen werden, daher gelten die Standardwerte.'
     }

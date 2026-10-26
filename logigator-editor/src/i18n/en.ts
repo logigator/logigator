@@ -1122,10 +1122,10 @@ const en = {
       unassign: 'Unassign',
       edit: 'Edit Shortcut',
       cancelRecording: 'Cancel Recording',
-      recordPrompt: 'Press keys…'
+      recordPrompt: 'Press keys…',
+      takenFrom: 'Taken from “{{action}}”, which now has no shortcut.'
     },
     toast: {
-      reassignedFrom: 'Shortcut unassigned from “{{action}}”',
       loadFailed: 'Could not load your shortcuts, so the defaults are used.'
     }
   },

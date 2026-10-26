@@ -218,10 +218,15 @@ export class ShortcutService implements OnDestroy {
     this._enabled = false;
   }
 
+  /**
+   * Binds `action`, taking the binding from any action that holds it. Returns
+   * that action, so the caller can say so where the reader is looking.
+   */
   public setBinding(
     action: ShortcutActionEnum,
     binding: ShortcutBinding | null
-  ): void {
+  ): ShortcutActionEnum | null {
+    let takenFrom: ShortcutActionEnum | null = null;
     if (binding) {
       for (const [
         existingAction,
@@ -233,21 +238,14 @@ export class ShortcutService implements OnDestroy {
           this._bindingsEqual(existingBinding, binding)
         ) {
           this._bindings.set(existingAction, null);
-          const oldName = this.translation.translate(
-            `shortcuts.actions.${existingAction}`
-          );
-          this.toastService.info(
-            this.translation.translate('shortcuts.toast.reassignedFrom', {
-              action: oldName
-            }),
-            'ShortcutService'
-          );
+          takenFrom = existingAction;
           break;
         }
       }
     }
     this._bindings.set(action, binding);
     this._saveToStorage();
+    return takenFrom;
   }
 
   public resetBinding(action: ShortcutActionEnum): void {

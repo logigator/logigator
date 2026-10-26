@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { DialogRef, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
 import { ShortcutService } from '../shortcut.service';
 import { ShortcutActionEnum } from '../shortcut-action.enum';
@@ -6,6 +6,9 @@ import { ShortcutBinding, DEFAULT_SHORTCUTS } from '../shortcut-binding.model';
 import { ShortcutEditComponent } from '../shortcut-edit/shortcut-edit.component';
 import { TranslationKey } from '../../translation/translation-key.model';
 import { TranslateDirective } from '../../translation/translate.directive';
+
+/** How long the taken-binding hint stays up. */
+const TAKEN_HINT_MS = 4000;
 
 interface ShortcutGroup {
   labelKey: TranslationKey;
@@ -21,11 +24,37 @@ interface ShortcutGroup {
     TranslateDirective,
     ShortcutEditComponent
   ],
-  templateUrl: './shortcut-manager.component.html'
+  templateUrl: './shortcut-manager.component.html',
+  styles: `
+    .taken-hint-enter {
+      animation: taken-hint-in 200ms ease-out;
+    }
+    .taken-hint-leave {
+      animation: taken-hint-in 150ms ease-in reverse;
+    }
+    @keyframes taken-hint-in {
+      from {
+        opacity: 0;
+        transform: translateY(0.5rem);
+      }
+    }
+  `
 })
 export class ShortcutManagerComponent {
   private readonly ref = inject(DialogRef);
   protected readonly shortcutService = inject(ShortcutService);
+
+  /**
+   * The action the last binding was taken from, told in a hint floating over
+   * the dialog rather than in a toast, which would sit outside it. It goes
+   * after a few seconds, and any later change in the manager clears it.
+   */
+  protected readonly takenFrom = signal<ShortcutActionEnum | null>(null);
+  private takenTimer: ReturnType<typeof setTimeout> | undefined;
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => clearTimeout(this.takenTimer));
+  }
 
   protected readonly groups: ShortcutGroup[] = [
     {
@@ -103,11 +132,33 @@ export class ShortcutManagerComponent {
     action: ShortcutActionEnum,
     binding: ShortcutBinding | null
   ): void {
-    this.shortcutService.setBinding(action, binding);
+    this.setTakenFrom(this.shortcutService.setBinding(action, binding));
+  }
+
+  protected reset(action: ShortcutActionEnum): void {
+    this.shortcutService.resetBinding(action);
+    this.setTakenFrom(null);
+  }
+
+  protected unassign(action: ShortcutActionEnum): void {
+    this.shortcutService.setBinding(action, null);
+    this.setTakenFrom(null);
   }
 
   protected resetAll(): void {
     this.shortcutService.resetAll();
+    this.setTakenFrom(null);
+  }
+
+  private setTakenFrom(action: ShortcutActionEnum | null): void {
+    clearTimeout(this.takenTimer);
+    this.takenFrom.set(action);
+    if (action) {
+      this.takenTimer = setTimeout(
+        () => this.takenFrom.set(null),
+        TAKEN_HINT_MS
+      );
+    }
   }
 
   protected close(): void {

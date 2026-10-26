@@ -1139,10 +1139,10 @@ const fr: TranslationSchema = {
       unassign: 'Désassigner',
       edit: 'Modifier le raccourci',
       cancelRecording: 'Annuler l’enregistrement',
-      recordPrompt: 'Appuyez sur des touches…'
+      recordPrompt: 'Appuyez sur des touches…',
+      takenFrom: 'Repris de « {{action}} », qui n’a plus de raccourci.'
     },
     toast: {
-      reassignedFrom: 'Raccourci désassigné de « {{action}} »',
       loadFailed:
         'Impossible de charger vos raccourcis, les valeurs par défaut sont donc utilisées.'
     }

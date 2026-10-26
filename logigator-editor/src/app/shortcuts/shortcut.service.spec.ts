@@ -102,13 +102,26 @@ describe('ShortcutService', () => {
     expect(service.binding(ShortcutActionEnum.COPY)()).toEqual(newBinding);
   });
 
-  it('should silently unassign conflicting action on setBinding', () => {
+  it('should unassign a conflicting action on setBinding and name it', () => {
     const saveBinding = { ...DEFAULT_SHORTCUTS[ShortcutActionEnum.SAVE] };
-    service.setBinding(ShortcutActionEnum.COPY, saveBinding);
+    expect(service.setBinding(ShortcutActionEnum.COPY, saveBinding)).toBe(
+      ShortcutActionEnum.SAVE
+    );
 
     expect(service.binding(ShortcutActionEnum.SAVE)()).toBeNull();
     expect(service.binding(ShortcutActionEnum.COPY)()).toEqual(saveBinding);
-    expect(messageAdd).toHaveBeenCalledOnce();
+    expect(messageAdd).not.toHaveBeenCalled();
+  });
+
+  it('should name no action when setBinding takes nothing', () => {
+    expect(
+      service.setBinding(ShortcutActionEnum.COPY, {
+        key: 'q',
+        ctrl: false,
+        shift: false,
+        alt: false
+      })
+    ).toBeNull();
   });
 
   it('should reset a single binding to default', () => {

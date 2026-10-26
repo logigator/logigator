@@ -1132,10 +1132,10 @@ const es: TranslationSchema = {
       unassign: 'Desasignar',
       edit: 'Editar atajo',
       cancelRecording: 'Cancelar la grabación',
-      recordPrompt: 'Pulsa las teclas…'
+      recordPrompt: 'Pulsa las teclas…',
+      takenFrom: 'Tomado de «{{action}}», que ya no tiene atajo.'
     },
     toast: {
-      reassignedFrom: 'Atajo desasignado de «{{action}}»',
       loadFailed:
         'No se pudieron cargar tus atajos, así que se usan los predeterminados.'
     }
