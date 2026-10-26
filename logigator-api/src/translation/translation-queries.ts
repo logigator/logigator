@@ -62,9 +62,11 @@ interface ClaimedRow extends Record<string, unknown> {
  *
  * Pending is `translated_digest IS DISTINCT FROM text_digest`, so every write
  * path that changes the text makes the row pending again by itself. A private
- * or hidden document is never taken: it may not leave the database. A text
- * that failed {@link MAX_TRANSLATION_ATTEMPTS} times is parked until its digest
- * moves.
+ * or hidden document is never taken: it may not leave the database. An empty
+ * one, with neither a component nor a wire, is passed by too: it has nothing
+ * to show a reader, and a board drawn on later is taken from then, its text
+ * still pending. A text that failed {@link MAX_TRANSLATION_ATTEMPTS} times is
+ * parked until its digest moves.
  */
 export async function claimPending(
   db: Database,
@@ -82,6 +84,7 @@ export async function claimPending(
           WHERE translated_digest IS DISTINCT FROM text_digest
             AND visibility <> 'private'
             AND hidden_at IS NULL
+            AND (component_count > 0 OR wire_count > 0)
             AND last_edited_at < now() - make_interval(secs => ${options.debounceSeconds})
             AND (translation_claimed_at IS NULL OR translation_claimed_at < now() - ${LEASE})
             AND NOT (translation_attempt_digest = text_digest

@@ -20,7 +20,7 @@ import type {
   TranslationOutcome,
   Translator
 } from '../src/translation/translator';
-import { circuitDocument, HALF_ADDER_BODY } from './circuits';
+import { circuitDocument, EMPTY_BODY, HALF_ADDER_BODY } from './circuits';
 import { CookieJar } from './cookie-jar';
 import { startE2eApp, type E2eApp, type TranslationDriver } from './harness';
 
@@ -340,6 +340,31 @@ describe('the translation worker', () => {
     expect((await detail(project.link, 'de')).json()).toMatchObject({
       machineTranslation: true
     });
+  });
+
+  it('passes an empty board by until something is drawn on it', async () => {
+    const project = await createProject(ada, {
+      document: circuitDocument('Blank board', EMPTY_BODY)
+    });
+
+    await worker.tick();
+
+    expect(fake.callsFor(project.id)).toEqual([]);
+    expect((await row(project.id)).translatedDigest).toBeNull();
+
+    const drawn = await api.inject({
+      method: 'PUT',
+      url: `/api/projects/${project.id}`,
+      headers: ada.headers(),
+      payload: {
+        version: project.version,
+        document: circuitDocument('Blank board', HALF_ADDER_BODY)
+      }
+    });
+    expect(drawn.statusCode).toBe(200);
+    await worker.tick();
+
+    expect(fake.callsFor(project.id)).toHaveLength(1);
   });
 
   it('does not send a document made private after it was claimed', async () => {
