@@ -12,16 +12,21 @@ import './runtime.ts';
  */
 const { userResponseSchema } =
   await import('../../../../logigator-contract/src/user/user.contract.ts');
-const { projectSummarySchema, projectResponseSchema } =
+const { projectPageSchema, projectResponseSchema } =
   await import('../../../../logigator-contract/src/document/project.contract.ts');
-const { componentSummarySchema, componentResponseSchema } =
+const { componentPageSchema, componentResponseSchema } =
   await import('../../../../logigator-contract/src/document/component.contract.ts');
 
+/**
+ * Keyed by the read, each the schema the editor's API service names for it.
+ * A listing is the owner's own, so its entries are the owned summaries, which
+ * carry more than the summary a write answers with.
+ */
 export const SCHEMAS = {
   user: userResponseSchema,
-  projectSummary: projectSummarySchema,
+  projectPage: projectPageSchema,
   project: projectResponseSchema,
-  componentSummary: componentSummarySchema,
+  componentPage: componentPageSchema,
   component: componentResponseSchema
 };
 

@@ -35,11 +35,8 @@ const SHARE_LINK = 'b3cad62c-aa17-4f0e-9c2f-5a1d8e77c410';
 const CREATED_AT = '2026-01-04T12:00:00.000Z';
 
 /**
- * The fields a listing and a single read share. `visibility` and not the
- * boolean it replaced: the summaries are parsed against the schema the editor
- * validates its own reads with, where the field is one of three states and
- * `public` is not a key at all — a fixture still carrying it fails to parse
- * before the first shot is taken.
+ * The fields an owner's listing and single read share. The text languages are
+ * null, as for a text not yet looked at; the editor shows none of them.
  */
 function circuitFields<Extra extends object = object>(
   id: string,
@@ -59,60 +56,88 @@ function circuitFields<Extra extends object = object>(
     preview: null,
     createdAt: CREATED_AT,
     lastEditedAt,
+    nameLanguage: null,
+    descriptionLanguage: null,
+    texts: [],
+    hidden: null,
     ...extra
   };
 }
 
+/** One entry of an owner's listing, as a fixture writes it. */
+type Entry<K extends 'projectPage' | 'componentPage'> =
+  FixtureInput<K>['entries'][number];
+
 /** What a component's summary carries beyond the fields a project's has. */
 type ComponentFields = Pick<
-  FixtureInput<'componentSummary'>,
+  Entry<'componentPage'>,
   'symbol' | 'numInputs' | 'numOutputs' | 'labels' | 'version'
 >;
 
-const PROJECTS = (
-  [
-    [
-      '11111111-1111-4111-8111-111111111111',
-      'Example',
-      '2026-07-22T08:30:00.000Z'
-    ],
-    ['22222222-2222-4222-8222-222222222222', 'CPU', '2026-07-19T16:05:00.000Z'],
-    [
-      '33333333-3333-4333-8333-333333333333',
-      'Test',
-      '2026-07-09T11:20:00.000Z'
-    ],
-    [
-      '44444444-4444-4444-8444-444444444444',
-      'Untitled',
-      '2026-07-09T09:45:00.000Z'
-    ]
-  ] satisfies [string, string, string][]
-).map((fields) => fixture('projectSummary', circuitFields(...fields)));
+const PROJECTS = fixture(
+  'projectPage',
+  pageOf<Entry<'projectPage'>>(
+    (
+      [
+        [
+          '11111111-1111-4111-8111-111111111111',
+          'Example',
+          '2026-07-22T08:30:00.000Z'
+        ],
+        [
+          '22222222-2222-4222-8222-222222222222',
+          'CPU',
+          '2026-07-19T16:05:00.000Z'
+        ],
+        [
+          '33333333-3333-4333-8333-333333333333',
+          'Test',
+          '2026-07-09T11:20:00.000Z'
+        ],
+        [
+          '44444444-4444-4444-8444-444444444444',
+          'Untitled',
+          '2026-07-09T09:45:00.000Z'
+        ]
+      ] satisfies [string, string, string][]
+    ).map((fields) => circuitFields(...fields))
+  )
+).entries;
 
-const COMPONENTS = (
-  [
-    [
-      'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa',
-      'Memory',
-      '2026-07-21T14:00:00.000Z',
-      { symbol: 'MEM', numInputs: 6, numOutputs: 4, labels: [], version: 3 }
-    ],
-    [
-      'bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb',
-      'Register',
-      '2026-07-18T10:30:00.000Z',
-      { symbol: 'REG', numInputs: 5, numOutputs: 4, labels: [], version: 2 }
-    ]
-  ] satisfies [string, string, string, ComponentFields][]
-).map((fields) => fixture('componentSummary', circuitFields(...fields)));
+const COMPONENTS = fixture(
+  'componentPage',
+  pageOf<Entry<'componentPage'>>(
+    (
+      [
+        [
+          'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa',
+          'Memory',
+          '2026-07-21T14:00:00.000Z',
+          { symbol: 'MEM', numInputs: 6, numOutputs: 4, labels: [], version: 3 }
+        ],
+        [
+          'bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb',
+          'Register',
+          '2026-07-18T10:30:00.000Z',
+          { symbol: 'REG', numInputs: 5, numOutputs: 4, labels: [], version: 2 }
+        ]
+      ] satisfies [string, string, string, ComponentFields][]
+    ).map((fields) => circuitFields(...fields))
+  )
+).entries;
 
-const pageOf = <T>(entries: readonly T[]) => ({
-  entries,
-  page: 0,
-  pageSize: Math.max(entries.length, 1),
-  total: entries.length
-});
+/** Each entry as the single-document read answers it. */
+const OPENED_PROJECTS = PROJECTS.map((entry) => opened('project', entry));
+const OPENED_COMPONENTS = COMPONENTS.map((entry) => opened('component', entry));
+
+function pageOf<T>(entries: T[]) {
+  return {
+    entries,
+    page: 0,
+    pageSize: Math.max(entries.length, 1),
+    total: entries.length
+  };
+}
 
 /**
  * Routes `/api/**` to the fixtures and marks the session as signed in. The
@@ -143,8 +168,10 @@ export async function installApiMocks(
     }
     if (path.startsWith('/api/projects/')) {
       const id = path.slice('/api/projects/'.length);
-      const project = PROJECTS.find((p) => p.id === id) ?? PROJECTS[0];
-      return fulfil(route, single('project', project));
+      return fulfil(
+        route,
+        OPENED_PROJECTS.find((p) => p.id === id) ?? OPENED_PROJECTS[0]
+      );
     }
 
     if (path === '/api/components') {
@@ -153,16 +180,17 @@ export async function installApiMocks(
     }
     if (path.startsWith('/api/components/')) {
       const id = path.slice('/api/components/'.length);
-      const component = COMPONENTS.find((c) => c.id === id) ?? COMPONENTS[0];
-      return fulfil(route, single('component', component));
+      return fulfil(
+        route,
+        OPENED_COMPONENTS.find((c) => c.id === id) ?? OPENED_COMPONENTS[0]
+      );
     }
 
     return fulfil(route, null);
   });
 }
 
-/** A listing entry as the single-document read answers it. */
-function single<Kind extends 'project' | 'component'>(
+function opened<Kind extends 'project' | 'component'>(
   kind: Kind,
   summary: (typeof PROJECTS)[number] | (typeof COMPONENTS)[number]
 ) {
@@ -176,10 +204,7 @@ function single<Kind extends 'project' | 'component'>(
   } as FixtureInput<Kind>);
 }
 
-function filtered<T extends { name: string }>(
-  entries: readonly T[],
-  url: URL
-): readonly T[] {
+function filtered<T extends { name: string }>(entries: T[], url: URL): T[] {
   const search = url.searchParams.get('search');
   if (!search) return entries;
   const needle = search.toLowerCase();
