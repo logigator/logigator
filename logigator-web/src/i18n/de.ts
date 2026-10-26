@@ -167,7 +167,9 @@ const de: TranslationSchema = {
       emailTaken:
         'Diese E-Mail-Adresse gehört bereits zu einem Konto. Melde dich mit deinem Passwort an und verknüpfe Google anschließend in deinem Konto.',
       alreadyLinked:
-        'Dieses Google-Konto gehört bereits zu einem anderen Logigator-Konto.'
+        'Dieses Google-Konto gehört bereits zu einem anderen Logigator-Konto.',
+      accountMismatch:
+        'Das ist nicht das Google-Konto, das mit diesem Logigator-Account verknüpft ist.'
     }
   },
   pages: {
@@ -585,7 +587,9 @@ const de: TranslationSchema = {
           submit: 'Meinen Account löschen',
           confirm:
             'Alles, was du auf Logigator gemacht hast, wird endgültig gelöscht.',
-          done: 'Dein Account wurde gelöscht.'
+          done: 'Dein Account wurde gelöscht.',
+          reauthenticate:
+            'Melde dich noch einmal mit Google an, um deinen Account zu löschen. Danach kommst du hierher zurück und schließt es ab.'
         }
       }
     },

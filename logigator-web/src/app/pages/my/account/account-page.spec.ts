@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import type { Type } from '@angular/core';
 import { HttpTestingController } from '@angular/common/http/testing';
-import { Router } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
 import { ConfirmationService } from '@logigator/ui';
 import type { UserResponse } from '@logigator/contract';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
@@ -37,11 +37,16 @@ describe('the account sections', () => {
    * nothing would test nothing. It costs no request — `resolve` is what reads
    * the API, and nothing calls it here.
    */
-  function render<T>(component: Type<T>, user: UserResponse = USER): void {
+  function render<T>(
+    component: Type<T>,
+    user: UserResponse = USER,
+    beforeCreate?: () => void
+  ): void {
     configureTestBed(
       [{ provide: SessionService, useClass: SessionService }],
       [component]
     );
+    beforeCreate?.();
     http = TestBed.inject(HttpTestingController);
     session = TestBed.inject(SessionService);
     session.signedIn(user);
@@ -233,5 +238,72 @@ describe('the account sections', () => {
     expect(session.user()).toBeNull();
     expect(logout).not.toHaveBeenCalled();
     expect(home).toHaveBeenCalledWith('/en');
+  });
+
+  describe('for an account without a password', () => {
+    const GOOGLE_ONLY: UserResponse = {
+      ...USER,
+      hasPassword: false,
+      googleLinked: true
+    };
+
+    function acceptConfirmations(): void {
+      TestBed.inject(ConfirmationService).requireConfirmation$.subscribe(
+        (request) => request.accept?.()
+      );
+    }
+
+    it('sends a stale session through Google and back to this page to resume', async () => {
+      render(AccountDeleteSection, GOOGLE_ONLY);
+      acceptConfirmations();
+
+      root.querySelector('button')!.click();
+      await settle();
+      http
+        .expectOne('/api/user')
+        .flush(
+          { code: 'reauthentication_required', message: 'Sign in again.' },
+          { status: 403, statusText: 'Forbidden' }
+        );
+      await settle();
+
+      const link = root.querySelector('a[href]') as HTMLAnchorElement;
+      const start = new URL(link.href, 'http://localhost');
+      expect(start.pathname).toBe('/api/auth/google');
+      const router = TestBed.inject(Router);
+      const returnPath = router.parseUrl(start.searchParams.get('returnUrl')!);
+      expect(returnPath.queryParams).toEqual({ resume: 'delete' });
+      // Deleting again would only be refused again.
+      expect(root.querySelector('button')).toBeNull();
+    });
+
+    it('opens the confirmation on returning from Google, and deletes on accept', async () => {
+      let navigate!: ReturnType<typeof vi.spyOn>;
+      render(AccountDeleteSection, GOOGLE_ONLY, () => {
+        TestBed.overrideProvider(ActivatedRoute, {
+          useValue: {
+            snapshot: {
+              queryParamMap: convertToParamMap({ resume: 'delete' })
+            }
+          }
+        });
+        const router = TestBed.inject(Router);
+        navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+        vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+        acceptConfirmations();
+      });
+      await settle();
+
+      expect(navigate).toHaveBeenCalledWith(
+        [],
+        expect.objectContaining({
+          queryParams: { resume: null, error: null },
+          replaceUrl: true
+        })
+      );
+      const request = http.expectOne('/api/user');
+      expect(request.request.method).toBe('DELETE');
+      expect(request.request.body).toEqual({});
+    });
   });
 });

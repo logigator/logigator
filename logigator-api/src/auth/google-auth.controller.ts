@@ -44,7 +44,9 @@ export class GoogleAuthController {
 
   /**
    * Sends the browser to Google. A caller who is already signed in is starting
-   * a link rather than a sign-in, and the flow records which.
+   * a link rather than a sign-in, and the flow records which; coming back with
+   * the identity the account already has signs that account in again, which is
+   * how a member without a password re-authenticates.
    *
    * `returnUrl` is where the browser should end up afterwards. It is stored
    * with the flow rather than handed to Google, and only ever as a path on this

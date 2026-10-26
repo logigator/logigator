@@ -19,6 +19,11 @@ export const apiErrorCodeSchema = z.enum([
   'service_unavailable',
   /** Email or password did not match, as opposed to a missing session. */
   'invalid_credentials',
+  /**
+   * The action needs a sign-in newer than this session's, and the account has
+   * no password to prove it with instead; offer to sign in again.
+   */
+  'reauthentication_required',
   /** The account exists but its address is unconfirmed; offer to resend the mail. */
   'email_not_verified',
   /** A one-shot mail token is unknown, already used, or expired. */

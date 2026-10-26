@@ -1,6 +1,15 @@
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi
+} from 'vitest';
 import { eq, sql } from 'drizzle-orm';
 import { users } from '../src/database/schema';
 import { assetFilePath } from './assets';
@@ -681,5 +690,143 @@ describe('the signed-in user', () => {
       headers: jar.headers()
     });
     expect(afterwards.statusCode).toBe(401);
+  });
+});
+
+/**
+ * Deletion's proof of identity: the password where the account has one, and a
+ * sign-in a few minutes old where it does not. The clock is the only thing
+ * moved, so the session is the one a browser would hold.
+ */
+describe('deleting an account', () => {
+  let api: E2eApp;
+  const password = 'babbage42';
+  const elevenMinutes = 11 * 60 * 1000;
+
+  async function register(email: string, username: string): Promise<void> {
+    await api.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { username, email, password }
+    });
+    await api.inject({
+      method: 'POST',
+      url: '/api/auth/verify-email',
+      payload: { token: api.mail.lastToken() }
+    });
+  }
+
+  async function signIn(email: string, jar = new CookieJar()) {
+    jar.store(
+      await api.inject({
+        method: 'POST',
+        url: '/api/auth/login',
+        headers: jar.headers(),
+        payload: { email, password }
+      })
+    );
+    return jar;
+  }
+
+  /** Signed in with a password, which is then taken away: the state of an
+   * account that only ever signed in through Google. */
+  async function passwordlessAccount(email: string, username: string) {
+    await register(email, username);
+    const jar = await signIn(email);
+    await api.db
+      .update(users)
+      .set({ passwordHash: null })
+      .where(eq(users.email, email));
+    return jar;
+  }
+
+  function deleteAccount(jar: CookieJar, payload?: object) {
+    return api.inject({
+      method: 'DELETE',
+      url: '/api/user',
+      headers: jar.headers(),
+      ...(payload ? { payload } : {})
+    });
+  }
+
+  async function exists(email: string): Promise<boolean> {
+    const rows = await api.db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+    return rows.length > 0;
+  }
+
+  beforeAll(async () => {
+    api = await startE2eApp();
+  });
+
+  afterAll(async () => {
+    await api.close();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('takes a session that signed in moments ago where there is no password', async () => {
+    const jar = await passwordlessAccount('fresh@example.com', 'Fresh');
+
+    const response = await deleteAccount(jar);
+
+    expect(response.statusCode).toBe(204);
+    expect(await exists('fresh@example.com')).toBe(false);
+  });
+
+  it('asks an older session without a password to sign in again', async () => {
+    const jar = await passwordlessAccount('stale@example.com', 'Stale');
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(Date.now() + elevenMinutes);
+
+    const response = await deleteAccount(jar);
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json().code).toBe('reauthentication_required');
+    expect(await exists('stale@example.com')).toBe(true);
+    // Refused, not signed out: the session is still the way back to Google.
+    const account = await api.inject({
+      method: 'GET',
+      url: '/api/user',
+      headers: jar.headers()
+    });
+    expect(account.statusCode).toBe(200);
+  });
+
+  it('takes the password at any age of the session', async () => {
+    await register('password@example.com', 'Password');
+    const jar = await signIn('password@example.com');
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(Date.now() + elevenMinutes);
+
+    const response = await deleteAccount(jar, { password });
+
+    expect(response.statusCode).toBe(204);
+    expect(await exists('password@example.com')).toBe(false);
+  });
+
+  it('ends the session a signed-in browser signs in again over', async () => {
+    await register('twice@example.com', 'Twice');
+    const jar = await signIn('twice@example.com');
+    const before = jar.headers();
+
+    await signIn('twice@example.com', jar);
+
+    const old = await api.inject({
+      method: 'GET',
+      url: '/api/user',
+      headers: before
+    });
+    expect(old.statusCode).toBe(401);
+    const current = await api.inject({
+      method: 'GET',
+      url: '/api/user',
+      headers: jar.headers()
+    });
+    expect(current.statusCode).toBe(200);
   });
 });

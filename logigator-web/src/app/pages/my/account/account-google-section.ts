@@ -20,6 +20,7 @@ import { TranslationService } from '../../../translation/translation.service';
 import { AuthProvidersService } from '../../../user/auth-providers.service';
 import { googleErrorKey } from '../../../user/google-auth-errors';
 import { SessionService } from '../../../user/session.service';
+import { RESUME_DELETE_PARAM } from './account-delete-section';
 import { AccountSection } from './account-section';
 
 /**
@@ -78,10 +79,12 @@ export class AccountGoogleSection {
    * configured sign-in URL, and `guestGuard` sends a visitor who still has a
    * session on to where the flow started, carrying the `?error=` with it.
    */
-  protected readonly failureKey = computed(
-    () =>
-      this.unlinkFailure() ?? googleErrorKey(this.query()?.get('error') ?? null)
-  );
+  protected readonly failureKey = computed(() => {
+    const query = this.query();
+    // A round trip to finish a deletion reports its failure there.
+    if (query?.has(RESUME_DELETE_PARAM)) return this.unlinkFailure();
+    return this.unlinkFailure() ?? googleErrorKey(query?.get('error') ?? null);
+  });
 
   /**
    * The API's own start route, on the API's origin — a full document load, not

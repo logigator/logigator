@@ -163,7 +163,9 @@ const es: TranslationSchema = {
       emailTaken:
         'Ya hay una cuenta con esa dirección de correo. Inicia sesión con tu contraseña y luego vincula Google desde tu cuenta.',
       alreadyLinked:
-        'Esa cuenta de Google pertenece a otra cuenta de Logigator.'
+        'Esa cuenta de Google pertenece a otra cuenta de Logigator.',
+      accountMismatch:
+        'Esa no es la cuenta de Google vinculada a esta cuenta de Logigator.'
     }
   },
   pages: {
@@ -578,7 +580,9 @@ const es: TranslationSchema = {
           submit: 'Eliminar mi cuenta',
           confirm:
             'Todo lo que has hecho en Logigator se elimina, para siempre.',
-          done: 'Tu cuenta se eliminó.'
+          done: 'Tu cuenta se eliminó.',
+          reauthenticate:
+            'Vuelve a iniciar sesión con Google para eliminar tu cuenta. Después vuelves aquí para terminar.'
         }
       }
     },

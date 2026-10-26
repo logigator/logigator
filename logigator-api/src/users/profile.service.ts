@@ -32,9 +32,10 @@ export interface ProfileUpdateResult {
  *
  * A session alone is not proof of intent for anything that moves control of the
  * account: the password, the address and deletion all need the current
- * password. Leaving the address off that list turns a stolen session cookie
- * into a takeover — change the address, confirm from the new mailbox, then
- * reset the password, none of it gated by anything the owner knows.
+ * password, and deletion a fresh sign-in where there is none. Leaving the
+ * address off that list turns a stolen session cookie into a takeover —
+ * change the address, confirm from the new mailbox, then reset the password,
+ * none of it gated by anything the owner knows.
  */
 @Injectable()
 export class ProfileService {
@@ -170,8 +171,19 @@ export class ProfileService {
   /**
    * Deletes the account and everything it owns. The cascade does the work in
    * one statement, so an account cannot be left half-deleted.
+   *
+   * The proof asked for is the password where the account has one, and
+   * otherwise a sign-in within the last few minutes: a Google-only member
+   * signs in through Google again, which a stolen session cookie cannot do.
+   *
+   * @param signedInRecently whether the session asking signed in within the
+   * window {@link SessionService.signedInRecently} names.
    */
-  async deleteAccount(user: UserRow, password?: string): Promise<void> {
+  async deleteAccount(
+    user: UserRow,
+    password: string | undefined,
+    signedInRecently: boolean
+  ): Promise<void> {
     if (user.passwordHash) {
       if (
         !password ||
@@ -183,6 +195,12 @@ export class ProfileService {
           'The password is incorrect.'
         );
       }
+    } else if (!signedInRecently) {
+      throw new ApiException(
+        HttpStatus.FORBIDDEN,
+        'reauthentication_required',
+        'Sign in again to delete this account.'
+      );
     }
 
     await this.users.delete(user.id);

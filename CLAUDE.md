@@ -162,6 +162,9 @@ Angular 22, standalone + zoneless, rendered per request by `@angular/ssr` behind
   `<form method="get">` writing the URL; listing routes need
   `runGuardsAndResolvers: 'paramsOrQueryParamsChange'`.
 - **Rendered pages answer `Cache-Control: no-store`.**
+- **Headers that are the same on every response live in both Caddyfiles**; the site's CSP comes
+  from `server.ts` with a nonce per request (`content-security-policy.ts`). The site's and the
+  editor's CSPs are Report-Only until production reports are clean.
 - **A one-shot mail token is redeemed in the browser** (`afterNextRender`), never during a render:
   crawlers and mail previews render links too.
 - **`returnUrl` is validated by core's `safeReturnPath`** on both site and API.

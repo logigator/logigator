@@ -9,6 +9,16 @@
   <div class="flex max-w-sm flex-col gap-4">
     @if (formError(); as message) {
     <lg-message severity="danger">{{ t(message) }}</lg-message>
+    } @if (reauthenticate()) {
+    <lg-message severity="info">
+      {{ t('pages.my.account.delete.reauthenticate') }}
+    </lg-message>
+    <div>
+      <!-- A plain link: the round trip leaves the app for the API and Google. -->
+      <a lgButton outlined severity="secondary" [href]="reauthenticateUrl()">
+        {{ t('auth.continueWithGoogle') }}
+      </a>
+    </div>
     } @if (needsPassword()) {
     <lg-form-field
       #passwordField="lgFormField"
@@ -28,8 +38,7 @@
         [attr.aria-describedby]="passwordField.describedBy()"
       />
     </lg-form-field>
-    }
-
+    } @if (!reauthenticate()) {
     <div>
       <button
         lgButton
@@ -41,5 +50,6 @@
         {{ t('pages.my.account.delete.submit') }}
       </button>
     </div>
+    }
   </div>
 </web-account-section>

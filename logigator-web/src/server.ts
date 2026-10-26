@@ -13,6 +13,12 @@ import { docDestinations } from './app/pages/docs/doc-destinations';
 import { loadDocPage } from './app/pages/docs/doc-content';
 import { loadChangelog } from './app/pages/changelog/changelog-content';
 import { renderChangelogFeed } from './app/pages/changelog/changelog-feed';
+import {
+  CONTENT_SECURITY_POLICY_HEADER,
+  createCspNonce,
+  siteContentSecurityPolicy,
+  type RenderContext
+} from './content-security-policy';
 import { requestOrigin } from './request-origin';
 import { createErrorHandler, logProcessFailures } from './server-errors';
 import { pathInLanguage } from './app/translation/language-url';
@@ -319,11 +325,19 @@ function rootRelative(url: string): string {
  * markup and the transfer state. None of that may be held by a shared cache,
  * and there is nothing to gain from holding it: the page is rendered per
  * request either way.
+ *
+ * The policy's nonce is new per response, and the render stamps it on the
+ * inline scripts it writes.
  */
 app.use((req, res, next) => {
+  const cspNonce = createCspNonce();
   res.setHeader('Cache-Control', 'no-store');
+  res.setHeader(
+    CONTENT_SECURITY_POLICY_HEADER,
+    siteContentSecurityPolicy(cspNonce)
+  );
   angularApp
-    .handle(req)
+    .handle(req, { cspNonce } satisfies RenderContext)
     .then((response) =>
       response ? writeResponseToNodeResponse(response, res) : next()
     )

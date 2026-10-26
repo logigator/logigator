@@ -169,9 +169,11 @@ export const updateUserResponseSchema = z
 export type UpdateUserResponse = z.infer<typeof updateUserResponseSchema>;
 
 /**
- * Deleting an account requires its password, if it has one. The whole body is
- * optional and an absent one reads as `{}`, because an account with no password
- * has nothing to send and a bare `DELETE` carries no payload.
+ * Deleting an account requires its password, if it has one; one without a
+ * password needs a recent sign-in instead, and is answered
+ * `reauthentication_required` without it. The whole body is optional and an
+ * absent one reads as `{}`, because an account with no password has nothing to
+ * send and a bare `DELETE` carries no payload.
  */
 export const deleteUserRequestSchema = z
   .object({

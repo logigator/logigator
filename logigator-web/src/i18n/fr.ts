@@ -160,7 +160,9 @@ const fr: TranslationSchema = {
       stateInvalid: 'Cette tentative de connexion a expiré. Recommencez.',
       emailTaken:
         'Un compte utilise déjà cette adresse e-mail. Connectez-vous avec votre mot de passe, puis associez Google depuis votre compte.',
-      alreadyLinked: 'Ce compte Google appartient à un autre compte Logigator.'
+      alreadyLinked: 'Ce compte Google appartient à un autre compte Logigator.',
+      accountMismatch:
+        'Ce n’est pas le compte Google associé à ce compte Logigator.'
     }
   },
   pages: {
@@ -578,7 +580,9 @@ const fr: TranslationSchema = {
           submit: 'Supprimer mon compte',
           confirm:
             'Tout ce que vous avez créé sur Logigator sera supprimé, définitivement.',
-          done: 'Votre compte a été supprimé.'
+          done: 'Votre compte a été supprimé.',
+          reauthenticate:
+            'Reconnectez-vous avec Google pour supprimer votre compte. Vous reviendrez ensuite ici pour terminer.'
         }
       }
     },

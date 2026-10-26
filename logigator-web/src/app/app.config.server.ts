@@ -1,11 +1,16 @@
 import {
   ApplicationConfig,
+  CSP_NONCE,
+  DOCUMENT,
   inject,
   mergeApplicationConfig,
-  REQUEST
+  provideEnvironmentInitializer,
+  REQUEST,
+  REQUEST_CONTEXT
 } from '@angular/core';
 import { provideServerRendering, withRoutes } from '@angular/ssr';
 import { apiOrigin } from '../api-origin';
+import { cspNonceOf, stampCspNonce } from '../content-security-policy';
 import { appConfig } from './app.config';
 import { serverRoutes } from './app.routes.server';
 import { API_ORIGIN } from './api/server-api.interceptor';
@@ -32,7 +37,17 @@ const serverConfig: ApplicationConfig = {
       provide: SITE_ORIGIN,
       useFactory: () =>
         new URL(inject(REQUEST)?.url ?? SITE_ORIGIN_FALLBACK).origin
-    }
+    },
+    // The nonce of the policy `server.ts` sends, for the scripts the render
+    // writes: event replay stamps its own from `CSP_NONCE`.
+    {
+      provide: CSP_NONCE,
+      useFactory: () => cspNonceOf(inject(REQUEST_CONTEXT))
+    },
+    provideEnvironmentInitializer(() => {
+      const nonce = inject(CSP_NONCE);
+      if (nonce) stampCspNonce(inject(DOCUMENT), nonce);
+    })
   ]
 };
 

@@ -5,9 +5,22 @@ logigator.test {
 	# encoding is left alone, so an upstream compressing its own output keeps it.
 	encode zstd gzip
 
+	# What is the same on every response, from every upstream and from the files
+	# served here. `X-Frame-Options` stands beside the CSPs' `frame-ancestors` for
+	# browsers without them. The deletion is a directive of its own: a block
+	# that deletes is deferred as a whole, and error responses then miss it.
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options SAMEORIGIN
+	}
+	header -X-Powered-By
+
 	# The API, for the editor and the website alike.
 	@api path /api /api/*
 	handle @api {
+		# JSON and PNG only.
+		header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
 		reverse_proxy api:3000
 	}
 
@@ -18,6 +31,11 @@ logigator.test {
 	# and the editor rewrites the address itself.
 	@editor path /editor /editor/*
 	handle @editor {
+		# The editor's HTML never varies, so its policy is fixed. Report-only until
+		# production reports are clean. `'unsafe-eval'` is Pixi's shader code
+		# generation, `'wasm-unsafe-eval'` the simulation, `blob:` Pixi's image
+		# workers, and the hash the critical-CSS step's `onload` handler.
+		header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' 'unsafe-hashes' 'sha256-MhtPZXr7+LpJUY5qtMutB+qWfQtMaPccfe7QXtCcEYc=' https://u.logigator.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://u.logigator.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
 		rewrite /editor /editor/
 		reverse_proxy editor:4200
 	}
@@ -29,6 +47,9 @@ logigator.test {
 	# excepted: a deleted one has to stop being served, so it is kept an hour.
 	@storage path /files/*
 	handle @storage {
+		# Uploads are re-encoded; this keeps anything that ever turns out to be
+		# HTML or SVG inert when opened directly.
+		header Content-Security-Policy "default-src 'none'; sandbox"
 		root * /srv
 		uri strip_prefix /files
 		file_server

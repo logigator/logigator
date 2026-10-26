@@ -172,7 +172,10 @@ const en = {
       stateInvalid: 'That sign-in attempt expired. Please start again.',
       emailTaken:
         'An account already uses that email address. Sign in with your password, then link Google from your account.',
-      alreadyLinked: 'That Google account belongs to another Logigator account.'
+      alreadyLinked:
+        'That Google account belongs to another Logigator account.',
+      accountMismatch:
+        'That is not the Google account linked to this Logigator account.'
     }
   },
   pages: {
@@ -593,7 +596,9 @@ const en = {
           submit: 'Delete my account',
           confirm:
             'Everything you have made on Logigator is deleted, for good.',
-          done: 'Your account was deleted.'
+          done: 'Your account was deleted.',
+          reauthenticate:
+            'Sign in with Google again to delete your account. You come back here afterwards to finish.'
         }
       }
     },

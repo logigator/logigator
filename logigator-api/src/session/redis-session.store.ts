@@ -75,6 +75,12 @@ export class RedisSessionStore implements SessionStore {
     await this.redis.removeFromSet(index, doomed);
   }
 
+  /** Deletes one session of an account and drops it from the index. */
+  async discard(userId: string, sessionId: string): Promise<void> {
+    await this.redis.delete(key(sessionId));
+    await this.forget(userId, sessionId);
+  }
+
   /** Drops one id from the index, for a session that is ending deliberately. */
   async forget(userId: string, sessionId: string): Promise<void> {
     await this.redis.removeFromSet(userIndexKey(userId), [sessionId]);

@@ -114,7 +114,11 @@ export class UsersController {
     @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply
   ): Promise<void> {
-    await this.profile.deleteAccount(user, body.password);
+    await this.profile.deleteAccount(
+      user,
+      body.password,
+      this.session.signedInRecently(request)
+    );
     await this.session.signOut(request, reply);
   }
 }

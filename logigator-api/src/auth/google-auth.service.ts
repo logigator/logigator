@@ -51,7 +51,8 @@ export type GoogleAuthFailure =
   | 'google_failed'
   | 'google_state_invalid'
   | 'google_email_taken'
-  | 'google_already_linked';
+  | 'google_already_linked'
+  | 'google_account_mismatch';
 
 export class GoogleAuthError extends Error {
   constructor(
@@ -67,7 +68,10 @@ export class GoogleAuthError extends Error {
 export interface GoogleCallbackResult {
   /**
    * The account whose session should be started, or `null` when a link
-   * succeeded and the caller is already signed in as that account.
+   * succeeded and the caller is already signed in as that account. A caller
+   * who comes back with the identity their account already has is signed in
+   * again, as that account, which is what makes the round trip a
+   * re-authentication.
    */
   user: UserRow | null;
   /** Where the browser asked to be sent, if it named a place. */
@@ -171,7 +175,10 @@ export class GoogleAuthService {
     }
   }
 
-  /** The account behind a callback, or `null` when it completed a link. */
+  /**
+   * The account behind a callback: the identity's own on a sign-in, the
+   * caller's on a re-authentication, and `null` when it completed a link.
+   */
   private async identify(
     query: Record<string, string>,
     flow: PendingFlow,
@@ -189,8 +196,7 @@ export class GoogleAuthService {
       if (!signedInUserId || signedInUserId !== flow.userId) {
         throw new GoogleAuthError('google_state_invalid');
       }
-      await this.link(flow.userId, googleUserId);
-      return null;
+      return this.linkOrReauthenticate(flow.userId, googleUserId);
     }
 
     return this.findOrCreate(googleUserId, email, claims);
@@ -226,12 +232,28 @@ export class GoogleAuthService {
     }
   }
 
-  private async link(userId: string, googleUserId: string): Promise<void> {
+  /**
+   * A round trip started from a session: the identity the account already has
+   * signs it in again; a new one is linked, unless the account already has a
+   * different one. Only the first proves anything about the account, so only
+   * the first answers it — a Google account the member also controls is proof
+   * of that Google account alone, and replacing the linked identity with it
+   * would hand the account to whoever holds the session.
+   */
+  private async linkOrReauthenticate(
+    userId: string,
+    googleUserId: string
+  ): Promise<UserRow | null> {
     const existing = await this.users.findByGoogleUserId(googleUserId);
     if (existing && existing.id !== userId) {
       throw new GoogleAuthError('google_already_linked');
     }
-    if (existing) return;
+    if (existing) return existing;
+
+    const account = await this.users.findById(userId);
+    if (account?.googleUserId) {
+      throw new GoogleAuthError('google_account_mismatch');
+    }
 
     try {
       await this.users.update(userId, { googleUserId });
@@ -242,6 +264,7 @@ export class GoogleAuthService {
       }
       throw error;
     }
+    return null;
   }
 
   private async findOrCreate(

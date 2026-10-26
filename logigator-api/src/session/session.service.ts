@@ -15,6 +15,12 @@ const AUTH_HINT_COOKIE = 'isAuthenticated';
 
 const MINUTE_IN_MS = 60 * 1000;
 
+/**
+ * How long a sign-in counts as proof of identity for an action that cannot be
+ * undone, where the account has no password to ask for instead.
+ */
+const RECENT_SIGN_IN_MS = 10 * MINUTE_IN_MS;
+
 /** Starts and ends signed-in sessions. */
 @Injectable()
 export class SessionService {
@@ -26,12 +32,34 @@ export class SessionService {
   /**
    * Binds the session to `userId`. The id is regenerated first: reusing an id
    * the caller already held would let whoever handed it over ride along on the
-   * new sign-in (session fixation).
+   * new sign-in (session fixation). A session the caller was already signed in
+   * with ends here, since `regenerate` leaves it in the store, still valid for
+   * anyone holding its old cookie.
    */
   async signIn(request: FastifyRequest, userId: string): Promise<void> {
+    const previous = request.session.userId
+      ? { userId: request.session.userId, id: request.session.sessionId }
+      : null;
+
     await request.session.regenerate();
+    if (previous) await this.store.discard(previous.userId, previous.id);
+
+    const now = Date.now();
     request.session.userId = userId;
-    request.session.touchedAt = Date.now();
+    request.session.signedInAt = now;
+    request.session.touchedAt = now;
+  }
+
+  /**
+   * Whether the session was signed in within the last few minutes. A stolen
+   * cookie is usually older than that, so this stands in for a password where
+   * the account has none.
+   */
+  signedInRecently(request: FastifyRequest): boolean {
+    const signedInAt = request.session?.signedInAt;
+    return (
+      signedInAt !== undefined && Date.now() - signedInAt < RECENT_SIGN_IN_MS
+    );
   }
 
   /**
