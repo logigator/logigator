@@ -43,6 +43,8 @@ export interface CallUsage {
   generationId: string | null;
   costUsd: number | null;
   promptTokens: number | null;
+  /** The part of `promptTokens` the provider read from its prompt cache. */
+  cachedTokens: number | null;
   completionTokens: number | null;
 }
 

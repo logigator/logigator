@@ -35,7 +35,12 @@ function completion(
     model: 'vendor/served-model-20261001',
     provider: 'SomeProvider',
     choices: [{ finish_reason: finishReason, message: { content } }],
-    usage: { prompt_tokens: 600, completion_tokens: 120, cost: 0.0004 }
+    usage: {
+      prompt_tokens: 600,
+      prompt_tokens_details: { cached_tokens: 512 },
+      completion_tokens: 120,
+      cost: 0.0004
+    }
   };
 }
 
@@ -183,6 +188,7 @@ describe('OpenRouterClient.translate', () => {
     });
     expect(outcome.calls).toHaveLength(1);
     expect(outcome.calls[0].costUsd).toBe(0.0004);
+    expect(outcome.calls[0].cachedTokens).toBe(512);
   });
 
   it('retries a schema-invalid reply once, naming what was wrong', async () => {
@@ -424,6 +430,7 @@ describe('OpenRouterClient.translate', () => {
     const all = logs.join('\n');
     expect(all).toContain('doc-42');
     expect(all).toContain('0.0004');
+    expect(all).toContain('512 cached');
     expect(all).toContain('vendor/served-model-20261001');
     expect(all).not.toContain('7f3a');
     expect(all).not.toContain('Volladdierer');

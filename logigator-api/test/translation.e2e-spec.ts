@@ -32,6 +32,7 @@ const USAGE: CallUsage = {
   generationId: null,
   costUsd: 0,
   promptTokens: 1,
+  cachedTokens: 0,
   completionTokens: 1
 };
 

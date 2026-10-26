@@ -274,7 +274,8 @@ export class OpenRouterClient implements Translator {
     this.logger.log(
       `Translation call for ${documentId}: ${usage.model ?? 'unknown model'} ` +
         `via ${usage.provider ?? 'unknown provider'}, ` +
-        `${usage.promptTokens ?? '?'} prompt + ${usage.completionTokens ?? '?'} completion tokens, ` +
+        `${usage.promptTokens ?? '?'} prompt (${usage.cachedTokens ?? '?'} cached) + ` +
+        `${usage.completionTokens ?? '?'} completion tokens, ` +
         `$${usage.costUsd ?? '?'} (${usage.generationId ?? 'no generation id'})`
     );
   }
@@ -339,6 +340,8 @@ function readCompletion(body: unknown): {
   }
   const record = body as Record<string, unknown>;
   const usage = record['usage'] as Record<string, unknown> | undefined;
+  const promptDetails = usage?.['prompt_tokens_details'] as
+    Record<string, unknown> | undefined;
   const served = 'usage' in record || 'model' in record;
   const choices = record['choices'];
   const first = Array.isArray(choices)
@@ -354,6 +357,7 @@ function readCompletion(body: unknown): {
           generationId: stringOrNull(record['id']),
           costUsd: numberOrNull(usage?.['cost']),
           promptTokens: numberOrNull(usage?.['prompt_tokens']),
+          cachedTokens: numberOrNull(promptDetails?.['cached_tokens']),
           completionTokens: numberOrNull(usage?.['completion_tokens'])
         }
       : null,
