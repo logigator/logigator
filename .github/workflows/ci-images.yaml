@@ -128,6 +128,23 @@ jobs:
           expect_header "$site/editor" "Content-Security-Policy-Report-Only: .*frame-ancestors 'self'"
           expect_header "$site/en" "Content-Security-Policy-Report-Only: .*'nonce-"
 
+          # What the edge may keep for a year: a file that exists, under its
+          # exact address, since a purge names nothing else. A seeded example's
+          # preview is one.
+          listing=$(fetch "$site/api/community/projects")
+          if [[ ! $listing =~ (/files/preview/[^\"]+\.webp) ]]; then
+            echo "::error::the community listing names no preview"
+            exit 1
+          fi
+          preview=${BASH_REMATCH[1]}
+          expect_header "$site$preview" 'CDN-Cache-Control: public, max-age=31536000$'
+          expect_header "$site$preview" 'Cache-Control: public, max-age=31536000, immutable$'
+          expect_header "$site$preview?v=1" 'CDN-Cache-Control: no-store$'
+          if headers_of "$site/files/smoke-test.webp" | grep --quiet --ignore-case '^CDN-Cache-Control:'; then
+            echo "::error::a missing file under /files is held at the edge"
+            exit 1
+          fi
+
       - name: 'Stack logs'
         if: ${{ failure() && needs.pre_job.outputs.skip_stack != 'true' }}
         shell: bash

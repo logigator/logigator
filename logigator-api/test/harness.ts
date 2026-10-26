@@ -23,6 +23,10 @@ import { runMigrations } from '../src/database/migrate';
 import { MAIL_TRANSPORT } from '../src/mail/mail.transport';
 import { createRedisClient } from '../src/redis/redis.client';
 import {
+  CACHE_PURGE,
+  type CachePurge
+} from '../src/storage/cache-purge/cache-purge';
+import {
   TRANSLATION_CLOCK,
   type TranslationClock,
   TranslationWorker
@@ -136,6 +140,12 @@ export interface E2eAppOptions {
    * worker out exactly as in production.
    */
   translator?: Translator;
+  /**
+   * The CDN purges go to, in place of the environment's provider (`none`).
+   * The queue's interval drains it too; a spec drains it itself with
+   * `CachePurgeQueue.drain`.
+   */
+  cachePurge?: CachePurge;
 }
 
 export interface E2eApp {
@@ -207,6 +217,11 @@ export async function startE2eApp(
       .useValue(options.translator)
       .overrideProvider(TRANSLATION_CLOCK)
       .useValue(clock);
+  }
+  if (options.cachePurge) {
+    builder = builder
+      .overrideProvider(CACHE_PURGE)
+      .useValue(options.cachePurge);
   }
   const moduleRef = await builder.compile();
 

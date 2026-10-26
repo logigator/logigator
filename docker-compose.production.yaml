@@ -18,6 +18,12 @@
 # it, set `new,old` and drop `old` once SESSION_MAX_AGE_DAYS have passed. On
 # the server, also set SITE_HOST, POSTGRES_PASSWORD and CLOUDFLARE_TUNNEL_TOKEN.
 #
+# The origin lets Cloudflare keep every file under /files for a year, so on the
+# server the API has to purge a deleted one: set CACHE_PURGE_PROVIDER=cloudflare,
+# CLOUDFLARE_ZONE_ID and CLOUDFLARE_API_TOKEN (a token with the zone's Cache
+# Purge permission only). Set the zone's Browser Cache TTL to "Respect Existing
+# Headers" as well, or Cloudflare raises an avatar's hour in browsers to four.
+#
 # On the server, LOGIGATOR_VERSION names the release whose images a `pull`
 # fetches (`latest` without it); a local `up --build` builds them instead,
 # under the same names. Either way, `up` migrates the database and seeds the
@@ -46,6 +52,9 @@ x-api-environment: &api-environment
   TRANSLATION_ENABLED: ${TRANSLATION_ENABLED:-}
   OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
   OPENROUTER_PRESET: ${OPENROUTER_PRESET:-}
+  CACHE_PURGE_PROVIDER: ${CACHE_PURGE_PROVIDER:-}
+  CLOUDFLARE_ZONE_ID: ${CLOUDFLARE_ZONE_ID:-}
+  CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
 
 services:
   tunnel:

@@ -259,6 +259,10 @@ service), `translation/` (OpenRouter client and worker), `common/`, plus `app.se
   The hidden state reaches its owner alone (owned summaries, and `hidden` on their own detail read).
 - **Uploads are decoded and re-encoded** by sharp, never stored as sent; the volume is served under
   one root, `/files`.
+- **A deleted `/files` file is purged from the CDN by exact URL**: `FileStorageService.removeAsset`
+  queues every file of the asset, and `CachePurgeQueue` purges each once it is gone from the volume,
+  through the `CachePurge` provider (`CACHE_PURGE_PROVIDER`). The edge holds `/files` a year
+  (`CDN-Cache-Control`), so nothing deletes a served file any other way.
 - **The startup gate refuses a database whose applied migrations differ from the build's**, in
   either direction. Nothing migrates on boot.
 - **Migrations are expand/contract.** A deploy's `migrate` runs while the previous API still serves,

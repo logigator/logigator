@@ -14,7 +14,8 @@ export type ImageFormat = z.infer<typeof imageFormatSchema>;
  * of these rather than one URL: the server owns the ladder, the client picks
  * from it, so neither side encodes the other's rules. What a URL names never
  * changes, and replacing the image replaces the list. A deleted image's URL
- * stops resolving, so avatars are cached for an hour rather than forever.
+ * stops resolving and is purged from the CDN; a browser's copy cannot be, so
+ * browsers keep an avatar an hour and a preview a year.
  */
 export const imageVariantSchema = z
   .object({

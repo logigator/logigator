@@ -3,7 +3,7 @@ import type {
   ImageFormat,
   ImageVariant
 } from '@logigator/contract';
-import { assetUrl, type StorageArea } from './file-storage.service';
+import { assetUrl, type StorageArea } from './storage-layout';
 
 /**
  * Which source an asset's variants are derived from. A preview has one render

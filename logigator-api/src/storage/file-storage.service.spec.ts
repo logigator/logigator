@@ -1,9 +1,10 @@
-import { mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
+import { access, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Logger } from '@nestjs/common';
 import type { Env } from '../config/env';
+import type { CachePurgeQueue } from './cache-purge/cache-purge-queue';
 import {
   assetPath,
   assetUrl,
@@ -38,12 +39,29 @@ describe('the asset layout', () => {
 describe('FileStorageService', () => {
   let root: string;
   let files: FileStorageService;
+  /** Each queued file, and whether it was still on the volume when queued. */
+  let queued: { file: string; present: boolean }[];
+  let enqueue: (files: readonly string[]) => Promise<void>;
 
   beforeEach(async () => {
     root = await mkdtemp(join(tmpdir(), 'logigator-storage-'));
-    files = new FileStorageService({ STORAGE_DIR: root } as Env);
-    // The refusal below logs; a passing suite should not read like a failure.
+    queued = [];
+    enqueue = async (paths) => {
+      for (const file of paths) {
+        const present = await access(join(root, file)).then(
+          () => true,
+          () => false
+        );
+        queued.push({ file, present });
+      }
+    };
+    const purges = {
+      enqueue: (paths: readonly string[]) => enqueue(paths)
+    } as CachePurgeQueue;
+    files = new FileStorageService({ STORAGE_DIR: root } as Env, purges);
+    // The refusals below log; a passing suite should not read like a failure.
     vi.spyOn(Logger.prototype, 'warn').mockReturnValue(undefined);
+    vi.spyOn(Logger.prototype, 'error').mockReturnValue(undefined);
   });
 
   afterEach(async () => {
@@ -66,9 +84,10 @@ describe('FileStorageService', () => {
 
   /**
    * Deleting takes the directory, not the files it knows about, so the variant
-   * matrix can change without stranding what an older one named.
+   * matrix can change without stranding what an older one named — on the
+   * volume or at the edge.
    */
-  it('deletes files it never wrote, along with the rest of the asset', async () => {
+  it('deletes and purges files it never wrote, along with the rest of the asset', async () => {
     const id = await files.writeAsset('profile', [
       { name: '64.webp', content: Buffer.from('current') }
     ]);
@@ -78,6 +97,24 @@ describe('FileStorageService', () => {
     await files.removeAsset('profile', id);
 
     await expect(readdir(directory)).rejects.toMatchObject({ code: 'ENOENT' });
+    // Queued while still there: a crash before the unlink loses no purge.
+    expect(queued.sort((a, b) => a.file.localeCompare(b.file))).toEqual([
+      { file: `${assetPath('profile', id)}/512.avif`, present: true },
+      { file: `${assetPath('profile', id)}/64.webp`, present: true }
+    ]);
+  });
+
+  it('deletes an asset even when its purge cannot be queued', async () => {
+    const id = await files.writeAsset('preview', [
+      { name: 'dark-512.webp', content: Buffer.from('render') }
+    ]);
+    enqueue = () => Promise.reject(new Error('Redis is down'));
+
+    await files.removeAsset('preview', id);
+
+    await expect(
+      readdir(join(root, assetPath('preview', id)))
+    ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
   /**
@@ -115,5 +152,7 @@ describe('FileStorageService', () => {
     for (const shard of shards) {
       expect(await readdir(join(root, 'profile', shard))).toEqual([]);
     }
+    // Nothing named it, so no edge holds it.
+    expect(queued).toEqual([]);
   });
 });

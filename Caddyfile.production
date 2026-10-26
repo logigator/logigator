@@ -73,19 +73,26 @@
 
 	# The API's storage volume: avatars and circuit previews. Every file under it
 	# is written once under a name nothing reuses — replacing an asset means a new
-	# directory and a new pointer — so the URLs are safe to cache forever, and
-	# serving them here keeps a static read off the application entirely. Only a
-	# file that exists is: the edge would otherwise hold a 404 for a year.
+	# directory and a new pointer — and serving them here keeps a static read off
+	# the application entirely.
 	#
-	# Avatars excepted: a deleted one has to stop being served, so the edge and
-	# the browser keep one an hour and then revalidate, which a deleted file
-	# answers with a 404.
+	# The edge keeps a file for a year (`CDN-Cache-Control`, RFC 9213, which no
+	# browser reads): the API purges a deleted file from it by exact URL. A copy in
+	# a browser cannot be purged, so `Cache-Control` keeps an avatar an hour
+	# there and a preview a year. Only a file that exists is held, or the edge
+	# would keep a 404 for a year; and never under a query string, which makes an
+	# address no purge names.
 	handle_path /files/* {
 		# Uploads are re-encoded; this keeps anything that ever turns out to be
 		# HTML or SVG inert when opened directly.
 		header Content-Security-Policy "default-src 'none'; sandbox"
 		root * /srv/files
-		@forever {
+		@held {
+			file
+			query ""
+		}
+		@queried not query ""
+		@preview {
 			file
 			not path /profile/*
 		}
@@ -93,7 +100,9 @@
 			file
 			path /profile/*
 		}
-		header @forever Cache-Control "public, max-age=31536000, immutable"
+		header @held CDN-Cache-Control "public, max-age=31536000"
+		header @queried CDN-Cache-Control "no-store"
+		header @preview Cache-Control "public, max-age=31536000, immutable"
 		header @avatar Cache-Control "public, max-age=3600"
 		file_server
 	}
