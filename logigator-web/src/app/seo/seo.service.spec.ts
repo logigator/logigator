@@ -399,6 +399,31 @@ describe('SeoService', () => {
     expect(document.head.querySelector('meta[name="robots"]')).toBeNull();
   });
 
+  it('names no identity for a page kept out of an index', () => {
+    // A canonical, `og:url` or translation of a token page would only repeat
+    // its token, and none of them is anything to an index that drops the page.
+    const seo = TestBed.inject(SeoService);
+    seo.apply({ titleKey: 'pages.home.title' }, '/en/features');
+    seo.apply(
+      {
+        titleKey: 'pages.verifyEmail.title',
+        noindex: () => true,
+        breadcrumb: false
+      },
+      '/en/verify-email/abc'
+    );
+
+    expect(links('canonical')).toEqual([]);
+    expect(links('alternate')).toEqual([]);
+    expect(metaContent('og:url')).toEqual([]);
+    expect(document.head.innerHTML).not.toContain('abc');
+
+    seo.apply({ titleKey: 'pages.home.title' }, '/en/features');
+    expect(links('canonical')).toHaveLength(1);
+    expect(links('alternate')).toHaveLength(5);
+    expect(metaContent('og:url')).toHaveLength(1);
+  });
+
   it('lets a page decide from what it resolved, on every navigation', () => {
     // One route, two answers: a document's own page is a search result or not
     // depending on the visibility its guard resolved, which the route

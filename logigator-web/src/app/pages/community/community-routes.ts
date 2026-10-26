@@ -7,6 +7,7 @@ import { PageMeta } from '../../seo/seo.service';
 import { TranslationKey } from '../../translation/translation-key.model';
 import { TranslationService } from '../../translation/translation.service';
 import { CommunityBrowsePage } from './community-browse-page';
+import { CommunityBrowseService } from './community-browse.service';
 import { communityBrowseGuard } from './community-browse.guard';
 import { communityDocumentJsonLd } from './community-document-json-ld';
 import { CommunityDocumentPage } from './community-document-page';
@@ -14,7 +15,7 @@ import { communityDocumentGuard } from './community-document.guard';
 import { CommunityDocumentService } from './community-document.service';
 import { apiKindOf, CommunityRouteData } from './community-kind';
 import { profileJsonLd } from './profile-json-ld';
-import { listingCanonicalQuery } from './listing-query';
+import { DEFAULT_ORDER, listingCanonicalQuery } from './listing-query';
 import { ProfileListing } from './profile-listing';
 import { ProfilePage } from './profile-page';
 import {
@@ -81,6 +82,17 @@ const profileNoindex = (): boolean => {
   const profiles = inject(ProfileService);
   const profile = profiles.profile();
   return profile ? !profileIsIndexable(profile) : profiles.missing();
+};
+
+/**
+ * Whether a browse listing is kept out of an index: a search, or a ranking
+ * other than the default. Both show documents the plain listing pages through
+ * as well, so each is a view of it rather than a page of its own — and a
+ * search result is not something to send a searcher to.
+ */
+const browseNoindex = (): boolean => {
+  const { search, orderBy } = inject(CommunityBrowseService).query();
+  return search.length > 0 || orderBy !== DEFAULT_ORDER;
 };
 
 /**
@@ -201,6 +213,7 @@ function documentRoutes(
         seo: {
           titleKey,
           descriptionKey: ledeKey,
+          noindex: browseNoindex,
           canonicalQuery: listingCanonicalQuery
         } satisfies PageMeta
       } satisfies CommunityRouteData & { seo: PageMeta }

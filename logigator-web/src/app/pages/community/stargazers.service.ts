@@ -3,7 +3,7 @@ import type { Author } from '@logigator/contract';
 import type { CommunityKind } from '../../api/services/community-api.service';
 import { CommunityApiService } from '../../api/services/community-api.service';
 import { contentSection } from '../../transfer/content-section';
-import { STARGAZER_PAGE_SIZE } from './listing-query';
+import { pastLastPage, STARGAZER_PAGE_SIZE } from './listing-query';
 
 /**
  * Who starred a document, most recent first.
@@ -42,6 +42,11 @@ export class StargazersService {
       ? 1
       : Math.max(1, Math.ceil(total / STARGAZER_PAGE_SIZE));
   });
+
+  /** Whether the URL asks for a page past the last one. */
+  public readonly pastLastPage = computed(() =>
+    pastLastPage(this.page(), this.listing.total(), STARGAZER_PAGE_SIZE)
+  );
 
   public async resolve(
     kind: CommunityKind,

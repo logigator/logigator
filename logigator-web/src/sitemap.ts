@@ -64,10 +64,9 @@ export const STATIC_PAGES: readonly SitemapPage[] = [
  * A page could be one entry naming the unprefixed URL instead, which is what
  * the legacy hand-maintained file did — but that URL is the negotiating `302`,
  * and a `<loc>` a crawler has to be redirected away from is not the address of
- * anything. Each language version is its own canonical (decision 52), so each
- * is its own entry, and all four plus `x-default` are annotated on every one of
- * them: that reciprocal set is what marks the five as translations rather than
- * duplicates.
+ * anything. Each language version is its own canonical, so each is its own
+ * entry, and all four plus `x-default` are annotated on every one of them: that
+ * reciprocal set is what marks the five as translations rather than duplicates.
  *
  * One file of a set rather than the whole site: {@link sitemapFiles} cuts the
  * pages into files that stay inside a crawler's limits, and

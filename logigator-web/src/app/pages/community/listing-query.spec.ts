@@ -3,7 +3,8 @@ import { ActivatedRouteSnapshot, convertToParamMap } from '@angular/router';
 import {
   listingCanonicalQuery,
   listingParams,
-  listingQuery
+  listingQuery,
+  pastLastPage
 } from './listing-query';
 
 /** A snapshot carrying only what `listingQuery` reads. */
@@ -40,8 +41,8 @@ describe('listingQuery', () => {
 describe('listingParams', () => {
   it('writes no parameter for the default view', () => {
     // Three rankings of one set of documents are one page rather than three:
-    // the canonical drops `orderBy` entirely, so the default view has to be the
-    // plain URL or a share of it would report a page the canonical disowns.
+    // the other two are `noindex`, so the default view has to be the plain URL
+    // or the one ranking an index holds would have no address.
     expect(listingParams({ page: 0, search: '', orderBy: 'trending' })).toEqual(
       {
         page: null,
@@ -81,5 +82,24 @@ describe('listingCanonicalQuery', () => {
 
   it('folds a search, every page of it, into the plain listing', () => {
     expect(canonical('search=adder&page=3')).toBe('');
+  });
+});
+
+describe('pastLastPage', () => {
+  it('finds the first page past the last row, and none before it', () => {
+    // 48 rows at 24 a page are pages 0 and 1; one more row opens page 2.
+    expect(pastLastPage(1, 48, 24)).toBe(false);
+    expect(pastLastPage(2, 48, 24)).toBe(true);
+    expect(pastLastPage(2, 49, 24)).toBe(false);
+  });
+
+  it('never puts the first page past the end', () => {
+    // An empty listing is a page that says so, not a 404.
+    expect(pastLastPage(0, 0, 24)).toBe(false);
+    expect(pastLastPage(1, 0, 24)).toBe(true);
+  });
+
+  it('has no verdict for a read that failed', () => {
+    expect(pastLastPage(9, null, 24)).toBe(false);
   });
 });

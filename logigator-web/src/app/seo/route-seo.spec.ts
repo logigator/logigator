@@ -108,7 +108,9 @@ describe('every page route', () => {
     // written a bio (both factories are held to that in
     // `community-routes.spec.ts`). Its stargazer sibling is not on the list:
     // a document that is not public has no stargazer list, so that page is the
-    // site's 404 there, and a status of its own is what a crawler reads.
+    // site's 404 there, and a status of its own is what a crawler reads. The
+    // two browse listings opt out of a search and of the rankings other than
+    // the default, each a view of the plain listing.
     const noindex = rendered
       .filter((page) => page.seo?.noindex)
       .map((page) => page.path);
@@ -117,6 +119,8 @@ describe('every page route', () => {
       new Set([
         '/:lang/reset-password',
         '/:lang/verify-email/:token',
+        '/:lang/community/projects',
+        '/:lang/community/components',
         '/:lang/community/projects/:link',
         '/:lang/community/components/:link',
         '/:lang/community/users/:id',

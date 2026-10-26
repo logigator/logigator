@@ -14,7 +14,7 @@ import { contentSection } from '../../transfer/content-section';
 import { TransferHandoffService } from '../../transfer/transfer-handoff.service';
 import { TranslationKey } from '../../translation/translation-key.model';
 import { TranslationService } from '../../translation/translation.service';
-import { BROWSE_PAGE_SIZE, ListingQuery } from './listing-query';
+import { BROWSE_PAGE_SIZE, ListingQuery, pastLastPage } from './listing-query';
 
 /** Which of a member's four public listings a route shows. */
 export type ProfileSection =
@@ -93,6 +93,11 @@ export class ProfileService {
       ? 1
       : Math.max(1, Math.ceil(total / BROWSE_PAGE_SIZE));
   });
+
+  /** Whether the URL asks for a page past the tab's last one. */
+  public readonly pastLastPage = computed(() =>
+    pastLastPage(this._query().page, this.listing.total(), BROWSE_PAGE_SIZE)
+  );
 
   /** Whether the rows all share an author — the member's own work — which is
    * what decides whether a tile carries a meta row at all. */

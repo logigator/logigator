@@ -4,7 +4,12 @@ import { CommunityApiService } from '../../api/services/community-api.service';
 import { CommunityRow } from '../../documents/circuit-tile-entry';
 import { contentSection } from '../../transfer/content-section';
 import { TranslationService } from '../../translation/translation.service';
-import { BROWSE_PAGE_SIZE, DEFAULT_ORDER, ListingQuery } from './listing-query';
+import {
+  BROWSE_PAGE_SIZE,
+  DEFAULT_ORDER,
+  ListingQuery,
+  pastLastPage
+} from './listing-query';
 
 /**
  * One page of the community's published documents, whichever of the two tables
@@ -60,6 +65,11 @@ export class CommunityBrowseService {
       ? 1
       : Math.max(1, Math.ceil(total / BROWSE_PAGE_SIZE));
   });
+
+  /** Whether the URL asks for a page past the last one. */
+  public readonly pastLastPage = computed(() =>
+    pastLastPage(this._query().page, this.listing.total(), BROWSE_PAGE_SIZE)
+  );
 
   public async resolve(
     kind: CommunityKind,

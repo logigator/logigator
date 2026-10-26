@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivateFn } from '@angular/router';
-import { listingQuery } from './listing-query';
+import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
+import { lastPageUrl, listingQuery } from './listing-query';
 import { ProfileSection, ProfileService } from './profile.service';
 
 /** What a profile tab's route says about itself. */
@@ -23,17 +23,21 @@ export const profileGuard: CanActivateFn = async (route) => {
  * tab a real URL: it renders server-side, it is what a crawler follows, and it
  * carries its own canonical and `hreflang` set.
  */
-export const profileListingGuard: CanActivateFn = async (route) => {
+export const profileListingGuard: CanActivateFn = async (route, state) => {
   const section = (route.data as Partial<ProfileRouteData>).profileSection;
   if (!section) {
     throw new Error('A profile tab must declare its `profileSection`.');
   }
-  await inject(ProfileService).resolveListing(
+  const profiles = inject(ProfileService);
+  const router = inject(Router);
+  await profiles.resolveListing(
     userIdOf(route),
     section,
     listingQuery(route).page
   );
-  return true;
+  return profiles.pastLastPage()
+    ? lastPageUrl(router, state.url, profiles.pageCount())
+    : true;
 };
 
 /** The id is the parent route's parameter, so a child has to walk up for it. */

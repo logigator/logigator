@@ -146,7 +146,8 @@ export interface PageMeta {
  * marks the set as translations of one another rather than duplicates.
  * `x-default` names the unprefixed URL, which negotiates a language of its own
  * for a visitor no alternate matches. `og:url` follows the canonical, a scraper
- * reading it as the object's identity and re-fetching it.
+ * reading it as the object's identity and re-fetching it. A `noindex` page
+ * carries none of the three.
  *
  * The links, and the graph's script tag, are rewritten in place rather than
  * appended: a client-side navigation reuses the same document, and appending
@@ -213,15 +214,24 @@ export class SeoService {
     });
 
     // Crawlable, but not a search result: the page is an action, or describes
-    // something its owner never put in front of the world.
-    if (this.isNoindex(page)) {
+    // something its owner never put in front of the world, or is a view of a
+    // listing that is indexed in its plain form.
+    const noindex = this.isNoindex(page);
+    if (noindex) {
       this.meta.updateTag({ name: 'robots', content: 'noindex, follow' });
     } else {
       this.meta.removeTag('name="robots"');
     }
 
-    this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
-    this.setLink('canonical', undefined, canonicalUrl);
+    // A page kept out of an index names no identity for one: no canonical, no
+    // `og:url` and no translations of itself. Where the URL carries a one-shot
+    // token, these would only repeat it.
+    if (noindex) {
+      this.meta.removeTag('property="og:url"');
+    } else {
+      this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
+    }
+    this.setLink('canonical', undefined, noindex ? null : canonicalUrl);
     this.meta.updateTag({ property: 'og:locale', content: OG_LOCALES[lang] });
     this.setLocaleAlternates(lang);
 
@@ -231,7 +241,7 @@ export class SeoService {
       this.setLink(
         'alternate',
         alternate.hreflang,
-        alternate.hreflang === 'x-default' && canonicalQuery
+        noindex || (alternate.hreflang === 'x-default' && canonicalQuery)
           ? null
           : `${this.origin}${alternate.path}${canonicalQuery}`
       );

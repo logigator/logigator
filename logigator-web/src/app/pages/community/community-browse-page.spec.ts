@@ -82,8 +82,8 @@ describe('CommunityBrowsePage', () => {
   });
 
   it('leaves the default ranking’s link without a parameter', async () => {
-    // The canonical drops `orderBy`, so the default view has to be the plain
-    // URL or a share of it would report a page the canonical disowns.
+    // The other rankings are `noindex`, so the default view has to be the plain
+    // URL or the one ranking an index holds would have no address.
     const el = await render();
 
     const trending = [...el.querySelectorAll('a')].find(

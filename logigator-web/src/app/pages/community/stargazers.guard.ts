@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
-import { CanActivateFn } from '@angular/router';
+import { CanActivateFn, Router } from '@angular/router';
 import { communityKindOf } from './community-kind';
-import { listingQuery } from './listing-query';
+import { lastPageUrl, listingQuery } from './listing-query';
 import { StargazersService } from './stargazers.service';
 
 /**
@@ -10,11 +10,15 @@ import { StargazersService } from './stargazers.service';
  * trail — the list is a page about a document, so the document has to be
  * resolved too.
  */
-export const stargazersGuard: CanActivateFn = async (route) => {
-  await inject(StargazersService).resolve(
+export const stargazersGuard: CanActivateFn = async (route, state) => {
+  const stargazers = inject(StargazersService);
+  const router = inject(Router);
+  await stargazers.resolve(
     communityKindOf(route),
     route.paramMap.get('link') ?? '',
     listingQuery(route).page
   );
-  return true;
+  return stargazers.pastLastPage()
+    ? lastPageUrl(router, state.url, stargazers.pageCount())
+    : true;
 };

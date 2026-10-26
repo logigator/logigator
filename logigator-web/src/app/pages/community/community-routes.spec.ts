@@ -14,7 +14,9 @@ import {
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { PageMeta } from '../../seo/seo.service';
 import { communityRoutes } from './community-routes';
+import { CommunityBrowseService } from './community-browse.service';
 import { CommunityDocumentService } from './community-document.service';
+import { DEFAULT_ORDER, ListingQuery } from './listing-query';
 import { ProfileService } from './profile.service';
 import { MIN_INDEXED_COMPONENTS } from './search-indexing';
 
@@ -65,6 +67,16 @@ function profileRouteNoindex(): () => boolean {
   return noindex!;
 }
 
+/** The `noindex` a browse listing declares, read off the tree the same way. */
+function browseRouteNoindex(): () => boolean {
+  const route = communityRoutes.find(
+    (candidate) => candidate.path === 'community/projects'
+  );
+  const noindex = (route?.data as { seo?: PageMeta } | undefined)?.seo?.noindex;
+  expect(noindex, 'the browse listing declares no noindex').toBeDefined();
+  return noindex!;
+}
+
 /** The document route's meta description factory, read off the tree. */
 function documentRouteDescription(): () => string | null {
   const route = communityRoutes.find(
@@ -111,11 +123,13 @@ describe('the community routes', () => {
   }
 
   /** The one read the activating guard makes, answered as an empty page. */
-  async function answerListing(): Promise<TestRequest> {
+  async function answerListing(
+    answer: object = EMPTY_PAGE
+  ): Promise<TestRequest> {
     const request = await waitForRequest((url) =>
       url.startsWith('/api/community/')
     );
-    request.flush(EMPTY_PAGE);
+    request.flush(answer);
     return request;
   }
 
@@ -140,11 +154,51 @@ describe('the community routes', () => {
     const second = router.navigateByUrl(
       '/en/community/projects?page=3&orderBy=latest'
     );
-    const request = await answerListing();
+    const request = await answerListing({ ...EMPTY_PAGE, total: 100 });
     await second;
 
     expect(request.request.params.get('page')).toBe('2');
     expect(request.request.params.get('orderBy')).toBe('latest');
+  });
+
+  /**
+   * A page past the last one is mostly a last page that deletions emptied, so
+   * it sends its reader to the end of the list, with the ranking and the
+   * search they had.
+   */
+  it('sends a page past the end to the last page', async () => {
+    const listing = (url: string) => url === '/api/community/projects';
+    const opened = router.navigateByUrl(
+      '/en/community/projects?orderBy=latest&search=adder&page=9'
+    );
+    (await waitForRequest(listing)).flush({ ...EMPTY_PAGE, total: 30 });
+    const last = await waitForRequest(listing);
+    last.flush({ ...EMPTY_PAGE, page: 1, total: 30 });
+    await opened;
+
+    expect(last.request.params.get('page')).toBe('1');
+    expect(router.url).toBe(
+      '/en/community/projects?orderBy=latest&search=adder&page=2'
+    );
+  });
+
+  it('sends a page past the end of an empty listing to its plain URL', async () => {
+    const listing = (url: string) =>
+      url === `/api/community/projects/${LINK}/stargazers`;
+    const opened = router.navigateByUrl(
+      `/en/community/projects/${LINK}/stargazers?page=3`
+    );
+    (
+      await waitForRequest((url) => url === `/api/community/projects/${LINK}`)
+    ).flush(detail());
+    (await waitForRequest(listing)).flush(EMPTY_PAGE);
+    (
+      await waitForRequest((url) => url === `/api/community/projects/${LINK}`)
+    ).flush(detail());
+    (await waitForRequest(listing)).flush(EMPTY_PAGE);
+    await opened;
+
+    expect(router.url).toBe(`/en/community/projects/${LINK}/stargazers`);
   });
 
   /**
@@ -244,7 +298,7 @@ describe('the community routes', () => {
     const request = await waitForRequest(
       (url) => url === `/api/community/users/${USER}/components`
     );
-    request.flush(EMPTY_PAGE);
+    request.flush({ ...EMPTY_PAGE, page: 1, total: 40 });
     await paged;
 
     expect(router.url).toBe(`/en/community/users/${USER}/components?page=2`);
@@ -341,6 +395,33 @@ describe('the community routes', () => {
 
     expect(await indexed('')).toBe(false);
     expect(await indexed('I build CPUs out of NAND gates.')).toBe(true);
+  });
+
+  /**
+   * The plain listing is the one an index holds, page by page; a search and
+   * the other rankings show the same documents again and stay out of it.
+   */
+  it('indexes a browse listing only in its default ranking, unsearched', async () => {
+    const noindex = browseRouteNoindex();
+    const browse = TestBed.inject(CommunityBrowseService);
+    const indexed = async (query: Partial<ListingQuery>) => {
+      const resolved = browse.resolve('projects', {
+        page: 0,
+        search: '',
+        orderBy: DEFAULT_ORDER,
+        ...query
+      });
+      http
+        .expectOne((request) => request.url === '/api/community/projects')
+        .flush(EMPTY_PAGE);
+      await resolved;
+      return !TestBed.runInInjectionContext(noindex);
+    };
+
+    expect(await indexed({})).toBe(true);
+    expect(await indexed({ page: 3 })).toBe(true);
+    expect(await indexed({ orderBy: 'latest' })).toBe(false);
+    expect(await indexed({ search: 'adder' })).toBe(false);
   });
 
   /**
