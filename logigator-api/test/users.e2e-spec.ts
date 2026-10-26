@@ -907,3 +907,156 @@ describe('changes that need more than a session', () => {
     expect(current.statusCode).toBe(200);
   });
 });
+
+/**
+ * A session proves itself with the password through the same wrong-password
+ * budgets as a sign-in, so a stolen session cookie is no way around them.
+ * Each test makes its guesses from addresses of its own.
+ */
+describe('wrong passwords from a signed-in session', () => {
+  let api: E2eApp;
+  const password = 'hamilton69';
+
+  async function signedInAccount(
+    email: string,
+    username: string
+  ): Promise<CookieJar> {
+    await api.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { username, email, password }
+    });
+    await api.inject({
+      method: 'POST',
+      url: '/api/auth/verify-email',
+      payload: { token: api.mail.lastToken() }
+    });
+    const jar = new CookieJar();
+    jar.store(await login('192.0.2.200', email, password));
+    return jar;
+  }
+
+  function login(remoteAddress: string, email: string, attempt: string) {
+    return api.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      remoteAddress,
+      payload: { email, password: attempt }
+    });
+  }
+
+  /** Each of the account's password checks, in turn. */
+  function proveWith(
+    jar: CookieJar,
+    remoteAddress: string,
+    attempt: string,
+    turn: number
+  ) {
+    const checks = [
+      {
+        method: 'PATCH',
+        payload: { password: 'new-pass-1', currentPassword: attempt }
+      },
+      {
+        method: 'PATCH',
+        payload: { email: 'elsewhere@example.com', currentPassword: attempt }
+      },
+      { method: 'DELETE', payload: { password: attempt } }
+    ] as const;
+    const check = checks[turn % checks.length];
+    return api.inject({
+      method: check.method,
+      url: '/api/user',
+      headers: jar.headers(),
+      remoteAddress,
+      payload: check.payload
+    });
+  }
+
+  beforeAll(async () => {
+    api = await startE2eApp();
+  });
+
+  afterAll(async () => {
+    await api.close();
+  });
+
+  it('locks the account’s password checks and its sign-in on that address after ten', async () => {
+    const address = '198.51.100.10';
+    const jar = await signedInAccount('margaret@example.com', 'Margaret');
+    const other = await signedInAccount('katherine@example.com', 'Katherine');
+
+    for (let turn = 0; turn < 10; turn += 1) {
+      const wrong = await proveWith(jar, address, 'guess1234', turn);
+      expect(wrong.statusCode).toBe(401);
+      expect(wrong.json().code).toBe('invalid_credentials');
+    }
+
+    // The right password is refused too, through every check and the sign-in.
+    const deletion = await proveWith(jar, address, password, 2);
+    expect(deletion.statusCode).toBe(429);
+    expect(deletion.json().code).toBe('rate_limited');
+    expect((await proveWith(jar, address, password, 0)).statusCode).toBe(429);
+    expect(
+      (await login(address, 'margaret@example.com', password)).statusCode
+    ).toBe(429);
+
+    const stillThere = await api.inject({
+      method: 'GET',
+      url: '/api/user',
+      headers: jar.headers()
+    });
+    expect(stillThere.statusCode).toBe(200);
+
+    // Another account on the same address is untouched.
+    expect(
+      (await login(address, 'katherine@example.com', password)).statusCode
+    ).toBe(200);
+    const changed = await api.inject({
+      method: 'PATCH',
+      url: '/api/user',
+      headers: other.headers(),
+      remoteAddress: address,
+      payload: { password: 'new-pass-1', currentPassword: password }
+    });
+    expect(changed.statusCode).toBe(200);
+  });
+
+  it('counts a session’s wrong passwords across addresses, and the sign-in’s on each', async () => {
+    const jar = await signedInAccount('grace@example.com', 'Grace');
+
+    // Nine wrong sign-ins and one wrong check on one address spend it.
+    for (let attempt = 0; attempt < 9; attempt += 1) {
+      expect(
+        (await login('198.51.100.20', 'grace@example.com', 'guess1234'))
+          .statusCode
+      ).toBe(401);
+    }
+    expect(
+      (await proveWith(jar, '198.51.100.20', 'guess1234', 0)).statusCode
+    ).toBe(401);
+    expect(
+      (await proveWith(jar, '198.51.100.20', password, 0)).statusCode
+    ).toBe(429);
+
+    // Nine more checks, each from an address of its own, spend the account's.
+    for (let turn = 1; turn < 10; turn += 1) {
+      const wrong = await proveWith(
+        jar,
+        `198.51.100.${20 + turn}`,
+        'guess1234',
+        turn
+      );
+      expect(wrong.statusCode).toBe(401);
+    }
+    expect(
+      (await proveWith(jar, '198.51.100.40', password, 0)).statusCode
+    ).toBe(429);
+
+    // A sign-in from an untouched address still goes through: only the
+    // account's sessions share a budget across addresses.
+    expect(
+      (await login('198.51.100.40', 'grace@example.com', password)).statusCode
+    ).toBe(200);
+  });
+});

@@ -6,7 +6,10 @@ import { rateLimited } from '../common/rate-limit.guard';
 import type { UserRow } from '../database/schema';
 import { AuthTokenService } from '../auth/auth-token.service';
 import { PasswordService } from '../auth/password.service';
-import { ReauthenticationService } from '../auth/reauthentication.service';
+import {
+  ReauthenticationService,
+  type ReauthenticationContext
+} from '../auth/reauthentication.service';
 import { MailService } from '../mail/mail.service';
 import { RedisService } from '../redis/redis.service';
 import { SessionService } from '../session/session.service';
@@ -23,11 +26,9 @@ const EMAIL_CHANGES_PER_WINDOW = 5;
 const EMAIL_CHANGE_WINDOW_SECONDS = 3600;
 
 /** The session a request arrived on, as far as a change of account needs it. */
-export interface RequestSession {
+export interface RequestSession extends ReauthenticationContext {
   /** Spared when a password change signs the account's other sessions out. */
   id?: string;
-  /** See `SessionService.signedInRecently`. */
-  signedInRecently: boolean;
 }
 
 /** Whether the update is still waiting on a confirmation mail. */
@@ -90,7 +91,7 @@ export class ProfileService {
       await this.reauthentication.assertProven(
         user,
         body.currentPassword,
-        session.signedInRecently,
+        session,
         body.password !== undefined
           ? 'Sign in again to set a password.'
           : 'Sign in again to change the email address.'
@@ -197,7 +198,7 @@ export class ProfileService {
     await this.reauthentication.assertProven(
       user,
       password,
-      session.signedInRecently,
+      session,
       'Sign in again to delete this account.'
     );
 

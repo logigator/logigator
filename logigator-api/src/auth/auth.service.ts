@@ -177,18 +177,18 @@ export class AuthService {
     password: string,
     ip: string
   ): Promise<UserRow> {
-    await this.attempts.admit(ip, email);
+    await this.attempts.admit(ip, { email });
 
     let user: UserRow | null;
     try {
       user = await this.matchPassword(email, password);
     } catch (error) {
-      await this.attempts.forgive(ip, email);
+      await this.attempts.forgive(ip, { email });
       throw error;
     }
     if (!user) throw invalidCredentials();
 
-    await this.attempts.forgive(ip, email);
+    await this.attempts.forgive(ip, { email });
     return user;
   }
 

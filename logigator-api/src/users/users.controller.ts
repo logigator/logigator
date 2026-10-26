@@ -124,6 +124,7 @@ export class UsersController {
   private requestSession(request: FastifyRequest): RequestSession {
     return {
       id: request.session.sessionId,
+      ip: request.ip,
       signedInRecently: this.session.signedInRecently(request)
     };
   }

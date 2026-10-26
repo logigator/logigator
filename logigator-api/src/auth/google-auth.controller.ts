@@ -150,7 +150,10 @@ export class GoogleAuthController {
     await this.reauthentication.assertProven(
       user,
       body.password,
-      this.session.signedInRecently(request),
+      {
+        ip: request.ip,
+        signedInRecently: this.session.signedInRecently(request)
+      },
       'Sign in again to unlink Google.'
     );
 
