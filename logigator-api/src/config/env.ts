@@ -116,17 +116,6 @@ const variables = z.object({
    * orphan except by age.
    */
   STORAGE_SWEEP_GRACE_MINUTES: z.coerce.number().int().min(0).default(1440),
-  /**
-   * The CDN in front of the origin, which a deleted file under `/files` is
-   * purged from by exact URL. `none` purges nothing: right where no CDN holds
-   * `/files`, wrong where one does, since the origin lets an edge keep those
-   * files for a year.
-   */
-  CACHE_PURGE_PROVIDER: z.enum(['none', 'cloudflare']).default('none'),
-  /** The zone the site's hostname is in, for `cloudflare`. */
-  CLOUDFLARE_ZONE_ID: z.string().optional(),
-  /** An API token with the zone's Cache Purge permission and nothing else. */
-  CLOUDFLARE_API_TOKEN: z.string().optional(),
 
   /**
    * Signs the session cookie: a comma-separated list, each of 32+ characters.
@@ -287,27 +276,6 @@ export const envSchema = variables
         path: ['GOOGLE_CLIENT_ID'],
         message:
           'GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together, or neither (which disables Google sign-in)'
-      });
-    }
-  })
-  .check((ctx) => {
-    const { CACHE_PURGE_PROVIDER, CLOUDFLARE_ZONE_ID, CLOUDFLARE_API_TOKEN } =
-      ctx.value;
-    const credentials =
-      Boolean(CLOUDFLARE_ZONE_ID) || Boolean(CLOUDFLARE_API_TOKEN);
-    // Both directions are silent failures: a purge that cannot be sent, or
-    // credentials that look configured while nothing is ever purged.
-    if (
-      CACHE_PURGE_PROVIDER === 'cloudflare'
-        ? !CLOUDFLARE_ZONE_ID || !CLOUDFLARE_API_TOKEN
-        : credentials
-    ) {
-      ctx.issues.push({
-        code: 'custom',
-        input: CACHE_PURGE_PROVIDER,
-        path: ['CACHE_PURGE_PROVIDER'],
-        message:
-          'cloudflare needs CLOUDFLARE_ZONE_ID and CLOUDFLARE_API_TOKEN, and those are read only with CACHE_PURGE_PROVIDER=cloudflare'
       });
     }
   })

@@ -237,9 +237,9 @@ describe('the translation worker', () => {
   });
 
   it('is scheduled, where the switched-off application has no interval', () => {
-    expect(api.app.get(SchedulerRegistry).getIntervals()).toContain(
+    expect(api.app.get(SchedulerRegistry).getIntervals()).toEqual([
       'translation-worker'
-    );
+    ]);
   });
 
   it('translates a written description, and the reads offer it', async () => {
@@ -726,9 +726,7 @@ describe('with translation switched off', () => {
     await new Promise((resolve) => setTimeout(resolve, 1_500));
 
     expect(api.translation).toBeNull();
-    expect(api.app.get(SchedulerRegistry).getIntervals()).not.toContain(
-      'translation-worker'
-    );
+    expect(api.app.get(SchedulerRegistry).getIntervals()).toEqual([]);
     expect(fake.calls).toEqual([]);
     const untouched = await row(pending.id);
     expect(untouched.translationClaimedAt).toBeNull();

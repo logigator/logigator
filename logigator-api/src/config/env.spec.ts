@@ -31,7 +31,6 @@ describe('loadEnv', () => {
       OAUTH_RETURN_URL: 'http://logigator.test/login',
       STORAGE_DIR: 'data/storage',
       STORAGE_SWEEP_GRACE_MINUTES: 1440,
-      CACHE_PURGE_PROVIDER: 'none',
       UPLOAD_MAX_BYTES: 10 * 1024 * 1024,
       SESSION_SECRET: [DEVELOPMENT_SESSION_SECRET],
       SESSION_COOKIE_NAME: 'lg_sid',
@@ -117,32 +116,6 @@ describe('loadEnv', () => {
         OPENROUTER_PRESET: 'logigator'
       })
     ).not.toThrow();
-  });
-
-  it('takes Cloudflare credentials only together with the provider', () => {
-    const credentials = {
-      CLOUDFLARE_ZONE_ID: 'zone',
-      CLOUDFLARE_API_TOKEN: 'token'
-    };
-
-    expect(() =>
-      loadEnv({
-        CACHE_PURGE_PROVIDER: 'cloudflare',
-        CLOUDFLARE_ZONE_ID: 'zone'
-      })
-    ).toThrowError(/CACHE_PURGE_PROVIDER/);
-    expect(() =>
-      loadEnv({
-        CACHE_PURGE_PROVIDER: 'cloudflare',
-        CLOUDFLARE_API_TOKEN: 'token'
-      })
-    ).toThrowError(/CACHE_PURGE_PROVIDER/);
-    // Configured-looking credentials that would never be used.
-    expect(() => loadEnv(credentials)).toThrowError(/CACHE_PURGE_PROVIDER/);
-    expect(
-      loadEnv({ ...credentials, CACHE_PURGE_PROVIDER: 'cloudflare' })
-        .CACHE_PURGE_PROVIDER
-    ).toBe('cloudflare');
   });
 
   it('refuses a preset written with its prefix', () => {

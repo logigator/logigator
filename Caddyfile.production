@@ -79,34 +79,18 @@
 	# directory and a new pointer — and serving them here keeps a static read off
 	# the application entirely.
 	#
-	# The edge keeps a file for a year (`CDN-Cache-Control`, RFC 9213, which no
-	# browser reads): the API purges a deleted file from it by exact URL. A copy in
-	# a browser cannot be purged, so `Cache-Control` keeps an avatar an hour
-	# there and a preview a year. Only a file that exists is held, or the edge
-	# would keep a 404 for a year; and never under a query string, which makes an
-	# address no purge names.
+	# A browser keeps a file for a year. The edge keeps one for a day
+	# (`CDN-Cache-Control`, RFC 9213, which no browser reads), so a deleted file
+	# stops being served within a day without the API purging anything. Only a
+	# file that exists is held, or the edge would keep a 404.
 	handle_path /files/* {
 		# Uploads are re-encoded; this keeps anything that ever turns out to be
 		# HTML or SVG inert when opened directly.
 		header Content-Security-Policy "default-src 'none'; sandbox"
 		root * /srv/files
-		@held {
-			file
-			query ""
-		}
-		@queried not query ""
-		@preview {
-			file
-			not path /profile/*
-		}
-		@avatar {
-			file
-			path /profile/*
-		}
-		header @held CDN-Cache-Control "public, max-age=31536000"
-		header @queried CDN-Cache-Control "no-store"
-		header @preview Cache-Control "public, max-age=31536000, immutable"
-		header @avatar Cache-Control "public, max-age=3600"
+		@present file
+		header @present Cache-Control "public, max-age=31536000, immutable"
+		header @present CDN-Cache-Control "public, max-age=86400"
 		file_server
 	}
 

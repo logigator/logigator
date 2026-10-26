@@ -46,9 +46,8 @@ logigator.test {
 	# The API's storage volume: avatars and circuit previews. Every file under it
 	# is written once under a name nothing reuses — replacing an asset means a new
 	# directory and a new pointer — and serving them here keeps a static read off
-	# the application entirely. The headers are production's: an edge keeps a
-	# file a year and is purged by the API when it is deleted, and a browser keeps
-	# an avatar an hour and a preview a year.
+	# the application entirely. The headers are production's: a browser keeps a
+	# file a year and an edge a day.
 	@storage path /files/*
 	handle @storage {
 		# Uploads are re-encoded; this keeps anything that ever turns out to be
@@ -57,14 +56,8 @@ logigator.test {
 		root * /srv
 		uri strip_prefix /files
 		file_server
-		@held query ""
-		@queried not query ""
-		@forever not path /files/profile/*
-		@avatar path /files/profile/*
-		header @held CDN-Cache-Control "public, max-age=31536000"
-		header @queried CDN-Cache-Control "no-store"
-		header @forever Cache-Control "public, max-age=31536000, immutable"
-		header @avatar Cache-Control "public, max-age=3600"
+		header Cache-Control "public, max-age=31536000, immutable"
+		header CDN-Cache-Control "public, max-age=86400"
 	}
 
 	# The website, at the origin root, including the icons the editor links to by
