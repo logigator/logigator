@@ -52,14 +52,16 @@
 
 	# What is the same on every response, from every upstream and from the files
 	# served here. `X-Frame-Options` stands beside the CSPs' `frame-ancestors` for
-	# browsers without them. The deletion is a directive of its own: a block
+	# browsers without them. The deletions are directives of their own: a block
 	# that deletes is deferred as a whole, and error responses then miss it.
+	# `Via` is the one `reverse_proxy` adds to every proxied response.
 	header {
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
 		X-Frame-Options SAMEORIGIN
 	}
 	header -X-Powered-By
+	header -Via
 
 	@api path /api /api/*
 	handle @api {
