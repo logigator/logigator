@@ -1119,10 +1119,12 @@ const en = {
     manager: {
       resetAll: 'Reset All',
       reset: 'Reset',
-      unassign: 'Unassign',
-      edit: 'Edit Shortcut',
+      change: 'Change {{key}}',
+      remove: 'Remove {{key}}',
+      add: 'Add Shortcut',
       cancelRecording: 'Cancel Recording',
-      recordPrompt: 'Press keys…'
+      recordPrompt: 'Press keys…',
+      notSet: 'Not set'
     },
     toast: {
       reassignedFrom: 'Shortcut unassigned from “{{action}}”',

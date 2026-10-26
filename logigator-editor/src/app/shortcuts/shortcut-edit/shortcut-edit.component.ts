@@ -1,5 +1,6 @@
 import {
   Component,
+  computed,
   DestroyRef,
   ElementRef,
   inject,
@@ -7,9 +8,15 @@ import {
   model,
   signal
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { fromEvent, Subscription } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { LgButton, LgShortcut, LgTooltip } from '@logigator/ui';
+import {
+  formatShortcutLabel,
+  LgButton,
+  LgShortcut,
+  LgTooltip
+} from '@logigator/ui';
 import {
   MODIFIER_FLAG_BY_KEY,
   ShortcutBinding
@@ -19,7 +26,13 @@ import { TranslateDirective } from '../../translation/translate.directive';
 
 @Component({
   selector: 'app-shortcut-edit',
-  imports: [LgButton, LgShortcut, LgTooltip, TranslateDirective],
+  imports: [
+    LgButton,
+    LgShortcut,
+    LgTooltip,
+    NgTemplateOutlet,
+    TranslateDirective
+  ],
   templateUrl: './shortcut-edit.component.html'
 })
 export class ShortcutEditComponent {
@@ -28,7 +41,10 @@ export class ShortcutEditComponent {
     inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly shortcutService = inject(ShortcutService);
 
-  /** Every binding of the action; recording a key replaces them with it. */
+  /**
+   * Every binding of the action. Each is re-recorded or removed on its own,
+   * and a recording at the end adds one.
+   */
   public readonly bindings = model.required<ShortcutBinding[]>();
 
   /**
@@ -37,7 +53,14 @@ export class ShortcutEditComponent {
    */
   public readonly allowModifierOnly = input(false);
 
-  protected readonly isRecording = signal(false);
+  /**
+   * The slot being recorded: an existing binding's index, or the list's
+   * length for a new one. `null` while not recording.
+   */
+  protected readonly recordingIndex = signal<number | null>(null);
+  protected readonly isRecording = computed(
+    () => this.recordingIndex() !== null
+  );
 
   private static readonly MODIFIER_KEYS = new Set([
     'Control',
@@ -49,8 +72,9 @@ export class ShortcutEditComponent {
 
   private _recordSub?: Subscription;
 
-  protected startRecording(): void {
-    this.isRecording.set(true);
+  protected startRecording(index: number): void {
+    this.stopRecording();
+    this.recordingIndex.set(index);
     this.shortcutService.disable();
     this._recordSub = fromEvent<KeyboardEvent>(window, 'keydown')
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -60,8 +84,34 @@ export class ShortcutEditComponent {
   protected stopRecording(): void {
     this._recordSub?.unsubscribe();
     this._recordSub = undefined;
-    this.isRecording.set(false);
+    if (this.recordingIndex() === null) return;
+    this.recordingIndex.set(null);
     this.shortcutService.enable();
+  }
+
+  protected remove(index: number): void {
+    this.bindings.set(this.bindings().filter((_, i) => i !== index));
+  }
+
+  protected label(binding: ShortcutBinding): string {
+    return formatShortcutLabel(binding);
+  }
+
+  /**
+   * Puts the recorded binding into its slot. One the action already holds
+   * elsewhere leaves that slot, so the list never repeats a combination.
+   */
+  private _commit(binding: ShortcutBinding): void {
+    const index = this.recordingIndex() ?? this.bindings().length;
+    const next = [...this.bindings()];
+    next.splice(index, 1, binding);
+    this.bindings.set(
+      next.filter(
+        (other, i) =>
+          i === index || !this.shortcutService.bindingEqual(other, binding)
+      )
+    );
+    this.stopRecording();
   }
 
   private _handleRecordKey(e: KeyboardEvent): void {
@@ -80,23 +130,19 @@ export class ShortcutEditComponent {
       };
       const own = MODIFIER_FLAG_BY_KEY[e.key];
       if (own) binding[own] = false;
-      this.bindings.set([binding]);
-      this.stopRecording();
+      this._commit(binding);
       return;
     }
     if (e.key === 'Escape') {
       this.stopRecording();
       return;
     }
-    this.bindings.set([
-      {
-        key: e.key,
-        ctrl: e.ctrlKey || e.metaKey,
-        shift: e.shiftKey,
-        alt: e.altKey
-      }
-    ]);
-    this.stopRecording();
+    this._commit({
+      key: e.key,
+      ctrl: e.ctrlKey || e.metaKey,
+      shift: e.shiftKey,
+      alt: e.altKey
+    });
   }
 
   /**

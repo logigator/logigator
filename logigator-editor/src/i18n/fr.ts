@@ -1136,10 +1136,12 @@ const fr: TranslationSchema = {
     manager: {
       resetAll: 'Tout réinitialiser',
       reset: 'Réinitialiser',
-      unassign: 'Désassigner',
-      edit: 'Modifier le raccourci',
+      change: 'Modifier {{key}}',
+      remove: 'Retirer {{key}}',
+      add: 'Ajouter un raccourci',
       cancelRecording: 'Annuler l’enregistrement',
-      recordPrompt: 'Appuyez sur des touches…'
+      recordPrompt: 'Appuyez sur des touches…',
+      notSet: 'Non défini'
     },
     toast: {
       reassignedFrom: 'Raccourci désassigné de « {{action}} »',

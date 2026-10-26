@@ -1,36 +1,80 @@
-<div class="flex items-center gap-2" *appTranslate="let t">
-  @if (!isRecording()) {
-    @for (binding of bindings(); track $index) {
-      @if (!$first) {
-        <span class="text-xs text-muted">/</span>
-      }
-      <lg-shortcut [binding]="binding" />
-    } @empty {
-      <lg-shortcut [binding]="null" />
+<div
+  class="flex flex-wrap items-center justify-end gap-1"
+  *appTranslate="let t"
+>
+  <ng-template #prompt>
+    <span class="inline-flex items-center rounded-md bg-content-hover">
+      <span class="py-1 pr-0.5 pl-1.25 text-xs leading-5.5 italic text-muted">{{
+        t('shortcuts.manager.recordPrompt')
+      }}</span>
+      <button
+        lgButton
+        class="min-h-0! min-w-0! self-stretch rounded-l-none! py-1! pr-1! pl-px! text-xs!"
+        icon="ph ph-x"
+        severity="secondary"
+        [text]="true"
+        size="sm"
+        [lgTooltip]="t('shortcuts.manager.cancelRecording')"
+        [ariaLabel]="t('shortcuts.manager.cancelRecording')"
+        tooltipPosition="bottom"
+        (onClick)="stopRecording()"
+      ></button>
+    </span>
+  </ng-template>
+
+  @for (binding of bindings(); track $index; let i = $index) {
+    @if (recordingIndex() === i) {
+      <ng-container [ngTemplateOutlet]="prompt" />
+    } @else {
+      <span class="inline-flex items-center rounded-md bg-content-hover">
+        <button
+          lgButton
+          class="min-h-0! min-w-0! rounded-r-none! py-1! pr-0.5! pl-1!"
+          severity="secondary"
+          [text]="true"
+          size="sm"
+          [lgTooltip]="t('shortcuts.manager.change', { key: label(binding) })"
+          [ariaLabel]="t('shortcuts.manager.change', { key: label(binding) })"
+          tooltipPosition="bottom"
+          (onClick)="startRecording(i)"
+        >
+          <lg-shortcut [binding]="binding" />
+        </button>
+        <button
+          lgButton
+          class="min-h-0! min-w-0! self-stretch rounded-l-none! py-1! pr-1! pl-px! text-xs!"
+          icon="ph ph-x"
+          severity="secondary"
+          [text]="true"
+          size="sm"
+          [lgTooltip]="t('shortcuts.manager.remove', { key: label(binding) })"
+          [ariaLabel]="t('shortcuts.manager.remove', { key: label(binding) })"
+          tooltipPosition="bottom"
+          (onClick)="remove(i)"
+        ></button>
+      </span>
     }
-    <button
-      lgButton
-      icon="ph ph-pencil"
-      severity="secondary"
-      [text]="true"
-      size="sm"
-      [lgTooltip]="t('shortcuts.manager.edit')"
-      [ariaLabel]="t('shortcuts.manager.edit')"
-      tooltipPosition="bottom"
-      (onClick)="startRecording()"
-    ></button>
-  } @else {
-    <span class="text-sm italic text-primary animate-pulse">{{
-      t('shortcuts.manager.recordPrompt')
-    }}</span>
-    <button
-      lgButton
-      icon="ph ph-x"
-      severity="warn"
-      [text]="true"
-      size="sm"
-      [ariaLabel]="t('shortcuts.manager.cancelRecording')"
-      (onClick)="stopRecording()"
-    ></button>
+  } @empty {
+    @if (!isRecording()) {
+      <span class="px-1.25 text-xs text-muted">{{
+        t('shortcuts.manager.notSet')
+      }}</span>
+    }
   }
+
+  @if (recordingIndex() === bindings().length) {
+    <ng-container [ngTemplateOutlet]="prompt" />
+  }
+  <button
+    lgButton
+    icon="ph ph-plus"
+    severity="secondary"
+    [text]="true"
+    size="sm"
+    [lgTooltip]="t('shortcuts.manager.add')"
+    [ariaLabel]="t('shortcuts.manager.add')"
+    tooltipPosition="bottom"
+    (onClick)="startRecording(bindings().length)"
+  ></button>
+  <ng-content />
 </div>

@@ -1143,10 +1143,12 @@ const de: TranslationSchema = {
     manager: {
       resetAll: 'Alle zurücksetzen',
       reset: 'Zurücksetzen',
-      unassign: 'Zuweisung aufheben',
-      edit: 'Tastenkürzel bearbeiten',
+      change: '{{key}} ändern',
+      remove: '{{key}} entfernen',
+      add: 'Tastenkürzel hinzufügen',
       cancelRecording: 'Aufzeichnung abbrechen',
-      recordPrompt: 'Tasten drücken…'
+      recordPrompt: 'Tasten drücken…',
+      notSet: 'Nicht festgelegt'
     },
     toast: {
       reassignedFrom: 'Tastenkürzel von „{{action}}“ entfernt',

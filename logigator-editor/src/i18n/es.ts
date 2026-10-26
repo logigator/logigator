@@ -1129,10 +1129,12 @@ const es: TranslationSchema = {
     manager: {
       resetAll: 'Restablecer todo',
       reset: 'Restablecer',
-      unassign: 'Desasignar',
-      edit: 'Editar atajo',
+      change: 'Cambiar {{key}}',
+      remove: 'Quitar {{key}}',
+      add: 'Añadir atajo',
       cancelRecording: 'Cancelar la grabación',
-      recordPrompt: 'Pulsa las teclas…'
+      recordPrompt: 'Pulsa las teclas…',
+      notSet: 'Sin asignar'
     },
     toast: {
       reassignedFrom: 'Atajo desasignado de «{{action}}»',

@@ -231,7 +231,7 @@ export class ShortcutService implements OnDestroy {
     for (const [otherAction, otherBindings] of this._bindings.entries()) {
       if (otherAction === action) continue;
       const kept = otherBindings.filter(
-        (other) => !bindings.some((b) => this._bindingEqual(other, b))
+        (other) => !bindings.some((b) => this.bindingEqual(other, b))
       );
       if (kept.length < otherBindings.length) {
         conflicts.push([otherAction, kept]);
@@ -261,8 +261,8 @@ export class ShortcutService implements OnDestroy {
     const current = this._bindingSignals[action]();
     const defaults = DEFAULT_SHORTCUTS[action];
     return (
-      current.every((c) => defaults.some((d) => this._bindingEqual(c, d))) &&
-      defaults.every((d) => current.some((c) => this._bindingEqual(c, d)))
+      current.every((c) => defaults.some((d) => this.bindingEqual(c, d))) &&
+      defaults.every((d) => current.some((c) => this.bindingEqual(c, d)))
     );
   }
 
@@ -426,7 +426,8 @@ export class ShortcutService implements OnDestroy {
     return a === b;
   }
 
-  private _bindingEqual(a: ShortcutBinding, b: ShortcutBinding): boolean {
+  /** The same key combination, character keys case-insensitively. */
+  public bindingEqual(a: ShortcutBinding, b: ShortcutBinding): boolean {
     return (
       this._keysEqual(a.key, b.key) &&
       a.ctrl === b.ctrl &&
@@ -482,13 +483,13 @@ export class ShortcutService implements OnDestroy {
    */
   private _upgradeLegacyDelete(stored: ShortcutBinding): void {
     const [oldDefault, ...added] = DEFAULT_SHORTCUTS[ShortcutActionEnum.DELETE];
-    if (!this._bindingEqual(stored, oldDefault)) return;
+    if (!this.bindingEqual(stored, oldDefault)) return;
     const free = added.filter(
       (binding) =>
         ![...this._bindings.entries()].some(
           ([action, bindings]) =>
             action !== ShortcutActionEnum.DELETE &&
-            bindings.some((b) => this._bindingEqual(b, binding))
+            bindings.some((b) => this.bindingEqual(b, binding))
         )
     );
     this._bindings.set(ShortcutActionEnum.DELETE, [oldDefault, ...free]);
