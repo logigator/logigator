@@ -2445,6 +2445,7 @@ describe('PersistenceService', () => {
               version: 2
             }),
             ...OWNER_TEXT_FIELDS,
+            hidden: null,
             symbol: 'CL',
             numInputs: 1,
             numOutputs: 1,

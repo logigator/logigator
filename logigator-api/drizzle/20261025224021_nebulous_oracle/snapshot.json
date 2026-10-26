@@ -2,34 +2,22 @@
   "version": "8",
   "dialect": "postgres",
   "id": "9d75d3d5-6317-4327-895b-059cde3b8107",
-  "prevIds": [
-    "6c0905cd-c7ca-43ae-b2dd-0d37a9e7ca34"
-  ],
+  "prevIds": ["6c0905cd-c7ca-43ae-b2dd-0d37a9e7ca34"],
   "ddl": [
     {
-      "values": [
-        "private",
-        "unlisted",
-        "public"
-      ],
+      "values": ["private", "unlisted", "public"],
       "name": "document_visibility",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "human",
-        "machine"
-      ],
+      "values": ["human", "machine"],
       "name": "document_text_origin",
       "entityType": "enums",
       "schema": "public"
     },
     {
-      "values": [
-        "project",
-        "component"
-      ],
+      "values": ["project", "component"],
       "name": "document_kind",
       "entityType": "enums",
       "schema": "public"
@@ -1838,14 +1826,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "components_user_id_users_id_fkey",
@@ -1855,14 +1839,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "forked_from_id"
-      ],
+      "columns": ["forked_from_id"],
       "schemaTo": "public",
       "tableTo": "components",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "components_forked_from_id_components_id_fkey",
@@ -1872,14 +1852,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "projects_user_id_users_id_fkey",
@@ -1889,14 +1865,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "forked_from_id"
-      ],
+      "columns": ["forked_from_id"],
       "schemaTo": "public",
       "tableTo": "projects",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "projects_forked_from_id_projects_id_fkey",
@@ -1906,14 +1878,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "dependent_id"
-      ],
+      "columns": ["dependent_id"],
       "schemaTo": "public",
       "tableTo": "components",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "component_dependencies_dependent_id_components_id_fkey",
@@ -1923,14 +1891,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "dependency_id"
-      ],
+      "columns": ["dependency_id"],
       "schemaTo": "public",
       "tableTo": "components",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "component_dependencies_dependency_id_components_id_fkey",
@@ -1940,14 +1904,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "dependent_id"
-      ],
+      "columns": ["dependent_id"],
       "schemaTo": "public",
       "tableTo": "projects",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "project_dependencies_dependent_id_projects_id_fkey",
@@ -1957,14 +1917,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "dependency_id"
-      ],
+      "columns": ["dependency_id"],
       "schemaTo": "public",
       "tableTo": "components",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "project_dependencies_dependency_id_components_id_fkey",
@@ -1974,14 +1930,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "component_stars_user_id_users_id_fkey",
@@ -1991,14 +1943,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "component_id"
-      ],
+      "columns": ["component_id"],
       "schemaTo": "public",
       "tableTo": "components",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "component_stars_component_id_components_id_fkey",
@@ -2008,14 +1956,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "user_id"
-      ],
+      "columns": ["user_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "project_stars_user_id_users_id_fkey",
@@ -2025,14 +1969,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "project_id"
-      ],
+      "columns": ["project_id"],
       "schemaTo": "public",
       "tableTo": "projects",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "project_stars_project_id_projects_id_fkey",
@@ -2042,14 +1982,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "document_id"
-      ],
+      "columns": ["document_id"],
       "schemaTo": "public",
       "tableTo": "components",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "component_texts_document_id_components_id_fkey",
@@ -2059,14 +1995,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "document_id"
-      ],
+      "columns": ["document_id"],
       "schemaTo": "public",
       "tableTo": "projects",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "project_texts_document_id_projects_id_fkey",
@@ -2076,14 +2008,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "reporter_id"
-      ],
+      "columns": ["reporter_id"],
       "schemaTo": "public",
       "tableTo": "users",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
       "name": "document_reports_reporter_id_users_id_fkey",
@@ -2092,10 +2020,7 @@
       "table": "document_reports"
     },
     {
-      "columns": [
-        "dependent_id",
-        "dependency_id"
-      ],
+      "columns": ["dependent_id", "dependency_id"],
       "nameExplicit": false,
       "name": "component_dependencies_pkey",
       "entityType": "pks",
@@ -2103,10 +2028,7 @@
       "table": "component_dependencies"
     },
     {
-      "columns": [
-        "dependent_id",
-        "dependency_id"
-      ],
+      "columns": ["dependent_id", "dependency_id"],
       "nameExplicit": false,
       "name": "project_dependencies_pkey",
       "entityType": "pks",
@@ -2114,10 +2036,7 @@
       "table": "project_dependencies"
     },
     {
-      "columns": [
-        "user_id",
-        "component_id"
-      ],
+      "columns": ["user_id", "component_id"],
       "nameExplicit": false,
       "name": "component_stars_pkey",
       "entityType": "pks",
@@ -2125,10 +2044,7 @@
       "table": "component_stars"
     },
     {
-      "columns": [
-        "user_id",
-        "project_id"
-      ],
+      "columns": ["user_id", "project_id"],
       "nameExplicit": false,
       "name": "project_stars_pkey",
       "entityType": "pks",
@@ -2136,11 +2052,7 @@
       "table": "project_stars"
     },
     {
-      "columns": [
-        "document_id",
-        "language",
-        "origin"
-      ],
+      "columns": ["document_id", "language", "origin"],
       "nameExplicit": false,
       "name": "component_texts_pkey",
       "entityType": "pks",
@@ -2148,11 +2060,7 @@
       "table": "component_texts"
     },
     {
-      "columns": [
-        "document_id",
-        "language",
-        "origin"
-      ],
+      "columns": ["document_id", "language", "origin"],
       "nameExplicit": false,
       "name": "project_texts_pkey",
       "entityType": "pks",
@@ -2160,9 +2068,7 @@
       "table": "project_texts"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -2170,9 +2076,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "components_pkey",
       "schema": "public",
@@ -2180,9 +2084,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "projects_pkey",
       "schema": "public",
@@ -2190,9 +2092,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "document_reports_pkey",
       "schema": "public",
@@ -2201,9 +2101,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "email"
-      ],
+      "columns": ["email"],
       "nullsNotDistinct": false,
       "name": "users_email_key",
       "schema": "public",
@@ -2212,9 +2110,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "google_user_id"
-      ],
+      "columns": ["google_user_id"],
       "nullsNotDistinct": false,
       "name": "users_google_user_id_key",
       "schema": "public",
@@ -2223,9 +2119,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "link"
-      ],
+      "columns": ["link"],
       "nullsNotDistinct": false,
       "name": "components_link_key",
       "schema": "public",
@@ -2234,9 +2128,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "link"
-      ],
+      "columns": ["link"],
       "nullsNotDistinct": false,
       "name": "projects_link_key",
       "schema": "public",
