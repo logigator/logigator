@@ -81,6 +81,45 @@
         {{ shown()?.name }}
       </h1>
 
+      @if (doc.machineTranslation) {
+      <!-- Offered, never shown by default: the machine text is fetched on the
+             click, so the page a crawler reads holds only the author's words.
+             Under the heading, since the read does not say which field has a
+             machine text and one click swaps whichever do. Polite, so the
+             swap is announced where the button was. -->
+      <div
+        class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted"
+        aria-live="polite"
+      >
+        @if (machineNote(); as note) {
+        <span>{{ note }}</span>
+        <span aria-hidden="true">·</span>
+        <button
+          type="button"
+          class="text-primary hover:underline"
+          (click)="showOriginal()"
+        >
+          {{ t('pages.community.document.showOriginal') }}
+        </button>
+        } @else {
+        <button
+          lgButton
+          outlined
+          severity="secondary"
+          size="sm"
+          type="button"
+          [loading]="translating()"
+          (click)="translate()"
+        >
+          <i class="ph ph-translate" aria-hidden="true"></i>
+          {{ t('pages.community.document.translate') }}
+        </button>
+        }
+      </div>
+      @if (translateFailureKey(); as failure) {
+      <p class="mt-2 text-sm text-error" role="alert">{{ t(failure) }}</p>
+      } }
+
       <a
         class="mt-4 flex items-center gap-2 text-sm text-muted hover:text-text"
         [routerLink]="authorHref()"
@@ -215,9 +254,35 @@
   <!-- The description is the one thing on this page a tile has no room for,
          so it gets a block of its own rather than a column. -->
   <section class="mt-9 border-t border-border pt-7">
-    <h2 class="text-base font-semibold text-text-hover">
-      {{ t('pages.community.document.about') }}
-    </h2>
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <h2 class="text-base font-semibold text-text-hover">
+        {{ t('pages.community.document.about') }}
+      </h2>
+      <!-- The same switch as the one under the heading, repeated where the
+             reader of a long description is. The note stays up there. -->
+      @if (descriptionTranslatable()) { @if (machineNote()) {
+      <button
+        type="button"
+        class="text-sm text-primary hover:underline"
+        (click)="showOriginal()"
+      >
+        {{ t('pages.community.document.showOriginal') }}
+      </button>
+      } @else {
+      <button
+        lgButton
+        outlined
+        severity="secondary"
+        size="sm"
+        type="button"
+        [loading]="translating()"
+        (click)="translate()"
+      >
+        <i class="ph ph-translate" aria-hidden="true"></i>
+        {{ t('pages.community.document.translate') }}
+      </button>
+      } }
+    </div>
     @if (shown()?.description; as description) {
     <!-- The author's own markdown, rendered under the user-content rule: the
            tag set is closed to what markdown syntax emits, raw HTML comes out
@@ -237,42 +302,7 @@
     <p class="mt-2.5 max-w-prose leading-relaxed text-pretty text-muted">
       {{ t('pages.community.document.noDescription') }}
     </p>
-    } @if (doc.machineTranslation) {
-    <!-- Offered, never shown by default: the machine text is fetched on the
-           click, so the page a crawler reads holds only the author's words.
-           Polite, so the swap is announced where the button was. -->
-    <div
-      class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted"
-      aria-live="polite"
-    >
-      @if (machineNote(); as note) {
-      <span>{{ note }}</span>
-      <span aria-hidden="true">·</span>
-      <button
-        type="button"
-        class="text-primary hover:underline"
-        (click)="showOriginal()"
-      >
-        {{ t('pages.community.document.showOriginal') }}
-      </button>
-      } @else {
-      <button
-        lgButton
-        outlined
-        severity="secondary"
-        size="sm"
-        type="button"
-        [loading]="translating()"
-        (click)="translate()"
-      >
-        <i class="ph ph-translate" aria-hidden="true"></i>
-        {{ t('pages.community.document.translate') }}
-      </button>
-      }
-    </div>
-    @if (translateFailureKey(); as failure) {
-    <p class="mt-2 text-sm text-error" role="alert">{{ t(failure) }}</p>
-    } }
+    }
   </section>
 
   <!-- Only a listed document has stargazers to list, so a document that is not

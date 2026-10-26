@@ -172,10 +172,27 @@ export class CommunityDocumentPage {
   );
 
   /**
+   * Whether the description can be among what a translation swaps. The read
+   * flags a machine text for the document, not per field, but the API keeps
+   * one only for a text in a real language other than the page's, so a
+   * description in the page's own language, or none, has nothing to offer.
+   */
+  protected readonly descriptionTranslatable = computed(() => {
+    const document = this.document();
+    return (
+      !!document?.machineTranslation &&
+      !!document.description &&
+      textLangAttribute(
+        document.textLanguage.description,
+        this.translation.activeLang()
+      ) !== null
+    );
+  });
+
+  /**
    * The note naming what the shown text was translated from. The description's
-   * source where it was translated, since the note sits under it and a short
-   * title is the likelier of the two to be detected wrongly; the name's
-   * otherwise. Named by `Intl` because the source can be any language, not one
+   * source where it was translated, since a short title is the likelier of the
+   * two to be detected wrongly; the name's otherwise. Named by `Intl` because the source can be any language, not one
    * the locale files know.
    */
   protected readonly machineNote = computed(() => {

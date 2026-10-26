@@ -438,6 +438,23 @@ describe('CommunityDocumentPage', () => {
       }
     );
 
+    it.each([
+      [GERMAN, true],
+      // The API keeps no machine text for a description in the page's language.
+      [{ ...GERMAN, textLanguage: { name: 'de', description: 'en' } }, false],
+      [{ ...GERMAN, textLanguage: { name: 'de', description: 'zxx' } }, false],
+      [{ ...GERMAN, description: '' }, false]
+    ])(
+      'offers it by the description only where that can be translated (%o)',
+      async (read, offered) => {
+        const { el } = await render(read);
+        const about = el.querySelector('section h2')!.parentElement!;
+
+        expect(about.querySelector('.ph-translate') !== null).toBe(offered);
+        expect(translateButton(el)).not.toBeNull();
+      }
+    );
+
     it('swaps the machine text in and restores the original exactly', async () => {
       const { el, fixture } = await render(GERMAN);
       await settle(fixture);
