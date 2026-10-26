@@ -465,6 +465,9 @@ export class ShortcutService implements OnDestroy {
         if (action === ShortcutActionEnum.DELETE) legacyDelete = stored;
       }
       if (legacyDelete) this._upgradeLegacyDelete(legacyDelete);
+      // Rewritten at once in today's form: only what differs from the
+      // defaults, so a default changed later reaches everyone who kept it.
+      this._saveToStorage();
     } catch (err) {
       /* corrupted data — keep defaults */
       this.toastService.error(

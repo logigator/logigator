@@ -384,6 +384,32 @@ describe('ShortcutService', () => {
       );
     }
 
+    it('rewrites legacy storage at once, keeping only customizations', () => {
+      const q: ShortcutBinding = {
+        key: 'q',
+        ctrl: false,
+        shift: false,
+        alt: false
+      };
+      const stored = legacyStorage();
+      stored[ShortcutActionEnum.COPY] = q;
+      stored[ShortcutActionEnum.PASTE] = null;
+      reloadFrom(stored);
+
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')).toEqual({
+        [ShortcutActionEnum.COPY]: [q],
+        [ShortcutActionEnum.PASTE]: []
+      });
+    });
+
+    it('drops stored defaults from current-format storage on load', () => {
+      reloadFrom({
+        [ShortcutActionEnum.SAVE]: DEFAULT_SHORTCUTS[ShortcutActionEnum.SAVE]
+      });
+
+      expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')).toEqual({});
+    });
+
     it('loads a legacy unassigned (null) entry as no bindings', () => {
       const shortcuts = reloadFrom({ [ShortcutActionEnum.COPY]: null });
 
