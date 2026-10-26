@@ -1,5 +1,6 @@
 # The production stack: the website, the API and the editor behind one Caddy
-# origin (`Caddyfile.production`), with Postgres and Redis on the same network.
+# origin (`Caddyfile`, shared with the dev stack), with Postgres and Redis on
+# the same network.
 #
 # Cloudflare is the edge. On the server it reaches the stack through a tunnel:
 # `cloudflared` dials out, so nothing here publishes a port, and the tunnel's

@@ -142,6 +142,6 @@ CMD ["node", "--enable-source-maps", "dist/logigator-api/main.js"]
 # The origin's reverse proxy, carrying its Caddyfile and the editor's static
 # bundle, which it serves itself.
 FROM caddy:2-alpine AS proxy
-COPY ["./Caddyfile.production", "/etc/caddy/Caddyfile"]
+COPY ["./Caddyfile", "/etc/caddy/Caddyfile"]
 COPY --from=editor-build ["/app/dist/logigator-editor/browser", "/srv/editor"]
 

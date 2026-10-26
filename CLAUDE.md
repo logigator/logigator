@@ -56,7 +56,8 @@ stack runs lands on `docker compose restart api`. There are no down migrations, 
 of the branch needs `DATABASE_MIGRATION_CHECK=false` or a drop and re-migrate.
 
 Caddy serves **`logigator-web` at the origin root**, the editor under `/editor` and the API under
-`/api`.
+`/api`. Dev runs production's `Caddyfile` behind the same `edge` as a local staging run;
+`LOGIGATOR_EDITOR=dev_server` swaps the editor's bundle for its dev server.
 
 ## Commands
 
@@ -162,7 +163,7 @@ Angular 22, standalone + zoneless, rendered per request by `@angular/ssr` behind
   `<form method="get">` writing the URL; listing routes need
   `runGuardsAndResolvers: 'paramsOrQueryParamsChange'`.
 - **Rendered pages answer `Cache-Control: no-store`.**
-- **Headers that are the same on every response live in both Caddyfiles**; the site's CSP comes
+- **Headers that are the same on every response live in the `Caddyfile`**; the site's CSP comes
   from `server.ts` with a nonce per request (`content-security-policy.ts`). The site's and the
   editor's CSPs are Report-Only until production reports are clean. Both report to
   `/api/csp-report` by `report-uri` and `report-to csp`; a response naming the group sends

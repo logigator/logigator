@@ -106,7 +106,7 @@ The certificate comes from Caddy's local certificate authority, so your browser 
 first time. Accept the warning, or trust the CA once to get rid of it for good:
 
 ```sh
-docker compose cp proxy:/data/caddy/pki/authorities/local/root.crt ./caddy-root.crt
+docker compose cp edge:/data/caddy/pki/authorities/local/root.crt ./caddy-root.crt
 # then import caddy-root.crt into your system or browser trust store
 ```
 

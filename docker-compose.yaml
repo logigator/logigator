@@ -1,17 +1,34 @@
 services:
+  # Stands in for Cloudflare, as in a local staging run: TLS for logigator.test
+  # with Caddy's internal CA, and the one header the origin takes from Cloudflare.
+  edge:
+    image: caddy:2-alpine
+    networks:
+      - net
+    depends_on:
+      - proxy
+    command: >-
+      caddy reverse-proxy --from logigator.test --to proxy:8080
+      --internal-certs --header-up "Cf-Connecting-Ip: {http.request.remote.host}"
+    volumes:
+      - caddy_data:/data
+    ports:
+      - 127.0.0.1:80:80
+      - 127.0.0.1:443:443
+
+  # The production origin's Caddyfile, proxying the editor's dev server instead
+  # of serving a bundle.
   proxy:
     image: caddy:2-alpine
     networks:
       - net
+    environment:
+      - LOGIGATOR_EDITOR=dev_server
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
       # What the API writes under STORAGE_DIR, read-only: Caddy serves these
       # files, and only the API ever produces them.
-      - ./data/storage:/srv:ro
-    ports:
-      - 127.0.0.1:80:80
-      - 127.0.0.1:443:443
+      - ./data/storage:/srv/files:ro
 
   deps:
     image: node:24

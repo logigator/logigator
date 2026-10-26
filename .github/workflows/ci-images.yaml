@@ -31,7 +31,7 @@ jobs:
           concurrent_skipping: 'never'
           cancel_others: 'true'
           skip_after_successful_duplicate: 'true'
-          paths: '["Dockerfile", ".dockerignore", "Caddyfile.production", "docker-compose.production.yaml", "package.json", "logigator-*/package.json", "yarn.lock", ".yarnrc.yml", ".yarn/patches/**", "logigator-editor/packages/router-stub/**", "angular.json", "tsconfig.json", ".github/workflows/ci-images.yaml", ".github/scripts/smoke-test.sh"]'
+          paths: '["Dockerfile", ".dockerignore", "Caddyfile", "docker-compose.production.yaml", "package.json", "logigator-*/package.json", "yarn.lock", ".yarnrc.yml", ".yarn/patches/**", "logigator-editor/packages/router-stub/**", "angular.json", "tsconfig.json", ".github/workflows/ci-images.yaml", ".github/scripts/smoke-test.sh"]'
 
       # Starting the stack catches what a build cannot — the forwarding
       # headers, the migration step, the editor's routes — and only these
@@ -41,7 +41,7 @@ jobs:
         with:
           concurrent_skipping: 'never'
           skip_after_successful_duplicate: 'true'
-          paths: '["Dockerfile", "Caddyfile.production", "docker-compose.production.yaml", ".github/workflows/ci-images.yaml", ".github/scripts/smoke-test.sh"]'
+          paths: '["Dockerfile", "Caddyfile", "docker-compose.production.yaml", ".github/workflows/ci-images.yaml", ".github/scripts/smoke-test.sh"]'
 
   ci:
     name: 'CI images'

@@ -1,6 +1,51 @@
-logigator.test {
-	tls internal
+# The origin, for every stack. TLS ends at an edge in front of it, which
+# reaches this listener in plain HTTP on the compose network, so it publishes
+# no port: Cloudflare through the `cloudflared` tunnel in production, the
+# `edge` service in the dev stack and in a local staging run.
 
+# What a request learned at the edge, handed to an application. Only an edge can
+# reach this listener, so its `Cf-Connecting-Ip` is the visitor's address, and
+# it overwrites whatever chain a visitor sent along. The scheme is the edge's,
+# which is always HTTPS; the API writes no session over a request it believes
+# arrived in plain HTTP.
+(from_edge) {
+	header_up X-Forwarded-For {http.request.header.Cf-Connecting-Ip}
+	header_up X-Forwarded-Proto https
+}
+
+# How the editor is served, chosen by LOGIGATOR_EDITOR: the static bundle baked
+# into the image unless the dev stack names its dev server.
+(editor_bundle) {
+	root * /srv/editor
+	uri strip_prefix /editor
+
+	# A hashed name is held forever, and a missing one stays an uncached 404:
+	# a page from an earlier deploy asking for its old chunk must not be
+	# handed the shell under a cache-forever header.
+	@hashed path_regexp ^/(?:media/|[^/]+-[A-Za-z0-9_-]{8}\.(?:js|css)(?:\.map)?$)
+	handle @hashed {
+		@present file
+		header @present Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# Everything else is a file under a name the next deploy reuses, or one of
+	# the editor's own routes, which all get the shell.
+	handle {
+		header Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# The dev server is mounted at `/editor/` (its base href) and redirects the
+# bare path there, so it is handed that path rewritten instead.
+(editor_dev_server) {
+	rewrite /editor /editor/
+	reverse_proxy editor:4200
+}
+
+:8080 {
 	# Compression for every upstream at once. A response that already names an
 	# encoding is left alone, so an upstream compressing its own output keeps it.
 	encode zstd gzip
@@ -16,19 +61,18 @@ logigator.test {
 	}
 	header -X-Powered-By
 
-	# The API, for the editor and the website alike.
 	@api path /api /api/*
 	handle @api {
 		# JSON and PNG only.
 		header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
-		reverse_proxy api:3000
+		reverse_proxy api:3000 {
+			import from_edge
+		}
 	}
 
-	# The editor's address is `/editor`. The dev server is mounted at `/editor/`
-	# (its base href) and redirects the bare path there, so it is handed that
-	# path rewritten instead. `/editor/` is served as well and never redirected:
-	# browsers still hold the legacy backend's cached `301` from `/editor` to it,
-	# and the editor rewrites the address itself.
+	# The editor's address is `/editor`, and `/editor/` is served the same
+	# rather than redirected: browsers still hold the legacy backend's cached
+	# `301` from `/editor` to it, and the editor rewrites the address itself.
 	@editor path /editor /editor/*
 	handle @editor {
 		# The editor's HTML never varies, so its policy is fixed. Report-only until
@@ -39,31 +83,35 @@ logigator.test {
 		# `report-uri`, and the Reporting API takes an absolute URL only.
 		header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval' 'unsafe-hashes' 'sha256-MhtPZXr7+LpJUY5qtMutB+qWfQtMaPccfe7QXtCcEYc=' https://u.logigator.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://u.logigator.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; report-uri /api/csp-report; report-to csp"
 		header Reporting-Endpoints `csp="https://{http.request.host}/api/csp-report"`
-		rewrite /editor /editor/
-		reverse_proxy editor:4200
+		import editor_{$LOGIGATOR_EDITOR:bundle}
 	}
 
 	# The API's storage volume: avatars and circuit previews. Every file under it
 	# is written once under a name nothing reuses — replacing an asset means a new
 	# directory and a new pointer — and serving them here keeps a static read off
-	# the application entirely. The headers are production's: a browser keeps a
-	# file a year and an edge a day.
-	@storage path /files/*
-	handle @storage {
+	# the application entirely.
+	#
+	# A browser keeps a file for a year. The edge keeps one for a day
+	# (`CDN-Cache-Control`, RFC 9213, which no browser reads), so a deleted file
+	# stops being served within a day without the API purging anything. Only a
+	# file that exists is held, or the edge would keep a 404.
+	handle_path /files/* {
 		# Uploads are re-encoded; this keeps anything that ever turns out to be
 		# HTML or SVG inert when opened directly.
 		header Content-Security-Policy "default-src 'none'; sandbox"
-		root * /srv
-		uri strip_prefix /files
+		root * /srv/files
+		@present file
+		header @present Cache-Control "public, max-age=31536000, immutable"
+		header @present CDN-Cache-Control "public, max-age=86400"
 		file_server
-		header Cache-Control "public, max-age=31536000, immutable"
-		header CDN-Cache-Control "public, max-age=86400"
 	}
 
-	# The website, at the origin root, including the icons the editor links to by
-	# absolute path.
+	# The website, at the origin root, including everything the legacy backend's
+	# pages used to answer and the redirects from their addresses.
 	handle {
-		reverse_proxy web:4200
+		reverse_proxy web:4000 {
+			import from_edge
+		}
 	}
 
 	log {
