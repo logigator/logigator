@@ -323,7 +323,7 @@ site read it into `environment.version`. A release commit bumps it and turns
 links in `CHANGELOG.md`). Pushing the `v<version>` tag runs `release.yaml`:
 its first job waits for the tagged commit's CI and refuses it unless every workflow run passed (push
 the commit to a branch first), `.github/scripts/release-notes.mjs` refuses a tag that
-disagrees with the version or the changelogs, the `web`, `api` and `proxy` images are pushed, then
+disagrees with the version or the changelogs, the `web`, `api` and `origin` images are pushed, then
 the GitHub Release is created with the English notes.
 
 ## Testing

@@ -60,7 +60,7 @@ jobs:
         shell: bash
         run: docker compose build
 
-      # The edge depends on a healthy proxy, the proxy on a healthy site and
+      # The edge depends on a healthy origin, the origin on a healthy site and
       # API, the migration on a healthy Redis, so `up` returns only once every
       # healthcheck has passed and fails on one that cannot: a check that does
       # not run in its image fails here rather than on the server.

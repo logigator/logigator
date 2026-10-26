@@ -162,32 +162,32 @@ jobs:
           labels: ${{ steps.meta-api.outputs.labels }}
           annotations: ${{ steps.meta-api.outputs.annotations }}
 
-      - name: Extract metadata (proxy)
+      - name: Extract metadata (origin)
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
-        id: meta-proxy
+        id: meta-origin
         with:
           images: |
-            ghcr.io/${{ github.repository }}-proxy
+            ghcr.io/${{ github.repository }}-origin
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
           labels: |
-            org.opencontainers.image.title=logigator-proxy
+            org.opencontainers.image.title=logigator-origin
 
-      - name: Build and push (proxy)
+      - name: Build and push (origin)
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
-          target: proxy
+          target: origin
           push: true
           platforms: linux/amd64
           build-args: |
             GIT_COMMIT=${{ steps.buildmeta.outputs.commit }}
             BUILD_DATE=${{ steps.buildmeta.outputs.date }}
-          tags: ${{ steps.meta-proxy.outputs.tags }}
-          labels: ${{ steps.meta-proxy.outputs.labels }}
-          annotations: ${{ steps.meta-proxy.outputs.annotations }}
+          tags: ${{ steps.meta-origin.outputs.tags }}
+          labels: ${{ steps.meta-origin.outputs.labels }}
+          annotations: ${{ steps.meta-origin.outputs.annotations }}
 
   github-release:
     name: Publish the GitHub Release

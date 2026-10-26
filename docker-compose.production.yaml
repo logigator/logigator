@@ -4,7 +4,7 @@
 #
 # Cloudflare is the edge. On the server it reaches the stack through a tunnel:
 # `cloudflared` dials out, so nothing here publishes a port, and the tunnel's
-# public hostname points at `http://proxy:8080` in the Cloudflare dashboard.
+# public hostname points at `http://origin:8080` in the Cloudflare dashboard.
 # Locally, `edge` stands in for Cloudflare instead, terminating TLS for
 # logigator.test with Caddy's internal CA and setting the one header the origin
 # takes from Cloudflare.
@@ -29,8 +29,8 @@
 # examples through `migrate` before the API starts.
 #
 # Every long-running service has a healthcheck, and a service starts only once
-# what it forwards to reports healthy: the edge or the tunnel after the proxy,
-# the proxy after the site and the API. The two Node images carry no curl or
+# what it forwards to reports healthy: the edge or the tunnel after the origin,
+# the origin after the site and the API. The two Node images carry no curl or
 # wget, so their checks are a one-line `fetch` in Node itself. The checks only
 # report; nothing restarts a container that turns unhealthy.
 
@@ -60,7 +60,7 @@ services:
     networks:
       - net
     depends_on:
-      proxy:
+      origin:
         condition: service_healthy
     command: tunnel --no-autoupdate run
     environment:
@@ -74,10 +74,10 @@ services:
     networks:
       - net
     depends_on:
-      proxy:
+      origin:
         condition: service_healthy
     command: >-
-      caddy reverse-proxy --from ${SITE_HOST:-logigator.test} --to proxy:8080
+      caddy reverse-proxy --from ${SITE_HOST:-logigator.test} --to origin:8080
       --internal-certs --header-up "Cf-Connecting-Ip: {http.request.remote.host}"
     volumes:
       # The dev stack's volume, under the same project name: its local root CA
@@ -87,14 +87,17 @@ services:
       - '127.0.0.1:80:80'
       - '127.0.0.1:443:443'
 
-  proxy:
-    image: ghcr.io/logigator/logigator-proxy:${LOGIGATOR_VERSION:-latest}
+  origin:
+    image: ghcr.io/logigator/logigator-origin:${LOGIGATOR_VERSION:-latest}
     build:
       context: .
       dockerfile: Dockerfile
-      target: proxy
+      target: origin
     networks:
-      - net
+      net:
+        # The name the tunnel's public hostname may still point at.
+        aliases:
+          - proxy
     depends_on:
       web:
         condition: service_healthy
@@ -104,7 +107,7 @@ services:
       # What the API writes, read-only: Caddy serves these files, and only the
       # API ever produces them.
       - storage:/srv/files:ro
-    # The editor's shell, which Caddy serves itself: the check is of the proxy
+    # The editor's shell, which Caddy serves itself: the check is of the origin
     # alone, not of what it forwards to.
     healthcheck:
       test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:8080/editor']

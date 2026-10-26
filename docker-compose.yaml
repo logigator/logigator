@@ -6,9 +6,9 @@ services:
     networks:
       - net
     depends_on:
-      - proxy
+      - origin
     command: >-
-      caddy reverse-proxy --from logigator.test --to proxy:8080
+      caddy reverse-proxy --from logigator.test --to origin:8080
       --internal-certs --header-up "Cf-Connecting-Ip: {http.request.remote.host}"
     volumes:
       - caddy_data:/data
@@ -18,7 +18,7 @@ services:
 
   # The production origin's Caddyfile, proxying the editor's dev server instead
   # of serving a bundle.
-  proxy:
+  origin:
     image: caddy:2-alpine
     networks:
       - net
