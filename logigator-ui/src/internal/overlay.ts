@@ -270,6 +270,11 @@ export interface GlobalOverlayOptions {
  * corner only; the panel supplies its own cross-axis size (`h-screen` for a
  * side drawer, `w-screen` for a bottom/top one). Dismissal stays with the
  * caller, {@link externalTeardown} included.
+ *
+ * Never a popover: cdk's default would open it in the browser's top layer,
+ * which no z-index reaches, so it would cover the toasts. It stays in the
+ * overlay container's band instead. An anchored overlay opened from it is
+ * still a popover, so a menu or tooltip in a dialog lies over the dialog.
  */
 export function createGlobalOverlay(
   overlay: Overlay,
@@ -301,6 +306,7 @@ export function createGlobalOverlay(
 
   return overlay.create({
     positionStrategy: strategy,
+    usePopover: false,
     scrollStrategy: options.blockScroll
       ? overlay.scrollStrategies.block()
       : overlay.scrollStrategies.noop(),

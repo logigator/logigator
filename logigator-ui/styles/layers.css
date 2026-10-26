@@ -14,9 +14,14 @@
  *                   bar), over the page and its bars, under every overlay so
  *                   a dialog it opens covers it
  *   overlay         the shared cdk/overlay container, whose panes order among
- *                   themselves by open order
+ *                   themselves by open order: the global ones (dialogs,
+ *                   drawers), which are never popovers
  *   toast           above dialogs, so they stay visible
  *   max             cover-everything band; 50–90 left free for growth
+ *
+ * Anchored overlays (menus, tooltips, selects) are cdk popovers in the
+ * browser's top layer, over every band, so one opened from a dialog lies over
+ * it.
  */
 
 :root {

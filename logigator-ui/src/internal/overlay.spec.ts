@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { ConnectedPosition } from '@angular/cdk/overlay';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { ConnectedPosition, Overlay } from '@angular/cdk/overlay';
 import {
   caretOffsetFor,
   connectedPositions,
+  createConnectedOverlay,
+  createGlobalOverlay,
   positionForSide,
   sideOfPosition
 } from './overlay';
@@ -105,5 +108,41 @@ describe('sideOfPosition', () => {
   ];
   it.each(cases)('reads the resolved side back', (position, side) => {
     expect(sideOfPosition(position)).toBe(side);
+  });
+});
+
+describe('overlay layers', () => {
+  // jsdom has no popover API, and cdk only opens popovers where there is one.
+  const proto = HTMLElement.prototype as Partial<HTMLElement>;
+  beforeEach(() => {
+    proto.showPopover = () => undefined;
+    proto.hidePopover = () => undefined;
+  });
+  afterEach(() => {
+    delete proto.showPopover;
+    delete proto.hidePopover;
+  });
+
+  it('keeps a global overlay out of the top layer, in the container', () => {
+    const ref = createGlobalOverlay(TestBed.inject(Overlay), {
+      placement: 'center'
+    });
+    expect(ref.hostElement.hasAttribute('popover')).toBe(false);
+    expect(
+      ref.hostElement.parentElement?.classList.contains('cdk-overlay-container')
+    ).toBe(true);
+    ref.dispose();
+  });
+
+  it('opens an anchored overlay as a popover', () => {
+    const origin = document.createElement('button');
+    document.body.appendChild(origin);
+    const ref = createConnectedOverlay(TestBed.inject(Overlay), {
+      origin,
+      positions: connectedPositions('bottom')
+    });
+    expect(ref.hostElement.getAttribute('popover')).toBe('manual');
+    ref.dispose();
+    origin.remove();
   });
 });
