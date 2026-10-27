@@ -22,53 +22,59 @@
     <lg-message severity="info">
       {{ t('pages.my.account.google.reauthenticate') }}
     </lg-message>
-    } @if ((linked() && canUnlink()) || signInAgain()) {
-    <lg-form-field
-      #passwordField="lgFormField"
-      inputId="account-google-password"
-      required
-      class="max-w-sm"
-      [label]="t('pages.my.account.currentPassword')"
-      [error]="passwordMessage ? t(passwordMessage) : undefined"
+    } @if (needsPassword()) {
+    <form
+      class="flex flex-col gap-4"
+      [formGroup]="form"
+      (ngSubmit)="submitPassword()"
     >
-      <input
-        lgInputText
-        id="account-google-password"
-        type="password"
-        autocomplete="current-password"
-        class="w-full"
-        [formControl]="password"
-        [invalid]="!!passwordMessage"
-        [attr.aria-describedby]="passwordField.describedBy()"
-      />
-    </lg-form-field>
-    } @if (linked()) { @if (canUnlink()) {
-    <div>
-      <button
-        lgButton
-        outlined
-        severity="danger"
-        type="button"
-        [loading]="working()"
-        (onClick)="confirmUnlink()"
+      <input webAccountUsername />
+
+      <lg-form-field
+        #passwordField="lgFormField"
+        inputId="account-google-password"
+        required
+        class="max-w-sm"
+        [label]="t('pages.my.account.currentPassword')"
+        [error]="passwordMessage ? t(passwordMessage) : undefined"
       >
-        {{ t('pages.my.account.google.unlink') }}
-      </button>
-    </div>
-    } } @else if (signInAgain()) {
-    <div>
-      <button
-        lgButton
-        outlined
-        severity="secondary"
-        type="button"
-        [loading]="working()"
-        (onClick)="signInAgainAndLink()"
-      >
-        {{ t('auth.continueWithGoogle') }}
-      </button>
-    </div>
-    } @else {
+        <input
+          lgInputText
+          id="account-google-password"
+          type="password"
+          autocomplete="current-password"
+          class="w-full"
+          formControlName="password"
+          [invalid]="!!passwordMessage"
+          [attr.aria-describedby]="passwordField.describedBy()"
+        />
+      </lg-form-field>
+
+      <div>
+        @if (linked()) {
+        <button
+          lgButton
+          outlined
+          severity="danger"
+          type="submit"
+          [loading]="working()"
+        >
+          {{ t('pages.my.account.google.unlink') }}
+        </button>
+        } @else {
+        <button
+          lgButton
+          outlined
+          severity="secondary"
+          type="submit"
+          [loading]="working()"
+        >
+          {{ t('auth.continueWithGoogle') }}
+        </button>
+        }
+      </div>
+    </form>
+    } @else if (!linked()) {
     <div>
       <!-- A plain link, not a router one: the flow leaves the app for the API
            and Google, and comes back to the path it carries. -->

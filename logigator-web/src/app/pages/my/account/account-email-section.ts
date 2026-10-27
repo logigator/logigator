@@ -26,6 +26,7 @@ import {
   googleReauthentication
 } from './account-reauthentication';
 import { AccountSection } from './account-section';
+import { AccountUsername } from './account-username';
 
 /**
  * Changing the address the account signs in with.
@@ -47,6 +48,7 @@ import { AccountSection } from './account-section';
   imports: [
     AccountReauthentication,
     AccountSection,
+    AccountUsername,
     LgButton,
     LgFormField,
     LgInputText,

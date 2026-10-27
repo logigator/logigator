@@ -6,7 +6,7 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
@@ -32,6 +32,7 @@ import { googleErrorKey } from '../../../user/google-auth-errors';
 import { SessionService } from '../../../user/session.service';
 import { RESUME_PARAM } from './account-reauthentication';
 import { AccountSection } from './account-section';
+import { AccountUsername } from './account-username';
 
 /** What the API answers a link started from a session older than it accepts. */
 const REAUTHENTICATION_REQUIRED = 'google_reauthentication_required';
@@ -60,6 +61,7 @@ const REAUTHENTICATION_REQUIRED = 'google_reauthentication_required';
   selector: 'web-account-google-section',
   imports: [
     AccountSection,
+    AccountUsername,
     LgButton,
     LgFormField,
     LgInputText,
@@ -103,7 +105,14 @@ export class AccountGoogleSection {
       !this.linked() && this.query()?.get('error') === REAUTHENTICATION_REQUIRED
   );
 
+  /** Unlinking and signing in again to link are the two steps that take the
+   * password; one of them at a time is on offer. */
+  protected readonly needsPassword = computed(
+    () => (this.linked() && this.canUnlink()) || this.signInAgain()
+  );
+
   protected readonly password = new FormControl('', { nonNullable: true });
+  protected readonly form = new FormGroup({ password: this.password });
   protected readonly passwordError = fieldError(this.password, 'password');
 
   protected readonly working = signal(false);
@@ -143,7 +152,7 @@ export class AccountGoogleSection {
 
   /** Signs in again with the password, which makes the session recent enough
    * to start a link, and goes on to Google. */
-  protected async signInAgainAndLink(): Promise<void> {
+  private async signInAgainAndLink(): Promise<void> {
     const email = this.session.user()?.email;
     if (!this.passwordGiven() || !email || this.working()) return;
 
@@ -163,7 +172,12 @@ export class AccountGoogleSection {
     this.document.location.assign(this.linkUrl());
   }
 
-  protected confirmUnlink(): void {
+  protected submitPassword(): void {
+    if (this.linked()) this.confirmUnlink();
+    else void this.signInAgainAndLink();
+  }
+
+  private confirmUnlink(): void {
     if (!this.passwordGiven()) return;
 
     this.confirmations.confirm({

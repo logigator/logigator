@@ -5,7 +5,7 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ApiRequestError } from '@logigator/contract';
@@ -30,6 +30,7 @@ import {
   googleReauthentication
 } from './account-reauthentication';
 import { AccountSection } from './account-section';
+import { AccountUsername } from './account-username';
 
 /**
  * Deleting the account, and with it every project, component and star it owns
@@ -47,6 +48,7 @@ import { AccountSection } from './account-section';
   imports: [
     AccountReauthentication,
     AccountSection,
+    AccountUsername,
     LgButton,
     LgFormField,
     LgInputText,
@@ -71,6 +73,7 @@ export class AccountDeleteSection {
   );
 
   protected readonly password = new FormControl('', { nonNullable: true });
+  protected readonly form = new FormGroup({ password: this.password });
   protected readonly passwordError = fieldError(this.password, 'password');
 
   protected readonly deleting = signal(false);

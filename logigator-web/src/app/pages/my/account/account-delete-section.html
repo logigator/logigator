@@ -6,7 +6,13 @@
 >
   @let passwordMessage = passwordError();
 
-  <div class="flex max-w-sm flex-col gap-4">
+  <form
+    class="flex max-w-sm flex-col gap-4"
+    [formGroup]="form"
+    (ngSubmit)="confirm()"
+  >
+    <input webAccountUsername />
+
     @if (formError(); as message) {
     <lg-message severity="danger">{{ t(message) }}</lg-message>
     } @if (reauthentication.required()) {
@@ -28,23 +34,17 @@
         type="password"
         autocomplete="current-password"
         class="w-full"
-        [formControl]="password"
+        formControlName="password"
         [invalid]="!!passwordMessage"
         [attr.aria-describedby]="passwordField.describedBy()"
       />
     </lg-form-field>
     } @if (!reauthentication.required()) {
     <div>
-      <button
-        lgButton
-        severity="danger"
-        type="button"
-        [loading]="deleting()"
-        (onClick)="confirm()"
-      >
+      <button lgButton severity="danger" type="submit" [loading]="deleting()">
         {{ t('pages.my.account.delete.submit') }}
       </button>
     </div>
     }
-  </div>
+  </form>
 </web-account-section>

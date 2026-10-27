@@ -31,6 +31,7 @@ import {
   googleReauthentication
 } from './account-reauthentication';
 import { AccountSection } from './account-section';
+import { AccountUsername } from './account-username';
 
 /**
  * Setting or changing the account's password.
@@ -51,6 +52,7 @@ import { AccountSection } from './account-section';
   imports: [
     AccountReauthentication,
     AccountSection,
+    AccountUsername,
     LgButton,
     LgFormField,
     LgInputText,

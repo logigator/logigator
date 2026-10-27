@@ -23,6 +23,8 @@
     }
 
     <form class="flex flex-col gap-4" [formGroup]="form" (ngSubmit)="submit()">
+      <input webAccountUsername />
+
       @if (formError(); as message) {
       <lg-message severity="danger">{{ t(message) }}</lg-message>
       }
