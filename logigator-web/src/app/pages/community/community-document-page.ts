@@ -25,6 +25,7 @@ import { CommunityApiService } from '../../api/services/community-api.service';
 import { ShareApiService } from '../../api/services/share-api.service';
 import { shareCardUrl } from '../../documents/crawler-image';
 import { CircuitPreview } from '../../documents/circuit-preview';
+import { hiddenCategoryLabel } from '../../documents/hidden-category';
 import { isPublishedButEmpty } from '../../documents/published-but-empty';
 import { ShareControls } from '../../documents/share-controls';
 import { VisibilityTag } from '../../documents/visibility-tag';
@@ -246,6 +247,26 @@ export class CommunityDocumentPage {
    * with no star, no stargazers and nothing to share, whatever the visibility.
    */
   protected readonly hidden = computed(() => this.document()?.hidden ?? null);
+
+  /**
+   * What the notice says. A moderator's hide carries their own words; an
+   * automatic one carries none, so its category is named in the reader's
+   * language, by the report form's label for the same reason.
+   */
+  protected readonly hiddenNotice = computed(() => {
+    const hold = this.hidden();
+    if (!hold) return null;
+    return hold.automatic
+      ? this.translation.translate(
+          'pages.community.document.hiddenNoticeAutomatic',
+          {
+            category: hiddenCategoryLabel(this.translation, hold.category)
+          }
+        )
+      : this.translation.translate('pages.community.document.hiddenNotice', {
+          reason: hold.reason
+        });
+  });
 
   /**
    * Whether to tell the reader their published document is in no listing

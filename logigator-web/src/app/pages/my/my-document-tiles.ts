@@ -15,7 +15,9 @@ import {
   LgMenu,
   type MenuItem
 } from '@logigator/ui';
+import type { DocumentHidden } from '@logigator/contract';
 import type { CommunityKind } from '../../api/services/community-api.service';
+import { hiddenCategoryLabel } from '../../documents/hidden-category';
 import { isPublishedButEmpty } from '../../documents/published-but-empty';
 import { VisibilityTag } from '../../documents/visibility-tag';
 import { SiteLinks } from '../../layout/site-links';
@@ -92,15 +94,13 @@ export interface MyDocumentCommand {
               <span class="truncate font-mono text-xs">{{ tile.edited }}</span>
             </span>
 
-            @if (tile.hidden; as hidden) {
+            @if (tile.hiddenHint; as hint) {
               <!-- Ahead of the empty badge, which it outranks: a hidden
                    document is in no listing whatever is on it. -->
               <span
                 lgCircuitTileBadge
                 class="inline-flex h-8 items-center gap-1.5 rounded-md border border-warn-border bg-warn-surface px-2 text-xs whitespace-nowrap text-warn-text"
-                [title]="
-                  t('pages.my.list.hiddenHint', { reason: hidden.reason })
-                "
+                [title]="hint"
               >
                 <i class="ph ph-prohibit text-sm" aria-hidden="true"></i>
                 {{ t('pages.my.list.hidden') }}
@@ -177,7 +177,7 @@ export class MyDocumentTiles {
       id: row.id,
       name: row.name,
       visibility: row.visibility,
-      hidden: row.hidden ?? null,
+      hiddenHint: this.hiddenHint(row.hidden ?? null),
       empty: isPublishedButEmpty(row),
       edited: dates.format(new Date(row.lastEditedAt)),
       editorHref: this.links.editorDocument(kind, row.id),
@@ -190,6 +190,21 @@ export class MyDocumentTiles {
       menu: this.menuFor(row, kind)
     }));
   });
+
+  /**
+   * Why the document is hidden, for the badge's tooltip: a moderator's own
+   * words, or for an automatic hide its category, by the report form's label.
+   */
+  private hiddenHint(hidden: DocumentHidden): string | null {
+    if (!hidden) return null;
+    return hidden.automatic
+      ? this.translation.translate('pages.my.list.hiddenHintAutomatic', {
+          category: hiddenCategoryLabel(this.translation, hidden.category)
+        })
+      : this.translation.translate('pages.my.list.hiddenHint', {
+          reason: hidden.reason
+        });
+  }
 
   private menuFor(row: MyDocumentRow, kind: CommunityKind): MenuItem[] {
     return [

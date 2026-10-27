@@ -370,7 +370,9 @@ const de: TranslationSchema = {
         showOriginal: 'Original anzeigen',
         report: 'Melden',
         hiddenNotice:
-          'Diese Schaltung wurde von der Moderation ausgeblendet. Nur du kannst sie sehen, und sie erscheint in keiner Community-Liste. Grund: {{reason}}'
+          'Diese Schaltung wurde von der Moderation ausgeblendet. Nur du kannst sie sehen, und sie erscheint in keiner Community-Liste. Grund: {{reason}}',
+        hiddenNoticeAutomatic:
+          'Diese Schaltung wurde automatisch ausgeblendet. Nur du kannst sie sehen, und sie erscheint in keiner Community-Liste. Grund: {{category}}. Eine Person prüft diese Entscheidung noch.'
       },
       report: {
         heading: 'Schaltung melden',
@@ -476,6 +478,8 @@ const de: TranslationSchema = {
           'Diese Schaltung ist leer und wird deshalb noch nicht in der Community gelistet.',
         hidden: 'Ausgeblendet',
         hiddenHint: 'Von der Moderation ausgeblendet: {{reason}}',
+        hiddenHintAutomatic:
+          'Automatisch ausgeblendet: {{category}}. Eine Person prüft das noch.',
         delete: 'Löschen'
       },
       edit: {

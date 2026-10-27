@@ -378,7 +378,9 @@ const en = {
         showOriginal: 'Show original',
         report: 'Report',
         hiddenNotice:
-          'This circuit was hidden by moderation. Only you can see it, and it is in no community listing. Reason: {{reason}}'
+          'This circuit was hidden by moderation. Only you can see it, and it is in no community listing. Reason: {{reason}}',
+        hiddenNoticeAutomatic:
+          'This circuit was hidden automatically. Only you can see it, and it is in no community listing. Reason: {{category}}. A person will review this decision.'
       },
       report: {
         heading: 'Report this circuit',
@@ -487,6 +489,8 @@ const en = {
           'This circuit is empty, so the community doesn’t list it yet.',
         hidden: 'Hidden',
         hiddenHint: 'Hidden by moderation: {{reason}}',
+        hiddenHintAutomatic:
+          'Hidden automatically: {{category}}. A person will review this.',
         delete: 'Delete'
       },
       edit: {

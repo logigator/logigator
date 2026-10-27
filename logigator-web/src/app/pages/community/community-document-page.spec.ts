@@ -277,7 +277,12 @@ describe('CommunityDocumentPage', () => {
   it('tells the owner of a hidden document why, and offers nothing a listing has', async () => {
     const owner = communityRow('Half adder', LINK).author;
     const { el, detectChanges } = await render({
-      hidden: { at: '2026-02-01T00:00:00.000Z', reason: 'Copyright notice' }
+      hidden: {
+        at: '2026-02-01T00:00:00.000Z',
+        reason: 'Copyright notice',
+        automatic: false,
+        category: null
+      }
     });
     TestBed.inject(SessionService).signedIn({
       id: owner.id,
@@ -285,14 +290,41 @@ describe('CommunityDocumentPage', () => {
     } as never);
     detectChanges();
 
-    expect(el.querySelector('lg-message')?.textContent).toContain(
-      'Copyright notice'
-    );
+    const notice = el.querySelector('lg-message')?.textContent ?? '';
+    expect(notice).toContain('Copyright notice');
+    // A moderator's hide is the person's decision already.
+    expect(notice).not.toContain('A person will review');
     // Public by its own state, yet resolvable by nobody else: no star, no
     // stargazers, and no link worth handing on.
     expect(starControl(el)).toBeNull();
     expect(el.textContent).not.toContain('Stargazers');
     expect(el.querySelector('web-share-controls')).toBeNull();
+  });
+
+  it('names an automatic hide’s category and says a person reviews it, where a moderator’s hide gives its reason', async () => {
+    const owner = communityRow('Half adder', LINK).author;
+    const translation = TestBed.inject(TranslationService);
+    const { el, detectChanges } = await render({
+      hidden: {
+        at: '2026-02-01T00:00:00.000Z',
+        reason: '',
+        automatic: true,
+        category: 'harassment'
+      }
+    });
+    TestBed.inject(SessionService).signedIn({
+      id: owner.id,
+      username: owner.username
+    } as never);
+    detectChanges();
+
+    const notice = el.querySelector('lg-message')?.textContent ?? '';
+    // The category in the reader's language, by the report form's own label.
+    expect(notice).toContain(
+      translation.translate('pages.community.report.reasons.harassment')
+    );
+    expect(notice).toContain('A person will review');
+    expect(notice).not.toContain('hidden by moderation');
   });
 
   it('offers a report to every reader but the owner', async () => {

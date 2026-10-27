@@ -366,7 +366,9 @@ const es: TranslationSchema = {
         showOriginal: 'Ver original',
         report: 'Denunciar',
         hiddenNotice:
-          'La moderación ha ocultado este circuito. Solo tú puedes verlo y no aparece en ninguna lista de la comunidad. Motivo: {{reason}}'
+          'La moderación ha ocultado este circuito. Solo tú puedes verlo y no aparece en ninguna lista de la comunidad. Motivo: {{reason}}',
+        hiddenNoticeAutomatic:
+          'Este circuito se ha ocultado automáticamente. Solo tú puedes verlo y no aparece en ninguna lista de la comunidad. Motivo: {{category}}. Una persona revisará esta decisión.'
       },
       report: {
         heading: 'Denunciar este circuito',
@@ -472,6 +474,8 @@ const es: TranslationSchema = {
           'Este circuito está vacío, así que todavía no aparece en la comunidad.',
         hidden: 'Oculto',
         hiddenHint: 'Ocultado por la moderación: {{reason}}',
+        hiddenHintAutomatic:
+          'Ocultado automáticamente: {{category}}. Una persona lo revisará.',
         delete: 'Eliminar'
       },
       edit: {

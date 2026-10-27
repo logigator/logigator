@@ -363,7 +363,9 @@ const fr: TranslationSchema = {
         showOriginal: 'Afficher l’original',
         report: 'Signaler',
         hiddenNotice:
-          'Ce circuit a été masqué par la modération. Vous seul pouvez le voir, et il n’apparaît dans aucune liste de la communauté. Motif : {{reason}}'
+          'Ce circuit a été masqué par la modération. Vous seul pouvez le voir, et il n’apparaît dans aucune liste de la communauté. Motif : {{reason}}',
+        hiddenNoticeAutomatic:
+          'Ce circuit a été masqué automatiquement. Vous seul pouvez le voir, et il n’apparaît dans aucune liste de la communauté. Motif : {{category}}. Une personne va examiner cette décision.'
       },
       report: {
         heading: 'Signaler ce circuit',
@@ -469,6 +471,8 @@ const fr: TranslationSchema = {
           'Ce circuit est vide, il n’apparaît donc pas encore dans les listes communautaires.',
         hidden: 'Masqué',
         hiddenHint: 'Masqué par la modération : {{reason}}',
+        hiddenHintAutomatic:
+          'Masqué automatiquement : {{category}}. Une personne va l’examiner.',
         delete: 'Supprimer'
       },
       edit: {
