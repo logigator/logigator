@@ -220,7 +220,7 @@ export const MAX_ANALYSIS_ATTEMPTS = 3;
  * The attempt limit is written into the predicate, so changing
  * {@link MAX_ANALYSIS_ATTEMPTS} takes a migration of the two indexes.
  */
-function analysisPendingWhere(t: {
+export function analysisPendingWhere(t: {
   analyzedDigest: AnyPgColumn;
   textDigest: AnyPgColumn;
   visibility: AnyPgColumn;

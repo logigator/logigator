@@ -10,7 +10,7 @@ import {
 import { FileStorageService } from '../storage/file-storage.service';
 import { ImageService } from '../storage/image.service';
 import { circuitNotFound } from './circuit-errors';
-import type { CircuitRow, CircuitTable } from './circuit-queries';
+import { type CircuitRow, type CircuitTable, kindOf } from './circuit-queries';
 import { findOwned } from './circuit-queries';
 import type { PreviewSources } from './preview-upload';
 
@@ -119,8 +119,4 @@ export class PreviewService {
     if (!row) throw circuitNotFound(kindOf(table));
     return row;
   }
-}
-
-function kindOf(table: CircuitTable): 'project' | 'component' {
-  return table === projects ? 'project' : 'component';
 }

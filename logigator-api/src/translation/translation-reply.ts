@@ -2,10 +2,8 @@ import * as z from 'zod';
 import { documentNameSchema, NOT_TRANSLATABLE } from '@logigator/contract';
 import { normalizeAuthoredText } from '@logigator/core';
 import { type Locale, LOCALES } from '../common/locale';
-import type {
-  DocumentTranslation,
-  TranslatedText
-} from './document-translation';
+import type { TranslatedText } from '../documents/document-texts';
+import type { DocumentTranslation } from './document-translation';
 import { checkTranslatedDescription } from './translation-check';
 
 const perLanguage = <S extends z.ZodType>(entry: S) =>

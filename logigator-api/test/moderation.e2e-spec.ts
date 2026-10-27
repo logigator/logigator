@@ -481,7 +481,7 @@ describe('moderation', () => {
       expect(entry?.document).toMatchObject({
         link: project.link,
         ownerId: adaId,
-        hidden: false
+        hiddenBy: null
       });
 
       expect(await moderation.resolve(entry!.id, 'Not spam')).toBe('resolved');

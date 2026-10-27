@@ -15,7 +15,11 @@ import {
   type UserRow
 } from '../database/schema';
 import { CircuitDocumentService } from '../documents/circuit-document.service';
-import { findByResolvingLink, forkLineage } from '../documents/circuit-queries';
+import {
+  findByResolvingLink,
+  forkLineage,
+  tableOf
+} from '../documents/circuit-queries';
 import {
   toAttribution,
   toAuthor,
@@ -102,7 +106,7 @@ export class ShareService {
     callerId: string | null
   ): Promise<ShareResponse> {
     const target = await this.resolve(kind, link, callerId);
-    const table = target.kind === 'project' ? projects : components;
+    const table = tableOf(target.kind);
 
     const [author, dependencies, lineage, stars] = await Promise.all([
       this.author(target.row.userId),

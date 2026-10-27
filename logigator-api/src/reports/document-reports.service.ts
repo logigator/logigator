@@ -3,10 +3,16 @@ import type {
   DocumentReportReason,
   ReportDocumentRequest
 } from '@logigator/contract';
+import { and, eq, isNull } from 'drizzle-orm';
 import { ApiException } from '../common/api-exception';
 import { ENV, type Env } from '../config/env';
 import { DB, type Database } from '../database/database.module';
-import { components, documentReports, projects } from '../database/schema';
+import {
+  components,
+  documentReports,
+  projects,
+  type DocumentReportRow
+} from '../database/schema';
 import { findByResolvingLink } from '../documents/circuit-queries';
 import { MailService } from '../mail/mail.service';
 
@@ -92,6 +98,42 @@ export function reportSummary(report: OperatorReport): Record<string, unknown> {
 }
 
 /**
+ * Logs a stored report and mails it to the operator. The row is the record
+ * and the mail only tells somebody to look, so a failed send is logged and
+ * the report stands.
+ */
+export async function announceReport(
+  report: OperatorReport,
+  mail: MailService,
+  publicUrl: string,
+  logger: Logger
+): Promise<void> {
+  logger.warn(JSON.stringify(reportSummary(report)));
+  try {
+    await mail.sendDocumentReport(operatorReportMail(report, publicUrl));
+  } catch (error) {
+    logger.error(`Could not mail the ${report.source} report`, error);
+  }
+}
+
+/**
+ * The open reports about one document, those of one source only when it is
+ * given.
+ */
+export function openReportsAbout(
+  kind: ReportedKind,
+  documentId: string,
+  source?: DocumentReportRow['source']
+) {
+  return and(
+    eq(documentReports.documentKind, kind),
+    eq(documentReports.documentId, documentId),
+    source ? eq(documentReports.source, source) : undefined,
+    isNull(documentReports.resolvedAt)
+  );
+}
+
+/**
  * Notices about documents: stored, logged, and mailed to `REPORT_MAIL_TO` when
  * it is set. Anybody the document's link resolves for may send one, signed in
  * or not, so a report names exactly the documents its sender could see.
@@ -139,30 +181,26 @@ export class DocumentReportsService {
       })
       .returning({ id: documentReports.id });
 
-    const report: OperatorReport = {
-      reportId: row?.id,
-      source: 'reader',
-      kind,
-      document: {
-        id: document.id,
-        link,
-        name: document.name,
-        ownerId: document.userId
+    await announceReport(
+      {
+        reportId: row?.id,
+        source: 'reader',
+        kind,
+        document: {
+          id: document.id,
+          link,
+          name: document.name,
+          ownerId: document.userId
+        },
+        reason: body.reason,
+        explanation: body.explanation,
+        contactEmail: body.contactEmail ?? null,
+        reporterId,
+        hidden: false
       },
-      reason: body.reason,
-      explanation: body.explanation,
-      contactEmail: body.contactEmail ?? null,
-      reporterId,
-      hidden: false
-    };
-    this.logger.warn(JSON.stringify(reportSummary(report)));
-
-    try {
-      await this.mail.sendDocumentReport(
-        operatorReportMail(report, this.env.PUBLIC_URL)
-      );
-    } catch (error) {
-      this.logger.error('Could not mail the document report', error);
-    }
+      this.mail,
+      this.env.PUBLIC_URL,
+      this.logger
+    );
   }
 }

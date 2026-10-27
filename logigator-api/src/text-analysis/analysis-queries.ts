@@ -1,8 +1,11 @@
-import { getTableName, sql } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
-import { MAX_ANALYSIS_ATTEMPTS } from '../database/schema';
-import type { CircuitTable } from '../documents/circuit-queries';
-import { textTableOf } from '../documents/document-text-queries';
+import { analysisPendingWhere } from '../database/schema';
+import {
+  type CircuitTable,
+  linkResolvesFor
+} from '../documents/circuit-queries';
+import { outer, textTableOf } from '../documents/document-text-queries';
 import type { DocumentTranslation } from '../translation/document-translation';
 import { replaceMachineTexts } from '../translation/machine-texts';
 import { ANALYSIS_LEASE_MINUTES } from './analysis-lease';
@@ -18,13 +21,6 @@ import { ANALYSIS_LEASE_MINUTES } from './analysis-lease';
  */
 
 const LEASE = sql.raw(`interval '${ANALYSIS_LEASE_MINUTES} minutes'`);
-
-/**
- * Written into the claim as a literal: the planner uses a partial index only
- * where it can prove the query's condition implies the index's, and a bound
- * parameter proves nothing.
- */
-const MAX_ATTEMPTS = sql.raw(String(MAX_ANALYSIS_ATTEMPTS));
 
 /** One document the worker holds, with what it needs to analyze it. */
 export interface ClaimedDocument {
@@ -60,7 +56,7 @@ interface ClaimedRow extends Record<string, unknown> {
  * nobody is shown it, and drawn on later it is taken from then, its text still
  * pending. A public empty one is taken like any other, since anybody can open
  * it and its text has to be judged. A text that failed
- * {@link MAX_ANALYSIS_ATTEMPTS} times is parked until its digest moves.
+ * `MAX_ANALYSIS_ATTEMPTS` times is parked until its digest moves.
  *
  * The debounce covers the author's versions as well as the original: a version
  * written within it holds the document back as an edit does, so an author
@@ -74,27 +70,25 @@ export async function claimPending(
   table: CircuitTable,
   options: { debounceSeconds: number; batch: number }
 ): Promise<ClaimedDocument[]> {
-  const documentId = sql`${sql.identifier(getTableName(table))}.id`;
   // `RETURNING` follows the update's plan, not the subquery's order, so the
-  // claimed rows are put back in edit order around it.
+  // claimed rows are put back in edit order around it. The subquery starts
+  // from the partial index's own predicate: the planner uses the index only
+  // where it can prove the query's condition implies the index's, which the
+  // predicate's literals let it do and a bound parameter would not.
   const result = await db.execute<ClaimedRow>(sql`
     WITH claimed AS (
       UPDATE ${table} SET analysis_claimed_at = now()
        WHERE id IN (
          SELECT id FROM ${table}
-          WHERE analyzed_digest IS DISTINCT FROM text_digest
-            AND visibility <> 'private'
-            AND hidden_at IS NULL
+          WHERE ${analysisPendingWhere(table)}
             AND NOT (visibility = 'unlisted' AND component_count = 0 AND wire_count = 0)
             AND last_edited_at < now() - make_interval(secs => ${options.debounceSeconds})
             AND NOT EXISTS (
               SELECT 1 FROM ${textTableOf(table)} human
-               WHERE human.document_id = ${documentId}
+               WHERE human.document_id = ${outer(table.id)}
                  AND human.origin = 'human'
                  AND human.created_at >= now() - make_interval(secs => ${options.debounceSeconds}))
             AND (analysis_claimed_at IS NULL OR analysis_claimed_at < now() - ${LEASE})
-            AND NOT (analysis_attempt_digest = text_digest
-                     AND analysis_attempts >= ${MAX_ATTEMPTS})
           ORDER BY last_edited_at
           LIMIT ${options.batch}
           FOR UPDATE SKIP LOCKED)
@@ -133,8 +127,7 @@ export async function renewForCall(
   const result = await db.execute<{ claimed_at: string }>(sql`
     UPDATE ${table} SET analysis_claimed_at = now()
      WHERE id = ${claim.id}
-       AND visibility <> 'private'
-       AND hidden_at IS NULL
+       AND ${linkResolvesFor(table, null)}
        AND text_digest = ${claim.textDigest}
        AND analysis_claimed_at = ${claim.claimedAt}::timestamptz
     RETURNING analysis_claimed_at::text AS claimed_at

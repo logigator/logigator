@@ -53,16 +53,25 @@ export class AppModule {
    * env in rather than letting providers read `process.env` keeps validation at
    * one bootstrap-time point and lets specs supply their own. The provider is
    * global, so a feature module injects {@link ENV} without importing anything.
+   *
+   * `worker: false` leaves the text analysis worker out whatever the switch
+   * says, for a command-line tool that boots the container beside a running
+   * server. The switch is left as configured: what it says about the listings
+   * holds for the tool too.
    */
-  static forEnv(env: Env): DynamicModule {
+  static forEnv(
+    env: Env,
+    { worker = true }: { worker?: boolean } = {}
+  ): DynamicModule {
     return {
       module: AppModule,
       global: true,
       // Decided here, at bootstrap, because whether the worker exists is what
       // the switch means: reads never consult it.
-      imports: env.TEXT_ANALYSIS_WORKER_ENABLED
-        ? [TextAnalysisWorkerModule]
-        : [],
+      imports:
+        worker && env.TEXT_ANALYSIS_WORKER_ENABLED
+          ? [TextAnalysisWorkerModule]
+          : [],
       providers: [{ provide: ENV, useValue: env }],
       exports: [ENV]
     };

@@ -13,11 +13,16 @@ import { ApiException } from './api-exception';
  */
 export class UuidParam implements PipeTransform<string, string> {
   transform(value: string): string {
-    if (!UUID.test(value)) {
+    if (!isUuid(value)) {
       throw new ApiException(HttpStatus.NOT_FOUND, 'not_found', 'No such id.');
     }
     return value;
   }
+}
+
+/** Whether a string is a uuid, in any case. */
+export function isUuid(value: string): boolean {
+  return UUID.test(value);
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

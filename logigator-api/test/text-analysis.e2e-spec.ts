@@ -65,7 +65,6 @@ function translated(input: AnalysisInput): AnalysisOutcome {
     kind: 'success',
     model: SERVED_MODEL,
     calls: [USAGE],
-    rejections: [],
     verdict: HARMLESS,
     verdictCall: USAGE,
     translation: {
@@ -87,7 +86,6 @@ const documentFailure: Answer = () => ({
   kind: 'document',
   reason: 'the reply was refused twice',
   calls: [USAGE, USAGE],
-  rejections: [],
   verdict: null,
   verdictCall: null
 });
@@ -505,7 +503,6 @@ describe('the text analysis worker', () => {
       kind: 'document',
       reason: 'the description was refused twice',
       calls: [USAGE, USAGE],
-      rejections: [],
       verdict: HARMLESS,
       verdictCall: USAGE
     }));
@@ -560,7 +557,6 @@ describe('the text analysis worker', () => {
         kind: 'document',
         reason: 'the reply was cut short',
         calls: [USAGE],
-        rejections: [],
         verdict: HARMLESS,
         verdictCall: USAGE
       }),
@@ -588,7 +584,6 @@ describe('the text analysis worker', () => {
         kind: 'document',
         reason: 'the reply was cut short',
         calls: [USAGE],
-        rejections: [],
         verdict: HARMLESS,
         verdictCall: USAGE
       }),
@@ -754,7 +749,6 @@ describe('the text analysis worker', () => {
         kind: 'document',
         reason: 'the description was refused twice',
         calls: [USAGE, USAGE],
-        rejections: [],
         verdict,
         verdictCall: USAGE
       }));
@@ -854,7 +848,6 @@ describe('the text analysis worker', () => {
       reason: 'OpenRouter answered 429',
       retryAfterSeconds: 120,
       calls: [],
-      rejections: [],
       verdict: null,
       verdictCall: null
     }));
@@ -1038,7 +1031,6 @@ describe('the text analysis worker', () => {
       pause: 'budget',
       reason: 'OpenRouter answered 402',
       calls: [],
-      rejections: [],
       verdict: null,
       verdictCall: null
     }));
@@ -1071,7 +1063,7 @@ describe('the text analysis worker', () => {
     expect(fake.callsFor(behind.id)).toHaveLength(1);
   });
 
-  it('claims nothing while the key reports its budget spent', async () => {
+  it('analyzes nothing while the key reports its budget spent', async () => {
     fake.budget = { kind: 'exhausted', remainingUsd: 0.01 };
     const project = await createProject(ada, { name: 'Clock Divider' });
 
@@ -1096,7 +1088,6 @@ describe('the text analysis worker', () => {
       pause: 'configuration',
       reason: 'OpenRouter answered 400',
       calls: [],
-      rejections: [],
       verdict: null,
       verdictCall: null
     });

@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { LOCALES } from '../../common/locale';
 import type { ModerationVerdict } from '../../moderation/moderation-verdict';
-import { ANALYSIS_REPLY_JSON_SCHEMA } from '../analysis-reply';
-import type { AnalysisInput } from '../text-analyzer';
+import { analysisRetryMessage } from '../analysis-prompt';
+import {
+  ANALYSIS_REPLY_JSON_SCHEMA,
+  readAnalysisReply
+} from '../analysis-reply';
+import type { AnalysisInput, ReplyRejection } from '../text-analyzer';
 import {
   buildCompletionRequest,
   OpenRouterClient,
@@ -42,6 +46,13 @@ function content(
 }
 
 const VALID_CONTENT = content();
+
+/** Why the client refuses a reply with this content. */
+function rejectionOf(content: string): ReplyRejection {
+  const read = readAnalysisReply(content, INPUT);
+  if (read.ok) throw new Error('the reply is accepted');
+  return read.rejection;
+}
 
 /** A description `translation-check` refuses: it adds a link. */
 const INJECTED = 'Addiert drei Bits. [Mehr](https://evil.example)';
@@ -165,7 +176,7 @@ describe('buildCompletionRequest', () => {
     expect(body['response_format']).toMatchObject({
       type: 'json_schema',
       json_schema: {
-        name: 'document_translation',
+        name: 'text_analysis',
         strict: true,
         schema: ANALYSIS_REPLY_JSON_SCHEMA
       }
@@ -218,17 +229,19 @@ describe('OpenRouterClient.analyze', () => {
   });
 
   it('retries a schema-invalid reply once, naming what was wrong', async () => {
+    const invalid = '{"nameLanguage":"English"}';
     const { fetch, calls } = fakeFetch(
-      json(200, completion('{"nameLanguage":"English"}')),
+      json(200, completion(invalid)),
       json(200, completion(VALID_CONTENT))
     );
     const outcome = await client(fetch).client.analyze(INPUT, 'doc-1');
 
     expect(outcome.kind).toBe('success');
-    expect(outcome.rejections).toHaveLength(1);
+    const rejection = rejectionOf(invalid);
+    expect(rejection.stage).toBe('schema');
     const retry = calls[1].body?.['messages'] as { content: string }[];
     expect(retry).toHaveLength(3);
-    expect(retry[2].content).toContain(outcome.rejections[0].reason);
+    expect(retry[2].content).toBe(analysisRetryMessage(rejection.reason));
   });
 
   it('counts a reply refused twice against the document', async () => {
@@ -249,17 +262,20 @@ describe('OpenRouterClient.analyze', () => {
 
   it('retries a translation the check refuses', async () => {
     const injected = content(CLEAN, INJECTED);
-    const { fetch } = fakeFetch(
+    const { fetch, calls } = fakeFetch(
       json(200, completion(injected)),
       json(200, completion(injected))
     );
     const outcome = await client(fetch).client.analyze(INPUT, 'doc-1');
 
-    expect(outcome.kind).toBe('document');
-    expect(outcome.rejections.map((rejection) => rejection.stage)).toEqual([
-      'check',
-      'check'
-    ]);
+    const rejection = rejectionOf(injected);
+    expect(rejection.stage).toBe('check');
+    const retry = calls[1].body?.['messages'] as { content: string }[];
+    expect(retry[2].content).toBe(analysisRetryMessage(rejection.reason));
+    expect(outcome).toMatchObject({
+      kind: 'document',
+      reason: `the reply was refused twice; last: ${rejection.reason}`
+    });
   });
 
   it('returns the verdict with the call that gave it', async () => {

@@ -24,7 +24,8 @@ import type {
 } from '../text-analyzer';
 import {
   classifyOpenRouterFailure,
-  parseRetryAfter
+  parseRetryAfter,
+  readOpenRouterError
 } from './openrouter-failure';
 
 /**
@@ -89,7 +90,7 @@ export function buildCompletionRequest(
     response_format: {
       type: 'json_schema',
       json_schema: {
-        name: 'document_translation',
+        name: 'text_analysis',
         strict: true,
         schema: ANALYSIS_REPLY_JSON_SCHEMA
       }
@@ -136,11 +137,13 @@ interface Completion {
  */
 export class OpenRouterClient implements TextAnalyzer {
   private readonly model: string;
+  private readonly headers: Record<string, string>;
   private readonly fetch: typeof fetch;
   private readonly logger: Pick<LoggerService, 'log' | 'warn'>;
 
-  constructor(private readonly options: OpenRouterClientOptions) {
+  constructor(options: OpenRouterClientOptions) {
     this.model = options.model ?? `@preset/${options.preset}`;
+    this.headers = openRouterHeaders(options.apiKey, options.publicUrl);
     this.fetch = options.fetch ?? fetch;
     this.logger = options.logger ?? new Logger(OpenRouterClient.name);
   }
@@ -150,14 +153,15 @@ export class OpenRouterClient implements TextAnalyzer {
     documentId: string
   ): Promise<AnalysisOutcome> {
     const calls: CallUsage[] = [];
-    const rejections: ReplyRejection[] = [];
+    // The reply refused last, which the retry names.
+    let rejection: ReplyRejection | undefined;
     let verdict: ModerationVerdict | null = null;
     let verdictCall: CallUsage | null = null;
-    const accounted = () => ({ calls, rejections, verdict, verdictCall });
+    const accounted = () => ({ calls, verdict, verdictCall });
 
     for (let attempt = 0; attempt < 2; attempt++) {
       const completion = await this.complete(
-        buildCompletionRequest(this.model, input, rejections.at(-1)?.reason),
+        buildCompletionRequest(this.model, input, rejection?.reason),
         documentId
       );
       if (completion.usage) calls.push(completion.usage);
@@ -201,15 +205,15 @@ export class OpenRouterClient implements TextAnalyzer {
         };
       }
 
-      rejections.push(read.rejection);
+      rejection = read.rejection;
       this.logger.warn(
-        `Analysis reply for ${documentId} refused (${read.rejection.stage}): ${read.rejection.reason}`
+        `Analysis reply for ${documentId} refused (${rejection.stage}): ${rejection.reason}`
       );
     }
 
     return {
       kind: 'document',
-      reason: `the reply was refused twice; last: ${rejections.at(-1)?.reason}`,
+      reason: `the reply was refused twice; last: ${rejection?.reason}`,
       ...accounted()
     };
   }
@@ -223,7 +227,7 @@ export class OpenRouterClient implements TextAnalyzer {
     let body: unknown;
     try {
       response = await this.fetch(`${OPENROUTER_BASE_URL}/api/v1/key`, {
-        headers: this.headers(),
+        headers: this.headers,
         signal: AbortSignal.timeout(CALL_TIMEOUT_MS)
       });
       body = await response.json().catch(() => undefined);
@@ -255,10 +259,6 @@ export class OpenRouterClient implements TextAnalyzer {
       : { kind: 'exhausted', remainingUsd: remaining };
   }
 
-  private headers(): Record<string, string> {
-    return openRouterHeaders(this.options.apiKey, this.options.publicUrl);
-  }
-
   private async complete(
     request: Record<string, unknown>,
     documentId: string
@@ -270,7 +270,7 @@ export class OpenRouterClient implements TextAnalyzer {
         `${OPENROUTER_BASE_URL}/api/v1/chat/completions`,
         {
           method: 'POST',
-          headers: { ...this.headers(), 'Content-Type': 'application/json' },
+          headers: { ...this.headers, 'Content-Type': 'application/json' },
           body: JSON.stringify(request),
           signal: AbortSignal.timeout(CALL_TIMEOUT_MS)
         }
@@ -339,8 +339,7 @@ function classifyChoice(
   if (!choice) {
     // A `200` whose body is only an error: the failure happened after the
     // status was sent, and the error's code says which one it was.
-    const code = (body as { error?: { code?: unknown } } | undefined)?.error
-      ?.code;
+    const code = readOpenRouterError(body)?.code;
     return typeof code === 'number'
       ? classifyOpenRouterFailure(code, body, retryAfter)
       : {

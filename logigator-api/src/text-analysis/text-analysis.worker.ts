@@ -13,7 +13,7 @@ import {
   MAX_ANALYSIS_ATTEMPTS,
   projects
 } from '../database/schema';
-import type { CircuitTable } from '../documents/circuit-queries';
+import { type CircuitTable, kindOf } from '../documents/circuit-queries';
 import { humanVersionsOf } from '../documents/document-text-queries';
 import { MachineModerationService } from '../moderation/machine-moderation.service';
 import { RedisService } from '../redis/redis.service';
@@ -120,13 +120,14 @@ export class TextAnalysisWorker
   private lifted: Pause['kind'] | null = null;
   private transientStreak = 0;
   /**
-   * Whether each tick asks the key for its remaining budget first. Off for
-   * good once the key endpoint refuses this key: there is then no reading to
-   * go by, and a spent limit surfaces as a classified failure of the call.
+   * Whether a tick that claimed work asks the key for its remaining budget
+   * first. Off for good once the key endpoint refuses this key: there is then
+   * no reading to go by, and a spent limit surfaces as a classified failure of
+   * the call.
    */
   private budgetCheck = true;
-  /** The last budget reading, so a run of unreadable ones logs once. */
-  private lastBudget: 'available' | 'exhausted' | 'unavailable' = 'available';
+  /** Whether the last budget reading failed, so a run of them logs once. */
+  private budgetUnreadable = false;
   private projectsFirst = true;
   private stopping = false;
   private running: Promise<void> | null = null;
@@ -175,7 +176,7 @@ export class TextAnalysisWorker
 
   private async run(): Promise<void> {
     try {
-      if (!(await this.mayProceed())) return;
+      if (!this.mayProceed()) return;
 
       // Alternating which kind goes first keeps a pause that lands
       // mid-tick from starving the second.
@@ -187,6 +188,10 @@ export class TextAnalysisWorker
       // Owners found over their daily limit in this tick, so their other
       // documents are held without another count.
       const overLimit = new Set<string>();
+      // The key is read once a tick has work, so an empty queue costs no
+      // request. A spent budget pauses the loop, and what was claimed is
+      // released below like any batch a pause cuts short.
+      let budgetRead = !this.budgetCheck;
       for (const table of tables) {
         if (this.halted()) return;
         const claimed = await claimPending(this.db, table, {
@@ -194,6 +199,10 @@ export class TextAnalysisWorker
           batch: this.env.TEXT_ANALYSIS_BATCH
         });
         for (const [index, claim] of claimed.entries()) {
+          if (!budgetRead) {
+            budgetRead = true;
+            await this.checkBudget();
+          }
           if (this.halted()) {
             for (const rest of claimed.slice(index)) {
               await releaseClaim(this.db, table, rest);
@@ -213,59 +222,48 @@ export class TextAnalysisWorker
     return this.stopping || this.pause !== null;
   }
 
-  /**
-   * Whether this tick may claim: no pause in force, and budget left. A spent
-   * budget is a pause like the one a call's limit error starts, so the key is
-   * asked again only every half hour.
-   */
-  private async mayProceed(): Promise<boolean> {
-    const now = this.clock.now();
+  /** Whether this tick may claim: no pause in force, or one that has run out. */
+  private mayProceed(): boolean {
     if (this.pause) {
-      if (now < this.pause.until) return false;
+      if (this.clock.now() < this.pause.until) return false;
       this.lifted = this.pause.kind;
       this.pause = null;
     }
-    if (!this.budgetCheck || (await this.budgetAllows())) return true;
-    this.pause = { kind: 'budget', until: now + BUDGET_RECHECK_MS };
-    return false;
+    return true;
   }
 
   /**
-   * The key's word on one more call. Only a spent budget stops the tick. A
-   * key endpoint that cannot be reached says nothing about the budget, and the
-   * key's limit holds on OpenRouter's side whatever is read here: a call made
-   * past it fails as a budget pause, costs nothing, and stops the loop the
-   * same way. Skipping instead would stop the analysis whenever that one
-   * endpoint is unwell while the completions work.
+   * The key's word on one more call. Only a spent budget stops the tick, as a
+   * pause like the one a call's limit error starts, so the key is asked again
+   * only every half hour. A key endpoint that cannot be reached says nothing
+   * about the budget, and the key's limit holds on OpenRouter's side whatever
+   * is read here: a call made past it fails as a budget pause, costs nothing,
+   * and stops the loop the same way. Skipping instead would stop the analysis
+   * whenever that one endpoint is unwell while the completions work.
    */
-  private async budgetAllows(): Promise<boolean> {
+  private async checkBudget(): Promise<void> {
     const budget = await this.analyzer.readBudget();
-    const previous = this.lastBudget;
-    this.lastBudget = budget.kind === 'refused' ? 'available' : budget.kind;
+    const wasUnreadable = this.budgetUnreadable;
+    this.budgetUnreadable = budget.kind === 'unavailable';
     switch (budget.kind) {
       case 'exhausted':
-        // Logged when the wait begins, not on each half-hourly look.
-        if (this.lifted !== 'budget') {
-          this.logger.warn(
-            `Text analysis paused for budget: the key has $${budget.remainingUsd} left`
-          );
-        }
-        return false;
+        this.pauseForBudget(`the key has $${budget.remainingUsd} left`);
+        return;
       case 'refused':
         this.budgetCheck = false;
         this.logger.warn(
           `The key endpoint refuses this key (${budget.status}); text analysis goes by the calls' own failures from here on`
         );
-        return true;
+        return;
       case 'unavailable':
-        if (previous !== 'unavailable') {
+        if (!wasUnreadable) {
           this.logger.warn(
             `The key's budget could not be read (${budget.reason}); analyzing anyway`
           );
         }
-        return true;
+        return;
       case 'available':
-        return true;
+        return;
     }
   }
 
@@ -355,7 +353,7 @@ export class TextAnalysisWorker
     if (outcome.verdict === null) return;
     try {
       await this.moderation.apply({
-        kind: table === projects ? 'project' : 'component',
+        kind: kindOf(table),
         documentId: claim.id,
         textDigest: claim.textDigest,
         verdict: outcome.verdict,
@@ -444,11 +442,11 @@ export class TextAnalysisWorker
     const call = failure.calls.at(-1) ?? null;
     try {
       await this.moderation.reportUnjudged({
-        kind: table === projects ? 'project' : 'component',
+        kind: kindOf(table),
         documentId: claim.id,
         textDigest: claim.textDigest,
         attempts,
-        call: call && { model: call.model, generationId: call.generationId }
+        call
       });
     } catch (error) {
       this.logger.error(`Reporting unjudged ${claim.id} failed`, error);
@@ -485,22 +483,29 @@ export class TextAnalysisWorker
   private pauseFor(
     failure: Extract<AnalysisFailure, { kind: 'system' }>
   ): void {
-    const now = this.clock.now();
     if (failure.pause === 'budget') {
-      // Logged when the pause begins, not on each half-hourly look.
-      if (this.lifted !== 'budget') {
-        this.logger.warn(`Text analysis paused for budget: ${failure.reason}`);
-      }
-      this.pause = { kind: 'budget', until: now + BUDGET_RECHECK_MS };
-    } else {
-      this.logger.error(
-        `Text analysis paused, the key or the preset needs fixing: ${failure.reason}. One call is retried each hour.`
-      );
-      this.pause = {
-        kind: 'configuration',
-        until: now + CONFIGURATION_RETRY_MS
-      };
+      this.pauseForBudget(failure.reason);
+      return;
     }
+    this.logger.error(
+      `Text analysis paused, the key or the preset needs fixing: ${failure.reason}. One call is retried each hour.`
+    );
+    this.pause = {
+      kind: 'configuration',
+      until: this.clock.now() + CONFIGURATION_RETRY_MS
+    };
+    this.lifted = null;
+  }
+
+  private pauseForBudget(reason: string): void {
+    // Logged when the pause begins, not on each half-hourly look.
+    if (this.lifted !== 'budget') {
+      this.logger.warn(`Text analysis paused for budget: ${reason}`);
+    }
+    this.pause = {
+      kind: 'budget',
+      until: this.clock.now() + BUDGET_RECHECK_MS
+    };
     this.lifted = null;
   }
 }

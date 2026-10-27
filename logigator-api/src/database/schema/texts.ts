@@ -19,24 +19,6 @@ export const documentTextOrigin = pgEnum('document_text_origin', [
 ]);
 
 /**
- * A document's name and description in one more language, beside the original
- * in the document's own columns. Two tables, like the documents themselves, so
- * the foreign key is real and the texts go with their document.
- *
- * The key includes `origin`, so an author's version and a machine translation
- * of the same language coexist: a reader is served per field, and removing the
- * author's version falls back to the machine row without another call.
- *
- * `sourceDigest` is the document's `textDigest` the row was written against. A
- * machine row is served only while the two are equal, so an edit to the
- * original withdraws its translations on its own. A human row stays served
- * after an edit; the mismatch is only what tells its author it is stale.
- *
- * None of this is snapshot content: a placed component carries its original
- * name, so writing these rows bumps no `version` and leaves `lastEditedAt`
- * alone.
- */
-/**
  * The longest description a text row holds: twice what an author may write.
  * A translation runs longer than its original, German by a fifth or more, so a
  * description written up to the author's limit has to fit translated. An
@@ -62,6 +44,24 @@ function documentTextColumns() {
   };
 }
 
+/**
+ * A document's name and description in one more language, beside the original
+ * in the document's own columns. Two tables, like the documents themselves, so
+ * the foreign key is real and the texts go with their document.
+ *
+ * The key includes `origin`, so an author's version and a machine translation
+ * of the same language coexist: a reader is served per field, and removing the
+ * author's version falls back to the machine row without another call.
+ *
+ * `sourceDigest` is the document's `textDigest` the row was written against. A
+ * machine row is served only while the two are equal, so an edit to the
+ * original withdraws its translations on its own. A human row stays served
+ * after an edit; the mismatch is only what tells its author it is stale.
+ *
+ * None of this is snapshot content: a placed component carries its original
+ * name, so writing these rows bumps no `version` and leaves `lastEditedAt`
+ * alone.
+ */
 export const projectTexts = pgTable(
   'project_texts',
   {

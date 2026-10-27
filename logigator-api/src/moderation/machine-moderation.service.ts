@@ -1,28 +1,31 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import type { DocumentReportReason } from '@logigator/contract';
+import { and, eq, type SQL, sql } from 'drizzle-orm';
 import { ENV, type Env } from '../config/env';
 import { DB, type Database } from '../database/database.module';
 import { documentReports } from '../database/schema';
+import { type CircuitTable, tableOf } from '../documents/circuit-queries';
+import { awaitingCheck } from '../documents/text-check';
 import { MailService } from '../mail/mail.service';
+import type { CallUsage } from '../text-analysis/text-analyzer';
 import {
-  operatorReportMail,
+  announceReport,
   type OperatorReport,
-  type ReportedKind,
-  reportSummary
+  openReportsAbout,
+  type ReportedKind
 } from '../reports/document-reports.service';
-import { ModerationService, tableOf } from './moderation.service';
+import {
+  ModerationService,
+  type NoticedDocument,
+  noticeColumns
+} from './moderation.service';
 import {
   type ModerationVerdict,
   SEVERE_CATEGORIES
 } from './moderation-verdict';
 
 /** The model call a verdict came from, as far as the report names it. */
-export interface VerdictCall {
-  /** The model that answered, never the preset that chose it. */
-  model: string | null;
-  /** OpenRouter's generation id, which finds the call on its Activity page. */
-  generationId: string | null;
-}
+export type VerdictCall = Pick<CallUsage, 'model' | 'generationId'>;
 
 /** One verdict the text analysis worker got for a document's current text. */
 export interface MachineVerdictInput {
@@ -56,6 +59,12 @@ export interface UnjudgedTextInput {
  */
 export type MachineVerdictResult = 'ignored' | 'reported' | 'hidden';
 
+/** A report the machine opened, and the document as its mails name it. */
+interface OpenedReport {
+  reportId: string;
+  document: Omit<NoticedDocument, 'kind'> & { id: string };
+}
+
 /**
  * Acts on the text analysis worker's moderation verdicts.
  *
@@ -65,8 +74,8 @@ export type MachineVerdictResult = 'ignored' | 'reported' | 'hidden';
  * machine made, and both the operator and the owner are mailed of it.
  *
  * Each write carries its own guard in its `WHERE`: the text is still the one
- * judged, no moderator has cleared it, and nothing hid it meanwhile. The read
- * before them only names the document in the mails and skips the plain cases.
+ * judged, no moderator has cleared it, and nothing hid it meanwhile. The write
+ * returns what the mails name of the document, so there is no read before it.
  * A text a moderator cleared stays cleared until it changes; without that,
  * the next retry of a refused translation would hide it again.
  */
@@ -87,120 +96,44 @@ export class MachineModerationService {
     const category = verdict.category;
 
     const table = tableOf(input.kind);
-    const [document] = await this.db
-      .select({
-        id: table.id,
-        link: table.link,
-        name: table.name,
-        userId: table.userId,
-        textLanguageHint: table.textLanguageHint,
-        textDigest: table.textDigest,
-        moderatedDigest: table.moderatedDigest,
-        hiddenAt: table.hiddenAt
-      })
-      .from(table)
-      .where(eq(table.id, input.documentId))
-      .limit(1);
-    if (
-      !document ||
-      document.textDigest !== input.textDigest ||
-      document.moderatedDigest === document.textDigest ||
-      document.hiddenAt !== null
-    ) {
-      return 'ignored';
-    }
-
     const hides =
       this.env.MODERATION_AUTO_HIDE &&
       verdict.certain &&
       SEVERE_CATEGORIES.includes(category);
     const explanation = describeVerdict(verdict, input.call, hides);
-    const guard = sql`${table.id} = ${input.documentId}
-      AND ${table.textDigest} = ${input.textDigest}
-      AND ${table.moderatedDigest} IS DISTINCT FROM ${table.textDigest}
-      AND ${table.hiddenAt} IS NULL`;
+    const guard = sql`${holdsJudgedText(table, input)}
+      AND ${table.moderatedDigest} IS DISTINCT FROM ${table.textDigest}`;
 
-    let reportId: string | undefined;
-    if (hides) {
-      // A hide opens a report of its own, whatever is open already, so the
-      // report it opens is the one that names the verdict that hid.
-      reportId = await this.db.transaction(async (tx) => {
-        const [hidden] = await tx
-          .update(table)
-          .set({
-            hiddenAt: sql`now()`,
-            hiddenReason: '',
-            hiddenBy: 'machine',
-            hiddenCategory: category
-          })
-          .where(guard)
-          .returning({ id: table.id });
-        if (!hidden) return undefined;
+    // One open machine report per document for a flag: one already waiting
+    // for a person says what another would.
+    const opened = hides
+      ? await this.hide(input, category, explanation, guard)
+      : await this.openReport(
+          input,
+          category,
+          explanation,
+          guard,
+          openReportsAbout(input.kind, input.documentId, 'machine')
+        );
+    if (!opened) return 'ignored';
 
-        const [report] = await tx
-          .insert(documentReports)
-          .values({
-            documentKind: input.kind,
-            documentId: input.documentId,
-            reason: category,
-            explanation,
-            contactEmail: null,
-            reporterId: null,
-            source: 'machine',
-            textDigest: input.textDigest
-          })
-          .returning({ id: documentReports.id });
-        return report?.id;
-      });
-    } else {
-      // One open machine report per document: a flag already waiting for a
-      // person says what another would.
-      const result = await this.db.execute<{ id: string }>(sql`
-        INSERT INTO ${documentReports}
-               (document_kind, document_id, reason, explanation, source,
-                text_digest)
-        SELECT ${input.kind}::document_kind, ${table.id},
-               ${category}::report_reason, ${explanation},
-               'machine'::report_source, ${input.textDigest}
-          FROM ${table}
-         WHERE ${guard}
-           AND NOT EXISTS (
-                 SELECT 1 FROM ${documentReports}
-                  WHERE ${and(
-                    eq(documentReports.documentKind, input.kind),
-                    eq(documentReports.documentId, input.documentId),
-                    eq(documentReports.source, 'machine'),
-                    isNull(documentReports.resolvedAt)
-                  )})
-        RETURNING id
-      `);
-      reportId = result.rows[0]?.id;
-    }
-    if (!reportId) return 'ignored';
-
-    await this.announce({
-      reportId,
-      source: 'machine',
-      kind: input.kind,
-      document: {
-        id: document.id,
-        link: document.link,
-        name: document.name,
-        ownerId: document.userId
-      },
+    const announced = this.announce(input.kind, opened, {
       reason: category,
       explanation,
-      contactEmail: null,
-      reporterId: null,
       hidden: hides
     });
-    if (!hides) return 'reported';
-
+    if (!hides) {
+      await announced;
+      return 'reported';
+    }
     // Never undoes the hide: the owner sees the notice on the page either way.
-    await this.moderation.mailOwnerHidden(
-      { kind: input.kind, ...document },
-      { by: 'machine', category }
-    );
+    await Promise.all([
+      announced,
+      this.moderation.mailOwnerHidden(
+        { kind: input.kind, ...opened.document },
+        { by: 'machine', category }
+      )
+    ]);
     return 'hidden';
   }
 
@@ -231,77 +164,162 @@ export class MachineModerationService {
       input.call,
       false
     );
-    const result = await this.db.execute<{
-      id: string;
-      link: string;
-      name: string;
-      user_id: string;
-    }>(sql`
-      WITH opened AS (
-        INSERT INTO ${documentReports}
-               (document_kind, document_id, reason, explanation, source,
-                text_digest)
-        SELECT ${input.kind}::document_kind, ${table.id},
-               'other'::report_reason, ${explanation},
-               'machine'::report_source, ${input.textDigest}
-          FROM ${table}
-         WHERE ${table.id} = ${input.documentId}
-           AND ${table.textDigest} = ${input.textDigest}
-           AND ${table.checkedDigest} IS DISTINCT FROM ${table.textDigest}
-           AND ${table.moderatedDigest} IS DISTINCT FROM ${table.textDigest}
-           AND ${table.hiddenAt} IS NULL
-           AND NOT EXISTS (
-                 SELECT 1 FROM ${documentReports}
-                  WHERE ${and(
-                    eq(documentReports.documentKind, input.kind),
-                    eq(documentReports.documentId, input.documentId),
-                    eq(documentReports.source, 'machine'),
-                    eq(documentReports.textDigest, input.textDigest),
-                    isNull(documentReports.resolvedAt)
-                  )})
-        RETURNING id
+    const opened = await this.openReport(
+      input,
+      'other',
+      explanation,
+      sql`${holdsJudgedText(table, input)} AND ${awaitingCheck(table, true)}`,
+      and(
+        openReportsAbout(input.kind, input.documentId, 'machine'),
+        eq(documentReports.textDigest, input.textDigest)
       )
-      SELECT opened.id, ${table.link} AS link, ${table.name} AS name,
-             ${table.userId} AS user_id
-        FROM opened, ${table}
-       WHERE ${table.id} = ${input.documentId}
-    `);
-    const [row] = result.rows;
-    if (!row) return false;
+    );
+    if (!opened) return false;
 
-    await this.announce({
-      reportId: row.id,
-      source: 'machine',
-      kind: input.kind,
-      document: {
-        id: input.documentId,
-        link: row.link,
-        name: row.name,
-        ownerId: row.user_id
-      },
+    await this.announce(input.kind, opened, {
       reason: 'other',
       explanation,
-      contactEmail: null,
-      reporterId: null,
       hidden: false
     });
     return true;
   }
 
   /**
-   * Logs a machine report and mails it to the operator like a reader's. A
-   * failed send is logged and keeps the report.
+   * Hides the document where `guard` holds, with a report of its own whatever
+   * is open already, so the report it opens is the one that names the verdict
+   * that hid.
    */
-  private async announce(report: OperatorReport): Promise<void> {
-    this.logger.warn(JSON.stringify(reportSummary(report)));
-    try {
-      await this.mail.sendDocumentReport(
-        operatorReportMail(report, this.env.PUBLIC_URL)
-      );
-    } catch (error) {
-      this.logger.error('Could not mail the machine report', error);
-    }
+  private hide(
+    input: JudgedText,
+    category: DocumentReportReason,
+    explanation: string,
+    guard: SQL
+  ): Promise<OpenedReport | undefined> {
+    const table = tableOf(input.kind);
+    return this.db.transaction(async (tx) => {
+      const [hidden] = await tx
+        .update(table)
+        .set({
+          hiddenAt: sql`now()`,
+          hiddenReason: '',
+          hiddenBy: 'machine',
+          hiddenCategory: category
+        })
+        .where(guard)
+        .returning(noticeColumns(table));
+      if (!hidden) return undefined;
+
+      const [report] = await tx
+        .insert(documentReports)
+        .values({
+          documentKind: input.kind,
+          documentId: input.documentId,
+          reason: category,
+          explanation,
+          contactEmail: null,
+          reporterId: null,
+          source: 'machine',
+          textDigest: input.textDigest
+        })
+        .returning({ id: documentReports.id });
+      return report && { reportId: report.id, document: hidden };
+    });
   }
+
+  /**
+   * Opens a machine report about the text judged where `guard` holds of the
+   * document and no report `existing` matches is open.
+   */
+  private async openReport(
+    input: JudgedText,
+    reason: DocumentReportReason,
+    explanation: string,
+    guard: SQL,
+    existing: SQL | undefined
+  ): Promise<OpenedReport | undefined> {
+    const table = tableOf(input.kind);
+    const result = await this.db.execute<{
+      id: string;
+      link: string;
+      name: string;
+      user_id: string;
+      text_language_hint: string | null;
+    }>(sql`
+      WITH opened AS (
+        INSERT INTO ${documentReports}
+               (document_kind, document_id, reason, explanation, source,
+                text_digest)
+        SELECT ${input.kind}::document_kind, ${table.id},
+               ${reason}::report_reason, ${explanation},
+               'machine'::report_source, ${input.textDigest}
+          FROM ${table}
+         WHERE ${guard}
+           AND NOT EXISTS (SELECT 1 FROM ${documentReports} WHERE ${existing})
+        RETURNING id
+      )
+      SELECT opened.id, ${table.link} AS link, ${table.name} AS name,
+             ${table.userId} AS user_id,
+             ${table.textLanguageHint} AS text_language_hint
+        FROM opened, ${table}
+       WHERE ${table.id} = ${input.documentId}
+    `);
+    const [row] = result.rows;
+    return (
+      row && {
+        reportId: row.id,
+        document: {
+          id: input.documentId,
+          link: row.link,
+          name: row.name,
+          userId: row.user_id,
+          textLanguageHint: row.text_language_hint
+        }
+      }
+    );
+  }
+
+  /** Announces a report the machine opened, as a reader's is announced. */
+  private announce(
+    kind: ReportedKind,
+    { reportId, document }: OpenedReport,
+    verdict: Pick<OperatorReport, 'reason' | 'explanation' | 'hidden'>
+  ): Promise<void> {
+    return announceReport(
+      {
+        reportId,
+        source: 'machine',
+        kind,
+        document: {
+          id: document.id,
+          link: document.link,
+          name: document.name,
+          ownerId: document.userId
+        },
+        contactEmail: null,
+        reporterId: null,
+        ...verdict
+      },
+      this.mail,
+      this.env.PUBLIC_URL,
+      this.logger
+    );
+  }
+}
+
+/** Which text of which document a verdict, or its absence, is about. */
+type JudgedText = Pick<
+  MachineVerdictInput,
+  'kind' | 'documentId' | 'textDigest'
+>;
+
+/** The document still holds the text judged, and nothing hid it since. */
+function holdsJudgedText(
+  table: CircuitTable,
+  { documentId, textDigest }: JudgedText
+): SQL {
+  return sql`${table.id} = ${documentId}
+    AND ${table.textDigest} = ${textDigest}
+    AND ${table.hiddenAt} IS NULL`;
 }
 
 /**

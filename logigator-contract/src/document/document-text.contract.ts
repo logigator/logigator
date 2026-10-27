@@ -45,6 +45,14 @@ export const NOT_TRANSLATABLE = 'zxx';
  */
 const detectedLanguageSchema = z.string().nullable();
 
+/** A {@link detectedLanguageSchema} per field. */
+const fieldLanguagesSchema = z
+  .object({
+    name: detectedLanguageSchema,
+    description: detectedLanguageSchema
+  })
+  .loose();
+
 /**
  * What a read of somebody else's document adds to its `name` and
  * `description`, which hold the text to show for the requested language: the
@@ -56,12 +64,7 @@ const detectedLanguageSchema = z.string().nullable();
  * which a server-rendered page embeds where every crawler can read it.
  */
 export const documentTextFields = {
-  textLanguage: z
-    .object({
-      name: detectedLanguageSchema,
-      description: detectedLanguageSchema
-    })
-    .loose(),
+  textLanguage: fieldLanguagesSchema,
   machineTranslation: z.boolean()
 } as const;
 
@@ -134,12 +137,7 @@ export const documentTranslationResponseSchema = z
     name: z.string().nullable(),
     description: z.string().nullable(),
     /** What each translated field was translated from. */
-    sourceLanguage: z
-      .object({
-        name: detectedLanguageSchema,
-        description: detectedLanguageSchema
-      })
-      .loose()
+    sourceLanguage: fieldLanguagesSchema
   })
   .loose();
 

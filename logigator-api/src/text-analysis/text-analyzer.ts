@@ -91,8 +91,6 @@ export type AnalysisOutcome = (
   verdict: ModerationVerdict | null;
   /** The call whose reply gave {@link verdict}, for the report. */
   verdictCall: CallUsage | null;
-  /** Replies refused on the way, including one a retry then replaced. */
-  rejections: ReplyRejection[];
 };
 
 /**

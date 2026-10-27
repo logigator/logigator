@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LOCALES } from '../common/locale';
 import type { ModerationVerdict } from '../moderation/moderation-verdict';
-import type { TranslatedText } from '../translation/document-translation';
+import type { TranslatedText } from '../documents/document-texts';
 import {
   ANALYSIS_REPLY_JSON_SCHEMA,
   readAnalysisReply

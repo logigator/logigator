@@ -45,7 +45,8 @@ import {
   findByLink,
   forkLineage,
   linkResolvesFor,
-  nameMatches
+  nameMatches,
+  type CircuitTable
 } from '../documents/circuit-queries';
 import {
   toAuthor,
@@ -312,18 +313,14 @@ export class CommunityService {
         circuit: originalColumns(projects),
         humanName: projectHuman.name,
         humanDescription: projectHuman.description,
-        machineDigest: projectMachine.sourceDigest,
         machineName: projectMachine.name,
         machineDescription: projectMachine.description
       })
       .from(projects)
-      .leftJoin(
-        projectHuman,
-        textOn(projectHuman, projects.id, language, 'human')
-      )
+      .leftJoin(projectHuman, textOn(projectHuman, projects, language, 'human'))
       .leftJoin(
         projectMachine,
-        textOn(projectMachine, projects.id, language, 'machine')
+        textOn(projectMachine, projects, language, 'machine')
       )
       .where(and(linkResolvesFor(projects, callerId), eq(projects.link, link)))
       .limit(1);
@@ -340,18 +337,17 @@ export class CommunityService {
         circuit: originalColumns(components),
         humanName: componentHuman.name,
         humanDescription: componentHuman.description,
-        machineDigest: componentMachine.sourceDigest,
         machineName: componentMachine.name,
         machineDescription: componentMachine.description
       })
       .from(components)
       .leftJoin(
         componentHuman,
-        textOn(componentHuman, components.id, language, 'human')
+        textOn(componentHuman, components, language, 'human')
       )
       .leftJoin(
         componentMachine,
-        textOn(componentMachine, components.id, language, 'machine')
+        textOn(componentMachine, components, language, 'machine')
       )
       .where(
         and(linkResolvesFor(components, callerId), eq(components.link, link))
@@ -560,7 +556,7 @@ export class CommunityService {
         .innerJoin(users, eq(users.id, projects.userId))
         .leftJoin(
           projectHuman,
-          textOn(projectHuman, projects.id, query.lang, 'human')
+          textOn(projectHuman, projects, query.lang, 'human')
         )
         .where(where)
         .orderBy(...order)
@@ -599,7 +595,7 @@ export class CommunityService {
       .innerJoin(users, eq(users.id, components.userId))
       .leftJoin(
         componentHuman,
-        textOn(componentHuman, components.id, query.lang, 'human')
+        textOn(componentHuman, components, query.lang, 'human')
       )
       .where(where)
       .orderBy(...order)
@@ -856,10 +852,7 @@ export class CommunityService {
  * `linkResolvesFor` is: drizzle's `or()` is typed `SQL | undefined`, and an
  * `undefined` inside the caller's `and()` would drop the rule silently.
  */
-function listed(
-  table: typeof projects | typeof components,
-  analysisRuns: boolean
-): SQL {
+function listed(table: CircuitTable, analysisRuns: boolean): SQL {
   return sql`(${eq(table.visibility, 'public')} and ${isNull(table.hiddenAt)} and (${gt(table.componentCount, 0)} or ${gt(table.wireCount, 0)}) and not ${awaitingCheck(table, analysisRuns)})`;
 }
 
@@ -888,7 +881,7 @@ function notPublished(): ApiException {
 }
 
 /** The columns the resolution reads off a document row. */
-function originalColumns(table: typeof projects | typeof components) {
+function originalColumns(table: CircuitTable) {
   return {
     name: table.name,
     description: table.description,
@@ -899,10 +892,7 @@ function originalColumns(table: typeof projects | typeof components) {
   };
 }
 
-/**
- * Resolves a community row. The machine `EXISTS` already compared the digest,
- * so a field it found is current for the text the row holds.
- */
+/** Resolves a community row. */
 function resolveRowTexts(
   circuit: OriginalTexts,
   row: TextColumns,
@@ -911,11 +901,7 @@ function resolveRowTexts(
   return resolveTexts(
     circuit,
     { name: row.humanName, description: row.humanDescription },
-    {
-      sourceDigest: circuit.textDigest,
-      name: row.machineName,
-      description: row.machineDescription
-    },
+    { name: row.machineName, description: row.machineDescription },
     language
   );
 }
@@ -943,7 +929,6 @@ function toTranslation(
         circuit: OriginalTexts;
         humanName: string | null;
         humanDescription: string | null;
-        machineDigest: string | null;
         machineName: string | null;
         machineDescription: string | null;
       }
@@ -955,13 +940,10 @@ function toTranslation(
   const texts = resolveTexts(
     row.circuit,
     { name: row.humanName, description: row.humanDescription },
-    row.machineDigest === null
-      ? null
-      : {
-          sourceDigest: row.machineDigest,
-          name: row.machineName !== null,
-          description: row.machineDescription !== null
-        },
+    {
+      name: row.machineName !== null,
+      description: row.machineDescription !== null
+    },
     language
   );
   if (!texts.machineTranslation) {

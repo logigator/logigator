@@ -3,7 +3,7 @@ import type { Locale } from '../common/locale';
 import type { Queryable } from '../database/database.module';
 import type { CircuitTable } from '../documents/circuit-queries';
 import { textTableOf } from '../documents/document-text-queries';
-import type { TranslatedText } from './document-translation';
+import type { TranslatedText } from '../documents/document-texts';
 
 /** One document's machine texts, as one call made them. */
 export interface MachineTexts {

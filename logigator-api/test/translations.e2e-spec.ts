@@ -301,6 +301,27 @@ describe('document texts in other languages', () => {
       expect((await translation(project.link, 'de')).statusCode).toBe(404);
     });
 
+    it('are not served for an older text once the new one is detected', async () => {
+      const project = await translatedProject();
+
+      const edited = await api.inject({
+        method: 'PATCH',
+        url: `/api/projects/${project.id}`,
+        headers: ada.headers(),
+        payload: { description: 'Adds three bits, with carry.' }
+      });
+      expect(edited.statusCode).toBe(200);
+      // The language is known again, and the machine row is still the one
+      // written for the older text.
+      await markDetected(projects, project.id);
+
+      expect((await detail(project.link, 'de')).json()).toMatchObject({
+        textLanguage: { name: 'en', description: 'en' },
+        machineTranslation: false
+      });
+      expect((await translation(project.link, 'de')).statusCode).toBe(404);
+    });
+
     it('resolve only where the document’s link does', async () => {
       const unlisted = await translatedProject({ visibility: 'unlisted' });
       const hidden = await translatedProject({ visibility: 'private' });

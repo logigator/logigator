@@ -39,30 +39,34 @@ export function textTableOf(table: CircuitTable): TextTable {
  * query, and inside a subquery over a text table a bare name could bind to a
  * column of that table instead.
  */
-function outer(column: Column): SQL {
+export function outer(column: Column): SQL {
   return sql`${sql.identifier(getTableName(getColumnTable(column)))}.${sql.identifier(column.name)}`;
 }
 
 /**
  * The join condition that puts the text of one origin in `language` beside
  * each document row. A left join: most documents have none, and the row is
- * still read. A machine row is joined whatever text it was written for; the
- * resolution compares its digest.
+ * still read. A human row is joined whatever text it was written for. A
+ * machine row is joined only while it was written for the document's current
+ * text, as in {@link machineTextFor}, so one written for an older text reads
+ * as absent.
  */
 export function textOn(
   text: {
     documentId: Column;
     language: Column;
     origin: Column;
+    sourceDigest: Column;
   },
-  documentId: Column,
+  table: CircuitTable,
   language: LanguageId,
   origin: 'human' | 'machine'
 ): SQL | undefined {
   return and(
-    eq(text.documentId, documentId),
+    eq(text.documentId, table.id),
     eq(text.language, language),
-    eq(text.origin, origin)
+    eq(text.origin, origin),
+    origin === 'machine' ? eq(text.sourceDigest, table.textDigest) : undefined
   );
 }
 

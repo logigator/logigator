@@ -38,8 +38,22 @@ import { awaitingCheck } from './text-check';
  */
 export type CircuitTable = typeof projects | typeof components;
 
+/** The API's name for the kind of document a {@link CircuitTable} stores. */
+export function kindOf(table: CircuitTable): 'project' | 'component' {
+  return table === projects ? 'project' : 'component';
+}
+
+export function tableOf(kind: 'project' | 'component'): CircuitTable {
+  return kind === 'project' ? projects : components;
+}
+
 /** One row of either table. */
 export type CircuitRow = ProjectRow | ComponentRow;
+
+/** A row without its `document`, which no summary reads. */
+export type ProjectSummaryRow = Omit<ProjectRow, 'document'>;
+export type ComponentSummaryRow = Omit<ComponentRow, 'document'>;
+export type CircuitSummaryRow = ProjectSummaryRow | ComponentSummaryRow;
 
 /** Whether a row's text is waiting for its check, as `text-check.ts` decides. */
 export interface CheckState {
@@ -47,16 +61,19 @@ export interface CheckState {
 }
 
 /**
- * A whole row and its {@link CheckState}, as one selection: what the owner's
- * listing selects and what the owner's writes return, so the two say the same
- * about a document. `analysisRuns` is the env's `TEXT_ANALYSIS_WORKER_ENABLED`.
+ * A row without its document, and its {@link CheckState}, as one selection:
+ * what the owner's listing selects and what the owner's writes return, so the
+ * two say the same about a document. `analysisRuns` is the env's
+ * `TEXT_ANALYSIS_WORKER_ENABLED`.
  */
 export function withCheckState<T extends CircuitTable>(
   table: T,
   analysisRuns: boolean
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { document: _document, ...columns } = getTableColumns(table);
   return {
-    ...getTableColumns(table),
+    ...columns,
     awaitingCheck: awaitingCheck(table, analysisRuns)
   };
 }
@@ -92,28 +109,28 @@ export async function findOwned(
   return row ?? null;
 }
 
-/** {@link findOwned} with the row's {@link CheckState}. */
+/** {@link findOwned} through {@link withCheckState}. */
 export function findOwnedWithCheckState(
   db: Queryable,
   table: typeof projects,
   userId: string,
   id: string,
   analysisRuns: boolean
-): Promise<(ProjectRow & CheckState) | null>;
+): Promise<(ProjectSummaryRow & CheckState) | null>;
 export function findOwnedWithCheckState(
   db: Queryable,
   table: typeof components,
   userId: string,
   id: string,
   analysisRuns: boolean
-): Promise<(ComponentRow & CheckState) | null>;
+): Promise<(ComponentSummaryRow & CheckState) | null>;
 export async function findOwnedWithCheckState(
   db: Queryable,
   table: CircuitTable,
   userId: string,
   id: string,
   analysisRuns: boolean
-): Promise<(CircuitRow & CheckState) | null> {
+): Promise<(CircuitSummaryRow & CheckState) | null> {
   const [row] = await db
     .select(withCheckState(table, analysisRuns))
     .from(table)
@@ -213,9 +230,10 @@ export async function findByResolvingLink(
  * drops or repeats a row — and two documents saved in the same operation share
  * an edit time exactly.
  *
- * Each row carries whether its text is waiting for its check, read in the same
- * statement through the rule the listings use (`text-check.ts`); `analysisRuns`
- * is the env's `TEXT_ANALYSIS_WORKER_ENABLED`.
+ * Each row is read through {@link withCheckState}: without its document, and
+ * with whether its text is waiting for its check, read in the same statement
+ * through the rule the listings use (`text-check.ts`); `analysisRuns` is the
+ * env's `TEXT_ANALYSIS_WORKER_ENABLED`.
  */
 export function pageOf(
   db: Queryable,
@@ -224,7 +242,7 @@ export function pageOf(
   query: PageQuery,
   analysisRuns: boolean,
   order?: SQL[]
-): Promise<Page<ProjectRow & CheckState>>;
+): Promise<Page<ProjectSummaryRow & CheckState>>;
 export function pageOf(
   db: Queryable,
   table: typeof components,
@@ -232,7 +250,7 @@ export function pageOf(
   query: PageQuery,
   analysisRuns: boolean,
   order?: SQL[]
-): Promise<Page<ComponentRow & CheckState>>;
+): Promise<Page<ComponentSummaryRow & CheckState>>;
 export async function pageOf(
   db: Queryable,
   table: CircuitTable,
@@ -240,7 +258,7 @@ export async function pageOf(
   query: PageQuery,
   analysisRuns: boolean,
   order: SQL[] = [desc(table.lastEditedAt), desc(table.id)]
-): Promise<Page<CircuitRow & CheckState>> {
+): Promise<Page<CircuitSummaryRow & CheckState>> {
   const [entries, [totals]] = await Promise.all([
     db
       .select(withCheckState(table, analysisRuns))

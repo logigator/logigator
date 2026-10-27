@@ -1,10 +1,5 @@
 import type { Locale } from '../common/locale';
-
-/** One language's machine text; null where the field keeps the original. */
-export interface TranslatedText {
-  name: string | null;
-  description: string | null;
-}
+import type { TranslatedText } from '../documents/document-texts';
 
 /**
  * Detection and translation of one document, as they may be stored.

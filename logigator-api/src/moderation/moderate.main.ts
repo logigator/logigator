@@ -19,8 +19,10 @@
 import { parseArgs } from 'node:util';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
+import { isUuid } from '../common/uuid-param.pipe';
 import { loadEnv } from '../config/env';
 import type { ReportedKind } from '../reports/document-reports.service';
+import { isShareKind } from '../sharing/share-kind.pipe';
 import { ModerationService, type OpenReport } from './moderation.service';
 
 const USAGE = `Usage:
@@ -28,8 +30,6 @@ const USAGE = `Usage:
   db:moderate hide <project|component> <link> --reason "<shown to the owner>"
   db:moderate unhide <project|component> <link>
   db:moderate resolve <report-id> --note "<what was done>"`;
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 type Command =
   | { name: 'reports' }
@@ -52,17 +52,17 @@ function parseCommand(argv: string[]): Command | string {
     case 'hide':
     case 'unhide': {
       const [kind, link] = rest;
-      if (kind !== 'project' && kind !== 'component') {
+      if (!kind || !isShareKind(kind)) {
         return 'The kind is `project` or `component`.';
       }
-      if (!link || !UUID.test(link)) return 'The link is a uuid.';
+      if (!link || !isUuid(link)) return 'The link is a uuid.';
       if (name === 'unhide') return { name, kind, link };
       if (!values.reason?.trim()) return '`hide` needs a --reason.';
       return { name, kind, link, reason: values.reason };
     }
     case 'resolve': {
       const [reportId] = rest;
-      if (!reportId || !UUID.test(reportId)) return 'The report id is a uuid.';
+      if (!reportId || !isUuid(reportId)) return 'The report id is a uuid.';
       if (!values.note?.trim()) return '`resolve` needs a --note.';
       return { name, reportId, note: values.note };
     }
@@ -132,7 +132,7 @@ function describe(report: OpenReport): string {
   const hidden =
     report.document?.hiddenBy === 'machine'
       ? ', hidden automatically'
-      : report.document?.hidden
+      : report.document?.hiddenBy
         ? ', hidden'
         : '';
   const document = report.document
@@ -166,7 +166,7 @@ async function main(): Promise<number> {
   const env = loadEnv(process.env);
   // An application context, not an HTTP server: only the providers are wanted.
   const app = await NestFactory.createApplicationContext(
-    AppModule.forEnv(env),
+    AppModule.forEnv(env, { worker: false }),
     { logger: ['error', 'warn'] }
   );
 

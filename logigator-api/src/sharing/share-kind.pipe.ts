@@ -28,6 +28,6 @@ export class ShareKindParam implements PipeTransform<string, ShareKind> {
 /** Both kinds, in the singular the API spells them in. */
 export const SHARE_KINDS = ['project', 'component'] as const;
 
-function isShareKind(value: string): value is ShareKind {
+export function isShareKind(value: string): value is ShareKind {
   return (SHARE_KINDS as readonly string[]).includes(value);
 }

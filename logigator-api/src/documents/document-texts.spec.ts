@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { NOT_TRANSLATABLE } from '@logigator/contract';
 import {
   resolveTexts,
-  type MachineTexts,
+  type MachineFields,
   type OriginalTexts
 } from './document-texts';
 
@@ -22,9 +22,9 @@ function original(overrides: Partial<OriginalTexts> = {}): OriginalTexts {
   };
 }
 
-/** A German machine row with a text for both fields. */
-function machine(overrides: Partial<MachineTexts> = {}): MachineTexts {
-  return { sourceDigest: DIGEST, name: true, description: true, ...overrides };
+/** A current German machine row with a text for both fields. */
+function machine(overrides: Partial<MachineFields> = {}): MachineFields {
+  return { name: true, description: true, ...overrides };
 }
 
 describe('resolveTexts', () => {
@@ -87,19 +87,6 @@ describe('resolveTexts', () => {
     expect(sameLanguage.machineTranslation).toBe(false);
     expect(neutral.machineTranslation).toBe(false);
     expect(neutral.name.language).toBe(NOT_TRANSLATABLE);
-  });
-
-  it('never offers a machine row written for an older text', () => {
-    const texts = resolveTexts(
-      original(),
-      null,
-      machine({ sourceDigest: OLDER_DIGEST }),
-      'de'
-    );
-
-    expect(texts.machineTranslation).toBe(false);
-    expect(texts.name.machineTranslation).toBe(false);
-    expect(texts.description.machineTranslation).toBe(false);
   });
 
   it('never offers a field the translator kept as it is', () => {

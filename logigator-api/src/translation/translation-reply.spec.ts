@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LOCALES } from '../common/locale';
-import type { TranslatedText } from './document-translation';
+import type { TranslatedText } from '../documents/document-texts';
 import {
   readTranslation,
   type TranslationOriginal,

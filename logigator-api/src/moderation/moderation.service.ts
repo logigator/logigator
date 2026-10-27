@@ -9,7 +9,7 @@ import {
   users,
   type DocumentReportRow
 } from '../database/schema';
-import type { CircuitTable } from '../documents/circuit-queries';
+import { type CircuitTable, tableOf } from '../documents/circuit-queries';
 import { textTableOf } from '../documents/document-text-queries';
 import {
   type HideReason,
@@ -17,7 +17,10 @@ import {
   type MailRecipient,
   type ModeratedDocument
 } from '../mail/mail.service';
-import type { ReportedKind } from '../reports/document-reports.service';
+import {
+  openReportsAbout,
+  type ReportedKind
+} from '../reports/document-reports.service';
 
 /** An open report, with the document it names as that document stands now. */
 export interface OpenReport {
@@ -36,7 +39,6 @@ export interface OpenReport {
     name: string;
     link: string;
     ownerId: string;
-    hidden: boolean;
     /** Who hid it, null while it is not hidden. */
     hiddenBy: 'moderator' | 'machine' | null;
   } | null;
@@ -310,7 +312,7 @@ export class ModerationService {
   }
 
   /** As {@link mailOwnerHidden}, for a document back in the community. */
-  mailOwnerUnhidden(document: NoticedDocument): Promise<boolean> {
+  private mailOwnerUnhidden(document: NoticedDocument): Promise<boolean> {
     return this.mailOwner(document, (recipient, moderated) =>
       this.mail.sendDocumentUnhidden(recipient, moderated)
     );
@@ -365,22 +367,12 @@ export class ModerationService {
         name: table.name,
         link: table.link,
         ownerId: table.userId,
-        hiddenAt: table.hiddenAt,
         hiddenBy: table.hiddenBy
       })
       .from(table)
       .where(eq(table.id, report.documentId))
       .limit(1);
-    if (!row) return null;
-
-    return {
-      id: row.id,
-      name: row.name,
-      link: row.link,
-      ownerId: row.ownerId,
-      hidden: row.hiddenAt !== null,
-      hiddenBy: row.hiddenAt === null ? null : row.hiddenBy
-    };
+    return row ?? null;
   }
 }
 
@@ -395,12 +387,8 @@ function requireNote(text: string): string {
   return trimmed;
 }
 
-export function tableOf(kind: ReportedKind): CircuitTable {
-  return kind === 'project' ? projects : components;
-}
-
 /** What an owner's mail needs of a document, as a `returning` selection. */
-function noticeColumns(table: CircuitTable) {
+export function noticeColumns(table: CircuitTable) {
   return {
     id: table.id,
     link: table.link,
@@ -421,11 +409,10 @@ async function resolveOpenReports(
     .update(documentReports)
     .set({ resolvedAt: new Date(), resolution })
     .where(
-      and(
-        eq(documentReports.documentKind, kind),
-        eq(documentReports.documentId, documentId),
-        isNull(documentReports.resolvedAt),
-        options.machineOnly ? eq(documentReports.source, 'machine') : undefined
+      openReportsAbout(
+        kind,
+        documentId,
+        options.machineOnly ? 'machine' : undefined
       )
     )
     .returning({ id: documentReports.id });

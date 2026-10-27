@@ -11,10 +11,16 @@ import type {
   WrittenComponentSummary,
   WrittenProjectSummary
 } from '@logigator/contract';
-import type { ComponentRow, ProjectRow, UserRow } from '../database/schema';
+import type { UserRow } from '../database/schema';
 import { AVATAR_VARIANTS, variantUrls } from '../storage/image-variants';
 import { previewUrls } from '../storage/image-variants';
-import type { AncestorRow, CheckState, CircuitRow } from './circuit-queries';
+import type {
+  AncestorRow,
+  CheckState,
+  CircuitSummaryRow,
+  ComponentSummaryRow,
+  ProjectSummaryRow
+} from './circuit-queries';
 import { currentLanguages } from './document-texts';
 
 /**
@@ -22,7 +28,7 @@ import { currentLanguages } from './document-texts';
  * serialization groups, no class-level `@Exclude` — so a column is in a
  * response only because somebody wrote it there.
  */
-function circuitFields(row: CircuitRow) {
+function circuitFields(row: CircuitSummaryRow) {
   return {
     id: row.id,
     name: row.name,
@@ -38,11 +44,11 @@ function circuitFields(row: CircuitRow) {
   };
 }
 
-export function toProjectSummary(row: ProjectRow): ProjectSummary {
+export function toProjectSummary(row: ProjectSummaryRow): ProjectSummary {
   return circuitFields(row);
 }
 
-export function toComponentSummary(row: ComponentRow): ComponentSummary {
+export function toComponentSummary(row: ComponentSummaryRow): ComponentSummary {
   return {
     ...circuitFields(row),
     symbol: row.symbol,
@@ -58,7 +64,7 @@ export function toComponentSummary(row: ComponentRow): ComponentSummary {
  * the author wrote in other languages.
  */
 export function toOwnerTextFields(
-  row: CircuitRow,
+  row: CircuitSummaryRow,
   texts: readonly DocumentTextVersion[]
 ) {
   const languages = currentLanguages(row);
@@ -70,7 +76,7 @@ export function toOwnerTextFields(
 }
 
 /** Moderation's hold on a document, for its owner's eyes only. */
-export function toHidden(row: CircuitRow): DocumentHidden {
+export function toHidden(row: CircuitSummaryRow): DocumentHidden {
   return row.hiddenAt
     ? {
         at: row.hiddenAt.toISOString(),
@@ -87,24 +93,24 @@ export function toHidden(row: CircuitRow): DocumentHidden {
  * the owner's writes both say it, so a row a write answered and a row the
  * listing read agree.
  */
-function toOwnerState(row: CircuitRow & CheckState) {
+function toOwnerState(row: CircuitSummaryRow & CheckState) {
   return { hidden: toHidden(row), awaitingCheck: row.awaitingCheck };
 }
 
 export function toWrittenProjectSummary(
-  row: ProjectRow & CheckState
+  row: ProjectSummaryRow & CheckState
 ): WrittenProjectSummary {
   return { ...toProjectSummary(row), ...toOwnerState(row) };
 }
 
 export function toWrittenComponentSummary(
-  row: ComponentRow & CheckState
+  row: ComponentSummaryRow & CheckState
 ): WrittenComponentSummary {
   return { ...toComponentSummary(row), ...toOwnerState(row) };
 }
 
 export function toOwnedProjectSummary(
-  row: ProjectRow & CheckState,
+  row: ProjectSummaryRow & CheckState,
   texts: readonly DocumentTextVersion[]
 ): OwnedProjectSummary {
   return {
@@ -115,7 +121,7 @@ export function toOwnedProjectSummary(
 }
 
 export function toOwnedComponentSummary(
-  row: ComponentRow & CheckState,
+  row: ComponentSummaryRow & CheckState,
   texts: readonly DocumentTextVersion[]
 ): OwnedComponentSummary {
   return {

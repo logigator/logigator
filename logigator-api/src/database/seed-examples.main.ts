@@ -37,7 +37,7 @@ async function main(): Promise<void> {
 
   // An application context, not an HTTP server: only the providers are wanted.
   const app = await NestFactory.createApplicationContext(
-    AppModule.forEnv(env),
+    AppModule.forEnv(env, { worker: false }),
     { logger: ['error', 'warn', 'log'] }
   );
 

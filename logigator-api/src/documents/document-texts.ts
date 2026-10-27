@@ -13,8 +13,6 @@ import type { LanguageId } from '@logigator/core';
 
 export type TextField = 'name' | 'description';
 
-export const TEXT_FIELDS: readonly TextField[] = ['name', 'description'];
-
 /** What the document's own row says about its original texts. */
 export interface OriginalTexts {
   name: string;
@@ -26,19 +24,21 @@ export interface OriginalTexts {
   descriptionLanguage: string | null;
 }
 
-/** The author's version in the reader's language; a null field has none. */
-export interface HumanTexts {
+/**
+ * A name and description in one language beside the original, the author's or
+ * the translator's; a null field has no text in that language.
+ */
+export interface TranslatedText {
   name: string | null;
   description: string | null;
 }
 
 /**
- * The machine row in the reader's language: the digest it was written for, and
- * which fields it has a text for. A field the translator kept as it is has
- * none.
+ * Which fields the machine row in the reader's language, written for the
+ * current text, has a text for. A field the translator kept as it is has none,
+ * and so has every field without such a row.
  */
-export interface MachineTexts {
-  sourceDigest: string;
+export interface MachineFields {
   name: boolean;
   description: boolean;
 }
@@ -70,7 +70,7 @@ export function currentLanguages(
     OriginalTexts,
     'textDigest' | 'analyzedDigest' | 'nameLanguage' | 'descriptionLanguage'
   >
-): { name: string | null; description: string | null } {
+): Record<TextField, string | null> {
   const current = row.analyzedDigest === row.textDigest;
   return {
     name: current ? row.nameLanguage : null,
@@ -89,13 +89,11 @@ export function currentLanguages(
  */
 export function resolveTexts(
   original: OriginalTexts,
-  human: HumanTexts | null,
-  machine: MachineTexts | null,
+  human: TranslatedText | null,
+  machine: MachineFields,
   language: LanguageId
 ): ResolvedTexts {
   const languages = currentLanguages(original);
-  const machineCurrent =
-    machine !== null && machine.sourceDigest === original.textDigest;
 
   const resolve = (field: TextField): ResolvedField => {
     const authored = human?.[field] ?? null;
@@ -108,7 +106,6 @@ export function resolveTexts(
       text: original[field],
       language: detected,
       machineTranslation:
-        machineCurrent &&
         machine[field] &&
         detected !== null &&
         detected !== NOT_TRANSLATABLE &&
