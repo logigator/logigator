@@ -37,7 +37,6 @@ copy of the stack (see the [README](README.md#running-it-locally)) wherever you 
 
 Out of scope:
 
-- `logigator-editor-legacy/` and `logigator-backend/`, which are kept for reference and not deployed
 - reports from automated scanners without a demonstrated impact
 - missing best-practice headers or settings without a concrete way to exploit them
 - denial of service through sheer request volume

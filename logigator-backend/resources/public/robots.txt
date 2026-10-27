@@ -1,4 +1,0 @@
-Sitemap: https://logigator.com/sitemap.xml
-User-Agent: *
-Disallow: /legacy-editor
-Allow: /

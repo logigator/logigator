@@ -34,9 +34,6 @@ helps more than a duplicate.
   are a good place to start. Comment on one before you begin, so two people don't work on the same
   thing.
 
-`logigator-editor-legacy/` and `logigator-backend/` hold the previous editor and backend. They are
-kept for reference only and don't take changes.
-
 ## Setting up
 
 The development stack runs in Docker; follow

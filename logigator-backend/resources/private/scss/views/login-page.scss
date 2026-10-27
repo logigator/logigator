@@ -1,5 +1,0 @@
-@import "../config/config";
-
-@include view('login-page') {
-	@include section();
-}

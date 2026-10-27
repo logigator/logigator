@@ -1,4 +1,0 @@
-{
-	"secret": "secret",
-	"maxAge": 2592000000 // 30 days
-}

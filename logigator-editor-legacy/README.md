@@ -1,1 +1,0 @@
-# logigator-editor

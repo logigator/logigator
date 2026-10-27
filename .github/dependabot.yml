@@ -2,9 +2,8 @@
 # a cooldown so a release has a week to be yanked before it is proposed.
 # Security updates ignore both the schedule and the cooldown.
 #
-# Only the Yarn workspace, the images and the workflows are covered:
-# logigator-editor-legacy/, logigator-backend/ and the capture tool keep their
-# own lockfiles and get no version updates.
+# Only the Yarn workspace, the images and the workflows are covered: the
+# capture tool keeps its own lockfile and gets no version updates.
 version: 2
 
 multi-ecosystem-groups:
