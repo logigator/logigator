@@ -169,13 +169,21 @@ export class MailService {
   }): Promise<boolean> {
     if (!this.env.REPORT_MAIL_TO) return false;
 
-    await this.transport.sendMail({
+    // A crash message can be any length, and a subject line cannot.
+    const subject = mail.subject.slice(0, 160);
+    const info: unknown = await this.transport.sendMail({
       from: this.env.MAIL_FROM,
       to: this.env.REPORT_MAIL_TO,
       ...mail,
-      // A crash message can be any length, and a subject line cannot.
-      subject: mail.subject.slice(0, 160)
+      subject
     });
+
+    if (!this.env.SMTP_URL) {
+      this.logger.warn(
+        `No SMTP_URL configured — operator mail "${subject}" for ${this.env.REPORT_MAIL_TO} was not sent.`
+      );
+      this.logger.debug(info);
+    }
     return true;
   }
 
