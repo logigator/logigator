@@ -86,7 +86,8 @@ export type AnalysisOutcome = (
   /**
    * The strictest verdict of every reply that matched the schema, a refused
    * translation's included, so failing the translation check is no way past
-   * moderation; null when no reply got that far.
+   * moderation, and of every declined reply, as `BLOCKED_VERDICT`; null when
+   * no reply got that far.
    */
   verdict: ModerationVerdict | null;
   /** The call whose reply gave {@link verdict}, for the report. */

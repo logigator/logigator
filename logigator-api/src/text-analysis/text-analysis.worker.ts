@@ -16,6 +16,7 @@ import {
 import { type CircuitTable, kindOf } from '../documents/circuit-queries';
 import { humanVersionsOf } from '../documents/document-text-queries';
 import { MachineModerationService } from '../moderation/machine-moderation.service';
+import { BLOCKED_VERDICT } from '../moderation/moderation-verdict';
 import { RedisService } from '../redis/redis.service';
 import { leaseRunningOutAt, startOfNextUtcDay, utcDay } from './analysis-lease';
 import {
@@ -390,17 +391,16 @@ export class TextAnalysisWorker
       case 'document': {
         // The route answered, so whatever paused the loop before is over.
         this.callWorked();
-        const attempts = await recordFailure(
-          this.db,
-          table,
-          claim,
-          failure.verdict !== null
-        );
+        // The verdict a declined reply stands for puts the text in front of a
+        // person but checks nothing: no model read it.
+        const judged =
+          failure.verdict !== null && failure.verdict !== BLOCKED_VERDICT;
+        const attempts = await recordFailure(this.db, table, claim, judged);
         if (attempts !== null && attempts >= MAX_ANALYSIS_ATTEMPTS) {
           this.logger.warn(
             `Analysis of ${claim.id} failed ${attempts} times and waits for an edit: ${failure.reason}`
           );
-          if (failure.verdict === null) {
+          if (!judged) {
             await this.reportUnjudged(table, claim, attempts, failure);
           }
         }
@@ -430,8 +430,8 @@ export class TextAnalysisWorker
    * Puts a text that was parked without a verdict in front of a person: it
    * would otherwise wait unchecked, out of the listings, until its author
    * edits it. Moderation's own guard leaves out a text an earlier attempt's
-   * verdict already checked. A failure is logged; the text stays parked
-   * either way.
+   * verdict already checked, and one a declined reply's report already names.
+   * A failure is logged; the text stays parked either way.
    */
   private async reportUnjudged(
     table: CircuitTable,

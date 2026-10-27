@@ -15,7 +15,10 @@ import {
 } from '../src/database/schema';
 import { MachineModerationService } from '../src/moderation/machine-moderation.service';
 import { ModerationService } from '../src/moderation/moderation.service';
-import type { ModerationVerdict } from '../src/moderation/moderation-verdict';
+import {
+  BLOCKED_VERDICT,
+  type ModerationVerdict
+} from '../src/moderation/moderation-verdict';
 import {
   ANALYSIS_LEASE_MINUTES,
   startOfNextUtcDay
@@ -547,6 +550,43 @@ describe('the text analysis worker', () => {
 
     expect(await advertised(project)).toEqual([true, true]);
     expect((await detail(project.link, 'en')).json().awaitingCheck).toBe(false);
+  });
+
+  it('keeps a declined text out of the listings until its report is resolved', async () => {
+    const project = await createProject(lin, { name: 'Declined Adder' });
+    const declined: Answer = () => ({
+      kind: 'document',
+      reason: 'the provider filtered the reply',
+      calls: [USAGE],
+      verdict: BLOCKED_VERDICT,
+      verdictCall: USAGE
+    });
+    fake.answer(project.id, declined, declined, declined);
+
+    await worker.tick();
+    expect(await advertised(project)).toEqual([false, false]);
+
+    for (let tick = 1; tick < 3; tick++) await worker.tick();
+
+    const parked = await row(project.id);
+    const reports = await api.db
+      .select()
+      .from(documentReports)
+      .where(eq(documentReports.documentId, project.id));
+    expect(parked.analysisAttempts).toBe(3);
+    expect(reports).toMatchObject([
+      { source: 'machine', textDigest: parked.textDigest, resolvedAt: null }
+    ]);
+    expect(await advertised(project)).toEqual([false, false]);
+    expect((await detail(project.link, 'en')).json().awaitingCheck).toBe(true);
+
+    expect(
+      await api.app
+        .get(ModerationService)
+        .resolve(reports[0]!.id, 'Read it; harmless.')
+    ).toBe('resolved');
+
+    expect(await advertised(project)).toEqual([true, true]);
   });
 
   it('opens no report for a parked text an earlier attempt already judged', async () => {

@@ -176,9 +176,10 @@ export async function holdClaimUntil(
  * starts over at one. Returns the count, or null when the claim was no longer
  * this worker's and nothing was written.
  *
- * `judged` is whether the failed call still gave a moderation verdict — a
- * refused translation's, or the one a declined reply stands for — which checks
- * the claimed text in the same statement (`text-check.ts`). The digest written
+ * `judged` is whether the failed call still gave a moderation verdict, a
+ * refused translation's, which checks the claimed text in the same statement
+ * (`text-check.ts`). The one a declined reply stands for is no verdict of the
+ * text, and checks nothing. The digest written
  * is the claimed one: after an edit during the call it names a text that is
  * gone, which checks nothing.
  */

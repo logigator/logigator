@@ -39,7 +39,9 @@ export interface ModerationVerdict {
 /**
  * The verdict a declined reply stands for, when the provider's filter or the
  * model itself refused the text. It names no category, so it is never
- * certain: it puts the text in front of a person and hides nothing.
+ * certain: it puts the text in front of a person and hides nothing. Nor does
+ * it check the text, as no model read it: a published one stays out of the
+ * listings until that person resolves the report.
  */
 export const BLOCKED_VERDICT: ModerationVerdict = {
   category: 'other',
