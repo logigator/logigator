@@ -1,4 +1,4 @@
-Dernière mise à jour : 21 octobre 2026
+Dernière mise à jour : 26 octobre 2026
 
 Cette politique décrit quelles données personnelles Logigator traite, dans quel but, sur quelle base juridique et pendant combien de temps. Elle s’applique au site web et à l’éditeur sur logigator.com. La version allemande fait foi ; les versions anglaise, française et espagnole sont des traductions.
 
@@ -67,9 +67,11 @@ La base juridique est l’exécution des conditions d’utilisation (art. 6, par
 
 Le nom et la description des circuits visibles par **toute personne avec le lien** ou par **tout le monde** sont traduits automatiquement en anglais, en allemand, en français et en espagnol. Pour cela, notre serveur transmet le nom et la description à OpenRouter, Inc. (États-Unis), qui les transmet au fournisseur d’un modèle d’IA. Nous n’utilisons que des fournisseurs qui ne conservent pas les textes et ne les utilisent pas pour entraîner des modèles d’IA. Aucune donnée relative à votre compte n’est transmise. Les circuits visibles par **vous uniquement** ne sont jamais transmis.
 
+La même requête vérifie aussi que le nom et la description ne contiennent pas de contenu interdit, par exemple un contenu illicite, du harcèlement ou du spam. Si la violation est claire et grave, le circuit peut être masqué automatiquement : vous seul pouvez encore le voir, et le motif vous est indiqué. Une personne examine chaque circuit masqué de cette façon. Les autres résultats sont transmis à une personne et ne changent rien par eux-mêmes.
+
 Nous enregistrons les traductions avec le circuit et les supprimons avec lui.
 
-La base juridique est notre intérêt légitime à rendre les circuits compréhensibles dans d’autres langues (art. 6, par. 1, point f du RGPD).
+La base juridique est notre intérêt légitime à rendre les circuits compréhensibles dans d’autres langues et à tenir les contenus illicites et abusifs à l’écart du site (art. 6, par. 1, point f du RGPD).
 
 ## Cookies et stockage dans le navigateur
 
@@ -130,18 +132,18 @@ La base juridique est le consentement que vous donnez par ce clic (art. 6, par. 
 
 Nous ne vendons aucune donnée et n’affichons aucune publicité. Seuls les prestataires cités ici reçoivent des données, chacun pour la finalité décrite :
 
-| Prestataire            | Finalité                                   | Siège                         |
-| ---------------------- | ------------------------------------------ | ----------------------------- |
-| Cloudflare, Inc.       | Protection et diffusion du site            | États-Unis                    |
-| PostHog, Inc.          | Statistiques, uniquement avec consentement | États-Unis, données dans l’UE |
-| SMTP2GO                | Envoi des e-mails                          | Nouvelle-Zélande              |
-| Zoho Corporation B.V.  | Boîte de réception                         | Pays-Bas                      |
-| Google Ireland Limited | Connexion avec Google, YouTube             | Irlande                       |
-| OpenRouter, Inc.       | Traduction des noms et des descriptions    | États-Unis                    |
+| Prestataire            | Finalité                                                | Siège                         |
+| ---------------------- | ------------------------------------------------------- | ----------------------------- |
+| Cloudflare, Inc.       | Protection et diffusion du site                         | États-Unis                    |
+| PostHog, Inc.          | Statistiques, uniquement avec consentement              | États-Unis, données dans l’UE |
+| SMTP2GO                | Envoi des e-mails                                       | Nouvelle-Zélande              |
+| Zoho Corporation B.V.  | Boîte de réception                                      | Pays-Bas                      |
+| Google Ireland Limited | Connexion avec Google, YouTube                          | Irlande                       |
+| OpenRouter, Inc.       | Traduction et vérification des noms et des descriptions | États-Unis                    |
 
 La Commission européenne a constaté que la Nouvelle-Zélande assure un niveau de protection des données adéquat. Les transferts vers les États-Unis reposent sur le cadre de protection des données UE-États-Unis (Data Privacy Framework) lorsque le destinataire y est certifié.
 
-Nous ne prenons aucune décision automatisée vous concernant.
+Hormis le masquage automatique des circuits décrit plus haut, toujours examiné par une personne, nous ne prenons aucune décision automatisée vous concernant.
 
 ## Durées de conservation
 

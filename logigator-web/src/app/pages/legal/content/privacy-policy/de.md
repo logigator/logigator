@@ -1,4 +1,4 @@
-Stand: 21. Oktober 2026
+Stand: 26. Oktober 2026
 
 Diese Erklärung beschreibt, welche personenbezogenen Daten Logigator verarbeitet, wozu, auf welcher Rechtsgrundlage und wie lange. Sie gilt für die Website und den Editor unter logigator.com. Verbindlich ist die deutsche Fassung; die englische, französische und spanische sind Übersetzungen.
 
@@ -67,9 +67,11 @@ Rechtsgrundlage ist die Erfüllung des Nutzungsvertrags (Art. 6 Abs. 1 lit. b DS
 
 Name und Beschreibung von Schaltungen, die für **alle mit dem Link** oder für **alle** sichtbar sind, werden automatisch ins Deutsche, Englische, Französische und Spanische übersetzt. Dazu übermittelt unser Server Name und Beschreibung an OpenRouter, Inc. (USA), das sie an den Anbieter eines KI-Modells weitergibt. Wir setzen nur Anbieter ein, die die Texte nicht speichern und nicht zum Training von KI-Modellen verwenden. Daten zu deinem Konto werden nicht übermittelt. Schaltungen, die **nur du** sehen kannst, werden nie übermittelt.
 
+Dieselbe Anfrage prüft Name und Beschreibung auch auf unzulässige Inhalte, etwa rechtswidrige Inhalte, Belästigung oder Spam. Ist ein Verstoß eindeutig und schwerwiegend, kann die Schaltung automatisch ausgeblendet werden: Nur du kannst sie dann noch sehen, und du erfährst den Grund. Jede so ausgeblendete Schaltung prüft eine Person. Andere Befunde gehen an eine Person und ändern für sich nichts.
+
 Die Übersetzungen speichern wir bei der Schaltung und löschen sie mit ihr.
 
-Rechtsgrundlage ist unser berechtigtes Interesse daran, Schaltungen auch in anderen Sprachen verständlich zu machen (Art. 6 Abs. 1 lit. f DSGVO).
+Rechtsgrundlage ist unser berechtigtes Interesse daran, Schaltungen auch in anderen Sprachen verständlich zu machen und rechtswidrige und missbräuchliche Inhalte von der Website fernzuhalten (Art. 6 Abs. 1 lit. f DSGVO).
 
 ## Cookies und Speicher im Browser
 
@@ -130,18 +132,18 @@ Rechtsgrundlage ist deine Einwilligung durch den Klick (Art. 6 Abs. 1 lit. a DSG
 
 Wir verkaufen keine Daten und zeigen keine Werbung. Daten erhalten nur die hier genannten Dienstleister, jeweils für den beschriebenen Zweck:
 
-| Dienstleister          | Zweck                                    | Sitz                 |
-| ---------------------- | ---------------------------------------- | -------------------- |
-| Cloudflare, Inc.       | Schutz und Auslieferung der Website      | USA                  |
-| PostHog, Inc.          | Statistik, nur mit Einwilligung          | USA, Daten in der EU |
-| SMTP2GO                | Versand von E-Mails                      | Neuseeland           |
-| Zoho Corporation B.V.  | Postfach                                 | Niederlande          |
-| Google Ireland Limited | Anmeldung mit Google, YouTube            | Irland               |
-| OpenRouter, Inc.       | Übersetzung von Namen und Beschreibungen | USA                  |
+| Dienstleister          | Zweck                                                | Sitz                 |
+| ---------------------- | ---------------------------------------------------- | -------------------- |
+| Cloudflare, Inc.       | Schutz und Auslieferung der Website                  | USA                  |
+| PostHog, Inc.          | Statistik, nur mit Einwilligung                      | USA, Daten in der EU |
+| SMTP2GO                | Versand von E-Mails                                  | Neuseeland           |
+| Zoho Corporation B.V.  | Postfach                                             | Niederlande          |
+| Google Ireland Limited | Anmeldung mit Google, YouTube                        | Irland               |
+| OpenRouter, Inc.       | Übersetzung und Prüfung von Namen und Beschreibungen | USA                  |
 
 Für Neuseeland hat die EU-Kommission ein angemessenes Datenschutzniveau festgestellt. Übermittlungen in die USA stützen sich auf das EU-US Data Privacy Framework, soweit der Empfänger danach zertifiziert ist.
 
-Wir treffen keine automatisierten Entscheidungen über dich.
+Abgesehen vom oben beschriebenen automatischen Ausblenden von Schaltungen, das immer eine Person prüft, treffen wir keine automatisierten Entscheidungen über dich.
 
 ## Speicherdauer im Überblick
 

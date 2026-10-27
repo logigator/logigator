@@ -1,4 +1,4 @@
-Last updated: 21 October 2026
+Last updated: 26 October 2026
 
 This policy describes which personal data Logigator processes, for what purpose, on which legal basis and for how long. It applies to the website and the editor at logigator.com. The German version is binding; the English, French and Spanish versions are translations.
 
@@ -67,9 +67,11 @@ The legal basis is the performance of the terms of use (Art. 6(1)(b) GDPR). The 
 
 The names and descriptions of circuits visible to **anyone with the link** or to **everyone** are translated automatically into English, German, French and Spanish. For this, our server sends the name and description to OpenRouter, Inc. (USA), which passes them on to the provider of an AI model. We only use providers that do not store the texts and do not use them to train AI models. No data about your account is sent. Circuits visible **only to you** are never sent.
 
+The same request also checks the name and description for content that is not allowed, such as illegal content, harassment or spam. If the violation is clear and serious, the circuit can be hidden automatically: only you can still see it, and you are told why. A person reviews every circuit hidden this way. Other findings are passed to a person and change nothing on their own.
+
 We store the translations with the circuit and delete them with it.
 
-The legal basis is our legitimate interest in making circuits understandable in other languages (Art. 6(1)(f) GDPR).
+The legal basis is our legitimate interest in making circuits understandable in other languages and in keeping illegal and abusive content off the site (Art. 6(1)(f) GDPR).
 
 ## Cookies and browser storage
 
@@ -130,18 +132,18 @@ The legal basis is the consent you give by clicking (Art. 6(1)(a) GDPR, § 165(3
 
 We do not sell data and show no advertising. Only the service providers named here receive data, each for the purpose described:
 
-| Provider               | Purpose                               | Based in            |
-| ---------------------- | ------------------------------------- | ------------------- |
-| Cloudflare, Inc.       | Protecting and delivering the website | USA                 |
-| PostHog, Inc.          | Statistics, only with consent         | USA, data in the EU |
-| SMTP2GO                | Sending emails                        | New Zealand         |
-| Zoho Corporation B.V.  | Mailbox                               | Netherlands         |
-| Google Ireland Limited | Signing in with Google, YouTube       | Ireland             |
-| OpenRouter, Inc.       | Translating names and descriptions    | USA                 |
+| Provider               | Purpose                                         | Based in            |
+| ---------------------- | ----------------------------------------------- | ------------------- |
+| Cloudflare, Inc.       | Protecting and delivering the website           | USA                 |
+| PostHog, Inc.          | Statistics, only with consent                   | USA, data in the EU |
+| SMTP2GO                | Sending emails                                  | New Zealand         |
+| Zoho Corporation B.V.  | Mailbox                                         | Netherlands         |
+| Google Ireland Limited | Signing in with Google, YouTube                 | Ireland             |
+| OpenRouter, Inc.       | Translating and checking names and descriptions | USA                 |
 
 The European Commission has found that New Zealand ensures an adequate level of data protection. Transfers to the USA rely on the EU-US Data Privacy Framework where the recipient is certified under it.
 
-We make no automated decisions about you.
+Except for the automatic hiding of circuits described above, which a person always reviews, we make no automated decisions about you.
 
 ## Retention at a glance
 

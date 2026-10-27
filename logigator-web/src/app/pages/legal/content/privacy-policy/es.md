@@ -1,4 +1,4 @@
-Última actualización: 21 de octubre de 2026
+Última actualización: 26 de octubre de 2026
 
 Esta política describe qué datos personales trata Logigator, con qué finalidad, con qué base jurídica y durante cuánto tiempo. Se aplica al sitio web y al editor en logigator.com. La versión alemana es la vinculante; las versiones inglesa, francesa y española son traducciones.
 
@@ -67,9 +67,11 @@ La base jurídica es la ejecución de las condiciones de uso (art. 6, apdo. 1, l
 
 El nombre y la descripción de los circuitos visibles para **cualquiera con el enlace** o para **todo el mundo** se traducen automáticamente al inglés, al alemán, al francés y al español. Para ello, nuestro servidor envía el nombre y la descripción a OpenRouter, Inc. (EE. UU.), que los pasa al proveedor de un modelo de IA. Solo usamos proveedores que no guardan los textos ni los usan para entrenar modelos de IA. No se envía ningún dato de tu cuenta. Los circuitos visibles **solo para ti** nunca se envían.
 
+La misma solicitud también comprueba si el nombre y la descripción contienen algo no permitido, como contenido ilegal, acoso o spam. Si la infracción es clara y grave, el circuito puede ocultarse automáticamente: solo tú puedes seguir viéndolo y se te indica el motivo. Una persona revisa cada circuito ocultado de esta forma. Los demás resultados pasan a una persona y no cambian nada por sí solos.
+
 Guardamos las traducciones con el circuito y las eliminamos con él.
 
-La base jurídica es nuestro interés legítimo en que los circuitos se entiendan en otros idiomas (art. 6, apdo. 1, letra f del RGPD).
+La base jurídica es nuestro interés legítimo en que los circuitos se entiendan en otros idiomas y en mantener el contenido ilegal y abusivo fuera del sitio (art. 6, apdo. 1, letra f del RGPD).
 
 ## Cookies y almacenamiento en el navegador
 
@@ -130,18 +132,18 @@ La base jurídica es el consentimiento que das con el clic (art. 6, apdo. 1, let
 
 No vendemos datos ni mostramos publicidad. Solo reciben datos los proveedores indicados aquí, cada uno para la finalidad descrita:
 
-| Proveedor              | Finalidad                             | Sede                    |
-| ---------------------- | ------------------------------------- | ----------------------- |
-| Cloudflare, Inc.       | Protección y entrega del sitio        | EE. UU.                 |
-| PostHog, Inc.          | Estadísticas, solo con consentimiento | EE. UU., datos en la UE |
-| SMTP2GO                | Envío de correos                      | Nueva Zelanda           |
-| Zoho Corporation B.V.  | Buzón de correo                       | Países Bajos            |
-| Google Ireland Limited | Inicio de sesión con Google, YouTube  | Irlanda                 |
-| OpenRouter, Inc.       | Traducción de nombres y descripciones | EE. UU.                 |
+| Proveedor              | Finalidad                                            | Sede                    |
+| ---------------------- | ---------------------------------------------------- | ----------------------- |
+| Cloudflare, Inc.       | Protección y entrega del sitio                       | EE. UU.                 |
+| PostHog, Inc.          | Estadísticas, solo con consentimiento                | EE. UU., datos en la UE |
+| SMTP2GO                | Envío de correos                                     | Nueva Zelanda           |
+| Zoho Corporation B.V.  | Buzón de correo                                      | Países Bajos            |
+| Google Ireland Limited | Inicio de sesión con Google, YouTube                 | Irlanda                 |
+| OpenRouter, Inc.       | Traducción y comprobación de nombres y descripciones | EE. UU.                 |
 
 La Comisión Europea ha constatado que Nueva Zelanda garantiza un nivel adecuado de protección de datos. Las transferencias a EE. UU. se basan en el Marco de Privacidad de Datos UE-EE. UU. (Data Privacy Framework) cuando el destinatario está certificado conforme a él.
 
-No tomamos decisiones automatizadas sobre ti.
+Salvo la ocultación automática de circuitos descrita más arriba, que siempre revisa una persona, no tomamos decisiones automatizadas sobre ti.
 
 ## Plazos de conservación
 
