@@ -10,7 +10,7 @@ import { ENV, type Env } from '../config/env';
 import { DB, type Database } from '../database/database.module';
 import {
   components,
-  MAX_TRANSLATION_ATTEMPTS,
+  MAX_ANALYSIS_ATTEMPTS,
   projects
 } from '../database/schema';
 import type { CircuitTable } from '../documents/circuit-queries';
@@ -95,7 +95,7 @@ interface Pause {
  *
  * Failures are handled by what they say about the next call. A document
  * failure counts against that text, which is parked after
- * {@link MAX_TRANSLATION_ATTEMPTS}, and reported for a person when none of its
+ * {@link MAX_ANALYSIS_ATTEMPTS}, and reported for a person when none of its
  * calls gave a verdict. A transient one backs the loop off and
  * counts nothing. A system one pauses the loop until the budget allows again
  * or the configuration is fixed, and holds the document of a configuration
@@ -329,8 +329,7 @@ export class TextAnalysisWorker
         table,
         claim,
         outcome.translation,
-        outcome.model,
-        outcome.verdict !== null
+        outcome.model
       );
       // An edit or a version landed during the call: the result describes a
       // document that is gone. The new one is claimable once it settles.
@@ -399,7 +398,7 @@ export class TextAnalysisWorker
           claim,
           failure.verdict !== null
         );
-        if (attempts !== null && attempts >= MAX_TRANSLATION_ATTEMPTS) {
+        if (attempts !== null && attempts >= MAX_ANALYSIS_ATTEMPTS) {
           this.logger.warn(
             `Analysis of ${claim.id} failed ${attempts} times and waits for an edit: ${failure.reason}`
           );

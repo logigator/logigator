@@ -265,14 +265,14 @@ and the E2E harness).
   does `MachineModerationService` for a severe verdict the model is certain of, only with
   `MODERATION_AUTO_HIDE` on; every machine hide has an open report and is mailed to
   `REPORT_MAIL_TO` and the owner. A text a moderator cleared (`moderated_digest`) gets no machine
-  action until it changes.
+  action until it or a version changes.
 - **While text analysis runs, a public document is listed only once its current text is
   checked**: a verdict was obtained for it (`checked_digest`, written in the statement that settles
   or counts the call) or a moderator cleared it (`moderated_digest`). `documents/text-check.ts` is
   the one rule: the listing predicate carries its negation, and the community detail and owned
   summaries answer it as `awaitingCheck`, which the site's `noindex` reads. An edit of the name or
-  description moves the digest past both, a version write clears `checked_digest`, and a text
-  parked without any verdict gets a machine report whose resolution checks it. The link resolves
+  description moves the digest past both, a version write clears both and restarts a parked
+  text's failure count, and a text parked without any verdict gets a machine report whose resolution checks it. The link resolves
   throughout.
 - **Uploads are decoded and re-encoded** by sharp, never stored as sent; the volume is served under
   one root, `/files`.

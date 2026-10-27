@@ -128,7 +128,7 @@ describe('seeding the examples', () => {
           .where(eq(table.id, example.id));
         expect(row.nameLanguage).toBe(example.language);
         expect(row.descriptionLanguage).toBe(example.language);
-        expect(row.translatedDigest).toBe(row.textDigest);
+        expect(row.analyzedDigest).toBe(row.textDigest);
 
         const versions = await api.db
           .select({
@@ -201,7 +201,7 @@ describe('seeding the examples', () => {
     // The edit moves the digest, and the seed's languages and human versions
     // move with it, so the example is still not pending.
     expect(after.textDigest).not.toBe(before.textDigest);
-    expect(after.translatedDigest).toBe(after.textDigest);
+    expect(after.analyzedDigest).toBe(after.textDigest);
     const versions = await api.db
       .select({ sourceDigest: projectTexts.sourceDigest })
       .from(projectTexts)

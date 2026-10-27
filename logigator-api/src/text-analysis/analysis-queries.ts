@@ -1,6 +1,6 @@
-import { getTableName, sql, type SQL } from 'drizzle-orm';
+import { getTableName, sql } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
-import { MAX_TRANSLATION_ATTEMPTS } from '../database/schema';
+import { MAX_ANALYSIS_ATTEMPTS } from '../database/schema';
 import type { CircuitTable } from '../documents/circuit-queries';
 import { textTableOf } from '../documents/document-text-queries';
 import type { DocumentTranslation } from '../translation/document-translation';
@@ -12,7 +12,7 @@ import { ANALYSIS_LEASE_MINUTES } from './analysis-lease';
  * by what it depends on — the claim it holds, or the text it analyzed — so no
  * column is ever computed from a value read in an earlier statement.
  *
- * A claim is identified by its `translation_claimed_at`, carried as text: the
+ * A claim is identified by its `analysis_claimed_at`, carried as text: the
  * column holds microseconds, which a JavaScript `Date` would round away, and
  * then no guard on it would ever match.
  */
@@ -24,7 +24,7 @@ const LEASE = sql.raw(`interval '${ANALYSIS_LEASE_MINUTES} minutes'`);
  * where it can prove the query's condition implies the index's, and a bound
  * parameter proves nothing.
  */
-const MAX_ATTEMPTS = sql.raw(String(MAX_TRANSLATION_ATTEMPTS));
+const MAX_ATTEMPTS = sql.raw(String(MAX_ANALYSIS_ATTEMPTS));
 
 /** One document the worker holds, with what it needs to analyze it. */
 export interface ClaimedDocument {
@@ -53,14 +53,14 @@ interface ClaimedRow extends Record<string, unknown> {
  * statement. `SKIP LOCKED` keeps two API instances from taking the same row,
  * and the lease brings a crashed worker's rows back.
  *
- * Pending is `translated_digest IS DISTINCT FROM text_digest`, so every write
+ * Pending is `analyzed_digest IS DISTINCT FROM text_digest`, so every write
  * path that changes the text makes the row pending again by itself. A private
  * or hidden document is never taken: it may not leave the database. An
  * unlisted empty one, with neither a component nor a wire, is passed by too:
  * nobody is shown it, and drawn on later it is taken from then, its text still
  * pending. A public empty one is taken like any other, since anybody can open
  * it and its text has to be judged. A text that failed
- * {@link MAX_TRANSLATION_ATTEMPTS} times is parked until its digest moves.
+ * {@link MAX_ANALYSIS_ATTEMPTS} times is parked until its digest moves.
  *
  * The debounce covers the author's versions as well as the original: a version
  * written within it holds the document back as an edit does, so an author
@@ -79,10 +79,10 @@ export async function claimPending(
   // claimed rows are put back in edit order around it.
   const result = await db.execute<ClaimedRow>(sql`
     WITH claimed AS (
-      UPDATE ${table} SET translation_claimed_at = now()
+      UPDATE ${table} SET analysis_claimed_at = now()
        WHERE id IN (
          SELECT id FROM ${table}
-          WHERE translated_digest IS DISTINCT FROM text_digest
+          WHERE analyzed_digest IS DISTINCT FROM text_digest
             AND visibility <> 'private'
             AND hidden_at IS NULL
             AND NOT (visibility = 'unlisted' AND component_count = 0 AND wire_count = 0)
@@ -92,14 +92,14 @@ export async function claimPending(
                WHERE human.document_id = ${documentId}
                  AND human.origin = 'human'
                  AND human.created_at >= now() - make_interval(secs => ${options.debounceSeconds}))
-            AND (translation_claimed_at IS NULL OR translation_claimed_at < now() - ${LEASE})
-            AND NOT (translation_attempt_digest = text_digest
-                     AND translation_attempts >= ${MAX_ATTEMPTS})
+            AND (analysis_claimed_at IS NULL OR analysis_claimed_at < now() - ${LEASE})
+            AND NOT (analysis_attempt_digest = text_digest
+                     AND analysis_attempts >= ${MAX_ATTEMPTS})
           ORDER BY last_edited_at
           LIMIT ${options.batch}
           FOR UPDATE SKIP LOCKED)
       RETURNING id, user_id, name, description, text_digest, text_language_hint,
-                translation_claimed_at::text AS claimed_at, last_edited_at
+                analysis_claimed_at::text AS claimed_at, last_edited_at
     )
     SELECT * FROM claimed ORDER BY last_edited_at, id
   `);
@@ -131,13 +131,13 @@ export async function renewForCall(
   claim: ClaimedDocument
 ): Promise<ClaimedDocument | null> {
   const result = await db.execute<{ claimed_at: string }>(sql`
-    UPDATE ${table} SET translation_claimed_at = now()
+    UPDATE ${table} SET analysis_claimed_at = now()
      WHERE id = ${claim.id}
        AND visibility <> 'private'
        AND hidden_at IS NULL
        AND text_digest = ${claim.textDigest}
-       AND translation_claimed_at = ${claim.claimedAt}::timestamptz
-    RETURNING translation_claimed_at::text AS claimed_at
+       AND analysis_claimed_at = ${claim.claimedAt}::timestamptz
+    RETURNING analysis_claimed_at::text AS claimed_at
   `);
   const [renewed] = result.rows;
   return renewed ? { ...claim, claimedAt: renewed.claimed_at } : null;
@@ -154,9 +154,9 @@ export async function releaseClaim(
   claim: ClaimedDocument
 ): Promise<void> {
   await db.execute(sql`
-    UPDATE ${table} SET translation_claimed_at = NULL
+    UPDATE ${table} SET analysis_claimed_at = NULL
      WHERE id = ${claim.id}
-       AND translation_claimed_at = ${claim.claimedAt}::timestamptz
+       AND analysis_claimed_at = ${claim.claimedAt}::timestamptz
   `);
 }
 
@@ -171,9 +171,9 @@ export async function holdClaimUntil(
   claimedAt: Date
 ): Promise<void> {
   await db.execute(sql`
-    UPDATE ${table} SET translation_claimed_at = ${claimedAt.toISOString()}::timestamptz
+    UPDATE ${table} SET analysis_claimed_at = ${claimedAt.toISOString()}::timestamptz
      WHERE id = ${claim.id}
-       AND translation_claimed_at = ${claim.claimedAt}::timestamptz
+       AND analysis_claimed_at = ${claim.claimedAt}::timestamptz
   `);
 }
 
@@ -195,37 +195,28 @@ export async function recordFailure(
   claim: ClaimedDocument,
   judged: boolean
 ): Promise<number | null> {
-  const result = await db.execute<{ translation_attempts: number }>(sql`
+  const result = await db.execute<{ analysis_attempts: number }>(sql`
     UPDATE ${table}
-       SET translation_attempts = CASE
-             WHEN translation_attempt_digest = ${claim.textDigest}
-             THEN translation_attempts + 1
+       SET analysis_attempts = CASE
+             WHEN analysis_attempt_digest = ${claim.textDigest}
+             THEN analysis_attempts + 1
              ELSE 1
            END,
-           translation_attempt_digest = ${claim.textDigest},
-           ${checkedAs(claim, judged)}
-           translation_claimed_at = NULL
+           analysis_attempt_digest = ${claim.textDigest},
+           ${judged ? sql`checked_digest = ${claim.textDigest},` : sql``}
+           analysis_claimed_at = NULL
      WHERE id = ${claim.id}
-       AND translation_claimed_at = ${claim.claimedAt}::timestamptz
-    RETURNING translation_attempts
+       AND analysis_claimed_at = ${claim.claimedAt}::timestamptz
+    RETURNING analysis_attempts
   `);
-  return result.rows[0]?.translation_attempts ?? null;
-}
-
-/** The assignment that checks the claimed text, where a verdict was given. */
-function checkedAs(
-  claim: Pick<ClaimedDocument, 'textDigest'>,
-  judged: boolean
-): SQL {
-  return judged ? sql`checked_digest = ${claim.textDigest},` : sql``;
+  return result.rows[0]?.analysis_attempts ?? null;
 }
 
 /**
  * Marks the document done for the text it had when it was claimed, with the
  * detected languages, and replaces all its machine rows with the
- * translation's, in one transaction. `judged` is whether the call gave a
- * moderation verdict, which checks the text in the same statement
- * (`text-check.ts`).
+ * translation's, in one transaction. A settled call always gave a moderation
+ * verdict, so the same statement checks the text (`text-check.ts`).
  *
  * Two guards stand against what changed while the call was in flight, and
  * either one writes nothing, leaves the row pending and returns false. The
@@ -239,20 +230,19 @@ export async function settleAnalysis(
   table: CircuitTable,
   claim: Pick<ClaimedDocument, 'id' | 'textDigest' | 'claimedAt'>,
   translation: DocumentTranslation,
-  model: string | null,
-  judged: boolean
+  model: string | null
 ): Promise<boolean> {
   return db.transaction(async (tx) => {
     const settled = await tx.execute(sql`
       UPDATE ${table}
          SET name_language = ${translation.nameLanguage},
              description_language = ${translation.descriptionLanguage},
-             translated_digest = ${claim.textDigest},
-             ${checkedAs(claim, judged)}
-             translation_claimed_at = NULL
+             analyzed_digest = ${claim.textDigest},
+             checked_digest = ${claim.textDigest},
+             analysis_claimed_at = NULL
        WHERE id = ${claim.id}
          AND text_digest = ${claim.textDigest}
-         AND translation_claimed_at = ${claim.claimedAt}::timestamptz
+         AND analysis_claimed_at = ${claim.claimedAt}::timestamptz
       RETURNING id
     `);
     if (settled.rows.length === 0) return false;

@@ -129,7 +129,8 @@ function circuitColumns() {
     /**
      * The `textDigest` a moderator last cleared, by unhiding the document or
      * resolving a machine report about it. The machine neither hides nor
-     * reports that text again; an edit moves the digest past it.
+     * reports that text again; an edit moves the digest past it. Cleared when
+     * the author writes or removes a version, which the moderator did not see.
      */
     moderatedDigest: char('moderated_digest', { length: 32 }),
     /**
@@ -155,14 +156,15 @@ function circuitColumns() {
       .notNull()
       .defaultNow(),
     /**
-     * The text a translation is made for, as the database computes it. U+001F
+     * The text an analysis is made for, as the database computes it. U+001F
      * separates the fields, so moving characters from the name into the
      * description is still a different text.
      *
-     * Generated rather than written: a document is pending translation exactly
-     * while `translatedDigest` differs from this, so every write path that
+     * Generated rather than written: a document is pending analysis exactly
+     * while `analyzedDigest` differs from this, so every write path that
      * changes the name or the description makes it pending again without
-     * having to know that translations exist.
+     * having to know that text analysis exists. The author's versions are not
+     * part of it; a write of one resets what is keyed on it instead.
      */
     textDigest: char('text_digest', { length: 32 })
       .notNull()
@@ -175,39 +177,38 @@ function circuitColumns() {
     textLanguageHint: varchar('text_language_hint', { length: 8 }),
     /**
      * Detected ISO 639-1 codes, or `zxx` for nothing to translate. Valid only
-     * while `translatedDigest` equals `textDigest`: a read that finds them
+     * while `analyzedDigest` equals `textDigest`: a read that finds them
      * apart treats the languages as unknown, so a detection of an older text
      * is never served.
      */
     nameLanguage: varchar('name_language', { length: 8 }),
     descriptionLanguage: varchar('description_language', { length: 8 }),
     /**
-     * The `textDigest` the two languages and the machine texts were made for.
-     *
-     * This and the three columns after it track the whole text analysis of
-     * the current text, not translation alone: detection, translation and the
-     * moderation verdict, which one call gives together.
+     * The `textDigest` the last settled analysis was made for: the two
+     * languages, the machine texts and the verdict, which one call gives
+     * together.
      */
-    translatedDigest: char('translated_digest', { length: 32 }),
+    analyzedDigest: char('analyzed_digest', { length: 32 }),
     /**
      * A text analysis worker's lease. A lease older than its term is free
      * again, so the rows a crashed worker held come back on their own.
      */
-    translationClaimedAt: timestamp('translation_claimed_at', {
+    analysisClaimedAt: timestamp('analysis_claimed_at', {
       withTimezone: true
     }),
     /**
-     * Failed analyses of the text `translationAttemptDigest` names. Counted
+     * Failed analyses of the text `analysisAttemptDigest` names. Counted
      * against a digest so that an edit, which moves the digest, starts the
-     * count over: a text that keeps failing is parked until it changes.
+     * count over: a text that keeps failing is parked until it changes, or
+     * until its author writes or removes a version.
      */
-    translationAttempts: integer('translation_attempts').notNull().default(0),
-    translationAttemptDigest: char('translation_attempt_digest', { length: 32 })
+    analysisAttempts: integer('analysis_attempts').notNull().default(0),
+    analysisAttemptDigest: char('analysis_attempt_digest', { length: 32 })
   };
 }
 
 /** Failures of one text after which it waits for its author to change it. */
-export const MAX_TRANSLATION_ATTEMPTS = 3;
+export const MAX_ANALYSIS_ATTEMPTS = 3;
 
 /**
  * What the text analysis worker scans: pending rows that may leave the
@@ -217,17 +218,17 @@ export const MAX_TRANSLATION_ATTEMPTS = 3;
  * over every parked row before it reached one it may take.
  *
  * The attempt limit is written into the predicate, so changing
- * {@link MAX_TRANSLATION_ATTEMPTS} takes a migration of the two indexes.
+ * {@link MAX_ANALYSIS_ATTEMPTS} takes a migration of the two indexes.
  */
-function translationPendingWhere(t: {
-  translatedDigest: AnyPgColumn;
+function analysisPendingWhere(t: {
+  analyzedDigest: AnyPgColumn;
   textDigest: AnyPgColumn;
   visibility: AnyPgColumn;
   hiddenAt: AnyPgColumn;
-  translationAttemptDigest: AnyPgColumn;
-  translationAttempts: AnyPgColumn;
+  analysisAttemptDigest: AnyPgColumn;
+  analysisAttempts: AnyPgColumn;
 }) {
-  return sql`${t.translatedDigest} IS DISTINCT FROM ${t.textDigest} AND ${t.visibility} <> 'private' AND ${t.hiddenAt} IS NULL AND NOT (${t.translationAttemptDigest} = ${t.textDigest} AND ${t.translationAttempts} >= ${sql.raw(String(MAX_TRANSLATION_ATTEMPTS))})`;
+  return sql`${t.analyzedDigest} IS DISTINCT FROM ${t.textDigest} AND ${t.visibility} <> 'private' AND ${t.hiddenAt} IS NULL AND NOT (${t.analysisAttemptDigest} = ${t.textDigest} AND ${t.analysisAttempts} >= ${sql.raw(String(MAX_ANALYSIS_ATTEMPTS))})`;
 }
 
 /** A board: a circuit that is opened and simulated, never embedded in another. */
@@ -251,9 +252,9 @@ export const projects = pgTable(
     // leading column.
     index('projects_visibility_idx').on(t.visibility, t.lastEditedAt),
     index('projects_forked_from_idx').on(t.forkedFromId),
-    index('projects_translation_pending_idx')
+    index('projects_analysis_pending_idx')
       .on(t.lastEditedAt)
-      .where(translationPendingWhere(t))
+      .where(analysisPendingWhere(t))
   ]
 );
 
@@ -283,9 +284,9 @@ export const components = pgTable(
     index('components_format_version_idx').on(t.formatVersion),
     index('components_visibility_idx').on(t.visibility, t.lastEditedAt),
     index('components_forked_from_idx').on(t.forkedFromId),
-    index('components_translation_pending_idx')
+    index('components_analysis_pending_idx')
       .on(t.lastEditedAt)
-      .where(translationPendingWhere(t))
+      .where(analysisPendingWhere(t))
   ]
 );
 

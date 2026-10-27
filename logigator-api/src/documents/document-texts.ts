@@ -21,7 +21,7 @@ export interface OriginalTexts {
   description: string;
   textDigest: string;
   /** The digest the detected languages were made for; null before any. */
-  translatedDigest: string | null;
+  analyzedDigest: string | null;
   nameLanguage: string | null;
   descriptionLanguage: string | null;
 }
@@ -68,10 +68,10 @@ export interface ResolvedTexts {
 export function currentLanguages(
   row: Pick<
     OriginalTexts,
-    'textDigest' | 'translatedDigest' | 'nameLanguage' | 'descriptionLanguage'
+    'textDigest' | 'analyzedDigest' | 'nameLanguage' | 'descriptionLanguage'
   >
 ): { name: string | null; description: string | null } {
-  const current = row.translatedDigest === row.textDigest;
+  const current = row.analyzedDigest === row.textDigest;
   return {
     name: current ? row.nameLanguage : null,
     description: current ? row.descriptionLanguage : null

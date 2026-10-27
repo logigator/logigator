@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import type {
   OwnedProjectSummary,
@@ -386,8 +386,8 @@ describe('the text analysis worker', () => {
     });
 
     const stored = await row(project.id);
-    expect(stored.translatedDigest).toBe(stored.textDigest);
-    expect(stored.translationClaimedAt).toBeNull();
+    expect(stored.analyzedDigest).toBe(stored.textDigest);
+    expect(stored.analysisClaimedAt).toBeNull();
     for (const machine of await machineRows(project.id)) {
       expect(machine.sourceDigest).toBe(stored.textDigest);
       expect(machine.model).toBe(SERVED_MODEL);
@@ -513,8 +513,8 @@ describe('the text analysis worker', () => {
     await worker.tick();
 
     const failed = await row(project.id);
-    expect(failed.translationAttempts).toBe(1);
-    expect(failed.translatedDigest).toBeNull();
+    expect(failed.analysisAttempts).toBe(1);
+    expect(failed.analyzedDigest).toBeNull();
     expect(await advertised(project)).toEqual([true, true]);
   });
 
@@ -570,7 +570,7 @@ describe('the text analysis worker', () => {
 
     for (let tick = 0; tick < 3; tick++) await worker.tick();
 
-    expect((await row(project.id)).translationAttempts).toBe(3);
+    expect((await row(project.id)).analysisAttempts).toBe(3);
     expect(
       await api.db
         .select()
@@ -578,6 +578,68 @@ describe('the text analysis worker', () => {
         .where(eq(documentReports.documentId, project.id))
     ).toEqual([]);
     expect(await advertised(project)).toEqual([true, true]);
+  });
+
+  it('takes a parked text again once its author writes a version', async () => {
+    const project = await createProject(lin, { name: 'Parked Adder' });
+    fake.answer(
+      project.id,
+      () => ({
+        kind: 'document',
+        reason: 'the reply was cut short',
+        calls: [USAGE],
+        rejections: [],
+        verdict: HARMLESS,
+        verdictCall: USAGE
+      }),
+      documentFailure,
+      documentFailure
+    );
+    for (let tick = 0; tick < 3; tick++) await worker.tick();
+
+    await putText(lin, project.id, 'de', { name: 'Addierer' });
+    expect(await advertised(project)).toEqual([false, false]);
+
+    await worker.tick();
+
+    expect(fake.callsFor(project.id)).toHaveLength(4);
+    expect(await advertised(project)).toEqual([true, true]);
+  });
+
+  it('judges a version written after a moderator cleared the text', async () => {
+    const project = await createProject(lin, { name: 'Cleared Adder' });
+    fake.answer(project.id, documentFailure, documentFailure, documentFailure);
+    for (let tick = 0; tick < 3; tick++) await worker.tick();
+    const [unjudged] = await api.db
+      .select()
+      .from(documentReports)
+      .where(eq(documentReports.documentId, project.id));
+    await api.app
+      .get(ModerationService)
+      .resolve(unjudged!.id, 'Read it; harmless.');
+    expect(await advertised(project)).toEqual([true, true]);
+
+    await putText(lin, project.id, 'de', { name: 'Werbung' });
+    expect(await advertised(project)).toEqual([false, false]);
+
+    fake.answer(project.id, (input) => ({
+      ...translated(input),
+      verdict: { category: 'spam', certain: false, note: 'An ad.' },
+      verdictCall: USAGE
+    }));
+    await worker.tick();
+
+    expect(
+      await api.db
+        .select()
+        .from(documentReports)
+        .where(
+          and(
+            eq(documentReports.documentId, project.id),
+            isNull(documentReports.resolvedAt)
+          )
+        )
+    ).toMatchObject([{ source: 'machine', reason: 'spam' }]);
   });
 
   it('discards a result whose text was edited while it was translated', async () => {
@@ -593,9 +655,9 @@ describe('the text analysis worker', () => {
 
     expect(fake.callsFor(project.id)).toHaveLength(1);
     const stored = await row(project.id);
-    expect(stored.translatedDigest).not.toBe(stored.textDigest);
+    expect(stored.analyzedDigest).not.toBe(stored.textDigest);
     // Released at once, so the new text is not held up by the old claim.
-    expect(stored.translationClaimedAt).toBeNull();
+    expect(stored.analysisClaimedAt).toBeNull();
     expect(await machineRows(project.id)).toEqual([]);
     expect((await detail(project.link, 'de')).json()).toMatchObject({
       textLanguage: { name: null, description: null },
@@ -626,7 +688,7 @@ describe('the text analysis worker', () => {
     await worker.tick();
 
     expect(fake.callsFor(project.id)).toEqual([]);
-    expect((await row(project.id)).translationClaimedAt).toBeNull();
+    expect((await row(project.id)).analysisClaimedAt).toBeNull();
 
     await patchProject(ada, project.id, { visibility: 'unlisted' });
     await worker.tick();
@@ -647,7 +709,7 @@ describe('the text analysis worker', () => {
     await worker.tick();
 
     expect(fake.callsFor(project.id)).toEqual([]);
-    expect((await row(project.id)).translatedDigest).toBeNull();
+    expect((await row(project.id)).analyzedDigest).toBeNull();
 
     const drawn = await api.inject({
       method: 'PUT',
@@ -674,7 +736,7 @@ describe('the text analysis worker', () => {
 
     expect(fake.callsFor(project.id)).toHaveLength(1);
     const settled = await row(project.id);
-    expect(settled.translatedDigest).toBe(settled.textDigest);
+    expect(settled.analyzedDigest).toBe(settled.textDigest);
   });
 
   it('hands moderation the verdict of a refused translation, then counts the failure', async () => {
@@ -707,7 +769,7 @@ describe('the text analysis worker', () => {
         verdict,
         call: USAGE
       });
-      expect(failed.translationAttempts).toBe(1);
+      expect(failed.analysisAttempts).toBe(1);
     } finally {
       apply.mockRestore();
     }
@@ -732,7 +794,7 @@ describe('the text analysis worker', () => {
         apply.mock.calls.filter(([input]) => input.documentId === project.id)
       ).toHaveLength(1);
       const settled = await row(project.id);
-      expect(settled.translatedDigest).toBe(settled.textDigest);
+      expect(settled.analyzedDigest).toBe(settled.textDigest);
       expect(fake.callsFor(project.id)).toHaveLength(1);
     } finally {
       apply.mockRestore();
@@ -754,9 +816,9 @@ describe('the text analysis worker', () => {
     expect(fake.callsFor(first.id)).toHaveLength(1);
     expect(fake.callsFor(second.id)).toEqual([]);
     const held = await row(second.id);
-    expect(held.translationClaimedAt).toBeNull();
-    expect(held.translatedDigest).toBeNull();
-    expect(held.translationAttempts).toBe(0);
+    expect(held.analysisClaimedAt).toBeNull();
+    expect(held.analyzedDigest).toBeNull();
+    expect(held.analysisAttempts).toBe(0);
   });
 
   it('parks a text after three document failures, until it is edited', async () => {
@@ -767,9 +829,9 @@ describe('the text analysis worker', () => {
 
     expect(fake.callsFor(project.id)).toHaveLength(3);
     const parked = await row(project.id);
-    expect(parked.translationAttempts).toBe(3);
-    expect(parked.translationAttemptDigest).toBe(parked.textDigest);
-    expect(parked.translationClaimedAt).toBeNull();
+    expect(parked.analysisAttempts).toBe(3);
+    expect(parked.analysisAttemptDigest).toBe(parked.textDigest);
+    expect(parked.analysisClaimedAt).toBeNull();
 
     await worker.tick();
     expect(fake.callsFor(project.id)).toHaveLength(3);
@@ -800,13 +862,13 @@ describe('the text analysis worker', () => {
     await worker.tick();
 
     const released = await row(project.id);
-    expect(released.translationAttempts).toBe(0);
-    expect(released.translationClaimedAt).toBeNull();
+    expect(released.analysisAttempts).toBe(0);
+    expect(released.analysisClaimedAt).toBeNull();
 
     // Within the server's Retry-After nothing is claimed.
     await worker.tick();
     expect(fake.callsFor(project.id)).toHaveLength(1);
-    expect((await row(project.id)).translationClaimedAt).toBeNull();
+    expect((await row(project.id)).analysisClaimedAt).toBeNull();
 
     worker.advance(121_000);
     await worker.tick();
@@ -842,7 +904,7 @@ describe('the text analysis worker', () => {
       { name: 'Adder', description: 'Adds three bits.', versions }
     ]);
     const settled = await row(authored.id);
-    expect(settled.translatedDigest).toBe(settled.textDigest);
+    expect(settled.analyzedDigest).toBe(settled.textDigest);
     expect(settled.nameLanguage).toBe('en');
   });
 
@@ -859,7 +921,7 @@ describe('the text analysis worker', () => {
     // The digest did not move, yet the document is pending again, and its
     // languages read as unknown until the new call lands.
     const pending = await row(project.id);
-    expect(pending.translatedDigest).toBeNull();
+    expect(pending.analyzedDigest).toBeNull();
     expect((await detail(project.link, 'de')).json()).toMatchObject({
       textLanguage: { name: null, description: null },
       machineTranslation: false
@@ -875,13 +937,13 @@ describe('the text analysis worker', () => {
     });
 
     await deleteText(ada, project.id, 'fr');
-    expect((await row(project.id)).translatedDigest).toBeNull();
+    expect((await row(project.id)).analyzedDigest).toBeNull();
     await worker.tick();
 
     expect(fake.callsFor(project.id)).toHaveLength(3);
     expect(fake.callsFor(project.id).at(-1)?.versions).toEqual([]);
     const settled = await row(project.id);
-    expect(settled.translatedDigest).toBe(settled.textDigest);
+    expect(settled.analyzedDigest).toBe(settled.textDigest);
   });
 
   it('judges again a document given a version while its call was in flight', async () => {
@@ -895,8 +957,8 @@ describe('the text analysis worker', () => {
 
     // Not settled for versions the call never saw.
     const pending = await row(project.id);
-    expect(pending.translatedDigest).toBeNull();
-    expect(pending.translationClaimedAt).toBeNull();
+    expect(pending.analyzedDigest).toBeNull();
+    expect(pending.analysisClaimedAt).toBeNull();
 
     await worker.tick();
 
@@ -905,7 +967,7 @@ describe('the text analysis worker', () => {
       { language: 'de', name: 'Subtrahierer', description: null }
     ]);
     const settled = await row(project.id);
-    expect(settled.translatedDigest).toBe(settled.textDigest);
+    expect(settled.analyzedDigest).toBe(settled.textDigest);
   });
 
   it('waits out the debounce after a version as after an edit', async () => {
@@ -948,9 +1010,9 @@ describe('the text analysis worker', () => {
     // The batch before it took the whole lease.
     const aged = await api.db.execute<{ claimed_at: string }>(sql`
       UPDATE projects
-         SET translation_claimed_at = translation_claimed_at - interval '${sql.raw(String(ANALYSIS_LEASE_MINUTES))} minutes 1 second'
+         SET analysis_claimed_at = analysis_claimed_at - interval '${sql.raw(String(ANALYSIS_LEASE_MINUTES))} minutes 1 second'
        WHERE id = ${project.id}
-      RETURNING translation_claimed_at::text AS claimed_at
+      RETURNING analysis_claimed_at::text AS claimed_at
     `);
     const renewed = await renewForCall(api.db, projects, {
       ...claim,
@@ -987,8 +1049,8 @@ describe('the text analysis worker', () => {
     expect(fake.callsFor(behind.id)).toEqual([]);
     for (const id of [project.id, behind.id]) {
       const released = await row(id);
-      expect(released.translationClaimedAt).toBeNull();
-      expect(released.translationAttempts).toBe(0);
+      expect(released.analysisClaimedAt).toBeNull();
+      expect(released.analysisAttempts).toBe(0);
     }
 
     fake.budget = { kind: 'exhausted', remainingUsd: 0 };
@@ -1016,7 +1078,7 @@ describe('the text analysis worker', () => {
     await worker.tick();
 
     expect(fake.callsFor(project.id)).toEqual([]);
-    expect((await row(project.id)).translationClaimedAt).toBeNull();
+    expect((await row(project.id)).analysisClaimedAt).toBeNull();
 
     fake.budget = { kind: 'available', remainingUsd: 1 };
     worker.advance(30 * 60_000);
@@ -1061,8 +1123,8 @@ describe('the text analysis worker', () => {
     expect(fake.callsFor(behind.id)).toHaveLength(1);
     for (const id of [refused.id, behind.id]) {
       const held = await row(id);
-      expect(held.translationAttempts).toBe(0);
-      expect(held.translationClaimedAt!.getTime()).toBeGreaterThan(Date.now());
+      expect(held.analysisAttempts).toBe(0);
+      expect(held.analysisClaimedAt!.getTime()).toBeGreaterThan(Date.now());
     }
   });
 
@@ -1117,10 +1179,10 @@ describe('the per-owner daily limit', () => {
 
     const [held] = adas.filter((project) => !sent.includes(project));
     const stored = await row(held.id);
-    expect(stored.translationAttempts).toBe(0);
-    expect(stored.translationClaimedAt).not.toBeNull();
+    expect(stored.analysisAttempts).toBe(0);
+    expect(stored.analysisClaimedAt).not.toBeNull();
     expect(
-      stored.translationClaimedAt!.getTime() + ANALYSIS_LEASE_MINUTES * 60_000
+      stored.analysisClaimedAt!.getTime() + ANALYSIS_LEASE_MINUTES * 60_000
     ).toBe(startOfNextUtcDay(Date.now()));
 
     await driverOf(api).tick();
@@ -1168,8 +1230,7 @@ describe('with text analysis switched off', () => {
           descriptionLanguage: 'en',
           texts: { de: { name: null, description: 'Addiert drei Bits.' } }
         },
-        SERVED_MODEL,
-        true
+        SERVED_MODEL
       )
     ).toBe(true);
 
@@ -1179,8 +1240,8 @@ describe('with text analysis switched off', () => {
     expect(api.app.get(SchedulerRegistry).getIntervals()).toEqual([]);
     expect(fake.calls).toEqual([]);
     const untouched = await row(pending.id);
-    expect(untouched.translationClaimedAt).toBeNull();
-    expect(untouched.translatedDigest).toBeNull();
+    expect(untouched.analysisClaimedAt).toBeNull();
+    expect(untouched.analyzedDigest).toBeNull();
     expect((await detail(pending.link, 'de')).json()).toMatchObject({
       machineTranslation: false
     });

@@ -982,7 +982,7 @@ describe('stored circuits', () => {
       const [row] = await api.db
         .select({
           textDigest: projects.textDigest,
-          translatedDigest: projects.translatedDigest,
+          analyzedDigest: projects.analyzedDigest,
           textLanguageHint: projects.textLanguageHint
         })
         .from(projects)
@@ -994,7 +994,7 @@ describe('stored circuits', () => {
     async function markTranslated(id: string): Promise<void> {
       await api.db
         .update(projects)
-        .set({ translatedDigest: sql`${projects.textDigest}` })
+        .set({ analyzedDigest: sql`${projects.textDigest}` })
         .where(eq(projects.id, id));
     }
 
@@ -1008,7 +1008,7 @@ describe('stored circuits', () => {
       const { id } = created.json<ProjectSummary>();
 
       const fresh = await textState(id);
-      expect(fresh.translatedDigest).toBeNull();
+      expect(fresh.analyzedDigest).toBeNull();
       expect(fresh.textLanguageHint).toBe('de');
       await markTranslated(id);
 
@@ -1033,7 +1033,7 @@ describe('stored circuits', () => {
       expect(saved.statusCode).toBe(200);
       const untouched = await textState(id);
       expect(untouched.textDigest).toBe(fresh.textDigest);
-      expect(untouched.translatedDigest).toBe(fresh.textDigest);
+      expect(untouched.analyzedDigest).toBe(fresh.textDigest);
       expect(untouched.textLanguageHint).toBe('de');
 
       const described = await api.inject({
@@ -1046,7 +1046,7 @@ describe('stored circuits', () => {
 
       const edited = await textState(id);
       expect(edited.textDigest).not.toBe(fresh.textDigest);
-      expect(edited.translatedDigest).not.toBe(edited.textDigest);
+      expect(edited.analyzedDigest).not.toBe(edited.textDigest);
       expect(edited.textLanguageHint).toBe('fr');
     });
 

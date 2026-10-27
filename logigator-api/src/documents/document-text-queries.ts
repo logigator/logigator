@@ -160,15 +160,19 @@ export async function humanVersionsOf(
  * version's own write time.
  *
  * Until the new call lands, the original's detected languages read as unknown,
- * since they count only while `translated_digest` is the current digest: a
+ * since they count only while `analyzed_digest` is the current digest: a
  * reader is shown no language and no machine translation for the debounce and
  * the call. The machine rows themselves stay until the call replaces them.
  *
- * The check is cleared with it: a version is shown to readers in place of the
- * original, so a public document leaves the listings until the new call has
- * given its verdict (`text-check.ts`), as it does after an edit of the original.
+ * Everything else keyed on the text is reset with it, as an edit of the
+ * original moves the digest past it. A version is shown to readers in place of
+ * the original, so the check and a moderator's clearance go, and a public
+ * document leaves the listings until the new call has given its verdict
+ * (`text-check.ts`). The failure count goes too, so a parked text is taken
+ * again.
  */
-const REJUDGE = sql`translated_digest = NULL, checked_digest = NULL, translation_claimed_at = NULL`;
+const REJUDGE = sql`analyzed_digest = NULL, checked_digest = NULL, moderated_digest = NULL,
+  analysis_claimed_at = NULL, analysis_attempts = 0`;
 
 /**
  * Writes the author's version in one language, replacing any before it whole.

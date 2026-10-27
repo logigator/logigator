@@ -893,7 +893,7 @@ function originalColumns(table: typeof projects | typeof components) {
     name: table.name,
     description: table.description,
     textDigest: table.textDigest,
-    translatedDigest: table.translatedDigest,
+    analyzedDigest: table.analyzedDigest,
     nameLanguage: table.nameLanguage,
     descriptionLanguage: table.descriptionLanguage
   };

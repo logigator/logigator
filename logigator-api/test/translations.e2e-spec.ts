@@ -102,7 +102,7 @@ describe('document texts in other languages', () => {
       .set({
         nameLanguage: 'en',
         descriptionLanguage: 'en',
-        translatedDigest: sql`${table.textDigest}`
+        analyzedDigest: sql`${table.textDigest}`
       })
       .where(eq(table.id, id));
   }
@@ -512,7 +512,7 @@ describe('document texts in other languages', () => {
       const [row] = await api.db
         .select({
           textDigest: table.textDigest,
-          translatedDigest: table.translatedDigest,
+          analyzedDigest: table.analyzedDigest,
           nameLanguage: table.nameLanguage,
           descriptionLanguage: table.descriptionLanguage,
           textLanguageHint: table.textLanguageHint
@@ -576,7 +576,7 @@ describe('document texts in other languages', () => {
         const cloned = await bookkeeping(table, copied);
         expect(cloned).toEqual(original);
         // Not pending: nothing would send the copy to a translator again.
-        expect(cloned.translatedDigest).toBe(cloned.textDigest);
+        expect(cloned.analyzedDigest).toBe(cloned.textDigest);
       }
 
       // And it reads as the original does, under its new owner.

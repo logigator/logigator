@@ -10,6 +10,7 @@ import {
   type DocumentReportRow
 } from '../database/schema';
 import type { CircuitTable } from '../documents/circuit-queries';
+import { textTableOf } from '../documents/document-text-queries';
 import {
   type HideReason,
   MailService,
@@ -223,7 +224,8 @@ export class ModerationService {
    * Closes one report with a note on what was done, for the reports that need
    * no hiding. Resolving a report of the machine clears the text it judged, so
    * the next verdict on that same text does not open it again; a later edit
-   * is judged afresh.
+   * is judged afresh. A version the author wrote after the report moves no
+   * digest, so the clearance is left out then: the moderator never saw it.
    *
    * A machine report whose document the machine still holds hidden is not
    * closed: the hide waits for a person to confirm it with `hide` or reverse
@@ -253,6 +255,7 @@ export class ModerationService {
           )
         )
         .returning({
+          id: documentReports.id,
           kind: documentReports.documentKind,
           documentId: documentReports.documentId,
           source: documentReports.source,
@@ -274,10 +277,17 @@ export class ModerationService {
 
       if (row.source === 'machine' && row.textDigest !== null) {
         const table = tableOf(row.kind);
-        await tx
-          .update(table)
-          .set({ moderatedDigest: row.textDigest })
-          .where(eq(table.id, row.documentId));
+        await tx.execute(sql`
+          UPDATE ${table} SET moderated_digest = ${row.textDigest}
+           WHERE id = ${row.documentId}
+             AND NOT EXISTS (
+                   SELECT 1 FROM ${textTableOf(table)} human
+                    WHERE human.document_id = ${row.documentId}
+                      AND human.origin = 'human'
+                      AND human.created_at > (
+                            SELECT created_at FROM ${documentReports}
+                             WHERE id = ${row.id}))
+        `);
       }
       return 'resolved';
     });

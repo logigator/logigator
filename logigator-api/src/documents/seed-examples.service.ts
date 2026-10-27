@@ -332,7 +332,7 @@ export class SeedExamplesService {
     if (
       existing.nameLanguage !== example.language ||
       existing.descriptionLanguage !== example.language ||
-      existing.translatedDigest !== existing.textDigest ||
+      existing.analyzedDigest !== existing.textDigest ||
       existing.checkedDigest !== existing.textDigest
     ) {
       return false;
@@ -458,7 +458,7 @@ async function writeTexts(
     .set({
       nameLanguage: example.language,
       descriptionLanguage: example.language,
-      translatedDigest: sql`${table.textDigest}`,
+      analyzedDigest: sql`${table.textDigest}`,
       checkedDigest: sql`${table.textDigest}`
     })
     .where(eq(table.id, example.id));

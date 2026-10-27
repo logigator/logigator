@@ -291,7 +291,7 @@ function textColumns(source: ProjectRow | ComponentRow) {
     textLanguageHint: source.textLanguageHint,
     nameLanguage: source.nameLanguage,
     descriptionLanguage: source.descriptionLanguage,
-    translatedDigest: source.translatedDigest,
+    analyzedDigest: source.analyzedDigest,
     checkedDigest: source.checkedDigest
   };
 }

@@ -15,7 +15,7 @@ function original(overrides: Partial<OriginalTexts> = {}): OriginalTexts {
     name: 'Full Adder',
     description: 'Adds three bits.',
     textDigest: DIGEST,
-    translatedDigest: DIGEST,
+    analyzedDigest: DIGEST,
     nameLanguage: 'en',
     descriptionLanguage: 'en',
     ...overrides
@@ -116,7 +116,7 @@ describe('resolveTexts', () => {
 
   it('reads a detection of an older text as unknown, offering nothing', () => {
     const texts = resolveTexts(
-      original({ translatedDigest: OLDER_DIGEST }),
+      original({ analyzedDigest: OLDER_DIGEST }),
       null,
       machine(),
       'de'

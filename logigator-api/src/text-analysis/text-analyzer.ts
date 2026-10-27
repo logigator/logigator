@@ -76,6 +76,8 @@ export type AnalysisOutcome = (
       translation: DocumentTranslation;
       /** The served model of the call whose reply was kept, for the stored rows. */
       model: string | null;
+      /** A kept reply matched the schema, so a verdict is always there. */
+      verdict: ModerationVerdict;
     }
   | AnalysisFailure
 ) & {

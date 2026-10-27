@@ -21,8 +21,8 @@ import type { CircuitTable } from './circuit-queries';
  * reads select it, so what a document's owner is told and what the listings
  * do cannot come apart. Every write that changes the text moves the generated
  * digest past both columns, which is what re-gates an edit without a write
- * path having to know about checks; writing an author's version clears
- * `checked_digest` itself, since versions are judged with the original.
+ * path having to know about checks; writing an author's version clears both
+ * columns itself, since versions are judged with the original.
  */
 export function awaitingCheck(
   table: CircuitTable,

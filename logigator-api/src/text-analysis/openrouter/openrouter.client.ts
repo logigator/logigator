@@ -194,7 +194,10 @@ export class OpenRouterClient implements TextAnalyzer {
           kind: 'success',
           translation: read.translation,
           model: completion.usage?.model ?? null,
-          ...accounted()
+          ...accounted(),
+          // Never the fallback: the reply's own verdict was taken above
+          // unless a stricter one was already held.
+          verdict: verdict ?? read.verdict
         };
       }
 

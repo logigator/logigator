@@ -362,6 +362,31 @@ describe('machine moderation verdicts', () => {
     );
   });
 
+  it('clears no text given a version after its report', async () => {
+    const project = await publicProject(api, ada, 'Study Group');
+    const mild: ModerationVerdict = {
+      category: 'spam',
+      certain: false,
+      note: 'An advert.'
+    };
+    await machine.apply(await verdictFor(project, mild));
+    const [report] = await machineReports(api, project.id);
+
+    // Written after the report and before the moderator looked at it.
+    const version = await api.inject({
+      method: 'PUT',
+      url: `/api/projects/${project.id}/texts/de`,
+      headers: ada.headers(),
+      payload: { name: 'Ruf Tom an' }
+    });
+    expect(version.statusCode).toBe(200);
+    expect(await moderation.resolve(report!.id, 'Not spam.')).toBe('resolved');
+
+    expect(await machine.apply(await verdictFor(project, SEVERE))).toBe(
+      'hidden'
+    );
+  });
+
   it('keeps an automatic hide waiting for hide or unhide rather than resolve', async () => {
     const project = await publicProject(api, ada, 'Held');
     await machine.apply(await verdictFor(project, SEVERE));
