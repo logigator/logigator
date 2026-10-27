@@ -77,10 +77,12 @@ if [[ $status != 204 ]]; then
 fi
 
 # A file that exists is held a year by a browser and a day by the edge, which
-# is how long a deleted one stays served. A seeded example's preview is one.
-listing=$(fetch "$site/api/community/projects")
+# is how long a deleted one stays served. A seeded example's preview is one;
+# the examples are left out of the community listings, so they are asked for
+# from their account, as the site's home page does.
+listing=$(fetch "$site/api/community/users/00000000-0000-0000-0000-000000000000/projects")
 if [[ ! $listing =~ (/files/preview/[^\"]+\.webp) ]]; then
-  fail 'the community listing names no preview'
+  fail 'the examples listing names no preview'
 fi
 preview=${BASH_REMATCH[1]}
 expect_header "$site$preview" 'CDN-Cache-Control: public, max-age=86400$'
