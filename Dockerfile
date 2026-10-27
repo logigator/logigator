@@ -111,6 +111,22 @@ RUN apt-get update \
 	&& test -e /usr/local/lib/libjemalloc.so.2
 ENV LD_PRELOAD=/usr/local/lib/libjemalloc.so.2
 
+# `migrate.js` dumps the database before it applies a migration. pg_dump refuses
+# a server of a newer major version, and Debian's own client is older than the
+# production compose file's `postgres:18`, so the client comes from PostgreSQL's
+# repository; its major moves with that image's. apt reads the key as `_apt`,
+# hence the mode.
+ADD --chmod=644 --checksum=sha256:0144068502a1eddd2a0280ede10ef607d1ec592ce819940991203941564e8e76 \
+	https://www.postgresql.org/media/keys/ACCC4CF8.asc /usr/share/keyrings/pgdg.asc
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends ca-certificates \
+	&& . /etc/os-release \
+	&& echo "deb [signed-by=/usr/share/keyrings/pgdg.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" \
+		> /etc/apt/sources.list.d/pgdg.list \
+	&& apt-get update \
+	&& apt-get install -y --no-install-recommends postgresql-client-18 \
+	&& rm -rf /var/lib/apt/lists/*
+
 ENV NODE_ENV=production
 ENV STORAGE_DIR=/data/storage
 EXPOSE 3000/tcp
@@ -132,7 +148,8 @@ COPY --from=api-build ["/app/dist/logigator-api", "./dist/logigator-api"]
 
 # A named volume mounted here starts out with this directory's owner, which is
 # what lets the unprivileged process write to it.
-RUN mkdir -p /data/storage && chown node:node /data/storage
+RUN mkdir -p /data/storage /data/backups \
+	&& chown node:node /data/storage /data/backups
 
 USER node
 CMD ["node", "--enable-source-maps", "dist/logigator-api/main.js"]

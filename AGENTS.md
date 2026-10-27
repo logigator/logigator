@@ -283,6 +283,10 @@ and the E2E harness).
 - **Migrations are expand/contract.** A deploy's `migrate` runs while the previous API still serves,
   so each migration leaves that API working: add first; drop, rename or tighten in a later release.
   A previous API restarted in that window is refused by the gate.
+- **A production `migrate` dumps the database before it applies anything**
+  (`migrate.js --backup-dir`, the `backups` volume), only when a migration is pending, and keeps
+  only that dump. The API image's `postgresql-client-<major>` must match the compose `postgres`
+  image's major.
 - `AuthGuard` is per-route, never global.
 - **`POST /api/csp-report` is a plain Fastify route in a plugin of its own**
   (`reports/csp-report.route.ts`), so its content-type parsers and 16 KB limit reach no other route.

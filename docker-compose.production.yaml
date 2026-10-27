@@ -153,6 +153,14 @@ services:
   # migration has to leave that API working: expand first (a new table, a
   # nullable column), contract (drop, rename, tighten) in a later release. An
   # API of the previous release restarted in that window is refused by the gate.
+  #
+  # When a migration is pending, it first dumps the database into `backups` and
+  # deletes every earlier dump; a failed dump stops the deploy before anything
+  # is applied. To roll back over the release, stop `api` and recreate the
+  # database from that dump with the previous release's image, which carries
+  # `pg_restore`:
+  #   docker compose run --rm --no-deps migrate sh -c 'pg_restore --clean \
+  #     --create --dbname="${DATABASE_URL%/*}/postgres" /data/backups/<file>'
   migrate:
     image: ghcr.io/logigator/logigator-api:${LOGIGATOR_VERSION:-latest}
     build:
@@ -168,8 +176,9 @@ services:
         condition: service_healthy
     volumes:
       - storage:/data/storage
+      - backups:/data/backups
     environment: *api-environment
-    command: sh -c 'node dist/logigator-api/migrate.js && exec node dist/logigator-api/seed-examples.js'
+    command: sh -c 'node dist/logigator-api/migrate.js --backup-dir=/data/backups && exec node dist/logigator-api/seed-examples.js'
 
   api:
     image: ghcr.io/logigator/logigator-api:${LOGIGATOR_VERSION:-latest}
@@ -237,6 +246,7 @@ services:
 
 volumes:
   storage:
+  backups:
   postgres_data:
   redis_data:
   caddy_data:
