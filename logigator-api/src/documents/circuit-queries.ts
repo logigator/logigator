@@ -1,4 +1,14 @@
-import { and, count, desc, eq, isNull, ne, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  count,
+  desc,
+  eq,
+  getTableColumns,
+  isNull,
+  ne,
+  sql,
+  type SQL
+} from 'drizzle-orm';
 import type { Page, PageQuery } from '@logigator/contract';
 import type { Queryable } from '../database/database.module';
 import {
@@ -9,6 +19,7 @@ import {
   type ProjectRow
 } from '../database/schema';
 import { nameOrHumanNameMatches } from './document-text-queries';
+import { awaitingCheck } from './text-check';
 
 /**
  * Either stored-circuit table. Projects and components are the same thing — a
@@ -29,6 +40,26 @@ export type CircuitTable = typeof projects | typeof components;
 
 /** One row of either table. */
 export type CircuitRow = ProjectRow | ComponentRow;
+
+/** Whether a row's text is waiting for its check, as `text-check.ts` decides. */
+export interface CheckState {
+  awaitingCheck: boolean;
+}
+
+/**
+ * A whole row and its {@link CheckState}, as one selection: what the owner's
+ * listing selects and what the owner's writes return, so the two say the same
+ * about a document. `analysisRuns` is the env's `TEXT_ANALYSIS_WORKER_ENABLED`.
+ */
+export function withCheckState<T extends CircuitTable>(
+  table: T,
+  analysisRuns: boolean
+) {
+  return {
+    ...getTableColumns(table),
+    awaitingCheck: awaitingCheck(table, analysisRuns)
+  };
+}
 
 /**
  * The caller's own row, or `null`. Ownership is in the predicate, not a check
@@ -55,6 +86,36 @@ export async function findOwned(
 ): Promise<CircuitRow | null> {
   const [row] = await db
     .select()
+    .from(table)
+    .where(and(eq(table.id, id), eq(table.userId, userId)))
+    .limit(1);
+  return row ?? null;
+}
+
+/** {@link findOwned} with the row's {@link CheckState}. */
+export function findOwnedWithCheckState(
+  db: Queryable,
+  table: typeof projects,
+  userId: string,
+  id: string,
+  analysisRuns: boolean
+): Promise<(ProjectRow & CheckState) | null>;
+export function findOwnedWithCheckState(
+  db: Queryable,
+  table: typeof components,
+  userId: string,
+  id: string,
+  analysisRuns: boolean
+): Promise<(ComponentRow & CheckState) | null>;
+export async function findOwnedWithCheckState(
+  db: Queryable,
+  table: CircuitTable,
+  userId: string,
+  id: string,
+  analysisRuns: boolean
+): Promise<(CircuitRow & CheckState) | null> {
+  const [row] = await db
+    .select(withCheckState(table, analysisRuns))
     .from(table)
     .where(and(eq(table.id, id), eq(table.userId, userId)))
     .limit(1);
@@ -151,31 +212,38 @@ export async function findByResolvingLink(
  * `OFFSET`-based, so a tie the database breaks differently between two requests
  * drops or repeats a row — and two documents saved in the same operation share
  * an edit time exactly.
+ *
+ * Each row carries whether its text is waiting for its check, read in the same
+ * statement through the rule the listings use (`text-check.ts`); `analysisRuns`
+ * is the env's `TEXT_ANALYSIS_WORKER_ENABLED`.
  */
 export function pageOf(
   db: Queryable,
   table: typeof projects,
   where: SQL | undefined,
   query: PageQuery,
+  analysisRuns: boolean,
   order?: SQL[]
-): Promise<Page<ProjectRow>>;
+): Promise<Page<ProjectRow & CheckState>>;
 export function pageOf(
   db: Queryable,
   table: typeof components,
   where: SQL | undefined,
   query: PageQuery,
+  analysisRuns: boolean,
   order?: SQL[]
-): Promise<Page<ComponentRow>>;
+): Promise<Page<ComponentRow & CheckState>>;
 export async function pageOf(
   db: Queryable,
   table: CircuitTable,
   where: SQL | undefined,
   query: PageQuery,
+  analysisRuns: boolean,
   order: SQL[] = [desc(table.lastEditedAt), desc(table.id)]
-): Promise<Page<CircuitRow>> {
+): Promise<Page<CircuitRow & CheckState>> {
   const [entries, [totals]] = await Promise.all([
     db
-      .select()
+      .select(withCheckState(table, analysisRuns))
       .from(table)
       .where(where)
       .orderBy(...order)

@@ -28,7 +28,8 @@ import {
   type PageQuery,
   type PutDocumentTextRequest,
   type SaveCircuitRequest,
-  type UpdateComponentRequest
+  type UpdateComponentRequest,
+  type WrittenComponentSummary
 } from '@logigator/contract';
 import type { FastifyRequest } from 'fastify';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
@@ -66,7 +67,7 @@ export class ComponentsController {
     @Body({ schema: createComponentRequestSchema })
     body: CreateComponentRequest,
     @Req() request: FastifyRequest
-  ): Promise<ComponentSummary> {
+  ): Promise<WrittenComponentSummary> {
     return this.components.create(user.id, body, localeFromRequest(request));
   }
 
@@ -95,7 +96,7 @@ export class ComponentsController {
     @Body({ schema: updateComponentRequestSchema })
     body: UpdateComponentRequest,
     @Req() request: FastifyRequest
-  ): Promise<ComponentSummary> {
+  ): Promise<WrittenComponentSummary> {
     return this.components.update(
       user.id,
       id,

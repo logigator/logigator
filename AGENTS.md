@@ -178,7 +178,7 @@ Angular 22, standalone + zoneless, rendered per request by `@angular/ssr` behind
 - **Each language version canonicalizes to itself**; the unprefixed URL is `x-default` only.
 - **`/community/` must never be closed in `robots.txt`**; `noindex` on non-public documents is what
   keeps them out. `pages/community/search-indexing.ts` is the one indexing rule, read by both the
-  page and the sitemap.
+  page and the sitemap; a document `awaitingCheck` is never indexed.
 - **Markdown (legal pages, docs, changelog) is a per-language `text`-loader chunk**, not a locale
   key. Import maps are written out per language so a missing file is a compile error.
 - **Pages stay eager** (the initial budget stops measuring under lazy routes).
@@ -266,6 +266,14 @@ and the E2E harness).
   `MODERATION_AUTO_HIDE` on; every machine hide has an open report and is mailed to
   `REPORT_MAIL_TO` and the owner. A text a moderator cleared (`moderated_digest`) gets no machine
   action until it changes.
+- **While text analysis runs, a public document is listed only once its current text is
+  checked**: a verdict was obtained for it (`checked_digest`, written in the statement that settles
+  or counts the call) or a moderator cleared it (`moderated_digest`). `documents/text-check.ts` is
+  the one rule: the listing predicate carries its negation, and the community detail and owned
+  summaries answer it as `awaitingCheck`, which the site's `noindex` reads. An edit of the name or
+  description moves the digest past both, a version write clears `checked_digest`, and a text
+  parked without any verdict gets a machine report whose resolution checks it. The link resolves
+  throughout.
 - **Uploads are decoded and re-encoded** by sharp, never stored as sent; the volume is served under
   one root, `/files`.
 - **Nothing purges the CDN**: the edge holds a `/files` file a day (`CDN-Cache-Control`) and a

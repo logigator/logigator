@@ -7,12 +7,14 @@ import type {
   OwnedComponentSummary,
   OwnedProjectSummary,
   Page,
-  ProjectSummary
+  ProjectSummary,
+  WrittenComponentSummary,
+  WrittenProjectSummary
 } from '@logigator/contract';
 import type { ComponentRow, ProjectRow, UserRow } from '../database/schema';
 import { AVATAR_VARIANTS, variantUrls } from '../storage/image-variants';
 import { previewUrls } from '../storage/image-variants';
-import type { AncestorRow, CircuitRow } from './circuit-queries';
+import type { AncestorRow, CheckState, CircuitRow } from './circuit-queries';
 import { currentLanguages } from './document-texts';
 
 /**
@@ -79,25 +81,47 @@ export function toHidden(row: CircuitRow): DocumentHidden {
     : null;
 }
 
+/**
+ * Where a document stands for its owner alone: whether moderation has hidden
+ * it, and whether its text is waiting for its check. The owner's listing and
+ * the owner's writes both say it, so a row a write answered and a row the
+ * listing read agree.
+ */
+function toOwnerState(row: CircuitRow & CheckState) {
+  return { hidden: toHidden(row), awaitingCheck: row.awaitingCheck };
+}
+
+export function toWrittenProjectSummary(
+  row: ProjectRow & CheckState
+): WrittenProjectSummary {
+  return { ...toProjectSummary(row), ...toOwnerState(row) };
+}
+
+export function toWrittenComponentSummary(
+  row: ComponentRow & CheckState
+): WrittenComponentSummary {
+  return { ...toComponentSummary(row), ...toOwnerState(row) };
+}
+
 export function toOwnedProjectSummary(
-  row: ProjectRow,
+  row: ProjectRow & CheckState,
   texts: readonly DocumentTextVersion[]
 ): OwnedProjectSummary {
   return {
     ...toProjectSummary(row),
     ...toOwnerTextFields(row, texts),
-    hidden: toHidden(row)
+    ...toOwnerState(row)
   };
 }
 
 export function toOwnedComponentSummary(
-  row: ComponentRow,
+  row: ComponentRow & CheckState,
   texts: readonly DocumentTextVersion[]
 ): OwnedComponentSummary {
   return {
     ...toComponentSummary(row),
     ...toOwnerTextFields(row, texts),
-    hidden: toHidden(row)
+    ...toOwnerState(row)
   };
 }
 

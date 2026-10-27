@@ -3,7 +3,8 @@ import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import type {
   ComponentSummary,
   OwnedProjectSummary,
-  ProjectSummary
+  ProjectSummary,
+  WrittenProjectSummary
 } from '@logigator/contract';
 import { eq } from 'drizzle-orm';
 import { documentReports, users } from '../src/database/schema';
@@ -352,6 +353,11 @@ describe('moderation', () => {
           payload: { visibility }
         });
         expect(response.statusCode).toBe(200);
+        // The answer tells its owner as the shelf does.
+        expect(response.json<WrittenProjectSummary>().hidden).toMatchObject({
+          reason: 'Copyright notice',
+          automatic: false
+        });
       }
 
       expect(

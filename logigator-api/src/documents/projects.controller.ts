@@ -28,7 +28,8 @@ import {
   type ProjectResponse,
   type ProjectSummary,
   type SaveCircuitRequest,
-  type UpdateProjectRequest
+  type UpdateProjectRequest,
+  type WrittenProjectSummary
 } from '@logigator/contract';
 import type { FastifyRequest } from 'fastify';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
@@ -69,7 +70,7 @@ export class ProjectsController {
     @Body({ schema: createProjectRequestSchema })
     body: CreateProjectRequest,
     @Req() request: FastifyRequest
-  ): Promise<ProjectSummary> {
+  ): Promise<WrittenProjectSummary> {
     return this.projects.create(user.id, body, localeFromRequest(request));
   }
 
@@ -98,7 +99,7 @@ export class ProjectsController {
     @Body({ schema: updateProjectRequestSchema })
     body: UpdateProjectRequest,
     @Req() request: FastifyRequest
-  ): Promise<ProjectSummary> {
+  ): Promise<WrittenProjectSummary> {
     return this.projects.update(user.id, id, body, localeFromRequest(request));
   }
 

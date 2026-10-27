@@ -36,7 +36,11 @@ import { SITE_ORIGIN } from '../../../seo/site-origin';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationKey } from '../../../translation/translation-key.model';
 import { TranslationService } from '../../../translation/translation.service';
-import { MyDocumentsService } from '../my-documents.service';
+import {
+  MyDocumentsService,
+  ownerStateOf,
+  type MyDocumentPatch
+} from '../my-documents.service';
 
 /** The row being shared, as the shelf already holds it. */
 export interface ShareDocumentData {
@@ -53,8 +57,11 @@ interface ShareLinkPatch {
   regenerateLink?: boolean;
 }
 
-/** What a write answered with, which is everything either control changes. */
-interface SharePatch {
+/**
+ * What a write answered with: everything either control changes, and where
+ * that leaves the document for its owner.
+ */
+interface SharePatch extends MyDocumentPatch {
   visibility: LgDocumentVisibility;
   link: string;
 }
@@ -269,14 +276,18 @@ export class ShareDocumentDialog extends LgDialogContent<ShareDocumentData> {
     }
   }
 
-  /** One `PATCH`, answered with the two fields either control can move. */
+  /** One `PATCH`, and what it answered. */
   private async write(body: ShareLinkPatch): Promise<SharePatch> {
     const updated = await firstValueFrom(
       this.data.kind === 'projects'
         ? this.documentsApi.updateProject(this.data.id, body)
         : this.documentsApi.updateComponent(this.data.id, body)
     );
-    return { visibility: updated.visibility, link: updated.link };
+    return {
+      visibility: updated.visibility,
+      link: updated.link,
+      ...ownerStateOf(updated)
+    };
   }
 
   /**

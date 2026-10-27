@@ -1,9 +1,20 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { and, eq, sql } from 'drizzle-orm';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import type { ProjectSummary } from '@logigator/contract';
-import { projectTexts, projects } from '../src/database/schema';
+import type {
+  OwnedProjectSummary,
+  Page,
+  ProjectSummary,
+  WrittenComponentSummary,
+  WrittenProjectSummary
+} from '@logigator/contract';
+import {
+  documentReports,
+  projectTexts,
+  projects
+} from '../src/database/schema';
 import { MachineModerationService } from '../src/moderation/machine-moderation.service';
+import { ModerationService } from '../src/moderation/moderation.service';
 import type { ModerationVerdict } from '../src/moderation/moderation-verdict';
 import {
   ANALYSIS_LEASE_MINUTES,
@@ -38,15 +49,25 @@ const USAGE: CallUsage = {
   completionTokens: 1
 };
 
-/** What the fake answers by default: an English original, translated. */
+/** A reply's verdict on a text that breaks no rule. */
+const HARMLESS: ModerationVerdict = {
+  category: 'none',
+  certain: true,
+  note: ''
+};
+
+/**
+ * What the fake answers by default: an English original, translated and
+ * judged harmless.
+ */
 function translated(input: AnalysisInput): AnalysisOutcome {
   return {
     kind: 'success',
     model: SERVED_MODEL,
     calls: [USAGE],
     rejections: [],
-    verdict: null,
-    verdictCall: null,
+    verdict: HARMLESS,
+    verdictCall: USAGE,
     translation: {
       nameLanguage: 'en',
       descriptionLanguage: 'en',
@@ -138,7 +159,7 @@ function fixture(api: () => E2eApp) {
   async function createProject(
     cookies: CookieJar,
     payload: Record<string, unknown> = {}
-  ): Promise<ProjectSummary> {
+  ): Promise<WrittenProjectSummary> {
     const name = (payload['name'] as string | undefined) ?? 'Full Adder';
     const response = await api().inject({
       method: 'POST',
@@ -161,7 +182,7 @@ function fixture(api: () => E2eApp) {
     id: string,
     payload: Record<string, unknown>,
     headers: Record<string, string> = {}
-  ): Promise<void> {
+  ): Promise<WrittenProjectSummary> {
     const response = await api().inject({
       method: 'PATCH',
       url: `/api/projects/${id}`,
@@ -169,6 +190,7 @@ function fixture(api: () => E2eApp) {
       payload
     });
     expect(response.statusCode).toBe(200);
+    return response.json();
   }
 
   /** Writes the author's version in one language. */
@@ -231,6 +253,43 @@ function fixture(api: () => E2eApp) {
     });
   }
 
+  /**
+   * Whether a stranger comes across the project in the browse search and on
+   * its author's profile, the listings the sitemap is walked from too.
+   */
+  async function advertised(project: ProjectSummary): Promise<boolean[]> {
+    const { userId } = await row(project.id);
+    const listings = [
+      `/api/community/projects?search=${encodeURIComponent(project.name)}&size=100`,
+      `/api/community/users/${userId}/projects?size=100`
+    ];
+    return Promise.all(
+      listings.map(async (url) => {
+        const response = await api().inject({ method: 'GET', url });
+        expect(response.statusCode).toBe(200);
+        return (response.json() as Page<ProjectSummary>).entries.some(
+          (entry) => entry.id === project.id
+        );
+      })
+    );
+  }
+
+  /** The owner's shelf entry for the project. */
+  async function owned(
+    cookies: CookieJar,
+    project: ProjectSummary
+  ): Promise<OwnedProjectSummary | undefined> {
+    const response = await api().inject({
+      method: 'GET',
+      url: `/api/projects?size=100&search=${encodeURIComponent(project.name)}`,
+      headers: cookies.headers()
+    });
+    expect(response.statusCode).toBe(200);
+    return (response.json() as Page<OwnedProjectSummary>).entries.find(
+      (entry) => entry.id === project.id
+    );
+  }
+
   return {
     signUp,
     createProject,
@@ -240,7 +299,9 @@ function fixture(api: () => E2eApp) {
     row,
     machineRows,
     detail,
-    translation
+    translation,
+    advertised,
+    owned
   };
 }
 
@@ -262,14 +323,19 @@ describe('the text analysis worker', () => {
     row,
     machineRows,
     detail,
-    translation
+    translation,
+    advertised,
+    owned
   } = fixture(() => api);
   let ada: CookieJar;
+  /** A member of their own, so the checks count against nobody's daily limit. */
+  let lin: CookieJar;
 
   beforeAll(async () => {
     api = await startE2eApp({}, { analyzer: fake });
     worker = driverOf(api);
     ada = await signUp('ada@example.com', 'Ada');
+    lin = await signUp('lin@example.com', 'Lin');
   });
 
   afterAll(async () => {
@@ -326,6 +392,192 @@ describe('the text analysis worker', () => {
       expect(machine.sourceDigest).toBe(stored.textDigest);
       expect(machine.model).toBe(SERVED_MODEL);
     }
+  });
+
+  it('lists a published document only once its text is checked', async () => {
+    const project = await createProject(lin, { name: 'Awaited Adder' });
+
+    // Its link works for anybody all along; it is only not advertised.
+    const before = await detail(project.link, 'en');
+    expect(before.statusCode).toBe(200);
+    expect(before.json().awaitingCheck).toBe(true);
+    expect((await owned(lin, project))?.awaitingCheck).toBe(true);
+    expect(await advertised(project)).toEqual([false, false]);
+
+    await worker.tick();
+
+    expect((await detail(project.link, 'en')).json().awaitingCheck).toBe(false);
+    expect((await owned(lin, project))?.awaitingCheck).toBe(false);
+    expect(await advertised(project)).toEqual([true, true]);
+  });
+
+  it('answers its owner’s create and edits with the check they leave it waiting for', async () => {
+    const project = await createProject(lin, { name: 'Answered Adder' });
+    expect(project).toMatchObject({ awaitingCheck: true, hidden: null });
+
+    const component = await api.inject({
+      method: 'POST',
+      url: '/api/components',
+      headers: lin.headers(),
+      payload: {
+        name: 'Answered Part',
+        symbol: 'AP',
+        description: 'Adds three bits.',
+        visibility: 'public',
+        document: circuitDocument('Answered Part', HALF_ADDER_BODY)
+      }
+    });
+    expect(component.statusCode).toBe(201);
+    expect(component.json<WrittenComponentSummary>()).toMatchObject({
+      awaitingCheck: true,
+      hidden: null
+    });
+
+    await worker.tick();
+
+    // A visibility change leaves the checked text as it is; a rename does not.
+    const republished = await patchProject(lin, project.id, {
+      visibility: 'public'
+    });
+    expect(republished.awaitingCheck).toBe(false);
+    expect(republished.awaitingCheck).toBe(
+      (await owned(lin, project))?.awaitingCheck
+    );
+
+    const renamed = await patchProject(lin, project.id, {
+      name: 'Answered Adder 2'
+    });
+    expect(renamed.awaitingCheck).toBe(true);
+    expect(renamed.awaitingCheck).toBe(
+      (await owned(lin, renamed))?.awaitingCheck
+    );
+  });
+
+  it('takes an edited text out of the listings until it is checked again', async () => {
+    const project = await createProject(lin, { name: 'Edited Adder' });
+    await worker.tick();
+    expect(await advertised(project)).toEqual([true, true]);
+
+    // A board edit leaves the text, and the check, as they are.
+    const saved = await api.inject({
+      method: 'PUT',
+      url: `/api/projects/${project.id}`,
+      headers: lin.headers(),
+      payload: {
+        version: project.version,
+        document: circuitDocument('Edited Adder', HALF_ADDER_BODY)
+      }
+    });
+    expect(saved.statusCode).toBe(200);
+    expect(await advertised(project)).toEqual([true, true]);
+
+    await patchProject(lin, project.id, { description: 'Adds, then some.' });
+    expect(await advertised(project)).toEqual([false, false]);
+    expect((await detail(project.link, 'en')).json().awaitingCheck).toBe(true);
+
+    await worker.tick();
+
+    expect(fake.callsFor(project.id)).toHaveLength(2);
+    expect(await advertised(project)).toEqual([true, true]);
+  });
+
+  it('takes a document out of the listings when its author writes a version', async () => {
+    const project = await createProject(lin, { name: 'Versioned Adder' });
+    await worker.tick();
+    expect(await advertised(project)).toEqual([true, true]);
+
+    await putText(lin, project.id, 'de', { name: 'Addierer' });
+
+    expect(await advertised(project)).toEqual([false, false]);
+    expect((await owned(lin, project))?.awaitingCheck).toBe(true);
+
+    await worker.tick();
+
+    expect(fake.callsFor(project.id).at(-1)?.versions).toEqual([
+      { language: 'de', name: 'Addierer', description: null }
+    ]);
+    expect(await advertised(project)).toEqual([true, true]);
+  });
+
+  it('checks a text by the verdict of a refused translation', async () => {
+    const project = await createProject(lin, { name: 'Refused Adder' });
+    fake.answer(project.id, () => ({
+      kind: 'document',
+      reason: 'the description was refused twice',
+      calls: [USAGE, USAGE],
+      rejections: [],
+      verdict: HARMLESS,
+      verdictCall: USAGE
+    }));
+
+    await worker.tick();
+
+    const failed = await row(project.id);
+    expect(failed.translationAttempts).toBe(1);
+    expect(failed.translatedDigest).toBeNull();
+    expect(await advertised(project)).toEqual([true, true]);
+  });
+
+  it('reports a text no call gave a verdict for, and lists it once the report is resolved', async () => {
+    const project = await createProject(lin, { name: 'Unjudged Adder' });
+    fake.answer(project.id, documentFailure, documentFailure, documentFailure);
+
+    for (let tick = 0; tick < 3; tick++) await worker.tick();
+
+    const parked = await row(project.id);
+    const reports = await api.db
+      .select()
+      .from(documentReports)
+      .where(eq(documentReports.documentId, project.id));
+    expect(reports).toMatchObject([
+      {
+        source: 'machine',
+        reason: 'other',
+        textDigest: parked.textDigest,
+        resolvedAt: null
+      }
+    ]);
+    expect(reports[0]!.explanation).toContain(
+      'No verdict could be obtained after 3 attempts.'
+    );
+    expect(await advertised(project)).toEqual([false, false]);
+
+    expect(
+      await api.app
+        .get(ModerationService)
+        .resolve(reports[0]!.id, 'Read it; harmless.')
+    ).toBe('resolved');
+
+    expect(await advertised(project)).toEqual([true, true]);
+    expect((await detail(project.link, 'en')).json().awaitingCheck).toBe(false);
+  });
+
+  it('opens no report for a parked text an earlier attempt already judged', async () => {
+    const project = await createProject(lin, { name: 'Judged Adder' });
+    fake.answer(
+      project.id,
+      () => ({
+        kind: 'document',
+        reason: 'the reply was cut short',
+        calls: [USAGE],
+        rejections: [],
+        verdict: HARMLESS,
+        verdictCall: USAGE
+      }),
+      documentFailure,
+      documentFailure
+    );
+
+    for (let tick = 0; tick < 3; tick++) await worker.tick();
+
+    expect((await row(project.id)).translationAttempts).toBe(3);
+    expect(
+      await api.db
+        .select()
+        .from(documentReports)
+        .where(eq(documentReports.documentId, project.id))
+    ).toEqual([]);
+    expect(await advertised(project)).toEqual([true, true]);
   });
 
   it('discards a result whose text was edited while it was translated', async () => {
@@ -475,7 +727,10 @@ describe('the text analysis worker', () => {
 
       await worker.tick();
 
-      expect(apply).toHaveBeenCalledOnce();
+      // Other documents still pending are judged in the same tick.
+      expect(
+        apply.mock.calls.filter(([input]) => input.documentId === project.id)
+      ).toHaveLength(1);
       const settled = await row(project.id);
       expect(settled.translatedDigest).toBe(settled.textDigest);
       expect(fake.callsFor(project.id)).toHaveLength(1);
@@ -876,9 +1131,8 @@ describe('the per-owner daily limit', () => {
 describe('with text analysis switched off', () => {
   let api: E2eApp;
   const fake = new FakeAnalyzer();
-  const { signUp, createProject, row, detail, translation } = fixture(
-    () => api
-  );
+  const { signUp, createProject, row, detail, translation, advertised } =
+    fixture(() => api);
 
   beforeAll(async () => {
     // A poll period short enough that a registered worker would have run.
@@ -914,7 +1168,8 @@ describe('with text analysis switched off', () => {
           descriptionLanguage: 'en',
           texts: { de: { name: null, description: 'Addiert drei Bits.' } }
         },
-        SERVED_MODEL
+        SERVED_MODEL,
+        true
       )
     ).toBe(true);
 
@@ -936,5 +1191,14 @@ describe('with text analysis switched off', () => {
     const served = await translation(before.link, 'de');
     expect(served.statusCode).toBe(200);
     expect(served.json().description).toBe('Addiert drei Bits.');
+  });
+
+  it('lists a published document at once, with no check to wait for', async () => {
+    const grace = await signUp('grace@example.com', 'Grace');
+    const project = await createProject(grace, { name: 'Unchecked Adder' });
+
+    expect(project.awaitingCheck).toBe(false);
+    expect((await detail(project.link, 'en')).json().awaitingCheck).toBe(false);
+    expect(await advertised(project)).toEqual([true, true]);
   });
 });

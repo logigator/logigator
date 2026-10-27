@@ -32,7 +32,7 @@ import { fieldError } from '../../../forms/field-error';
 import { zodValidator } from '../../../forms/zod-validator';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationKey } from '../../../translation/translation-key.model';
-import { MyDocumentsService } from '../my-documents.service';
+import { MyDocumentsService, ownerStateOf } from '../my-documents.service';
 
 /** The row being edited, as the shelf already holds it — so the dialog opens
  * filled in rather than fetching what the grid is drawing. */
@@ -145,7 +145,8 @@ export class EditDocumentDialog extends LgDialogContent<EditDocumentData> {
       );
       this.documents.applyPatch(this.data.id, {
         name: updated.name,
-        description: updated.description
+        description: updated.description,
+        ...ownerStateOf(updated)
       });
       this.dialogRef.close();
     } catch (error) {

@@ -283,14 +283,16 @@ export class CloneService {
 /**
  * The source's translation bookkeeping, carried over as it stands. Copied from
  * the same read as the name and description, so the digest the languages were
- * made for is compared against the text they describe.
+ * made for is compared against the text they describe. The check comes along:
+ * the copy holds the same text and the same versions, which were judged.
  */
 function textColumns(source: ProjectRow | ComponentRow) {
   return {
     textLanguageHint: source.textLanguageHint,
     nameLanguage: source.nameLanguage,
     descriptionLanguage: source.descriptionLanguage,
-    translatedDigest: source.translatedDigest
+    translatedDigest: source.translatedDigest,
+    checkedDigest: source.checkedDigest
   };
 }
 

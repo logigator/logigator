@@ -163,8 +163,12 @@ export async function humanVersionsOf(
  * since they count only while `translated_digest` is the current digest: a
  * reader is shown no language and no machine translation for the debounce and
  * the call. The machine rows themselves stay until the call replaces them.
+ *
+ * The check is cleared with it: a version is shown to readers in place of the
+ * original, so a public document leaves the listings until the new call has
+ * given its verdict (`text-check.ts`), as it does after an edit of the original.
  */
-const REJUDGE = sql`translated_digest = NULL, translation_claimed_at = NULL`;
+const REJUDGE = sql`translated_digest = NULL, checked_digest = NULL, translation_claimed_at = NULL`;
 
 /**
  * Writes the author's version in one language, replacing any before it whole.

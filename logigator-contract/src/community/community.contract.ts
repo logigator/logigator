@@ -3,6 +3,7 @@ import { imageVariantSchema } from '../image/image.contract';
 import { pageQuerySchema, pageSchema } from '../page/page.contract';
 import {
   authorSchema,
+  documentAwaitingCheckSchema,
   documentHiddenSchema
 } from '../document/document.contract';
 import {
@@ -85,12 +86,15 @@ export type CommunityComponentPage = z.infer<
 >;
 
 /**
- * What a document's own page adds to its listing entry: its fork parent, and
- * for its owner alone whether moderation has hidden it. `hidden` is absent for
- * anybody else, who is never answered a hidden document at all.
+ * What a document's own page adds to its listing entry: its fork parent,
+ * whether its text is still waiting for its check, and for its owner alone
+ * whether moderation has hidden it. `hidden` is absent for anybody else, who is
+ * never answered a hidden document at all. `awaitingCheck` is for every reader:
+ * it decides the page's `noindex`, and a listing entry never has it set.
  */
 const detailFields = {
   forkedFrom: forkedFromSchema,
+  awaitingCheck: documentAwaitingCheckSchema,
   hidden: documentHiddenSchema.optional()
 } as const;
 

@@ -2,17 +2,17 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
   componentPageSchema,
-  componentSummarySchema,
   projectPageSchema,
-  projectSummarySchema,
+  writtenComponentSummarySchema,
+  writtenProjectSummarySchema,
   type ComponentPage,
-  type ComponentSummary,
   type CreateComponentRequest,
   type CreateProjectRequest,
   type ProjectPage,
-  type ProjectSummary,
   type UpdateComponentRequest,
-  type UpdateProjectRequest
+  type UpdateProjectRequest,
+  type WrittenComponentSummary,
+  type WrittenProjectSummary
 } from '@logigator/contract';
 import { ApiBaseService, type QueryParams } from './api-base.service';
 import type { CommunityKind } from './community-api.service';
@@ -53,15 +53,21 @@ export class DocumentsApiService {
   }
 
   /** POST /api/projects — no `document` in the body, so the board is empty. */
-  public createProject(body: CreateProjectRequest): Observable<ProjectSummary> {
-    return this.api.post('/api/projects', projectSummarySchema, body);
+  public createProject(
+    body: CreateProjectRequest
+  ): Observable<WrittenProjectSummary> {
+    return this.api.post('/api/projects', writtenProjectSummarySchema, body);
   }
 
   /** POST /api/components — an empty circuit, so no ports yet. */
   public createComponent(
     body: CreateComponentRequest
-  ): Observable<ComponentSummary> {
-    return this.api.post('/api/components', componentSummarySchema, body);
+  ): Observable<WrittenComponentSummary> {
+    return this.api.post(
+      '/api/components',
+      writtenComponentSummarySchema,
+      body
+    );
   }
 
   /**
@@ -72,18 +78,22 @@ export class DocumentsApiService {
   public updateProject(
     id: string,
     body: UpdateProjectRequest
-  ): Observable<ProjectSummary> {
-    return this.api.patch(`/api/projects/${id}`, projectSummarySchema, body);
+  ): Observable<WrittenProjectSummary> {
+    return this.api.patch(
+      `/api/projects/${id}`,
+      writtenProjectSummarySchema,
+      body
+    );
   }
 
   /** PATCH /api/components/:id */
   public updateComponent(
     id: string,
     body: UpdateComponentRequest
-  ): Observable<ComponentSummary> {
+  ): Observable<WrittenComponentSummary> {
     return this.api.patch(
       `/api/components/${id}`,
-      componentSummarySchema,
+      writtenComponentSummarySchema,
       body
     );
   }

@@ -70,7 +70,9 @@ const LIST_ORDER_STEP_MS = 1000;
  *   and a language the manifest no longer has is removed. The original's
  *   language is the manifest's, set together with the digest it is for, so
  *   no seeded row is ever pending translation: the examples have a human
- *   version in every language, and no reader is offered a machine one.
+ *   version in every language, and no reader is offered a machine one. The
+ *   same digest marks the text checked: the examples are the site's own
+ *   words, and an example never waits for a check to be listed.
  * - **An edit is a version bump**, as a save is, so an editor holding an older
  *   copy is told; a visibility change alone is not, as through the API.
  * - **The manifest order is the listing order.** The listings run down the edit
@@ -319,8 +321,8 @@ export class SeedExamplesService {
 
   /**
    * Whether an unedited row's texts already are what the manifest states: the
-   * original's languages for its current digest, and exactly the manifest's
-   * human versions, each written against that digest.
+   * original's languages and its check for its current digest, and exactly the
+   * manifest's human versions, each written against that digest.
    */
   private async textsMatch(
     table: CircuitTable,
@@ -330,7 +332,8 @@ export class SeedExamplesService {
     if (
       existing.nameLanguage !== example.language ||
       existing.descriptionLanguage !== example.language ||
-      existing.translatedDigest !== existing.textDigest
+      existing.translatedDigest !== existing.textDigest ||
+      existing.checkedDigest !== existing.textDigest
     ) {
       return false;
     }
@@ -455,7 +458,8 @@ async function writeTexts(
     .set({
       nameLanguage: example.language,
       descriptionLanguage: example.language,
-      translatedDigest: sql`${table.textDigest}`
+      translatedDigest: sql`${table.textDigest}`,
+      checkedDigest: sql`${table.textDigest}`
     })
     .where(eq(table.id, example.id));
 }

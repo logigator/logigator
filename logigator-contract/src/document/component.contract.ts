@@ -6,6 +6,7 @@ import {
   circuitFields,
   componentSymbolSchema,
   documentDependencySchema,
+  documentAwaitingCheckSchema,
   documentDescriptionSchema,
   documentHiddenSchema,
   documentNameSchema,
@@ -38,10 +39,21 @@ export type ComponentSummary = z.infer<typeof componentSummarySchema>;
 /** A component in its owner's own listing; see `ownedProjectSummarySchema`. */
 export const ownedComponentSummarySchema = componentSummarySchema.extend({
   ...ownerTextFields,
-  hidden: documentHiddenSchema
+  hidden: documentHiddenSchema,
+  awaitingCheck: documentAwaitingCheckSchema
 });
 
 export type OwnedComponentSummary = z.infer<typeof ownedComponentSummarySchema>;
+
+/** A component as a create or a metadata change answers its owner; see `writtenProjectSummarySchema`. */
+export const writtenComponentSummarySchema = componentSummarySchema.extend({
+  hidden: documentHiddenSchema.optional(),
+  awaitingCheck: documentAwaitingCheckSchema
+});
+
+export type WrittenComponentSummary = z.infer<
+  typeof writtenComponentSummarySchema
+>;
 
 export const componentPageSchema = pageSchema(ownedComponentSummarySchema);
 

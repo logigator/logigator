@@ -2,7 +2,9 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import type {
   ComponentSummary,
   DocumentHidden,
-  ProjectSummary
+  ProjectSummary,
+  WrittenComponentSummary,
+  WrittenProjectSummary
 } from '@logigator/contract';
 import type { CommunityKind } from '../../api/services/community-api.service';
 import { DocumentsApiService } from '../../api/services/documents-api.service';
@@ -11,17 +13,36 @@ import { MY_PAGE_SIZE, MyListingQuery } from './my-listing-query';
 
 /**
  * A row on the reader's own shelf; a component carries its ports beside.
- * `hidden` comes with the listing and is absent on a row just created here,
- * which nothing has hidden.
+ * `hidden` and `awaitingCheck` come with the listing and with the answer to a
+ * create or a metadata write; `hidden` is absent where an API did not say it.
  */
 export type MyDocumentRow = (ProjectSummary | ComponentSummary) & {
   hidden?: DocumentHidden;
+  awaitingCheck?: boolean;
 };
 
 /** What a metadata edit can change about a row without re-reading the page. */
 export type MyDocumentPatch = Partial<
-  Pick<MyDocumentRow, 'name' | 'description' | 'visibility' | 'link'>
+  Pick<
+    MyDocumentRow,
+    'name' | 'description' | 'visibility' | 'link' | 'hidden' | 'awaitingCheck'
+  >
 >;
+
+/**
+ * Where a write's answer leaves the document for its owner, as a patch, so the
+ * grid says what a re-read would: a rename sends the text back to its check,
+ * and a publish shows a check still pending. A `hidden` the answer does not
+ * carry is left out rather than patched over the listing's.
+ */
+export function ownerStateOf(
+  written: WrittenProjectSummary | WrittenComponentSummary
+): MyDocumentPatch {
+  return {
+    awaitingCheck: written.awaitingCheck,
+    ...(written.hidden === undefined ? {} : { hidden: written.hidden })
+  };
+}
 
 /**
  * One page of the reader's own projects or components.

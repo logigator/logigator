@@ -27,17 +27,21 @@ export const MIN_INDEXED_COMPONENTS = 4;
  *
  * Visibility is not part of it: the sitemap only ever sees public rows, and
  * the page asks that first. A hidden document is never indexed; only its
- * owner's read carries `hidden`, and no listing row is hidden.
+ * owner's read carries `hidden`, and no listing row is hidden. Nor is one whose
+ * text is still waiting for its check, which no listing shows either: the
+ * page's read carries `awaitingCheck`, and the sitemap's rows, read from the
+ * listings, are never waiting.
  */
 export function documentIsIndexable(
   document: Pick<
     CommunityProject,
     'componentCount' | 'wireCount' | 'description' | 'stars'
   > &
-    Partial<Pick<CommunityProjectDetail, 'hidden'>>
+    Partial<Pick<CommunityProjectDetail, 'hidden' | 'awaitingCheck'>>
 ): boolean {
   return (
     !document.hidden &&
+    !document.awaitingCheck &&
     document.componentCount >= MIN_INDEXED_COMPONENTS &&
     document.wireCount > 0 &&
     (document.description.trim() !== '' || document.stars > 0)

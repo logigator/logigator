@@ -95,7 +95,8 @@ interface Pause {
  *
  * Failures are handled by what they say about the next call. A document
  * failure counts against that text, which is parked after
- * {@link MAX_TRANSLATION_ATTEMPTS}. A transient one backs the loop off and
+ * {@link MAX_TRANSLATION_ATTEMPTS}, and reported for a person when none of its
+ * calls gave a verdict. A transient one backs the loop off and
  * counts nothing. A system one pauses the loop until the budget allows again
  * or the configuration is fixed, and holds the document of a configuration
  * failure for a day without counting it. Whatever the batch still held when
@@ -104,7 +105,9 @@ interface Pause {
  *
  * Every call's moderation verdict is handed on before the outcome is handled,
  * whatever the outcome: a text whose translation keeps failing is judged all
- * the same.
+ * the same. A verdict also checks the text, in the statement that settles or
+ * counts the call, which is what lets a published document into the listings
+ * (`text-check.ts`).
  */
 @Injectable()
 export class TextAnalysisWorker
@@ -326,7 +329,8 @@ export class TextAnalysisWorker
         table,
         claim,
         outcome.translation,
-        outcome.model
+        outcome.model,
+        outcome.verdict !== null
       );
       // An edit or a version landed during the call: the result describes a
       // document that is gone. The new one is claimable once it settles.
@@ -383,17 +387,25 @@ export class TextAnalysisWorker
   private async handleFailure(
     table: CircuitTable,
     claim: ClaimedDocument,
-    failure: AnalysisFailure
+    failure: AnalysisOutcome & AnalysisFailure
   ): Promise<void> {
     switch (failure.kind) {
       case 'document': {
         // The route answered, so whatever paused the loop before is over.
         this.callWorked();
-        const attempts = await recordFailure(this.db, table, claim);
+        const attempts = await recordFailure(
+          this.db,
+          table,
+          claim,
+          failure.verdict !== null
+        );
         if (attempts !== null && attempts >= MAX_TRANSLATION_ATTEMPTS) {
           this.logger.warn(
             `Analysis of ${claim.id} failed ${attempts} times and waits for an edit: ${failure.reason}`
           );
+          if (failure.verdict === null) {
+            await this.reportUnjudged(table, claim, attempts, failure);
+          }
         }
         return;
       }
@@ -414,6 +426,33 @@ export class TextAnalysisWorker
         }
         this.pauseFor(failure);
         return;
+    }
+  }
+
+  /**
+   * Puts a text that was parked without a verdict in front of a person: it
+   * would otherwise wait unchecked, out of the listings, until its author
+   * edits it. Moderation's own guard leaves out a text an earlier attempt's
+   * verdict already checked. A failure is logged; the text stays parked
+   * either way.
+   */
+  private async reportUnjudged(
+    table: CircuitTable,
+    claim: ClaimedDocument,
+    attempts: number,
+    failure: AnalysisOutcome
+  ): Promise<void> {
+    const call = failure.calls.at(-1) ?? null;
+    try {
+      await this.moderation.reportUnjudged({
+        kind: table === projects ? 'project' : 'component',
+        documentId: claim.id,
+        textDigest: claim.textDigest,
+        attempts,
+        call: call && { model: call.model, generationId: call.generationId }
+      });
+    } catch (error) {
+      this.logger.error(`Reporting unjudged ${claim.id} failed`, error);
     }
   }
 

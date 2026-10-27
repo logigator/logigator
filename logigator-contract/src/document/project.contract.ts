@@ -5,6 +5,7 @@ import {
   circuitDocumentSchema,
   circuitFields,
   documentDependencySchema,
+  documentAwaitingCheckSchema,
   documentDescriptionSchema,
   documentHiddenSchema,
   documentNameSchema,
@@ -21,15 +22,30 @@ export type ProjectSummary = z.infer<typeof projectSummarySchema>;
 
 /**
  * A project in its owner's own listing, with the languages of its texts, the
- * versions its author wrote in other languages, and whether moderation has
- * hidden it.
+ * versions its author wrote in other languages, whether moderation has hidden
+ * it, and whether its text is still waiting for its check.
  */
 export const ownedProjectSummarySchema = projectSummarySchema.extend({
   ...ownerTextFields,
-  hidden: documentHiddenSchema
+  hidden: documentHiddenSchema,
+  awaitingCheck: documentAwaitingCheckSchema
 });
 
 export type OwnedProjectSummary = z.infer<typeof ownedProjectSummarySchema>;
+
+/**
+ * What a create or a metadata change answers its owner with: the summary, and
+ * where the write leaves the document — hidden by moderation, or its text
+ * waiting for its check — so a listing it is applied over says what a re-read
+ * would. `hidden` is optional so a client tolerates an API from before it was
+ * said here: absent is "not told", which is not the same as `null`.
+ */
+export const writtenProjectSummarySchema = projectSummarySchema.extend({
+  hidden: documentHiddenSchema.optional(),
+  awaitingCheck: documentAwaitingCheckSchema
+});
+
+export type WrittenProjectSummary = z.infer<typeof writtenProjectSummarySchema>;
 
 export const projectPageSchema = pageSchema(ownedProjectSummarySchema);
 

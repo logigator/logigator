@@ -1,4 +1,4 @@
-import { getTableName, sql } from 'drizzle-orm';
+import { getTableName, sql, type SQL } from 'drizzle-orm';
 import type { Database } from '../database/database.module';
 import { MAX_TRANSLATION_ATTEMPTS } from '../database/schema';
 import type { CircuitTable } from '../documents/circuit-queries';
@@ -182,11 +182,18 @@ export async function holdClaimUntil(
  * belongs to a digest: a failure of a different text than the one counted
  * starts over at one. Returns the count, or null when the claim was no longer
  * this worker's and nothing was written.
+ *
+ * `judged` is whether the failed call still gave a moderation verdict — a
+ * refused translation's, or the one a declined reply stands for — which checks
+ * the claimed text in the same statement (`text-check.ts`). The digest written
+ * is the claimed one: after an edit during the call it names a text that is
+ * gone, which checks nothing.
  */
 export async function recordFailure(
   db: Database,
   table: CircuitTable,
-  claim: ClaimedDocument
+  claim: ClaimedDocument,
+  judged: boolean
 ): Promise<number | null> {
   const result = await db.execute<{ translation_attempts: number }>(sql`
     UPDATE ${table}
@@ -196,6 +203,7 @@ export async function recordFailure(
              ELSE 1
            END,
            translation_attempt_digest = ${claim.textDigest},
+           ${checkedAs(claim, judged)}
            translation_claimed_at = NULL
      WHERE id = ${claim.id}
        AND translation_claimed_at = ${claim.claimedAt}::timestamptz
@@ -204,10 +212,20 @@ export async function recordFailure(
   return result.rows[0]?.translation_attempts ?? null;
 }
 
+/** The assignment that checks the claimed text, where a verdict was given. */
+function checkedAs(
+  claim: Pick<ClaimedDocument, 'textDigest'>,
+  judged: boolean
+): SQL {
+  return judged ? sql`checked_digest = ${claim.textDigest},` : sql``;
+}
+
 /**
  * Marks the document done for the text it had when it was claimed, with the
  * detected languages, and replaces all its machine rows with the
- * translation's, in one transaction.
+ * translation's, in one transaction. `judged` is whether the call gave a
+ * moderation verdict, which checks the text in the same statement
+ * (`text-check.ts`).
  *
  * Two guards stand against what changed while the call was in flight, and
  * either one writes nothing, leaves the row pending and returns false. The
@@ -221,7 +239,8 @@ export async function settleAnalysis(
   table: CircuitTable,
   claim: Pick<ClaimedDocument, 'id' | 'textDigest' | 'claimedAt'>,
   translation: DocumentTranslation,
-  model: string | null
+  model: string | null,
+  judged: boolean
 ): Promise<boolean> {
   return db.transaction(async (tx) => {
     const settled = await tx.execute(sql`
@@ -229,6 +248,7 @@ export async function settleAnalysis(
          SET name_language = ${translation.nameLanguage},
              description_language = ${translation.descriptionLanguage},
              translated_digest = ${claim.textDigest},
+             ${checkedAs(claim, judged)}
              translation_claimed_at = NULL
        WHERE id = ${claim.id}
          AND text_digest = ${claim.textDigest}

@@ -368,6 +368,8 @@ const en = {
         noDescription: 'No description was provided.',
         emptyNotice:
           'This circuit is empty, so it isn’t listed in the community yet. It appears there as soon as it has a component or a wire on it.',
+        awaitingCheckNotice:
+          'This circuit is being checked before it appears in the community. This usually takes a few minutes; you can already share its link.',
         forkedFrom: 'Forked from',
         forkedFromBy: 'by {{author}}',
         errorHeading: 'The circuit could not be loaded',
@@ -487,6 +489,9 @@ const en = {
         emptyNotListed: 'Not listed',
         emptyNotListedHint:
           'This circuit is empty, so the community doesn’t list it yet.',
+        awaitingCheck: 'Being checked',
+        awaitingCheckHint:
+          'This circuit is being checked before it appears in the community. This usually takes a few minutes.',
         hidden: 'Hidden',
         hiddenHint: 'Hidden by moderation: {{reason}}',
         hiddenHintAutomatic:

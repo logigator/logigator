@@ -28,6 +28,7 @@ import type {
 import { alias } from 'drizzle-orm/pg-core';
 import { EXAMPLES_ACCOUNT_ID, type LanguageId } from '@logigator/core';
 import { ApiException } from '../common/api-exception';
+import { ENV, type Env } from '../config/env';
 import { DB, type Database } from '../database/database.module';
 import {
   componentStars,
@@ -53,6 +54,7 @@ import {
   toProjectSummary
 } from '../documents/circuit-responses';
 import { machineTextFor, textOn } from '../documents/document-text-queries';
+import { awaitingCheck } from '../documents/text-check';
 import {
   resolveTexts,
   type OriginalTexts,
@@ -121,8 +123,9 @@ type StarTable = typeof projectStars | typeof componentStars;
  *
  * Two predicates, and nothing else. The **listings** — the browse pages, a
  * profile's tabs and counts, the starred tabs — carry {@link listed}: a
- * published document with something on it is the only kind a stranger is told
- * about (a star and its stargazers ask only that it be published). The browse
+ * published document with something on it, whose text has been checked, is the
+ * only kind a stranger is told about (a star and its stargazers ask only that
+ * it be published). The browse
  * pages also leave out the examples account, whose public documents are the
  * site's examples rather than community work: its profile, its documents'
  * pages and a member's starred tab still show them. A **read
@@ -138,7 +141,15 @@ type StarTable = typeof projectStars | typeof componentStars;
  */
 @Injectable()
 export class CommunityService {
-  constructor(@Inject(DB) private readonly db: Database) {}
+  /** Whether a published text waits for its check before it is listed. */
+  private readonly analysisRuns: boolean;
+
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    @Inject(ENV) env: Env
+  ) {
+    this.analysisRuns = env.TEXT_ANALYSIS_WORKER_ENABLED;
+  }
 
   // ---- listings ----
 
@@ -147,7 +158,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityProject>> {
     const where = and(
-      listed(projects),
+      listed(projects, this.analysisRuns),
       ne(projects.userId, EXAMPLES_ACCOUNT_ID),
       nameMatches(projects, query.search)
     );
@@ -159,7 +170,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     const where = and(
-      listed(components),
+      listed(components, this.analysisRuns),
       ne(components.userId, EXAMPLES_ACCOUNT_ID),
       nameMatches(components, query.search)
     );
@@ -178,7 +189,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.projectPage(
-      and(listed(projects), eq(projects.userId, userId)),
+      and(listed(projects, this.analysisRuns), eq(projects.userId, userId)),
       query,
       callerId
     );
@@ -190,7 +201,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.componentPage(
-      and(listed(components), eq(components.userId, userId)),
+      and(listed(components, this.analysisRuns), eq(components.userId, userId)),
       query,
       callerId
     );
@@ -199,7 +210,8 @@ export class CommunityService {
   /**
    * What an account has starred: the ordinary listing with the same `EXISTS`
    * that fills in `starred` as one more predicate. A star on something since
-   * made private, or since emptied, stops being listed.
+   * made private, or since emptied, stops being listed, and one whose text was
+   * edited is listed again once the new text is checked.
    *
    * Whose stars are listed and whose flag is reported are two different
    * accounts — a visitor reading somebody's public starred tab gets their own
@@ -212,7 +224,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.projectPage(
-      and(listed(projects), this.projectStarredBy(userId)),
+      and(listed(projects, this.analysisRuns), this.projectStarredBy(userId)),
       query,
       callerId
     );
@@ -224,7 +236,10 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.componentPage(
-      and(listed(components), this.componentStarredBy(userId)),
+      and(
+        listed(components, this.analysisRuns),
+        this.componentStarredBy(userId)
+      ),
       query,
       callerId
     );
@@ -255,6 +270,7 @@ export class CommunityService {
     return {
       ...this.toCommunityProject(row, language),
       forkedFrom: await this.parentOf(projects, row.circuit),
+      awaitingCheck: row.awaitingCheck,
       ...ownerFields(row.circuit, callerId)
     };
   }
@@ -274,6 +290,7 @@ export class CommunityService {
     return {
       ...this.toCommunityComponent(row, language),
       forkedFrom: await this.parentOf(components, row.circuit),
+      awaitingCheck: row.awaitingCheck,
       ...ownerFields(row.circuit, callerId)
     };
   }
@@ -475,11 +492,18 @@ export class CommunityService {
       this.db
         .select({ value: count() })
         .from(projects)
-        .where(and(eq(projects.userId, userId), listed(projects))),
+        .where(
+          and(eq(projects.userId, userId), listed(projects, this.analysisRuns))
+        ),
       this.db
         .select({ value: count() })
         .from(components)
-        .where(and(eq(components.userId, userId), listed(components)))
+        .where(
+          and(
+            eq(components.userId, userId),
+            listed(components, this.analysisRuns)
+          )
+        )
     ]);
 
     return {
@@ -520,6 +544,7 @@ export class CommunityService {
           author: authorColumns,
           stars: starCount(projectStars, projectStars.projectId, projects.id),
           starred: this.projectStarredBy(callerId),
+          awaitingCheck: awaitingCheck(projects, this.analysisRuns),
           humanName: projectHuman.name,
           humanDescription: projectHuman.description,
           machineName: machineTextFor(projects, 'name', query.lang),
@@ -560,6 +585,7 @@ export class CommunityService {
           components.id
         ),
         starred: this.componentStarredBy(callerId),
+        awaitingCheck: awaitingCheck(components, this.analysisRuns),
         humanName: componentHuman.name,
         humanDescription: componentHuman.description,
         machineName: machineTextFor(components, 'name', query.lang),
@@ -813,19 +839,28 @@ export class CommunityService {
 
 /**
  * The predicate every listing carries: published, not hidden by moderation,
- * and not empty. A document with neither a component nor a wire on it — the blank board the shelf's
- * _New project_ creates, or one its author cleared — has nothing to show a
- * stranger, and publishing it is more often a slip than a statement. Its page
- * still resolves by its link and it can still be starred there: emptiness only
- * decides whether it is *advertised*, which is the listings' question alone.
+ * not empty, and with its current text checked. A document with neither a
+ * component nor a wire on it — the blank board the shelf's _New project_
+ * creates, or one its author cleared — has nothing to show a stranger, and
+ * publishing it is more often a slip than a statement. A text the automatic
+ * check has not yet seen, while text analysis runs, is not advertised before
+ * it has been: a new document, or one whose name or description was just
+ * edited, waits the few minutes the worker takes (`text-check.ts`, which the
+ * reads select too, so the owner is told by the same rule). Either way its
+ * page still resolves by its link and it can still be starred there: both
+ * only decide whether it is *advertised*, which is the listings' question
+ * alone.
  *
- * Read off the two counts every write derives from the document, so the rule
- * follows an edit without a column of its own. Written out as SQL for the same
- * reason `linkResolvesFor` is: drizzle's `or()` is typed `SQL | undefined`, and
- * an `undefined` inside the caller's `and()` would drop the rule silently.
+ * Read off columns every write keeps current, so the rule follows an edit
+ * without a column of its own. Written out as SQL for the same reason
+ * `linkResolvesFor` is: drizzle's `or()` is typed `SQL | undefined`, and an
+ * `undefined` inside the caller's `and()` would drop the rule silently.
  */
-function listed(table: typeof projects | typeof components): SQL {
-  return sql`(${eq(table.visibility, 'public')} and ${isNull(table.hiddenAt)} and (${gt(table.componentCount, 0)} or ${gt(table.wireCount, 0)}))`;
+function listed(
+  table: typeof projects | typeof components,
+  analysisRuns: boolean
+): SQL {
+  return sql`(${eq(table.visibility, 'public')} and ${isNull(table.hiddenAt)} and (${gt(table.componentCount, 0)} or ${gt(table.wireCount, 0)}) and not ${awaitingCheck(table, analysisRuns)})`;
 }
 
 /** {@link listed}'s state half, for a row already in hand. */

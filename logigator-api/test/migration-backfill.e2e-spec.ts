@@ -25,6 +25,44 @@ import {
  * the moment its owner's intent was to publish it — which is a failure nobody
  * would see until a shared link answered `404`.
  */
+/**
+ * The checked-in migrations up to the one that adds `column`, staged into a
+ * folder of their own. The boundary is found in the SQL rather than assumed to
+ * be the newest migration: a migration added after this one would otherwise
+ * become the split point, and the spec would fail over a stage that never
+ * happened rather than over the state it missed.
+ */
+async function migrationsBefore(column: string): Promise<string> {
+  const folder = await mkdtemp(join(tmpdir(), 'logigator-migrations-'));
+
+  for (const { name } of readLocalMigrations(MIGRATIONS_FOLDER_PATH)) {
+    const migration = join(MIGRATIONS_FOLDER_PATH, name, 'migration.sql');
+    const text = await readFile(migration, 'utf8');
+    if (text.includes(`ADD COLUMN "${column}"`)) return folder;
+
+    await mkdir(join(folder, name));
+    await copyFile(migration, join(folder, name, 'migration.sql'));
+  }
+
+  throw new Error(
+    `No checked-in migration adds \`${column}\`. The backfill it carries has moved elsewhere, so this spec no longer tests it.`
+  );
+}
+
+/** One connection over the staged database, closed however the block ends. */
+async function withClient<T>(
+  url: string,
+  body: (client: Client) => Promise<T>
+): Promise<T> {
+  const client = new Client({ connectionString: url });
+  await client.connect();
+  try {
+    return await body(client);
+  } finally {
+    await client.end();
+  }
+}
+
 describe('the visibility backfill', () => {
   let database: ThrowawayDatabase | undefined;
 
@@ -33,47 +71,9 @@ describe('the visibility backfill', () => {
     database = undefined;
   });
 
-  /**
-   * The checked-in migrations up to the one that adds `visibility`, staged into
-   * a folder of their own. The boundary is found in the SQL rather than assumed
-   * to be the newest migration: a migration added after this one would
-   * otherwise become the split point, and the spec would fail over a stage that
-   * never happened rather than over the state it missed.
-   */
-  async function migrationsBeforeVisibility(): Promise<string> {
-    const folder = await mkdtemp(join(tmpdir(), 'logigator-migrations-'));
-
-    for (const { name } of readLocalMigrations(MIGRATIONS_FOLDER_PATH)) {
-      const migration = join(MIGRATIONS_FOLDER_PATH, name, 'migration.sql');
-      const text = await readFile(migration, 'utf8');
-      if (text.includes('ADD COLUMN "visibility"')) return folder;
-
-      await mkdir(join(folder, name));
-      await copyFile(migration, join(folder, name, 'migration.sql'));
-    }
-
-    throw new Error(
-      'No checked-in migration adds `visibility`. The backfill it carries has moved elsewhere, so this spec no longer tests it.'
-    );
-  }
-
-  /** One connection over the staged database, closed however the block ends. */
-  async function withClient<T>(
-    url: string,
-    body: (client: Client) => Promise<T>
-  ): Promise<T> {
-    const client = new Client({ connectionString: url });
-    await client.connect();
-    try {
-      return await body(client);
-    } finally {
-      await client.end();
-    }
-  }
-
   it('keeps a published link resolving, and leaves an unpublished one unlisted', async () => {
     database = await createThrowawayDatabase();
-    await runMigrations(database.url, await migrationsBeforeVisibility());
+    await runMigrations(database.url, await migrationsBefore('visibility'));
 
     const { publishedLink, unpublishedLink } = await withClient(
       database.url,
@@ -163,6 +163,55 @@ describe('the visibility backfill', () => {
       'private',
       'unlisted',
       'public'
+    ]);
+  });
+});
+
+/**
+ * The backfill that counts a text analyzed before checks were recorded as
+ * checked. Without it, adding the column would take every published document
+ * out of the listings at once, until the worker had seen each text again.
+ */
+describe('the check backfill', () => {
+  let database: ThrowawayDatabase | undefined;
+
+  afterEach(async () => {
+    await database?.drop();
+    database = undefined;
+  });
+
+  it('checks the texts analyzed before it, and only those', async () => {
+    database = await createThrowawayDatabase();
+    await runMigrations(database.url, await migrationsBefore('checked_digest'));
+
+    await withClient(database.url, async (client) => {
+      const owner = await client.query<{ id: string }>(
+        `insert into "users" ("username", "email") values ('Ada', 'ada@example.com') returning id`
+      );
+      const insert = (name: string, translatedDigest: string) =>
+        client.query(
+          `insert into "projects" ("user_id", "name", "document", "format_version", "visibility", "translated_digest")
+           values ($1, $2, '{}'::jsonb, 1, 'public', ${translatedDigest})`,
+          [owner.rows[0].id, name]
+        );
+
+      await insert('Analyzed', "md5('Analyzed' || chr(31))");
+      await insert('Edited since', "md5('Before the edit' || chr(31))");
+      await insert('Never analyzed', 'null');
+    });
+
+    await runMigrations(database.url, MIGRATIONS_FOLDER_PATH);
+
+    const rows = await withClient(database.url, async (client) =>
+      client.query<{ name: string; checked: boolean }>(
+        `select "name", "checked_digest" is not distinct from "text_digest" as checked
+           from "projects" order by "name"`
+      )
+    );
+    expect(rows.rows).toEqual([
+      { name: 'Analyzed', checked: true },
+      { name: 'Edited since', checked: false },
+      { name: 'Never analyzed', checked: false }
     ]);
   });
 });

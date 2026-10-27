@@ -11,10 +11,12 @@ import type {
   ProjectResponse,
   ProjectSummary,
   SaveCircuitRequest,
-  UpdateProjectRequest
+  UpdateProjectRequest,
+  WrittenProjectSummary
 } from '@logigator/contract';
 import type { LanguageId } from '@logigator/core';
 import type { Locale } from '../common/locale';
+import { ENV, type Env } from '../config/env';
 import { DB, type Database } from '../database/database.module';
 import { projects, type ProjectRow } from '../database/schema';
 import { FileStorageService } from '../storage/file-storage.service';
@@ -26,17 +28,20 @@ import {
 } from './circuit-errors';
 import {
   findOwned,
+  findOwnedWithCheckState,
   forkLineage,
   forkParentExists,
   nameMatches,
-  pageOf
+  pageOf,
+  withCheckState
 } from './circuit-queries';
 import {
   mapPage,
   toAttribution,
   toOwnedProjectSummary,
   toOwnerTextFields,
-  toProjectSummary
+  toProjectSummary,
+  toWrittenProjectSummary
 } from './circuit-responses';
 import {
   deleteHumanText,
@@ -60,6 +65,7 @@ import { renameInDocument } from './rename-in-document';
 export class ProjectsService {
   constructor(
     @Inject(DB) private readonly db: Database,
+    @Inject(ENV) private readonly env: Env,
     private readonly documents: CircuitDocumentService,
     private readonly dependencies: DependenciesService,
     private readonly files: FileStorageService
@@ -73,7 +79,8 @@ export class ProjectsService {
       this.db,
       projects,
       and(eq(projects.userId, userId), nameMatches(projects, query.search)),
-      query
+      query,
+      this.env.TEXT_ANALYSIS_WORKER_ENABLED
     );
     const versions = await humanVersionsOf(
       this.db,
@@ -111,12 +118,16 @@ export class ProjectsService {
    * Creates a project, optionally with a document already in it. One
    * transaction: the edges are derived from the document, and a row whose edges
    * do not describe the circuit beside them must never be observable.
+   *
+   * It and `update` answer with where the row now stands for its owner, through
+   * the selection the owner's listing reads (`withCheckState`), returned by the
+   * write itself.
    */
   async create(
     userId: string,
     body: CreateProjectRequest,
     locale: Locale
-  ): Promise<ProjectSummary> {
+  ): Promise<WrittenProjectSummary> {
     const ingested = this.documents.ingest(body.document, body.name);
     const forkedFromId = await this.resolveParent(ingested.claimedParentId);
 
@@ -138,7 +149,9 @@ export class ProjectsService {
           wireCount: ingested.wireCount,
           forkedFromId
         })
-        .returning();
+        .returning(
+          withCheckState(projects, this.env.TEXT_ANALYSIS_WORKER_ENABLED)
+        );
 
       await this.dependencies.replace(
         tx,
@@ -146,7 +159,7 @@ export class ProjectsService {
         row.id,
         ingested.dependencies
       );
-      return toProjectSummary(row);
+      return toWrittenProjectSummary(row);
     });
   }
 
@@ -229,7 +242,7 @@ export class ProjectsService {
     id: string,
     body: UpdateProjectRequest,
     locale: Locale
-  ): Promise<ProjectSummary> {
+  ): Promise<WrittenProjectSummary> {
     if (body.regenerateLink) {
       const existing = await this.require(userId, id);
       if (existing.visibility === 'public') {
@@ -264,17 +277,27 @@ export class ProjectsService {
     // An `UPDATE` with an empty `SET` is not a statement, so a body that asks
     // for nothing is answered with the row as it stands.
     if (Object.keys(changes).length === 0) {
-      return toProjectSummary(await this.require(userId, id));
+      const row = await findOwnedWithCheckState(
+        this.db,
+        projects,
+        userId,
+        id,
+        this.env.TEXT_ANALYSIS_WORKER_ENABLED
+      );
+      if (!row) throw circuitNotFound('project');
+      return toWrittenProjectSummary(row);
     }
 
     const [row] = await this.db
       .update(projects)
       .set(changes)
       .where(and(eq(projects.id, id), eq(projects.userId, userId)))
-      .returning();
+      .returning(
+        withCheckState(projects, this.env.TEXT_ANALYSIS_WORKER_ENABLED)
+      );
 
     if (!row) throw circuitNotFound('project');
-    return toProjectSummary(row);
+    return toWrittenProjectSummary(row);
   }
 
   /**

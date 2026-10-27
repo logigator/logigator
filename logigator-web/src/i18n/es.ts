@@ -357,6 +357,8 @@ const es: TranslationSchema = {
         noDescription: 'No se proporcionó ninguna descripción.',
         emptyNotice:
           'Este circuito está vacío, así que todavía no aparece en la comunidad. Aparecerá en cuanto tenga un componente o un cable.',
+        awaitingCheckNotice:
+          'Este circuito se está comprobando antes de aparecer en la comunidad. Suele tardar unos minutos; ya puedes compartir su enlace.',
         forkedFrom: 'Derivado de',
         forkedFromBy: 'de {{author}}',
         errorHeading: 'No se pudo cargar el circuito',
@@ -472,6 +474,9 @@ const es: TranslationSchema = {
         emptyNotListed: 'No listado',
         emptyNotListedHint:
           'Este circuito está vacío, así que todavía no aparece en la comunidad.',
+        awaitingCheck: 'En comprobación',
+        awaitingCheckHint:
+          'Este circuito se está comprobando antes de aparecer en la comunidad. Suele tardar unos minutos.',
         hidden: 'Oculto',
         hiddenHint: 'Ocultado por la moderación: {{reason}}',
         hiddenHintAutomatic:

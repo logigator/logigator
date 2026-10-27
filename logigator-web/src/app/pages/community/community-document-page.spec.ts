@@ -236,6 +236,61 @@ describe('CommunityDocumentPage', () => {
     expect(el.textContent).toContain(EMPTY_NOTICE);
   });
 
+  /**
+   * The other published state the chip cannot explain: a text not yet checked
+   * is in no listing either, for a few minutes. Told to the owner alone, and
+   * not over the empty notice, whose reason outlasts the check.
+   */
+  it('tells the owner alone that a published text is still being checked', async () => {
+    const CHECK_NOTICE = 'is being checked before it appears in the community';
+    const owner = communityRow('Half adder', LINK).author;
+    const { el, detectChanges } = await render({ awaitingCheck: true });
+
+    expect(el.textContent).not.toContain(CHECK_NOTICE);
+
+    const session = TestBed.inject(SessionService);
+    session.signedIn({ id: 'someone-else', username: 'ada' } as never);
+    detectChanges();
+    expect(el.textContent).not.toContain(CHECK_NOTICE);
+
+    session.signedIn({ id: owner.id, username: owner.username } as never);
+    detectChanges();
+    expect(el.textContent).toContain(CHECK_NOTICE);
+  });
+
+  it('names emptiness, not the check, to the owner of an empty unchecked document', async () => {
+    const owner = communityRow('Half adder', LINK).author;
+    const { el, detectChanges } = await render({
+      awaitingCheck: true,
+      componentCount: 0,
+      wireCount: 0
+    });
+    TestBed.inject(SessionService).signedIn({
+      id: owner.id,
+      username: owner.username
+    } as never);
+    detectChanges();
+
+    expect(el.textContent).toContain('isn’t listed in the community yet');
+    expect(el.textContent).not.toContain('is being checked');
+  });
+
+  it('says nothing about a check of an unlisted document', async () => {
+    const owner = communityRow('Half adder', LINK).author;
+    const { el, detectChanges } = await render({
+      awaitingCheck: true,
+      visibility: 'unlisted'
+    });
+    TestBed.inject(SessionService).signedIn({
+      id: owner.id,
+      username: owner.username
+    } as never);
+    detectChanges();
+
+    // It is in no listing for its visibility, which the chip already says.
+    expect(el.textContent).not.toContain('is being checked');
+  });
+
   it('says nothing about listing to the owner of a document with content', async () => {
     const owner = communityRow('Half adder', LINK).author;
     const { el, detectChanges } = await render({ componentCount: 0 });

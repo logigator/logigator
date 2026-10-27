@@ -68,6 +68,12 @@
       <lg-message class="mb-4 w-full" severity="info">
         {{ t('pages.community.document.emptyNotice') }}
       </lg-message>
+      } @else if (awaitingCheckNotice()) {
+      <!-- The same question for a text not yet checked: published, and in no
+             listing until the check comes back. -->
+      <lg-message class="mb-4 w-full" severity="info">
+        {{ t('pages.community.document.awaitingCheckNotice') }}
+      </lg-message>
       }
 
       <!-- A text in another language than the page's says so, for

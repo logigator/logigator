@@ -353,6 +353,8 @@ const fr: TranslationSchema = {
         noDescription: 'Aucune description n’a été fournie.',
         emptyNotice:
           'Ce circuit est vide, il n’apparaît donc pas encore dans les listes communautaires. Il y figurera dès qu’il contiendra un composant ou un fil.',
+        awaitingCheckNotice:
+          'Ce circuit est en cours de vérification avant d’apparaître dans la communauté. Cela prend généralement quelques minutes. Vous pouvez déjà partager son lien.',
         forkedFrom: 'Dérivé de',
         forkedFromBy: 'par {{author}}',
         errorHeading: 'Le circuit n’a pas pu être chargé',
@@ -469,6 +471,9 @@ const fr: TranslationSchema = {
         emptyNotListed: 'Non listé',
         emptyNotListedHint:
           'Ce circuit est vide, il n’apparaît donc pas encore dans les listes communautaires.',
+        awaitingCheck: 'Vérification en cours',
+        awaitingCheckHint:
+          'Ce circuit est en cours de vérification avant d’apparaître dans la communauté. Cela prend généralement quelques minutes.',
         hidden: 'Masqué',
         hiddenHint: 'Masqué par la modération : {{reason}}',
         hiddenHintAutomatic:

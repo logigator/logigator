@@ -11,10 +11,12 @@ import type {
   PageQuery,
   PutDocumentTextRequest,
   SaveCircuitRequest,
-  UpdateComponentRequest
+  UpdateComponentRequest,
+  WrittenComponentSummary
 } from '@logigator/contract';
 import type { LanguageId } from '@logigator/core';
 import type { Locale } from '../common/locale';
+import { ENV, type Env } from '../config/env';
 import { DB, type Database } from '../database/database.module';
 import { components, type ComponentRow } from '../database/schema';
 import { FileStorageService } from '../storage/file-storage.service';
@@ -26,17 +28,20 @@ import {
 } from './circuit-errors';
 import {
   findOwned,
+  findOwnedWithCheckState,
   forkLineage,
   forkParentExists,
   nameMatches,
-  pageOf
+  pageOf,
+  withCheckState
 } from './circuit-queries';
 import {
   mapPage,
   toAttribution,
   toOwnedComponentSummary,
   toOwnerTextFields,
-  toComponentSummary
+  toComponentSummary,
+  toWrittenComponentSummary
 } from './circuit-responses';
 import {
   deleteHumanText,
@@ -59,6 +64,7 @@ import { renameInDocument } from './rename-in-document';
 export class ComponentsService {
   constructor(
     @Inject(DB) private readonly db: Database,
+    @Inject(ENV) private readonly env: Env,
     private readonly documents: CircuitDocumentService,
     private readonly dependencies: DependenciesService,
     private readonly files: FileStorageService
@@ -72,7 +78,8 @@ export class ComponentsService {
       this.db,
       components,
       and(eq(components.userId, userId), nameMatches(components, query.search)),
-      query
+      query,
+      this.env.TEXT_ANALYSIS_WORKER_ENABLED
     );
     const versions = await humanVersionsOf(
       this.db,
@@ -105,7 +112,7 @@ export class ComponentsService {
     userId: string,
     body: CreateComponentRequest,
     locale: Locale
-  ): Promise<ComponentSummary> {
+  ): Promise<WrittenComponentSummary> {
     const ingested = this.documents.ingest(body.document, body.name);
     const forkedFromId = await this.resolveParent(ingested.claimedParentId);
 
@@ -130,7 +137,9 @@ export class ComponentsService {
           labels: ingested.summary.labels,
           forkedFromId
         })
-        .returning();
+        .returning(
+          withCheckState(components, this.env.TEXT_ANALYSIS_WORKER_ENABLED)
+        );
 
       await this.dependencies.replace(
         tx,
@@ -138,7 +147,7 @@ export class ComponentsService {
         row.id,
         ingested.dependencies
       );
-      return toComponentSummary(row);
+      return toWrittenComponentSummary(row);
     });
   }
 
@@ -211,7 +220,7 @@ export class ComponentsService {
     id: string,
     body: UpdateComponentRequest,
     locale: Locale
-  ): Promise<ComponentSummary> {
+  ): Promise<WrittenComponentSummary> {
     const existing = await this.require(userId, id);
 
     if (body.regenerateLink && existing.visibility === 'public') {
@@ -242,17 +251,27 @@ export class ComponentsService {
     };
 
     if (Object.keys(changes).length === 0) {
-      return toComponentSummary(existing);
+      const row = await findOwnedWithCheckState(
+        this.db,
+        components,
+        userId,
+        id,
+        this.env.TEXT_ANALYSIS_WORKER_ENABLED
+      );
+      if (!row) throw circuitNotFound('component');
+      return toWrittenComponentSummary(row);
     }
 
     const [row] = await this.db
       .update(components)
       .set(changes)
       .where(and(eq(components.id, id), eq(components.userId, userId)))
-      .returning();
+      .returning(
+        withCheckState(components, this.env.TEXT_ANALYSIS_WORKER_ENABLED)
+      );
 
     if (!row) throw circuitNotFound('component');
-    return toComponentSummary(row);
+    return toWrittenComponentSummary(row);
   }
 
   /**

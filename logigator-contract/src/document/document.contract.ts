@@ -95,6 +95,21 @@ export const documentHiddenSchema = z
 export type DocumentHidden = z.infer<typeof documentHiddenSchema>;
 
 /**
+ * Whether a document's current name and description are still waiting for the
+ * automatic check every shared text goes through. Until it comes back a public
+ * document is in no community listing and its page is not indexed; its link
+ * works as before. Edits to the name or description, and the author's versions
+ * in other languages, are checked again. Always `false` where no check runs.
+ *
+ * Said whatever the visibility, as the counts the empty rule reads are: a
+ * client asks for `public` itself, so a row whose visibility it changed in
+ * place still answers right.
+ *
+ * Defaulted so a client tolerates an API from before the check.
+ */
+export const documentAwaitingCheckSchema = z.boolean().default(false);
+
+/**
  * The circuit document a write carries — checked here only for being an object.
  * The format has a versioned, migration-aware validator of its own in
  * `@logigator/core`; a second description in zod would drift. zod's job at this

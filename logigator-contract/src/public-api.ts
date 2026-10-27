@@ -97,6 +97,7 @@ export {
   circuitFields,
   circuitPreviewSchema,
   componentSymbolSchema,
+  documentAwaitingCheckSchema,
   documentDependencySchema,
   documentDescriptionSchema,
   documentHiddenSchema,
@@ -125,7 +126,9 @@ export {
   type ProjectSummary,
   ownedProjectSummarySchema,
   type OwnedProjectSummary,
-  type UpdateProjectRequest
+  type UpdateProjectRequest,
+  writtenProjectSummarySchema,
+  type WrittenProjectSummary
 } from './document/project.contract';
 export {
   componentPageSchema,
@@ -139,7 +142,9 @@ export {
   type CreateComponentRequest,
   ownedComponentSummarySchema,
   type OwnedComponentSummary,
-  type UpdateComponentRequest
+  type UpdateComponentRequest,
+  writtenComponentSummarySchema,
+  type WrittenComponentSummary
 } from './document/component.contract';
 export {
   NOT_TRANSLATABLE,

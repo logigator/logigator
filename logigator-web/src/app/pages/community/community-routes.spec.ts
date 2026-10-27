@@ -38,7 +38,8 @@ function detail(
       stars: 0,
       ...patch
     }),
-    forkedFrom: null
+    forkedFrom: null,
+    awaitingCheck: patch.awaitingCheck ?? false
   };
 }
 
@@ -379,6 +380,9 @@ describe('the community routes', () => {
     expect(await indexed({ wireCount: 0 })).toBe(false);
     // Whitespace is not something written about the circuit.
     expect(await indexed({ description: '  \n', stars: 0 })).toBe(false);
+    // No listing shows a text that is still waiting for its check, and the
+    // index is told the same.
+    expect(await indexed({ awaitingCheck: true })).toBe(false);
   });
 
   it('indexes a member’s page only once they have written a bio', async () => {

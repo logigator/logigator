@@ -4,14 +4,19 @@ import {
   HttpTestingController,
   type TestRequest
 } from '@angular/common/http/testing';
-import type { OwnedProjectSummary } from '@logigator/contract';
+import type {
+  OwnedProjectSummary,
+  ProjectSummary,
+  WrittenProjectSummary
+} from '@logigator/contract';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { MyDocumentsService } from './my-documents.service';
+import { isPublishedAwaitingCheck } from '../../documents/awaiting-check';
+import { MyDocumentsService, ownerStateOf } from './my-documents.service';
 
 const ID_A = '11111111-1111-4111-8111-111111111111';
 const ID_B = '22222222-2222-4222-8222-222222222222';
 
-function row(id: string, name: string): OwnedProjectSummary {
+function summary(id: string, name: string): ProjectSummary {
   return {
     id,
     name,
@@ -23,11 +28,18 @@ function row(id: string, name: string): OwnedProjectSummary {
     wireCount: 0,
     preview: null,
     createdAt: '2026-01-01T00:00:00.000Z',
-    lastEditedAt: '2026-01-01T00:00:00.000Z',
+    lastEditedAt: '2026-01-01T00:00:00.000Z'
+  };
+}
+
+function row(id: string, name: string): OwnedProjectSummary {
+  return {
+    ...summary(id, name),
     nameLanguage: null,
     descriptionLanguage: null,
     texts: [],
-    hidden: null
+    hidden: null,
+    awaitingCheck: false
   };
 }
 
@@ -94,6 +106,44 @@ describe('MyDocumentsService', () => {
     expect(documents.rows()?.[0]?.visibility).toBe('public');
     // A re-read would also re-sort the grid: a rename bumps the edit time.
     http.verify();
+  });
+
+  it('takes the check a write answered over the listing it was applied to', async () => {
+    await resolveWith([row(ID_A, 'Half adder')]);
+    expect(isPublishedAwaitingCheck(documents.rows()![0]!)).toBe(false);
+
+    const published: WrittenProjectSummary = {
+      ...summary(ID_A, 'Half adder'),
+      visibility: 'public',
+      awaitingCheck: true
+    };
+    documents.applyPatch(ID_A, {
+      visibility: published.visibility,
+      ...ownerStateOf(published)
+    });
+
+    expect(isPublishedAwaitingCheck(documents.rows()![0]!)).toBe(true);
+  });
+
+  it('keeps the hidden state the listing read when a write does not say it', async () => {
+    const hidden = {
+      at: '2026-01-02T00:00:00.000Z',
+      reason: 'Spam',
+      automatic: false,
+      category: null
+    };
+    await resolveWith([{ ...row(ID_A, 'Half adder'), hidden }]);
+
+    const unsaid: WrittenProjectSummary = {
+      ...summary(ID_A, 'Full adder'),
+      awaitingCheck: false
+    };
+    documents.applyPatch(ID_A, {
+      name: unsaid.name,
+      ...ownerStateOf(unsaid)
+    });
+
+    expect(documents.rows()?.[0]?.hidden).toEqual(hidden);
   });
 
   it('takes a deleted row off the grid and off the count', async () => {

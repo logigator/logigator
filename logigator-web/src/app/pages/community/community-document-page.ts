@@ -26,6 +26,7 @@ import { ShareApiService } from '../../api/services/share-api.service';
 import { shareCardUrl } from '../../documents/crawler-image';
 import { CircuitPreview } from '../../documents/circuit-preview';
 import { hiddenCategoryLabel } from '../../documents/hidden-category';
+import { isPublishedAwaitingCheck } from '../../documents/awaiting-check';
 import { isPublishedButEmpty } from '../../documents/published-but-empty';
 import { ShareControls } from '../../documents/share-controls';
 import { VisibilityTag } from '../../documents/visibility-tag';
@@ -277,6 +278,22 @@ export class CommunityDocumentPage {
   protected readonly emptyNotice = computed(() => {
     const document = this.document();
     return !!document && this.isOwner() && isPublishedButEmpty(document);
+  });
+
+  /**
+   * Whether to tell the owner their published document is in no listing yet
+   * because its text is still being checked. Theirs alone, like the empty
+   * notice, which it gives way to: an empty document stays unlisted after its
+   * check, so emptiness is the reason worth naming.
+   */
+  protected readonly awaitingCheckNotice = computed(() => {
+    const document = this.document();
+    return (
+      !!document &&
+      this.isOwner() &&
+      !isPublishedButEmpty(document) &&
+      isPublishedAwaitingCheck(document)
+    );
   });
 
   /**

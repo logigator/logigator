@@ -227,7 +227,8 @@ describe('ShareDocumentDialog', () => {
     // document's, so there is nothing left to close on.
     expect(patched).toHaveBeenCalledWith(ID, {
       visibility: 'unlisted',
-      link: LINK
+      link: LINK,
+      awaitingCheck: false
     });
     expect(segments(el)[1].ariaPressed).toBe('true');
     expect(closing).not.toHaveBeenCalled();

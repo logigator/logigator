@@ -36,6 +36,20 @@ export interface MachineVerdictInput {
 }
 
 /**
+ * A text the text analysis worker gave up on without ever getting a verdict
+ * for it, after `attempts` failed calls.
+ */
+export interface UnjudgedTextInput {
+  kind: ReportedKind;
+  documentId: string;
+  /** The `textDigest` no verdict was obtained for. */
+  textDigest: string;
+  attempts: number;
+  /** The last call made for it, named in the report. */
+  call: VerdictCall | null;
+}
+
+/**
  * What became of a verdict: nothing (`none`, a text a moderator cleared, a
  * text edited since, or an open machine report already there), a report, or
  * a hide with its report.
@@ -164,7 +178,7 @@ export class MachineModerationService {
     }
     if (!reportId) return 'ignored';
 
-    const report: OperatorReport = {
+    await this.announce({
       reportId,
       source: 'machine',
       kind: input.kind,
@@ -179,16 +193,7 @@ export class MachineModerationService {
       contactEmail: null,
       reporterId: null,
       hidden: hides
-    };
-    this.logger.warn(JSON.stringify(reportSummary(report)));
-
-    try {
-      await this.mail.sendDocumentReport(
-        operatorReportMail(report, this.env.PUBLIC_URL)
-      );
-    } catch (error) {
-      this.logger.error('Could not mail the machine report', error);
-    }
+    });
     if (!hides) return 'reported';
 
     // Never undoes the hide: the owner sees the notice on the page either way.
@@ -197,6 +202,105 @@ export class MachineModerationService {
       { by: 'machine', category }
     );
     return 'hidden';
+  }
+
+  /**
+   * Opens a report for a published text no verdict could be obtained for: the
+   * calls kept failing, a reply cut short for one. Such a text is never
+   * checked, so it stays out of the listings (`text-check.ts`) until a person
+   * looks at it — resolving the report clears the text, which checks it — or
+   * its author edits it, which starts the analysis over.
+   *
+   * `other` and not certain, like a declined reply: a person decides, and
+   * nothing is hidden. Guarded like a verdict's report, and on the text being
+   * unchecked still, since a verdict of an earlier attempt already checked it.
+   * One open report per text rather than per document: it is resolving this
+   * one that checks the text, so a report about an earlier text cannot stand
+   * in for it.
+   *
+   * @returns whether a report was opened.
+   */
+  async reportUnjudged(input: UnjudgedTextInput): Promise<boolean> {
+    const table = tableOf(input.kind);
+    const explanation = describeVerdict(
+      {
+        category: 'other',
+        certain: false,
+        note: `No verdict could be obtained after ${input.attempts} attempts.`
+      },
+      input.call,
+      false
+    );
+    const result = await this.db.execute<{
+      id: string;
+      link: string;
+      name: string;
+      user_id: string;
+    }>(sql`
+      WITH opened AS (
+        INSERT INTO ${documentReports}
+               (document_kind, document_id, reason, explanation, source,
+                text_digest)
+        SELECT ${input.kind}::document_kind, ${table.id},
+               'other'::report_reason, ${explanation},
+               'machine'::report_source, ${input.textDigest}
+          FROM ${table}
+         WHERE ${table.id} = ${input.documentId}
+           AND ${table.textDigest} = ${input.textDigest}
+           AND ${table.checkedDigest} IS DISTINCT FROM ${table.textDigest}
+           AND ${table.moderatedDigest} IS DISTINCT FROM ${table.textDigest}
+           AND ${table.hiddenAt} IS NULL
+           AND NOT EXISTS (
+                 SELECT 1 FROM ${documentReports}
+                  WHERE ${and(
+                    eq(documentReports.documentKind, input.kind),
+                    eq(documentReports.documentId, input.documentId),
+                    eq(documentReports.source, 'machine'),
+                    eq(documentReports.textDigest, input.textDigest),
+                    isNull(documentReports.resolvedAt)
+                  )})
+        RETURNING id
+      )
+      SELECT opened.id, ${table.link} AS link, ${table.name} AS name,
+             ${table.userId} AS user_id
+        FROM opened, ${table}
+       WHERE ${table.id} = ${input.documentId}
+    `);
+    const [row] = result.rows;
+    if (!row) return false;
+
+    await this.announce({
+      reportId: row.id,
+      source: 'machine',
+      kind: input.kind,
+      document: {
+        id: input.documentId,
+        link: row.link,
+        name: row.name,
+        ownerId: row.user_id
+      },
+      reason: 'other',
+      explanation,
+      contactEmail: null,
+      reporterId: null,
+      hidden: false
+    });
+    return true;
+  }
+
+  /**
+   * Logs a machine report and mails it to the operator like a reader's. A
+   * failed send is logged and keeps the report.
+   */
+  private async announce(report: OperatorReport): Promise<void> {
+    this.logger.warn(JSON.stringify(reportSummary(report)));
+    try {
+      await this.mail.sendDocumentReport(
+        operatorReportMail(report, this.env.PUBLIC_URL)
+      );
+    } catch (error) {
+      this.logger.error('Could not mail the machine report', error);
+    }
   }
 }
 

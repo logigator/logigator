@@ -360,6 +360,8 @@ const de: TranslationSchema = {
         noDescription: 'Es wurde keine Beschreibung angegeben.',
         emptyNotice:
           'Diese Schaltung ist leer und wird deshalb noch nicht in der Community gelistet. Sie erscheint dort, sobald sie einen Baustein oder eine Leitung enthält.',
+        awaitingCheckNotice:
+          'Diese Schaltung wird geprüft, bevor sie in der Community erscheint. Das dauert meist nur ein paar Minuten; ihren Link kannst du schon jetzt teilen.',
         forkedFrom: 'Abgeleitet von',
         forkedFromBy: 'von {{author}}',
         errorHeading: 'Die Schaltung konnte nicht geladen werden',
@@ -476,6 +478,9 @@ const de: TranslationSchema = {
         emptyNotListed: 'Nicht gelistet',
         emptyNotListedHint:
           'Diese Schaltung ist leer und wird deshalb noch nicht in der Community gelistet.',
+        awaitingCheck: 'Wird geprüft',
+        awaitingCheckHint:
+          'Diese Schaltung wird geprüft, bevor sie in der Community erscheint. Das dauert meist nur ein paar Minuten.',
         hidden: 'Ausgeblendet',
         hiddenHint: 'Von der Moderation ausgeblendet: {{reason}}',
         hiddenHintAutomatic:

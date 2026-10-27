@@ -18,6 +18,7 @@ import {
 import type { DocumentHidden } from '@logigator/contract';
 import type { CommunityKind } from '../../api/services/community-api.service';
 import { hiddenCategoryLabel } from '../../documents/hidden-category';
+import { isPublishedAwaitingCheck } from '../../documents/awaiting-check';
 import { isPublishedButEmpty } from '../../documents/published-but-empty';
 import { VisibilityTag } from '../../documents/visibility-tag';
 import { SiteLinks } from '../../layout/site-links';
@@ -43,8 +44,9 @@ export interface MyDocumentCommand {
  * which is one of three states rather than a published-or-not pair — and when
  * it was last edited. A published document with nothing on it says so in the
  * render's other corner: the community leaves it out of every listing, and the
- * shelf is where its owner looks for it first. A document moderation has hidden
- * says that in the same corner instead. The corner carries the controls for the things a shelf
+ * shelf is where its owner looks for it first. One whose text is still being
+ * checked says so there too, and a document moderation has hidden says that
+ * in the same corner instead. The corner carries the controls for the things a shelf
  * does with a row — the three it can do *to* one, and the page it has.
  *
  * The card itself opens the editor, which is a separate deployment sharing this
@@ -119,6 +121,20 @@ export interface MyDocumentCommand {
                 <i class="ph ph-eye-slash text-sm" aria-hidden="true"></i>
                 {{ t('pages.my.list.emptyNotListed') }}
               </span>
+            } @else if (tile.awaitingCheck) {
+              <!-- After the empty badge, which names the reason that outlasts
+                   the check. -->
+              <span
+                lgCircuitTileBadge
+                class="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-content/90 px-2 text-xs whitespace-nowrap text-muted"
+                [title]="t('pages.my.list.awaitingCheckHint')"
+              >
+                <i
+                  class="ph ph-hourglass-medium text-sm"
+                  aria-hidden="true"
+                ></i>
+                {{ t('pages.my.list.awaitingCheck') }}
+              </span>
             }
 
             <button
@@ -179,6 +195,7 @@ export class MyDocumentTiles {
       visibility: row.visibility,
       hiddenHint: this.hiddenHint(row.hidden ?? null),
       empty: isPublishedButEmpty(row),
+      awaitingCheck: isPublishedAwaitingCheck(row),
       edited: dates.format(new Date(row.lastEditedAt)),
       editorHref: this.links.editorDocument(kind, row.id),
       loading: index < this.EAGER_ROW ? ('eager' as const) : ('lazy' as const),

@@ -133,6 +133,15 @@ function circuitColumns() {
      */
     moderatedDigest: char('moderated_digest', { length: 32 }),
     /**
+     * The `textDigest` the text analysis worker last obtained a moderation
+     * verdict for, whatever the verdict and whether or not its translation was
+     * kept. While text analysis runs, a public document whose current text is
+     * neither checked here nor cleared in `moderatedDigest` is in no listing
+     * (`text-check.ts`). Cleared when the author writes or removes a version,
+     * which is judged with the original.
+     */
+    checkedDigest: char('checked_digest', { length: 32 }),
+    /**
      * Id of the preview's directory on the served volume; the renders stay
      * files behind a cache-friendly `<img>` path. One pointer for both themes,
      * since the editor uploads the light and dark variant together and they are
