@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   leaseRunningOutAt,
   startOfNextUtcDay,
-  TRANSLATION_LEASE_MINUTES,
+  ANALYSIS_LEASE_MINUTES,
   utcDay
-} from './translation-lease';
+} from './analysis-lease';
 
 const DAY_MS = 24 * 60 * 60_000;
 
@@ -39,6 +39,6 @@ describe('leaseRunningOutAt', () => {
   it('writes a claim whose lease ends exactly at the instant', () => {
     const instant = Date.UTC(2026, 9, 22);
     const claimedAt = leaseRunningOutAt(instant).getTime();
-    expect(claimedAt + TRANSLATION_LEASE_MINUTES * 60_000).toBe(instant);
+    expect(claimedAt + ANALYSIS_LEASE_MINUTES * 60_000).toBe(instant);
   });
 });

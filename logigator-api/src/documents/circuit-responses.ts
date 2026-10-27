@@ -70,7 +70,12 @@ export function toOwnerTextFields(
 /** Moderation's hold on a document, for its owner's eyes only. */
 export function toHidden(row: CircuitRow): DocumentHidden {
   return row.hiddenAt
-    ? { at: row.hiddenAt.toISOString(), reason: row.hiddenReason ?? '' }
+    ? {
+        at: row.hiddenAt.toISOString(),
+        reason: row.hiddenReason ?? '',
+        automatic: row.hiddenBy === 'machine',
+        category: row.hiddenBy === 'machine' ? row.hiddenCategory : null
+      }
     : null;
 }
 

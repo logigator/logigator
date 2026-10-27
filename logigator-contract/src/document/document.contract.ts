@@ -2,6 +2,7 @@ import * as z from 'zod';
 import { normalizeAuthoredText } from '@logigator/core';
 import type { CurrentCircuitFile } from '@logigator/core';
 import { imageVariantSchema } from '../image/image.contract';
+import { documentReportReasonSchema } from '../report/report.contract';
 
 /**
  * The pieces projects and components share. The two are the same thing — a
@@ -74,11 +75,19 @@ export type DocumentVisibility = z.infer<typeof documentVisibilitySchema>;
  * Moderation's hold on a document: when it was taken out of the community and
  * why, or `null`. A hidden document resolves for its owner alone, so this is
  * only ever answered to them, on the responses that are theirs.
+ *
+ * `automatic` is a hide by the machine's verdict, which a person reviews.
+ * Its `category` is what the owner is told, in their own language, and its
+ * `reason` is empty; a moderator's hide has their own words as `reason` and
+ * no category.
  */
 export const documentHiddenSchema = z
   .object({
     at: z.string(),
-    reason: z.string()
+    reason: z.string(),
+    // Defaulted so a client tolerates an API from before automatic hides.
+    automatic: z.boolean().default(false),
+    category: documentReportReasonSchema.nullable().default(null)
   })
   .loose()
   .nullable();

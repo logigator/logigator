@@ -24,8 +24,8 @@ import { CookieJar } from './cookie-jar';
 import { startE2eApp, type E2eApp } from './harness';
 
 /**
- * There is no translation worker in the harness, so what it would write — the
- * detected languages, the digest they are for, and the machine rows — is
+ * There is no text analysis worker in the harness, so what it would write —
+ * the detected languages, the digest they are for, and the machine rows — is
  * written straight to the database. Everything else goes through the API.
  */
 describe('document texts in other languages', () => {
@@ -321,6 +321,9 @@ describe('document texts in other languages', () => {
 
       const named = await putText(project.id, 'de', { name: 'Addierer' });
       expect(named.statusCode).toBe(200);
+      // A version sends the document to be judged again; the worker's call
+      // detects the same original.
+      await markDetected(projects, project.id);
 
       expect((await detail(project.link, 'de')).json()).toMatchObject({
         name: 'Addierer',
@@ -341,6 +344,7 @@ describe('document texts in other languages', () => {
         name: 'Addierer',
         description: 'Addiert drei Bits, von Hand.'
       });
+      await markDetected(projects, project.id);
       expect(
         await communityEntry(
           `/api/community/users/${adaId}/projects?lang=de`,
@@ -360,6 +364,7 @@ describe('document texts in other languages', () => {
       const removed = await deleteText(project.id, 'de');
       expect(removed.statusCode).toBe(200);
       expect(removed.json<DocumentTextsResponse>().texts).toEqual([]);
+      await markDetected(projects, project.id);
       expect((await detail(project.link, 'de')).json()).toMatchObject({
         name: 'Full Adder',
         machineTranslation: true
@@ -433,8 +438,8 @@ describe('document texts in other languages', () => {
 
     it('turn stale when the original is edited, and stay shown', async () => {
       const project = await createProject({ name: 'Shifter' });
-      await markDetected(projects, project.id);
       await putText(project.id, 'de', { name: 'Schieber' });
+      await markDetected(projects, project.id);
 
       const before = await api.inject({
         method: 'GET',
@@ -552,6 +557,7 @@ describe('document texts in other languages', () => {
         )
       });
       await putText(board.id, 'es', { name: 'Tablero' });
+      await markDetected(projects, board.id);
 
       const copy = await clone('project', board.link);
       const [copiedInner] = copy.dependencies as ComponentSummary[];

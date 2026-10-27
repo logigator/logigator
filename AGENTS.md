@@ -87,8 +87,8 @@ Database scripts run from the API package (`yarn workspace logigator-api run …
 runner the E2E harness and a release use), `db:renormalize` (re-normalize older-format documents;
 `--all` re-extracts every derived row), `db:seed-examples` (writes `logigator-api/examples/` into
 the seed account, idempotent; `--previews` re-uploads previews), `db:moderate` (lists open document
-reports, `hide`/`unhide <kind> <link>`, `resolve <report-id>`; the only moderation surface, no
-admin role).
+reports, readers' and the text analysis worker's, `hide`/`unhide <kind> <link>`, `resolve
+<report-id>`; the only moderation surface, no admin role; hiding and unhiding mail the owner).
 
 `@logigator/ui` has no build script; its ng-packagr target in `angular.json` must stay, because the
 unit-test builder reads its build options from it.
@@ -242,9 +242,11 @@ and provided under the `ENV` token; providers never read `process.env`. `GET /ap
 liveness probe; `GET /api/health/ready` checks Postgres and Redis. `src/` layers: `config/`,
 `database/` (Drizzle over `pg`, `schema/`, `migrate.ts`, startup migration gate), `redis/`,
 `session/`, `auth/`, `users/`, `mail/`, `storage/` (images, `share-card/`), `documents/`, `sharing/`,
-`community/`, `reports/` (error reports and document reports), `moderation/` (the `db:moderate`
-service), `translation/` (OpenRouter client and worker), `common/`, plus `app.setup.ts`
-(shared by `main.ts` and the E2E harness).
+`community/`, `reports/` (error reports and document reports), `moderation/` (verdicts,
+`MachineModerationService`, the `db:moderate` service), `translation/` (detection and translation
+rules, machine texts), `text-analysis/` (the one OpenRouter call that detects, translates and
+moderates: client, prompt, worker), `common/`, plus `app.setup.ts` (shared by `main.ts`
+and the E2E harness).
 
 **Invariants:**
 
@@ -256,10 +258,14 @@ service), `translation/` (OpenRouter client and worker), `common/`, plus `app.se
   `unlisted` for whoever holds the link, `public` for everyone, listed and indexed. Link reads use
   the one predicate `linkResolvesFor`; every listing carries `visibility = 'public'`. Stars are
   public-only. Rotating a link is refused while public; visibility changes never touch the link.
-- **A hidden document (`hidden_at`, set only by `db:moderate`) is owner-only whatever its
-  visibility**: `linkResolvesFor` and every listing predicate exclude it, its stars stop counting,
-  the translation worker skips it, and dependents and clones keep its snapshot but not its master.
-  The hidden state reaches its owner alone (owned summaries, and `hidden` on their own detail read).
+- **A hidden document (`hidden_at`) is owner-only whatever its visibility**: `linkResolvesFor` and
+  every listing predicate exclude it, its stars stop counting, the text analysis worker skips it, and
+  dependents and clones keep its snapshot but not its master. The hidden state reaches its owner
+  alone (owned summaries, and `hidden` on their own detail read). `db:moderate` sets it, and so
+  does `MachineModerationService` for a severe verdict the model is certain of, only with
+  `MODERATION_AUTO_HIDE` on; every machine hide has an open report and is mailed to
+  `REPORT_MAIL_TO` and the owner. A text a moderator cleared (`moderated_digest`) gets no machine
+  action until it changes.
 - **Uploads are decoded and re-encoded** by sharp, never stored as sent; the volume is served under
   one root, `/files`.
 - **Nothing purges the CDN**: the edge holds a `/files` file a day (`CDN-Cache-Control`) and a
@@ -280,7 +286,9 @@ service), `translation/` (OpenRouter client and worker), `common/`, plus `app.se
 - **Machine-translated text leaves the API only through
   `GET /api/community/{kind}/:link/translation/:lang`**, never on a document or listing response. A
   translation, and a detected language, is served only while its digest matches the document's
-  generated `text_digest`. Nothing private is ever sent to OpenRouter.
+  generated `text_digest`. Nothing private is ever sent to OpenRouter. The text analysis call that
+  translates also returns a moderation verdict, kept even when the translation is refused;
+  `TEXT_ANALYSIS_ENABLED=false` stops both.
 - **The model and its routing are the OpenRouter preset's**; the request carries no `provider`,
   sampling or `reasoning` field. `marked` is used to check translations only: the API still stores
   every description as the source it was given.

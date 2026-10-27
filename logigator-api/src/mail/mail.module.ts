@@ -4,8 +4,8 @@ import { MailService } from './mail.service';
 import { createMailTransport, MAIL_TRANSPORT } from './mail.transport';
 
 /**
- * Three mails is the whole surface, so this is nodemailer plus rendering
- * functions — no template engine, no view directory.
+ * A handful of short mails is the whole surface, so this is nodemailer plus
+ * rendering functions — no template engine, no view directory.
  */
 @Module({
   providers: [

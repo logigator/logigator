@@ -4,6 +4,8 @@
    An Rspack entry beside `renormalize.js`, booting the application container
    for its database and nothing else. There is no admin role or admin route:
    running this against the database is what being a moderator means.
+   Hiding and unhiding mail the document's owner; the output says whether
+   they were mailed.
 
    eslint-disable no-console: a CLI whose only output channel is the terminal.
 
@@ -90,34 +92,60 @@ async function run(
       console.log(
         `Hidden. Resolved ${result.resolvedReports} open report(s) about it.`
       );
+      console.log(ownerMailed(result.ownerMailed));
       return 0;
     }
     case 'unhide': {
-      if (!(await moderation.unhide(command.kind, command.link))) {
-        return notFound(command.kind, command.link);
-      }
-      console.log('Unhidden.');
+      const result = await moderation.unhide(command.kind, command.link);
+      if (!result) return notFound(command.kind, command.link);
+      console.log(
+        'Unhidden. Its current text is cleared for the machine, and its open machine reports are resolved.'
+      );
+      console.log(ownerMailed(result.ownerMailed));
       return 0;
     }
     case 'resolve': {
-      if (!(await moderation.resolve(command.reportId, command.note))) {
-        console.error(`No open report ${command.reportId}.`);
-        return 1;
+      switch (await moderation.resolve(command.reportId, command.note)) {
+        case 'missing':
+          console.error(`No open report ${command.reportId}.`);
+          return 1;
+        case 'machine-hidden':
+          console.error(
+            'Its document is hidden automatically and waits for a decision: confirm it with `hide`, or reverse it with `unhide`.'
+          );
+          return 1;
+        case 'resolved':
+          console.log('Resolved.');
+          return 0;
       }
-      console.log('Resolved.');
-      return 0;
     }
   }
 }
 
+function ownerMailed(mailed: boolean): string {
+  return mailed
+    ? 'The owner was mailed.'
+    : 'The owner was not mailed (no hide to report, an unverified address, or a failed send; see the log).';
+}
+
 function describe(report: OpenReport): string {
+  const hidden =
+    report.document?.hiddenBy === 'machine'
+      ? ', hidden automatically'
+      : report.document?.hidden
+        ? ', hidden'
+        : '';
   const document = report.document
-    ? `${report.document.name} (${report.kind} ${report.document.link}, owner ${report.document.ownerId}${report.document.hidden ? ', hidden' : ''})`
+    ? `${report.document.name} (${report.kind} ${report.document.link}, owner ${report.document.ownerId}${hidden})`
     : `deleted ${report.kind} ${report.documentId}`;
+  const reporter =
+    report.source === 'machine'
+      ? '  Reporter: the machine'
+      : `  Reporter: ${report.reporterId ?? 'not signed in'} · contact ${report.contactEmail ?? 'none'}`;
   return [
-    `Report ${report.id} · ${report.createdAt.toISOString()} · ${report.reason}`,
+    `Report ${report.id} · ${report.createdAt.toISOString()} · ${report.source} · ${report.reason}`,
     `  Document: ${document}`,
-    `  Reporter: ${report.reporterId ?? 'not signed in'} · contact ${report.contactEmail ?? 'none'}`,
+    reporter,
     ...report.explanation.split('\n').map((line) => `  > ${line}`),
     ''
   ].join('\n');

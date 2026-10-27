@@ -2,13 +2,11 @@ import * as z from 'zod';
 import { documentNameSchema, NOT_TRANSLATABLE } from '@logigator/contract';
 import { normalizeAuthoredText } from '@logigator/core';
 import { type Locale, LOCALES } from '../common/locale';
-import { checkTranslatedDescription } from './translation-check';
 import type {
   DocumentTranslation,
-  ReplyRejection,
-  TranslatedText,
-  TranslationInput
-} from './translator';
+  TranslatedText
+} from './document-translation';
+import { checkTranslatedDescription } from './translation-check';
 
 const perLanguage = <S extends z.ZodType>(entry: S) =>
   Object.fromEntries(LOCALES.map((locale) => [locale, entry])) as Record<
@@ -17,15 +15,11 @@ const perLanguage = <S extends z.ZodType>(entry: S) =>
   >;
 
 /**
- * The reply's shape as the model is told it, with no constraint beyond types.
- *
- * Strict structured-output modes differ on `pattern`, `format` and the length
- * keywords, and an endpoint that rejects one fails the whole request, so the
- * schema sent stays in the subset every one of them accepts: objects with
- * every property required and nothing else allowed, plain strings, and null.
- * What the reply must actually satisfy is {@link translationReplySchema}.
+ * Detection and translation's fields of the reply as the model is told them,
+ * with no constraint beyond types, for the reason the whole wire schema has
+ * none.
  */
-const translationReplyWireSchema = z.object({
+export const translationReplyWireShape = {
   nameLanguage: z.string(),
   descriptionLanguage: z.string(),
   translations: z.object(
@@ -36,7 +30,7 @@ const translationReplyWireSchema = z.object({
       })
     )
   )
-});
+};
 
 const languageCode = z
   .string()
@@ -47,64 +41,28 @@ const languageCode = z
     error: 'must be a two-letter ISO 639-1 code in lowercase, or zxx'
   });
 
-/** The reply as it is parsed: the wire shape, with the language codes held to form. */
-export const translationReplySchema = translationReplyWireSchema.extend({
+/** The same fields as they are parsed, the language codes held to form. */
+export const translationReplyShape = {
+  ...translationReplyWireShape,
   nameLanguage: languageCode,
   descriptionLanguage: languageCode
-});
+};
 
-export type TranslationReply = z.infer<typeof translationReplySchema>;
+export type TranslationReply = z.infer<
+  z.ZodObject<typeof translationReplyShape>
+>;
 
-/**
- * The JSON schema `response_format` carries, generated from the wire schema so
- * the two cannot drift. zod writes a nullable string as a `type` list; that is
- * rewritten as `anyOf`, the form every strict mode reads, and `$schema` is
- * dropped since no endpoint needs it and some refuse unknown top-level keys.
- */
-export const TRANSLATION_REPLY_JSON_SCHEMA = portable(
-  z.toJSONSchema(translationReplyWireSchema)
-) as Record<string, unknown>;
-
-function portable(schema: unknown): unknown {
-  if (Array.isArray(schema)) return schema.map(portable);
-  if (typeof schema !== 'object' || schema === null) return schema;
-
-  const result: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(schema)) {
-    if (key === '$schema') continue;
-    if (key === 'type' && Array.isArray(value)) {
-      result['anyOf'] = value.map((type: unknown) => ({ type }));
-      continue;
-    }
-    result[key] = portable(value);
-  }
-  return result;
+/** The original a reply's translation is read against. */
+export interface TranslationOriginal {
+  name: string;
+  description: string;
 }
 
 /**
- * The reply's JSON from a message's content. A structured-output endpoint
- * answers with the JSON alone; one that only takes the schema as a hint often
- * wraps it in a fenced block, so the first ```json fence is the fallback.
+ * Reads the translation part of a reply that matched the schema into what may
+ * be stored, or the reason it may not.
  *
- * @returns the parsed value, or `undefined` when neither form is JSON.
- */
-export function parseReplyContent(content: string): unknown {
-  const fenced = /```json[^\n]*\n([\s\S]*?)```/i.exec(content)?.[1];
-  for (const candidate of [content, fenced]) {
-    if (candidate === undefined) continue;
-    try {
-      return JSON.parse(candidate) as unknown;
-    } catch {
-      // The next form, if there is one.
-    }
-  }
-  return undefined;
-}
-
-/**
- * Reads a model's reply into what may be stored, or the reason it may not.
- *
- * Beyond the schema, the reply is trimmed to what the stored rows mean:
+ * The reply is trimmed to what the stored rows mean:
  *
  * - an entry for the field's own source language is ignored, and so is every
  *   entry of a field detected as `zxx`;
@@ -116,47 +74,25 @@ export function parseReplyContent(content: string): unknown {
  *   field: the description's translation stands on its own.
  *
  * Every remaining description then has to pass `translation-check`; one that
- * fails refuses the whole reply, so the retry can name what went wrong.
+ * fails refuses the whole translation, so the retry can name what went wrong.
  */
-export function readTranslationReply(
-  content: string,
-  input: TranslationInput
+export function readTranslation(
+  reply: TranslationReply,
+  original: TranslationOriginal
 ):
   | { ok: true; translation: DocumentTranslation }
-  | { ok: false; rejection: ReplyRejection } {
-  const json = parseReplyContent(content);
-  if (json === undefined) {
-    return {
-      ok: false,
-      rejection: { stage: 'parse', reason: 'the reply is not JSON' }
-    };
-  }
-
-  const parsed = translationReplySchema.safeParse(json);
-  if (!parsed.success) {
-    return {
-      ok: false,
-      rejection: {
-        stage: 'schema',
-        reason: `the reply does not match the schema: ${z.prettifyError(parsed.error)}`
-      }
-    };
-  }
-
-  const translation = trimReply(parsed.data, input);
+  | { ok: false; reason: string } {
+  const translation = trimReply(reply, original);
   for (const [locale, text] of Object.entries(translation.texts)) {
     if (text.description === null) continue;
     const failure = checkTranslatedDescription(
-      input.description,
+      original.description,
       text.description
     );
     if (failure !== null) {
       return {
         ok: false,
-        rejection: {
-          stage: 'check',
-          reason: `the description for ${locale} was refused because ${failure}`
-        }
+        reason: `the description for ${locale} was refused because ${failure}`
       };
     }
   }
@@ -165,10 +101,10 @@ export function readTranslationReply(
 
 function trimReply(
   reply: TranslationReply,
-  input: TranslationInput
+  original: TranslationOriginal
 ): DocumentTranslation {
-  const name = normalizeAuthoredText(input.name);
-  const description = normalizeAuthoredText(input.description);
+  const name = normalizeAuthoredText(original.name);
+  const description = normalizeAuthoredText(original.description);
   const nameLanguage = name === '' ? NOT_TRANSLATABLE : reply.nameLanguage;
   const descriptionLanguage =
     description === '' ? NOT_TRANSLATABLE : reply.descriptionLanguage;

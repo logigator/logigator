@@ -38,12 +38,13 @@ describe('loadEnv', () => {
       SESSION_TOUCH_INTERVAL_MINUTES: 60,
       COOKIE_SECURE: false,
       TRUST_PROXY: false,
-      TRANSLATION_ENABLED: true,
-      TRANSLATION_POLL_SECONDS: 30,
-      TRANSLATION_DEBOUNCE_SECONDS: 120,
-      TRANSLATION_BATCH: 5,
-      TRANSLATION_DAILY_LIMIT_PER_USER: 50,
-      TRANSLATION_WORKER_ENABLED: false,
+      TEXT_ANALYSIS_ENABLED: true,
+      MODERATION_AUTO_HIDE: false,
+      TEXT_ANALYSIS_POLL_SECONDS: 30,
+      TEXT_ANALYSIS_DEBOUNCE_SECONDS: 120,
+      TEXT_ANALYSIS_BATCH: 5,
+      TEXT_ANALYSIS_DAILY_LIMIT_PER_USER: 50,
+      TEXT_ANALYSIS_WORKER_ENABLED: false,
       AUTH_TOKEN_TTL_MINUTES: 60,
       BCRYPT_COST: 12
     });
@@ -129,19 +130,31 @@ describe('loadEnv', () => {
     ).toThrowError(/OPENROUTER_PRESET/);
   });
 
-  it('runs the translation worker only when enabled and keyed', () => {
+  it('refuses automatic hiding with nobody to mail it to', () => {
+    expect(() => loadEnv({ MODERATION_AUTO_HIDE: 'true' })).toThrowError(
+      /REPORT_MAIL_TO/
+    );
+    expect(() =>
+      loadEnv({
+        MODERATION_AUTO_HIDE: 'true',
+        REPORT_MAIL_TO: 'moderation@logigator.test'
+      })
+    ).not.toThrow();
+  });
+
+  it('runs the text analysis worker only when enabled and keyed', () => {
     const keyed = {
       OPENROUTER_API_KEY: 'sk-or-key',
       OPENROUTER_PRESET: 'logigator'
     };
 
-    expect(loadEnv(keyed).TRANSLATION_WORKER_ENABLED).toBe(true);
+    expect(loadEnv(keyed).TEXT_ANALYSIS_WORKER_ENABLED).toBe(true);
     expect(
-      loadEnv({ ...keyed, TRANSLATION_ENABLED: 'false' })
-        .TRANSLATION_WORKER_ENABLED
+      loadEnv({ ...keyed, TEXT_ANALYSIS_ENABLED: 'false' })
+        .TEXT_ANALYSIS_WORKER_ENABLED
     ).toBe(false);
     expect(
-      loadEnv({ TRANSLATION_ENABLED: 'true' }).TRANSLATION_WORKER_ENABLED
+      loadEnv({ TEXT_ANALYSIS_ENABLED: 'true' }).TEXT_ANALYSIS_WORKER_ENABLED
     ).toBe(false);
   });
 

@@ -1,28 +1,30 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { and, eq, sql } from 'drizzle-orm';
 import { SchedulerRegistry } from '@nestjs/schedule';
 import type { ProjectSummary } from '@logigator/contract';
 import { projectTexts, projects } from '../src/database/schema';
+import { MachineModerationService } from '../src/moderation/machine-moderation.service';
+import type { ModerationVerdict } from '../src/moderation/moderation-verdict';
 import {
-  startOfNextUtcDay,
-  TRANSLATION_LEASE_MINUTES
-} from '../src/translation/translation-lease';
+  ANALYSIS_LEASE_MINUTES,
+  startOfNextUtcDay
+} from '../src/text-analysis/analysis-lease';
 import {
   claimPending,
   releaseClaim,
   renewForCall,
-  settleTranslation
-} from '../src/translation/translation-queries';
+  settleAnalysis
+} from '../src/text-analysis/analysis-queries';
 import type {
+  AnalysisInput,
+  AnalysisOutcome,
   CallUsage,
   KeyBudget,
-  TranslationInput,
-  TranslationOutcome,
-  Translator
-} from '../src/translation/translator';
+  TextAnalyzer
+} from '../src/text-analysis/text-analyzer';
 import { circuitDocument, EMPTY_BODY, HALF_ADDER_BODY } from './circuits';
 import { CookieJar } from './cookie-jar';
-import { startE2eApp, type E2eApp, type TranslationDriver } from './harness';
+import { startE2eApp, type E2eApp, type TextAnalysisDriver } from './harness';
 
 const SERVED_MODEL = 'fake/served-model';
 
@@ -37,12 +39,14 @@ const USAGE: CallUsage = {
 };
 
 /** What the fake answers by default: an English original, translated. */
-function translated(input: TranslationInput): TranslationOutcome {
+function translated(input: AnalysisInput): AnalysisOutcome {
   return {
     kind: 'success',
     model: SERVED_MODEL,
     calls: [USAGE],
     rejections: [],
+    verdict: null,
+    verdictCall: null,
     translation: {
       nameLanguage: 'en',
       descriptionLanguage: 'en',
@@ -55,22 +59,24 @@ function translated(input: TranslationInput): TranslationOutcome {
 }
 
 type Answer = (
-  input: TranslationInput
-) => TranslationOutcome | Promise<TranslationOutcome>;
+  input: AnalysisInput
+) => AnalysisOutcome | Promise<AnalysisOutcome>;
 
 const documentFailure: Answer = () => ({
   kind: 'document',
   reason: 'the reply was refused twice',
   calls: [USAGE, USAGE],
-  rejections: []
+  rejections: [],
+  verdict: null,
+  verdictCall: null
 });
 
 /**
  * Stands in for OpenRouter. It answers {@link translated} unless a spec has
  * queued answers for a document, and records every call it is asked to make.
  */
-class FakeTranslator implements Translator {
-  readonly calls: { documentId: string; input: TranslationInput }[] = [];
+class FakeAnalyzer implements TextAnalyzer {
+  readonly calls: { documentId: string; input: AnalysisInput }[] = [];
   budget: KeyBudget = { kind: 'available', remainingUsd: 1 };
   budgetReads = 0;
   private readonly queued = new Map<string, Answer[]>();
@@ -82,16 +88,16 @@ class FakeTranslator implements Translator {
     ]);
   }
 
-  callsFor(documentId: string): TranslationInput[] {
+  callsFor(documentId: string): AnalysisInput[] {
     return this.calls
       .filter((call) => call.documentId === documentId)
       .map((call) => call.input);
   }
 
-  async translate(
-    input: TranslationInput,
+  async analyze(
+    input: AnalysisInput,
     documentId: string
-  ): Promise<TranslationOutcome> {
+  ): Promise<AnalysisOutcome> {
     this.calls.push({ documentId, input });
     const answer = this.queued.get(documentId)?.shift() ?? translated;
     return answer(input);
@@ -165,6 +171,35 @@ function fixture(api: () => E2eApp) {
     expect(response.statusCode).toBe(200);
   }
 
+  /** Writes the author's version in one language. */
+  async function putText(
+    cookies: CookieJar,
+    id: string,
+    lang: string,
+    payload: Record<string, string>
+  ): Promise<void> {
+    const response = await api().inject({
+      method: 'PUT',
+      url: `/api/projects/${id}/texts/${lang}`,
+      headers: cookies.headers(),
+      payload
+    });
+    expect(response.statusCode).toBe(200);
+  }
+
+  async function deleteText(
+    cookies: CookieJar,
+    id: string,
+    lang: string
+  ): Promise<void> {
+    const response = await api().inject({
+      method: 'DELETE',
+      url: `/api/projects/${id}/texts/${lang}`,
+      headers: cookies.headers()
+    });
+    expect(response.statusCode).toBe(200);
+  }
+
   async function row(id: string) {
     const [found] = await api()
       .db.select()
@@ -200,6 +235,8 @@ function fixture(api: () => E2eApp) {
     signUp,
     createProject,
     patchProject,
+    putText,
+    deleteText,
     row,
     machineRows,
     detail,
@@ -207,19 +244,21 @@ function fixture(api: () => E2eApp) {
   };
 }
 
-function driverOf(api: E2eApp): TranslationDriver {
-  if (!api.translation) throw new Error('The worker is not registered.');
-  return api.translation;
+function driverOf(api: E2eApp): TextAnalysisDriver {
+  if (!api.textAnalysis) throw new Error('The worker is not registered.');
+  return api.textAnalysis;
 }
 
-describe('the translation worker', () => {
+describe('the text analysis worker', () => {
   let api: E2eApp;
-  let worker: TranslationDriver;
-  const fake = new FakeTranslator();
+  let worker: TextAnalysisDriver;
+  const fake = new FakeAnalyzer();
   const {
     signUp,
     createProject,
     patchProject,
+    putText,
+    deleteText,
     row,
     machineRows,
     detail,
@@ -228,7 +267,7 @@ describe('the translation worker', () => {
   let ada: CookieJar;
 
   beforeAll(async () => {
-    api = await startE2eApp({}, { translator: fake });
+    api = await startE2eApp({}, { analyzer: fake });
     worker = driverOf(api);
     ada = await signUp('ada@example.com', 'Ada');
   });
@@ -239,7 +278,7 @@ describe('the translation worker', () => {
 
   it('is scheduled, where the switched-off application has no interval', () => {
     expect(api.app.get(SchedulerRegistry).getIntervals()).toEqual([
-      'translation-worker'
+      'text-analysis-worker'
     ]);
   });
 
@@ -256,7 +295,12 @@ describe('the translation worker', () => {
 
     // The writer's interface language travels as the hint, nothing more.
     expect(fake.callsFor(project.id)).toEqual([
-      { name: 'Full Adder', description: 'Adds three bits.', hint: 'de' }
+      {
+        name: 'Full Adder',
+        description: 'Adds three bits.',
+        hint: 'de',
+        versions: []
+      }
     ]);
     expect((await detail(project.link, 'de')).json()).toMatchObject({
       description: 'Adds three bits.',
@@ -342,8 +386,9 @@ describe('the translation worker', () => {
     });
   });
 
-  it('passes an empty board by until something is drawn on it', async () => {
+  it('passes an unlisted empty board by until something is drawn on it', async () => {
     const project = await createProject(ada, {
+      visibility: 'unlisted',
       document: circuitDocument('Blank board', EMPTY_BODY)
     });
 
@@ -365,6 +410,78 @@ describe('the translation worker', () => {
     await worker.tick();
 
     expect(fake.callsFor(project.id)).toHaveLength(1);
+  });
+
+  it('sends a public empty board, whose text anybody can read', async () => {
+    const project = await createProject(ada, {
+      name: 'Blank public',
+      document: circuitDocument('Blank public', EMPTY_BODY)
+    });
+
+    await worker.tick();
+
+    expect(fake.callsFor(project.id)).toHaveLength(1);
+    const settled = await row(project.id);
+    expect(settled.translatedDigest).toBe(settled.textDigest);
+  });
+
+  it('hands moderation the verdict of a refused translation, then counts the failure', async () => {
+    const apply = vi
+      .spyOn(api.app.get(MachineModerationService), 'apply')
+      .mockResolvedValue('reported');
+    try {
+      const project = await createProject(ada, { name: 'Flagged' });
+      const verdict: ModerationVerdict = {
+        category: 'harassment',
+        certain: true,
+        note: 'Threatens a named person.'
+      };
+      fake.answer(project.id, () => ({
+        kind: 'document',
+        reason: 'the description was refused twice',
+        calls: [USAGE, USAGE],
+        rejections: [],
+        verdict,
+        verdictCall: USAGE
+      }));
+
+      await worker.tick();
+
+      const failed = await row(project.id);
+      expect(apply).toHaveBeenCalledExactlyOnceWith({
+        kind: 'project',
+        documentId: project.id,
+        textDigest: failed.textDigest,
+        verdict,
+        call: USAGE
+      });
+      expect(failed.translationAttempts).toBe(1);
+    } finally {
+      apply.mockRestore();
+    }
+  });
+
+  it('settles a translation whose moderation failed', async () => {
+    const apply = vi
+      .spyOn(api.app.get(MachineModerationService), 'apply')
+      .mockRejectedValue(new Error('the report could not be written'));
+    try {
+      const project = await createProject(ada, { name: 'Unlucky' });
+      fake.answer(project.id, (input) => ({
+        ...translated(input),
+        verdict: { category: 'spam', certain: false, note: 'An ad.' },
+        verdictCall: USAGE
+      }));
+
+      await worker.tick();
+
+      expect(apply).toHaveBeenCalledOnce();
+      const settled = await row(project.id);
+      expect(settled.translatedDigest).toBe(settled.textDigest);
+      expect(fake.callsFor(project.id)).toHaveLength(1);
+    } finally {
+      apply.mockRestore();
+    }
   });
 
   it('does not send a document made private after it was claimed', async () => {
@@ -420,7 +537,9 @@ describe('the translation worker', () => {
       reason: 'OpenRouter answered 429',
       retryAfterSeconds: 120,
       calls: [],
-      rejections: []
+      rejections: [],
+      verdict: null,
+      verdictCall: null
     }));
 
     await worker.tick();
@@ -443,81 +562,122 @@ describe('the translation worker', () => {
     );
   });
 
-  it('settles languageless and fully authored texts without a call', async () => {
+  it('sends a languageless name and a fully authored document like any other', async () => {
     const languageless = await createProject(ada, {
       name: '7400',
       description: ''
     });
     const authored = await createProject(ada, { name: 'Adder' });
-    const almost = await createProject(ada, { name: 'Subtractor' });
-    for (const lang of ['en', 'de', 'fr', 'es']) {
-      const texts = { name: `Adder ${lang}`, description: `Adds (${lang}).` };
-      for (const project of lang === 'es' ? [authored] : [authored, almost]) {
-        const put = await api.inject({
-          method: 'PUT',
-          url: `/api/projects/${project.id}/texts/${lang}`,
-          headers: ada.headers(),
-          payload: texts
-        });
-        expect(put.statusCode).toBe(200);
-      }
+    const versions = ['de', 'en', 'es', 'fr'].map((language) => ({
+      language,
+      name: `Adder ${language}`,
+      description: `Adds (${language}).`
+    }));
+    for (const { language, ...texts } of versions) {
+      await putText(ada, authored.id, language, texts);
     }
 
     await worker.tick();
 
-    expect(fake.callsFor(languageless.id)).toEqual([]);
-    expect((await detail(languageless.link, 'de')).json()).toMatchObject({
-      textLanguage: { name: 'zxx', description: 'zxx' },
+    expect(fake.callsFor(languageless.id)).toMatchObject([
+      { name: '7400', description: '', versions: [] }
+    ]);
+    // Every version is shown to some reader, so every one is judged.
+    expect(fake.callsFor(authored.id)).toMatchObject([
+      { name: 'Adder', description: 'Adds three bits.', versions }
+    ]);
+    const settled = await row(authored.id);
+    expect(settled.translatedDigest).toBe(settled.textDigest);
+    expect(settled.nameLanguage).toBe('en');
+  });
+
+  it('judges a document again when its author writes or removes a version', async () => {
+    const project = await createProject(ada, { name: 'Half Adder' });
+    await worker.tick();
+    expect(fake.callsFor(project.id)).toHaveLength(1);
+
+    await putText(ada, project.id, 'fr', {
+      name: 'Demi',
+      description: 'Additionne.'
+    });
+
+    // The digest did not move, yet the document is pending again, and its
+    // languages read as unknown until the new call lands.
+    const pending = await row(project.id);
+    expect(pending.translatedDigest).toBeNull();
+    expect((await detail(project.link, 'de')).json()).toMatchObject({
+      textLanguage: { name: null, description: null },
       machineTranslation: false
     });
 
-    expect(fake.callsFor(authored.id)).toEqual([]);
-    const settled = await row(authored.id);
-    expect(settled.translatedDigest).toBe(settled.textDigest);
-    expect(settled.nameLanguage).toBeNull();
-    expect(settled.descriptionLanguage).toBeNull();
-
-    // One site language without its author's version still needs the model.
-    expect(fake.callsFor(almost.id)).toHaveLength(1);
-  });
-
-  it('translates what its authors uncover once it was settled by them', async () => {
-    const project = await createProject(ada, { name: 'Half Adder' });
-    const putVersion = (lang: string, payload: Record<string, string>) =>
-      api.inject({
-        method: 'PUT',
-        url: `/api/projects/${project.id}/texts/${lang}`,
-        headers: ada.headers(),
-        payload
-      });
-    for (const lang of ['en', 'de', 'fr', 'es']) {
-      const texts = { name: `Adder ${lang}`, description: `Adds (${lang}).` };
-      expect((await putVersion(lang, texts)).statusCode).toBe(200);
-    }
     await worker.tick();
-    expect(fake.callsFor(project.id)).toEqual([]);
-
-    // Rewritten whole, every language still covered: settled again, no call.
-    await putVersion('fr', { name: 'Demi', description: 'Additionne.' });
-    expect((await row(project.id)).translatedDigest).toBeNull();
-    await worker.tick();
-    expect(fake.callsFor(project.id)).toEqual([]);
-    expect((await row(project.id)).translatedDigest).not.toBeNull();
-
-    const removed = await api.inject({
-      method: 'DELETE',
-      url: `/api/projects/${project.id}/texts/de`,
-      headers: ada.headers()
-    });
-    expect(removed.statusCode).toBe(200);
-    await worker.tick();
-
-    expect(fake.callsFor(project.id)).toHaveLength(1);
+    expect(fake.callsFor(project.id).at(-1)?.versions).toEqual([
+      { language: 'fr', name: 'Demi', description: 'Additionne.' }
+    ]);
     expect((await detail(project.link, 'de')).json()).toMatchObject({
-      description: 'Adds three bits.',
-      textLanguage: { description: 'en' },
+      textLanguage: { name: 'en', description: 'en' },
       machineTranslation: true
     });
+
+    await deleteText(ada, project.id, 'fr');
+    expect((await row(project.id)).translatedDigest).toBeNull();
+    await worker.tick();
+
+    expect(fake.callsFor(project.id)).toHaveLength(3);
+    expect(fake.callsFor(project.id).at(-1)?.versions).toEqual([]);
+    const settled = await row(project.id);
+    expect(settled.translatedDigest).toBe(settled.textDigest);
+  });
+
+  it('judges again a document given a version while its call was in flight', async () => {
+    const project = await createProject(ada, { name: 'Full Subtractor' });
+    fake.answer(project.id, async (input) => {
+      await putText(ada, project.id, 'de', { name: 'Subtrahierer' });
+      return translated(input);
+    });
+
+    await worker.tick();
+
+    // Not settled for versions the call never saw.
+    const pending = await row(project.id);
+    expect(pending.translatedDigest).toBeNull();
+    expect(pending.translationClaimedAt).toBeNull();
+
+    await worker.tick();
+
+    expect(fake.callsFor(project.id)).toHaveLength(2);
+    expect(fake.callsFor(project.id)[1].versions).toEqual([
+      { language: 'de', name: 'Subtrahierer', description: null }
+    ]);
+    const settled = await row(project.id);
+    expect(settled.translatedDigest).toBe(settled.textDigest);
+  });
+
+  it('waits out the debounce after a version as after an edit', async () => {
+    const project = await createProject(ada, { name: 'Ring Counter' });
+    await worker.tick();
+    await api.db
+      .update(projects)
+      .set({ lastEditedAt: sql`now() - interval '2 hours'` })
+      .where(eq(projects.id, project.id));
+    await putText(ada, project.id, 'es', { name: 'Contador en anillo' });
+
+    const claimedIds = async () => {
+      const claimed = await claimPending(api.db, projects, {
+        debounceSeconds: 60 * 60,
+        batch: 100
+      });
+      for (const claim of claimed) await releaseClaim(api.db, projects, claim);
+      return claimed.map((claim) => claim.id);
+    };
+
+    expect(await claimedIds()).not.toContain(project.id);
+
+    await api.db
+      .update(projectTexts)
+      .set({ createdAt: sql`now() - interval '2 hours'` })
+      .where(eq(projectTexts.documentId, project.id));
+    expect(await claimedIds()).toContain(project.id);
   });
 
   it('renews a batch member’s lease when its call starts', async () => {
@@ -533,7 +693,7 @@ describe('the translation worker', () => {
     // The batch before it took the whole lease.
     const aged = await api.db.execute<{ claimed_at: string }>(sql`
       UPDATE projects
-         SET translation_claimed_at = translation_claimed_at - interval '${sql.raw(String(TRANSLATION_LEASE_MINUTES))} minutes 1 second'
+         SET translation_claimed_at = translation_claimed_at - interval '${sql.raw(String(ANALYSIS_LEASE_MINUTES))} minutes 1 second'
        WHERE id = ${project.id}
       RETURNING translation_claimed_at::text AS claimed_at
     `);
@@ -561,7 +721,9 @@ describe('the translation worker', () => {
       pause: 'budget',
       reason: 'OpenRouter answered 402',
       calls: [],
-      rejections: []
+      rejections: [],
+      verdict: null,
+      verdictCall: null
     }));
 
     await worker.tick();
@@ -617,7 +779,9 @@ describe('the translation worker', () => {
       pause: 'configuration',
       reason: 'OpenRouter answered 400',
       calls: [],
-      rejections: []
+      rejections: [],
+      verdict: null,
+      verdictCall: null
     });
     fake.answer(refused.id, configuration);
     fake.answer(behind.id, configuration);
@@ -666,13 +830,13 @@ describe('the translation worker', () => {
 
 describe('the per-owner daily limit', () => {
   let api: E2eApp;
-  const fake = new FakeTranslator();
+  const fake = new FakeAnalyzer();
   const { signUp, createProject, row } = fixture(() => api);
 
   beforeAll(async () => {
     api = await startE2eApp(
-      { TRANSLATION_DAILY_LIMIT_PER_USER: '2' },
-      { translator: fake }
+      { TEXT_ANALYSIS_DAILY_LIMIT_PER_USER: '2' },
+      { analyzer: fake }
     );
   });
 
@@ -701,8 +865,7 @@ describe('the per-owner daily limit', () => {
     expect(stored.translationAttempts).toBe(0);
     expect(stored.translationClaimedAt).not.toBeNull();
     expect(
-      stored.translationClaimedAt!.getTime() +
-        TRANSLATION_LEASE_MINUTES * 60_000
+      stored.translationClaimedAt!.getTime() + ANALYSIS_LEASE_MINUTES * 60_000
     ).toBe(startOfNextUtcDay(Date.now()));
 
     await driverOf(api).tick();
@@ -710,9 +873,9 @@ describe('the per-owner daily limit', () => {
   });
 });
 
-describe('with translation switched off', () => {
+describe('with text analysis switched off', () => {
   let api: E2eApp;
-  const fake = new FakeTranslator();
+  const fake = new FakeAnalyzer();
   const { signUp, createProject, row, detail, translation } = fixture(
     () => api
   );
@@ -720,8 +883,8 @@ describe('with translation switched off', () => {
   beforeAll(async () => {
     // A poll period short enough that a registered worker would have run.
     api = await startE2eApp(
-      { TRANSLATION_ENABLED: 'false', TRANSLATION_POLL_SECONDS: '1' },
-      { translator: fake }
+      { TEXT_ANALYSIS_ENABLED: 'false', TEXT_ANALYSIS_POLL_SECONDS: '1' },
+      { analyzer: fake }
     );
   });
 
@@ -734,24 +897,30 @@ describe('with translation switched off', () => {
     const pending = await createProject(ada, { name: 'Counter' });
     const before = await createProject(ada, { name: 'Adder' });
     // What the worker wrote while it still ran.
-    const { textDigest } = await row(before.id);
+    const claimed = await claimPending(api.db, projects, {
+      debounceSeconds: 0,
+      batch: 100
+    });
+    for (const other of claimed.filter((each) => each.id !== before.id)) {
+      await releaseClaim(api.db, projects, other);
+    }
     expect(
-      await settleTranslation(
+      await settleAnalysis(
         api.db,
         projects,
-        { id: before.id, textDigest },
+        claimed.find((each) => each.id === before.id)!,
         {
           nameLanguage: 'en',
           descriptionLanguage: 'en',
-          texts: { de: { name: null, description: 'Addiert drei Bits.' } },
-          model: SERVED_MODEL
-        }
+          texts: { de: { name: null, description: 'Addiert drei Bits.' } }
+        },
+        SERVED_MODEL
       )
     ).toBe(true);
 
     await new Promise((resolve) => setTimeout(resolve, 1_500));
 
-    expect(api.translation).toBeNull();
+    expect(api.textAnalysis).toBeNull();
     expect(api.app.get(SchedulerRegistry).getIntervals()).toEqual([]);
     expect(fake.calls).toEqual([]);
     const untouched = await row(pending.id);

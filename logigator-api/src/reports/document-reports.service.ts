@@ -1,5 +1,8 @@
 import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
-import type { ReportDocumentRequest } from '@logigator/contract';
+import type {
+  DocumentReportReason,
+  ReportDocumentRequest
+} from '@logigator/contract';
 import { ApiException } from '../common/api-exception';
 import { ENV, type Env } from '../config/env';
 import { DB, type Database } from '../database/database.module';
@@ -9,6 +12,84 @@ import { MailService } from '../mail/mail.service';
 
 /** The two kinds of document a report can name, as the API spells them. */
 export type ReportedKind = 'project' | 'component';
+
+/** One stored report and the document it names, as the operator is told. */
+export interface OperatorReport {
+  reportId: string | undefined;
+  source: 'reader' | 'machine';
+  kind: ReportedKind;
+  document: { id: string; link: string; name: string; ownerId: string };
+  reason: DocumentReportReason;
+  explanation: string;
+  contactEmail: string | null;
+  reporterId: string | null;
+  /** Whether the machine's verdict that opened the report hid the document. */
+  hidden: boolean;
+}
+
+/**
+ * The operator's mail about one report, from a reader or the machine alike:
+ * the summary that is also logged, the page, the explanation, and the
+ * `db:moderate` commands that apply. A report whose verdict hid the document
+ * has a subject of its own, so it cannot pass for an ordinary report, and
+ * offers the commands that confirm or reverse the hide.
+ */
+export function operatorReportMail(
+  report: OperatorReport,
+  publicUrl: string
+): { subject: string; body: string; replyTo?: string } {
+  const { kind, document } = report;
+  const command = 'yarn workspace logigator-api run db:moderate';
+  const commands = report.hidden
+    ? [
+        `To confirm the hide, with a reason shown to the owner:`,
+        `  ${command} hide ${kind} ${document.link} --reason "…"`,
+        `To reverse it:`,
+        `  ${command} unhide ${kind} ${document.link}`
+      ]
+    : [
+        `To hide it:`,
+        `  ${command} hide ${kind} ${document.link} --reason "…"`,
+        ...(report.reportId
+          ? [
+              `To close the report without hiding:`,
+              `  ${command} resolve ${report.reportId} --note "…"`
+            ]
+          : [])
+      ];
+
+  return {
+    subject: report.hidden
+      ? `Hidden automatically: ${document.name}`
+      : report.source === 'machine'
+        ? `Document report (${report.reason}, machine): ${document.name}`
+        : `Document report (${report.reason}): ${document.name}`,
+    body: [
+      JSON.stringify(reportSummary(report), null, 2),
+      `\nPage: ${publicUrl}/en/community/${kind}s/${document.link}`,
+      `Source: ${report.source}`,
+      `Contact: ${report.contactEmail ?? 'none given'}`,
+      `\nExplanation:\n${report.explanation}`,
+      `\n${commands.join('\n')}`
+    ].join('\n'),
+    ...(report.contactEmail ? { replyTo: report.contactEmail } : {})
+  };
+}
+
+/** What is logged of a report: who and what, never the explanation. */
+export function reportSummary(report: OperatorReport): Record<string, unknown> {
+  return {
+    report: report.reportId,
+    source: report.source,
+    kind: report.kind,
+    document: report.document.id,
+    link: report.document.link,
+    owner: report.document.ownerId,
+    reason: report.reason,
+    reporter: report.reporterId,
+    ...(report.source === 'machine' ? { hidden: report.hidden } : {})
+  };
+}
 
 /**
  * Notices about documents: stored, logged, and mailed to `REPORT_MAIL_TO` when
@@ -58,29 +139,28 @@ export class DocumentReportsService {
       })
       .returning({ id: documentReports.id });
 
-    const summary = {
-      report: row?.id,
+    const report: OperatorReport = {
+      reportId: row?.id,
+      source: 'reader',
       kind,
-      document: document.id,
-      link,
-      owner: document.userId,
+      document: {
+        id: document.id,
+        link,
+        name: document.name,
+        ownerId: document.userId
+      },
       reason: body.reason,
-      reporter: reporterId
+      explanation: body.explanation,
+      contactEmail: body.contactEmail ?? null,
+      reporterId,
+      hidden: false
     };
-    this.logger.warn(JSON.stringify(summary));
+    this.logger.warn(JSON.stringify(reportSummary(report)));
 
     try {
-      await this.mail.sendDocumentReport({
-        subject: `Document report (${body.reason}): ${document.name}`,
-        body: [
-          JSON.stringify(summary, null, 2),
-          `\nPage: ${this.env.PUBLIC_URL}/en/community/${kind}s/${link}`,
-          `Contact: ${body.contactEmail ?? 'none given'}`,
-          `\nExplanation:\n${body.explanation}`,
-          `\nTo hide it:\n  yarn workspace logigator-api run db:moderate hide ${kind} ${link} --reason "…"`
-        ].join('\n'),
-        ...(body.contactEmail ? { replyTo: body.contactEmail } : {})
-      });
+      await this.mail.sendDocumentReport(
+        operatorReportMail(report, this.env.PUBLIC_URL)
+      );
     } catch (error) {
       this.logger.error('Could not mail the document report', error);
     }

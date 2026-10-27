@@ -6,14 +6,18 @@ import { renderMail, type MailKind } from './mail-template';
 const KINDS: MailKind[] = [
   'verifyRegistration',
   'verifyEmailChange',
-  'resetPassword'
+  'resetPassword',
+  'documentHidden',
+  'documentHiddenAutomatically',
+  'documentUnhidden'
 ];
 
 const params = {
   username: 'Ada',
   link: 'https://logigator.test/verify-email/abc123',
   linkLifetimeMinutes: 60,
-  publicUrl: 'https://logigator.test'
+  publicUrl: 'https://logigator.test',
+  values: { name: 'Half Adder', reason: 'Spam' }
 };
 
 describe('renderMail', () => {
@@ -25,6 +29,28 @@ describe('renderMail', () => {
 
     expect(mail.html).not.toContain('<script>');
     expect(mail.html).toContain('&lt;script&gt;');
+  });
+
+  it('escapes a document name and a reason in the HTML part', () => {
+    const mail = renderMail('documentHidden', 'en', {
+      ...params,
+      values: { name: '<img src=x onerror=alert(1)>', reason: '"<b>bold</b>"' }
+    });
+
+    expect(mail.html).not.toContain('<img src=x');
+    expect(mail.html).not.toContain('<b>bold</b>');
+    expect(mail.html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+    // The text part is plain text, so the name reaches it as written.
+    expect(mail.text).toContain('<img src=x onerror=alert(1)>');
+  });
+
+  it('takes a value as text, never as more placeholders', () => {
+    const mail = renderMail('documentHidden', 'en', {
+      ...params,
+      values: { name: '{reason}', reason: 'Spam' }
+    });
+
+    expect(mail.text).toContain('“{reason}”');
   });
 
   it.each(KINDS)('puts the link in both parts of a %s mail', (kind) => {

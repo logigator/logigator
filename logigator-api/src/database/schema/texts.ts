@@ -10,8 +10,8 @@ import {
 import { components, projects } from './documents';
 
 /**
- * Who wrote a document text: its author, naming the language, or the
- * translation worker. At module scope for the reason `documentVisibility` is.
+ * Who wrote a document text: its author, naming the language, or the text
+ * analysis worker. At module scope for the reason `documentVisibility` is.
  */
 export const documentTextOrigin = pgEnum('document_text_origin', [
   'human',

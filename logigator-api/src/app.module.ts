@@ -17,7 +17,7 @@ import { ReportsModule } from './reports/reports.module';
 import { SessionModule } from './session/session.module';
 import { SharingModule } from './sharing/sharing.module';
 import { StorageModule } from './storage/storage.module';
-import { TranslationWorkerModule } from './translation/translation-worker.module';
+import { TextAnalysisWorkerModule } from './text-analysis/text-analysis-worker.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -60,7 +60,9 @@ export class AppModule {
       global: true,
       // Decided here, at bootstrap, because whether the worker exists is what
       // the switch means: reads never consult it.
-      imports: env.TRANSLATION_WORKER_ENABLED ? [TranslationWorkerModule] : [],
+      imports: env.TEXT_ANALYSIS_WORKER_ENABLED
+        ? [TextAnalysisWorkerModule]
+        : [],
       providers: [{ provide: ENV, useValue: env }],
       exports: [ENV]
     };

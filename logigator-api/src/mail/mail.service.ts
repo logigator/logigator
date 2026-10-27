@@ -1,7 +1,9 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { Transporter } from 'nodemailer';
+import type { DocumentReportReason } from '@logigator/contract';
 import { ENV, type Env } from '../config/env';
 import type { Locale } from '../common/locale';
+import { MAIL_STRINGS } from './mail-strings';
 import { renderMail, type MailKind } from './mail-template';
 import { MAIL_TRANSPORT } from './mail.transport';
 
@@ -10,6 +12,21 @@ export interface MailRecipient {
   username: string;
   locale: Locale;
 }
+
+/** The document a moderation mail is about, as its owner knows it. */
+export interface ModeratedDocument {
+  kind: 'project' | 'component';
+  link: string;
+  name: string;
+}
+
+/**
+ * Why a document was hidden, as its owner is told: a moderator's own words,
+ * or the category of the machine's verdict, worded by the mail itself.
+ */
+export type HideReason =
+  | { by: 'moderator'; reason: string }
+  | { by: 'machine'; category: DocumentReportReason };
 
 /**
  * Sends the handful of transactional mails the API owns. Callers name an
@@ -60,6 +77,47 @@ export class MailService {
       'resetPassword',
       recipient,
       `${this.siteUrl(recipient)}/reset-password?token=${encodeURIComponent(token)}`
+    );
+  }
+
+  /**
+   * Tells a document's owner it was taken out of the community, and why. The
+   * reply-to is the operator's address where there is one, so objecting is a
+   * reply; the wording names the imprint's contact address, which holds
+   * either way.
+   */
+  async sendDocumentHidden(
+    recipient: MailRecipient,
+    document: ModeratedDocument,
+    hide: HideReason
+  ): Promise<void> {
+    await this.send(
+      hide.by === 'machine' ? 'documentHiddenAutomatically' : 'documentHidden',
+      recipient,
+      this.documentLink(recipient, document),
+      {
+        values: {
+          name: document.name,
+          reason:
+            hide.by === 'machine'
+              ? MAIL_STRINGS[recipient.locale].hiddenReasons[hide.category]
+              : hide.reason
+        },
+        replyTo: this.env.REPORT_MAIL_TO
+      }
+    );
+  }
+
+  /** Tells a document's owner it is back in the community. */
+  async sendDocumentUnhidden(
+    recipient: MailRecipient,
+    document: ModeratedDocument
+  ): Promise<void> {
+    await this.send(
+      'documentUnhidden',
+      recipient,
+      this.documentLink(recipient, document),
+      { values: { name: document.name }, replyTo: this.env.REPORT_MAIL_TO }
     );
   }
 
@@ -129,6 +187,14 @@ export class MailService {
     return `${this.env.PUBLIC_URL}/${recipient.locale}`;
   }
 
+  /** The document's community page, which resolves for its owner even hidden. */
+  private documentLink(
+    recipient: MailRecipient,
+    document: ModeratedDocument
+  ): string {
+    return `${this.siteUrl(recipient)}/community/${document.kind}s/${document.link}`;
+  }
+
   private verifyLink(recipient: MailRecipient, token: string): string {
     return `${this.siteUrl(recipient)}/verify-email/${encodeURIComponent(token)}`;
   }
@@ -136,13 +202,16 @@ export class MailService {
   private async send(
     kind: MailKind,
     recipient: MailRecipient,
-    link: string
+    link: string,
+    options: { values?: Record<string, string>; replyTo?: string } = {}
   ): Promise<void> {
+    const { values, replyTo } = options;
     const mail = renderMail(kind, recipient.locale, {
       username: recipient.username,
       link,
       linkLifetimeMinutes: this.env.AUTH_TOKEN_TTL_MINUTES,
-      publicUrl: this.env.PUBLIC_URL
+      publicUrl: this.env.PUBLIC_URL,
+      ...(values ? { values } : {})
     });
 
     const info: unknown = await this.transport.sendMail({
@@ -150,7 +219,8 @@ export class MailService {
       to: recipient.email,
       subject: mail.subject,
       html: mail.html,
-      text: mail.text
+      text: mail.text,
+      ...(replyTo ? { replyTo } : {})
     });
 
     if (!this.env.SMTP_URL) {

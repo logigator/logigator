@@ -1,22 +1,27 @@
 import { Logger, type LoggerService } from '@nestjs/common';
 import {
-  TRANSLATION_SYSTEM_PROMPT,
-  translationRetryMessage,
-  translationUserMessage
-} from '../translation-prompt';
+  BLOCKED_VERDICT,
+  isStricter,
+  type ModerationVerdict
+} from '../../moderation/moderation-verdict';
 import {
-  readTranslationReply,
-  TRANSLATION_REPLY_JSON_SCHEMA
-} from '../translation-reply';
+  analysisRetryMessage,
+  analysisUserMessage,
+  TEXT_ANALYSIS_SYSTEM_PROMPT
+} from '../analysis-prompt';
+import {
+  ANALYSIS_REPLY_JSON_SCHEMA,
+  readAnalysisReply
+} from '../analysis-reply';
 import type {
+  AnalysisFailure,
+  AnalysisInput,
+  AnalysisOutcome,
   CallUsage,
   KeyBudget,
   ReplyRejection,
-  TranslationFailure,
-  TranslationInput,
-  TranslationOutcome,
-  Translator
-} from '../translator';
+  TextAnalyzer
+} from '../text-analyzer';
 import {
   classifyOpenRouterFailure,
   parseRetryAfter
@@ -64,17 +69,17 @@ export interface OpenRouterClientOptions {
  */
 export function buildCompletionRequest(
   model: string,
-  input: TranslationInput,
+  input: AnalysisInput,
   retryReason?: string
 ): Record<string, unknown> {
   const messages = [
-    { role: 'system', content: TRANSLATION_SYSTEM_PROMPT },
-    { role: 'user', content: translationUserMessage(input) }
+    { role: 'system', content: TEXT_ANALYSIS_SYSTEM_PROMPT },
+    { role: 'user', content: analysisUserMessage(input) }
   ];
   if (retryReason !== undefined) {
     messages.push({
       role: 'user',
-      content: translationRetryMessage(retryReason)
+      content: analysisRetryMessage(retryReason)
     });
   }
 
@@ -86,7 +91,7 @@ export function buildCompletionRequest(
       json_schema: {
         name: 'document_translation',
         strict: true,
-        schema: TRANSLATION_REPLY_JSON_SCHEMA
+        schema: ANALYSIS_REPLY_JSON_SCHEMA
       }
     }
   };
@@ -109,20 +114,27 @@ function openRouterHeaders(
 
 /** What one call produced: the reply's text, or a classified failure. */
 interface Completion {
-  result: { kind: 'content'; content: string } | TranslationFailure;
+  result: { kind: 'content'; content: string } | AnalysisFailure;
   usage: CallUsage | null;
+  /** Whether the provider's filter or the model itself declined the text. */
+  blocked: boolean;
 }
 
 /**
- * Translation through OpenRouter. Model-generic by construction: the model,
+ * Text analysis through OpenRouter. Model-generic by construction: the model,
  * its fallbacks and its tuning are the preset's, so nothing here names a
  * model, a provider or a reasoning level.
  *
  * No endpoint is trusted to honour the schema — on some it is only a strong
  * hint — so every reply is parsed and checked here, and a refused one is
  * retried once with the reason named before it counts against the document.
+ *
+ * The moderation verdict is read from every reply that matches the schema,
+ * whatever becomes of its translation, and the strictest of the two attempts
+ * is the one returned: a retry is a second reading of the same text, and a
+ * milder second opinion is no reason to forget the first.
  */
-export class OpenRouterClient implements Translator {
+export class OpenRouterClient implements TextAnalyzer {
   private readonly model: string;
   private readonly fetch: typeof fetch;
   private readonly logger: Pick<LoggerService, 'log' | 'warn'>;
@@ -133,12 +145,15 @@ export class OpenRouterClient implements Translator {
     this.logger = options.logger ?? new Logger(OpenRouterClient.name);
   }
 
-  async translate(
-    input: TranslationInput,
+  async analyze(
+    input: AnalysisInput,
     documentId: string
-  ): Promise<TranslationOutcome> {
+  ): Promise<AnalysisOutcome> {
     const calls: CallUsage[] = [];
     const rejections: ReplyRejection[] = [];
+    let verdict: ModerationVerdict | null = null;
+    let verdictCall: CallUsage | null = null;
+    const accounted = () => ({ calls, rejections, verdict, verdictCall });
 
     for (let attempt = 0; attempt < 2; attempt++) {
       const completion = await this.complete(
@@ -148,35 +163,51 @@ export class OpenRouterClient implements Translator {
       if (completion.usage) calls.push(completion.usage);
 
       const { result } = completion;
+      // A declined text is likelier than any other to break the rules, and
+      // the one whose reply carries no verdict to say so.
+      if (completion.blocked && isStricter(BLOCKED_VERDICT, verdict)) {
+        verdict = BLOCKED_VERDICT;
+        verdictCall = completion.usage;
+      }
       if (result.kind !== 'content') {
         this.logger.warn(
-          `Translation of ${documentId} failed (${describeFailure(result)}): ${result.reason}`
+          `Analysis of ${documentId} failed (${describeFailure(result)}): ${result.reason}`
         );
-        return { ...result, calls, rejections };
+        return { ...result, ...accounted() };
       }
 
-      const read = readTranslationReply(result.content, input);
+      const read = readAnalysisReply(result.content, input);
+      if (read.verdict && isStricter(read.verdict, verdict)) {
+        verdict = read.verdict;
+        verdictCall = completion.usage;
+      }
+      if (read.verdict && read.verdict.category !== 'none') {
+        // The category and nothing else: the note is the model's words over
+        // the author's text, and stays with the report.
+        this.logger.log(
+          `Moderation verdict for ${documentId}: ${read.verdict.category}` +
+            (read.verdict.certain ? ', certain' : ', not certain')
+        );
+      }
       if (read.ok) {
         return {
           kind: 'success',
           translation: read.translation,
           model: completion.usage?.model ?? null,
-          calls,
-          rejections
+          ...accounted()
         };
       }
 
       rejections.push(read.rejection);
       this.logger.warn(
-        `Translation reply for ${documentId} refused (${read.rejection.stage}): ${read.rejection.reason}`
+        `Analysis reply for ${documentId} refused (${read.rejection.stage}): ${read.rejection.reason}`
       );
     }
 
     return {
       kind: 'document',
       reason: `the reply was refused twice; last: ${rejections.at(-1)?.reason}`,
-      calls,
-      rejections
+      ...accounted()
     };
   }
 
@@ -253,7 +284,8 @@ export class OpenRouterClient implements Translator {
           reason: describeError(error),
           retryAfterSeconds: null
         },
-        usage: null
+        usage: null,
+        blocked: false
       };
     }
 
@@ -261,18 +293,25 @@ export class OpenRouterClient implements Translator {
     if (!response.ok) {
       return {
         result: classifyOpenRouterFailure(response.status, body, retryAfter),
-        usage: null
+        usage: null,
+        blocked: false
       };
     }
 
     const { usage, choice } = readCompletion(body);
     if (usage) this.logUsage(usage, documentId);
-    return { result: classifyChoice(choice, body, retryAfter), usage };
+    return {
+      result: classifyChoice(choice, body, retryAfter),
+      usage,
+      blocked:
+        choice !== null &&
+        (choice.finishReason === 'content_filter' || choice.refusal)
+    };
   }
 
   private logUsage(usage: CallUsage, documentId: string): void {
     this.logger.log(
-      `Translation call for ${documentId}: ${usage.model ?? 'unknown model'} ` +
+      `Analysis call for ${documentId}: ${usage.model ?? 'unknown model'} ` +
         `via ${usage.provider ?? 'unknown provider'}, ` +
         `${usage.promptTokens ?? '?'} prompt (${usage.cachedTokens ?? '?'} cached) + ` +
         `${usage.completionTokens ?? '?'} completion tokens, ` +
@@ -394,6 +433,6 @@ function describeError(error: unknown): string {
   return `the request failed: ${error instanceof Error ? error.message : String(error)}`;
 }
 
-function describeFailure(failure: TranslationFailure): string {
+function describeFailure(failure: AnalysisFailure): string {
   return failure.kind === 'system' ? `system, ${failure.pause}` : failure.kind;
 }

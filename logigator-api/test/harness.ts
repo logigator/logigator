@@ -23,11 +23,14 @@ import { runMigrations } from '../src/database/migrate';
 import { MAIL_TRANSPORT } from '../src/mail/mail.transport';
 import { createRedisClient } from '../src/redis/redis.client';
 import {
-  TRANSLATION_CLOCK,
-  type TranslationClock,
-  TranslationWorker
-} from '../src/translation/translation.worker';
-import { TRANSLATOR, type Translator } from '../src/translation/translator';
+  ANALYSIS_CLOCK,
+  type AnalysisClock,
+  TextAnalysisWorker
+} from '../src/text-analysis/text-analysis.worker';
+import {
+  TEXT_ANALYZER,
+  type TextAnalyzer
+} from '../src/text-analysis/text-analyzer';
 import { MailCapture } from './mail-capture';
 
 /**
@@ -105,18 +108,18 @@ export async function createThrowawayDatabase(): Promise<ThrowawayDatabase> {
 }
 
 /**
- * The translation worker under a spec's control: its interval is too long to
+ * The text analysis worker under a spec's control: its interval is too long to
  * fire during a run, so a spec drives each tick itself, and the worker's clock
  * runs ahead only when told to.
  */
-export interface TranslationDriver {
+export interface TextAnalysisDriver {
   tick(): Promise<void>;
   /** Moves the worker's clock, which decides when a pause ends. */
   advance(ms: number): void;
 }
 
 /** Real time plus whatever a spec has skipped ahead. */
-class ManualClock implements TranslationClock {
+class ManualClock implements AnalysisClock {
   private offset = 0;
 
   now(): number {
@@ -130,12 +133,12 @@ class ManualClock implements TranslationClock {
 
 export interface E2eAppOptions {
   /**
-   * Runs the translation worker against this instead of OpenRouter. The env
+   * Runs the text analysis worker against this instead of OpenRouter. The env
    * then carries a placeholder key, no debounce and an interval that never
-   * fires; `overrides` still win, so `TRANSLATION_ENABLED=false` leaves the
+   * fires; `overrides` still win, so `TEXT_ANALYSIS_ENABLED=false` leaves the
    * worker out exactly as in production.
    */
-  translator?: Translator;
+  analyzer?: TextAnalyzer;
 }
 
 export interface E2eApp {
@@ -144,8 +147,8 @@ export interface E2eApp {
   db: Database;
   /** What the API tried to mail, in order. */
   mail: MailCapture;
-  /** Null unless a translator was given and the worker is registered. */
-  translation: TranslationDriver | null;
+  /** Null unless an analyzer was given and the worker is registered. */
+  textAnalysis: TextAnalysisDriver | null;
   inject(options: InjectOptions): Promise<LightMyRequestResponse>;
   /** Drops the database, clears the Redis keys, removes the storage dir. */
   close(): Promise<void>;
@@ -181,12 +184,12 @@ export async function startE2eApp(
     STORAGE_DIR: storageDir,
     BCRYPT_COST: '4',
     PUBLIC_URL: 'http://logigator.test',
-    ...(options.translator
+    ...(options.analyzer
       ? {
           OPENROUTER_API_KEY: 'e2e-placeholder',
           OPENROUTER_PRESET: 'e2e',
-          TRANSLATION_DEBOUNCE_SECONDS: '0',
-          TRANSLATION_POLL_SECONDS: String(24 * 60 * 60)
+          TEXT_ANALYSIS_DEBOUNCE_SECONDS: '0',
+          TEXT_ANALYSIS_POLL_SECONDS: String(24 * 60 * 60)
         }
       : {}),
     ...overrides
@@ -201,11 +204,11 @@ export async function startE2eApp(
     .useValue(mail.transport)
     .overrideProvider(MIGRATIONS_FOLDER)
     .useValue(MIGRATIONS_FOLDER_PATH);
-  if (options.translator) {
+  if (options.analyzer) {
     builder = builder
-      .overrideProvider(TRANSLATOR)
-      .useValue(options.translator)
-      .overrideProvider(TRANSLATION_CLOCK)
+      .overrideProvider(TEXT_ANALYZER)
+      .useValue(options.analyzer)
+      .overrideProvider(ANALYSIS_CLOCK)
       .useValue(clock);
   }
   const moduleRef = await builder.compile();
@@ -221,8 +224,8 @@ export async function startE2eApp(
   await app.getHttpAdapter().getInstance().ready();
 
   const worker =
-    options.translator && env.TRANSLATION_WORKER_ENABLED
-      ? app.get(TranslationWorker)
+    options.analyzer && env.TEXT_ANALYSIS_WORKER_ENABLED
+      ? app.get(TextAnalysisWorker)
       : null;
 
   return {
@@ -230,7 +233,7 @@ export async function startE2eApp(
     env,
     db: app.get<Database>(DB),
     mail,
-    translation: worker && {
+    textAnalysis: worker && {
       tick: () => worker.tick(),
       advance: (ms) => clock.advance(ms)
     },

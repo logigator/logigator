@@ -6,7 +6,7 @@ import type {
   ProjectSummary
 } from '@logigator/contract';
 import { eq } from 'drizzle-orm';
-import { documentReports } from '../src/database/schema';
+import { documentReports, users } from '../src/database/schema';
 import { ModerationService } from '../src/moderation/moderation.service';
 import {
   circuitDocument,
@@ -134,6 +134,7 @@ describe('moderation', () => {
         .where(eq(documentReports.documentId, project.id));
       expect(row).toMatchObject({
         documentKind: 'project',
+        source: 'reader',
         reason: 'copyright',
         explanation: REPORT.explanation,
         contactEmail: 'owner@example.com',
@@ -215,7 +216,7 @@ describe('moderation', () => {
         hidden.link,
         'Copyright notice'
       );
-      expect(result).toEqual({ resolvedReports: 1 });
+      expect(result).toEqual({ resolvedReports: 1, ownerMailed: true });
     });
 
     it('drops out of every listing, search and profile', async () => {
@@ -296,6 +297,50 @@ describe('moderation', () => {
       const other = await publicProject('Visible');
       const visible = await get(`/api/community/projects/${other.link}`, grace);
       expect(visible.json()).not.toHaveProperty('hidden');
+    });
+
+    it('mails its owner on hide and on unhide', async () => {
+      const other = await publicProject('Mailed');
+      api.mail.clear();
+
+      await moderation.hide('project', other.link, 'Copied from <a> book');
+      const hiddenMail = api.mail.last();
+      expect(hiddenMail.to).toBe('ada@example.com');
+      expect(hiddenMail.text).toContain('Mailed');
+      expect(hiddenMail.text).toContain('Copied from <a> book');
+      expect(hiddenMail.html).toContain('Copied from &lt;a&gt; book');
+      expect(hiddenMail.text).toContain(`/en/community/projects/${other.link}`);
+      // Objecting is a reply, and it reaches the operator.
+      expect(hiddenMail.replyTo).toBe('ops@logigator.test');
+
+      expect(await moderation.unhide('project', other.link)).toEqual({
+        ownerMailed: true
+      });
+      expect(api.mail.sent).toHaveLength(2);
+      expect(api.mail.last()).toMatchObject({
+        to: 'ada@example.com',
+        subject: 'Your document is visible again'
+      });
+    });
+
+    it('does not mail an owner whose address is unverified', async () => {
+      const other = await publicProject('Unverified owner');
+      await api.db
+        .update(users)
+        .set({ emailVerified: false })
+        .where(eq(users.id, adaId));
+      try {
+        api.mail.clear();
+        expect(
+          await moderation.hide('project', other.link, 'Spam')
+        ).toMatchObject({ ownerMailed: false });
+        expect(api.mail.sent).toEqual([]);
+      } finally {
+        await api.db
+          .update(users)
+          .set({ emailVerified: true })
+          .where(eq(users.id, adaId));
+      }
     });
 
     it('stays hidden through its owner’s visibility changes', async () => {
@@ -426,14 +471,15 @@ describe('moderation', () => {
       });
       const open = await moderation.openReports();
       const entry = open.find((r) => r.document?.id === project.id);
+      expect(entry?.source).toBe('reader');
       expect(entry?.document).toMatchObject({
         link: project.link,
         ownerId: adaId,
         hidden: false
       });
 
-      expect(await moderation.resolve(entry!.id, 'Not spam')).toBe(true);
-      expect(await moderation.resolve(entry!.id, 'Again')).toBe(false);
+      expect(await moderation.resolve(entry!.id, 'Not spam')).toBe('resolved');
+      expect(await moderation.resolve(entry!.id, 'Again')).toBe('missing');
       expect(
         (await moderation.openReports()).some((r) => r.id === entry!.id)
       ).toBe(false);

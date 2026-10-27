@@ -1,4 +1,4 @@
-import type { TranslationFailure } from '../translator';
+import type { AnalysisFailure } from '../text-analyzer';
 
 /**
  * The parts of an OpenRouter error body the classification reads. The body is
@@ -63,7 +63,7 @@ export function classifyOpenRouterFailure(
   status: number,
   body: unknown,
   retryAfterSeconds: number | null
-): TranslationFailure {
+): AnalysisFailure {
   const error = readOpenRouterError(body);
   const reason = `OpenRouter answered ${status}${error?.message ? `: ${error.message.slice(0, 300)}` : ''}`;
 

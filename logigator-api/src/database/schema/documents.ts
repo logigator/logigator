@@ -13,6 +13,7 @@ import {
   type AnyPgColumn
 } from 'drizzle-orm/pg-core';
 import type { CurrentCircuitFile } from '@logigator/core';
+import { reportReason } from './reports';
 import { users } from './users';
 
 /**
@@ -40,6 +41,12 @@ export const documentVisibility = pgEnum('document_visibility', [
   'unlisted',
   'public'
 ]);
+
+/**
+ * Who took a document out of the community: a person through the moderation
+ * CLI, or the text analysis worker on a severe verdict it was certain of.
+ */
+export const hiddenBy = pgEnum('hidden_by', ['moderator', 'machine']);
 
 /**
  * Columns every stored circuit has, as a factory rather than a shared object:
@@ -103,14 +110,28 @@ function circuitColumns() {
      */
     visibility: documentVisibility('visibility').notNull().default('unlisted'),
     /**
-     * Set when moderation takes the document out of the community, and only
-     * by the moderation CLI. A hidden document resolves for its owner alone
-     * and is in no listing, whatever `visibility` says; the owner can still
-     * change that, which does not unhide it. Both columns are written together.
+     * Set when moderation takes the document out of the community: by the
+     * moderation CLI, or by the text analysis worker for a severe verdict it
+     * was certain of. A hidden document resolves for its owner alone and is in
+     * no listing, whatever `visibility` says; the owner can still change that,
+     * which does not unhide it. The hidden columns are written together.
      */
     hiddenAt: timestamp('hidden_at', { withTimezone: true }),
     /** Why it was hidden, as shown to its owner. */
     hiddenReason: varchar('hidden_reason', { length: 500 }),
+    hiddenBy: hiddenBy('hidden_by'),
+    /**
+     * The verdict's category for a hide by the machine, which the owner is
+     * shown in their own language; null for a moderator's, whose reason is
+     * their own words.
+     */
+    hiddenCategory: reportReason('hidden_category'),
+    /**
+     * The `textDigest` a moderator last cleared, by unhiding the document or
+     * resolving a machine report about it. The machine neither hides nor
+     * reports that text again; an edit moves the digest past it.
+     */
+    moderatedDigest: char('moderated_digest', { length: 32 }),
     /**
      * Id of the preview's directory on the served volume; the renders stay
      * files behind a cache-friendly `<img>` path. One pointer for both themes,
@@ -151,17 +172,23 @@ function circuitColumns() {
      */
     nameLanguage: varchar('name_language', { length: 8 }),
     descriptionLanguage: varchar('description_language', { length: 8 }),
-    /** The `textDigest` the two languages and the machine texts were made for. */
+    /**
+     * The `textDigest` the two languages and the machine texts were made for.
+     *
+     * This and the three columns after it track the whole text analysis of
+     * the current text, not translation alone: detection, translation and the
+     * moderation verdict, which one call gives together.
+     */
     translatedDigest: char('translated_digest', { length: 32 }),
     /**
-     * A translation worker's lease. A lease older than its term is free again,
-     * so the rows a crashed worker held come back on their own.
+     * A text analysis worker's lease. A lease older than its term is free
+     * again, so the rows a crashed worker held come back on their own.
      */
     translationClaimedAt: timestamp('translation_claimed_at', {
       withTimezone: true
     }),
     /**
-     * Failed translations of the text `translationAttemptDigest` names. Counted
+     * Failed analyses of the text `translationAttemptDigest` names. Counted
      * against a digest so that an edit, which moves the digest, starts the
      * count over: a text that keeps failing is parked until it changes.
      */
@@ -174,9 +201,9 @@ function circuitColumns() {
 export const MAX_TRANSLATION_ATTEMPTS = 3;
 
 /**
- * What the translation worker scans: pending rows that may leave the
+ * What the text analysis worker scans: pending rows that may leave the
  * database, oldest edit first. Private and hidden documents are never sent to
- * a translator, and a parked text is not taken until it is edited, so both are
+ * the model, and a parked text is not taken until it is edited, so both are
  * outside the index as well as the claim; otherwise every claim would step
  * over every parked row before it reached one it may take.
  *

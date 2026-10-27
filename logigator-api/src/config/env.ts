@@ -173,13 +173,15 @@ const variables = z.object({
     .default('false'),
 
   /**
-   * Whether new names and descriptions are sent for detection and translation.
-   * `false` stops new work only: translations made earlier are still served,
+   * Whether new names and descriptions are sent for text analysis, the one
+   * call that detects their language, translates them and moderates them.
+   * `false` stops new translations and automatic moderation alike; reader
+   * reports still work, and translations made earlier are still served,
    * because reads answer from the database and never consult this switch.
    */
-  TRANSLATION_ENABLED: z.stringbool().default(true),
+  TEXT_ANALYSIS_ENABLED: z.stringbool().default(true),
   /**
-   * The OpenRouter key translation runs on, a key of its own: its daily limit
+   * The OpenRouter key text analysis runs on, a key of its own: its daily limit
    * is the feature's spend budget, and its usage is the feature's cost. Unset
    * means nothing is ever sent, which is the development default.
    */
@@ -195,21 +197,32 @@ const variables = z.object({
       error: 'must be the slug alone — the API sends it as @preset/<slug>'
     })
     .optional(),
-  /** How often the translation worker looks for documents to translate. */
-  TRANSLATION_POLL_SECONDS: z.coerce.number().int().min(1).default(30),
+  /**
+   * Whether a severe verdict the model is certain of hides the document at
+   * once. Off, every verdict only opens a report. Requires `REPORT_MAIL_TO`,
+   * so nothing is taken offline without the operator hearing of it.
+   */
+  MODERATION_AUTO_HIDE: z.stringbool().default(false),
+  /** How often the text analysis worker looks for documents to analyze. */
+  TEXT_ANALYSIS_POLL_SECONDS: z.coerce.number().int().min(1).default(30),
   /**
    * How long a document's text has to stay unchanged before it is claimed, so
    * autosave and typing settle first and one edit session costs one call.
    */
-  TRANSLATION_DEBOUNCE_SECONDS: z.coerce.number().int().min(0).default(120),
+  TEXT_ANALYSIS_DEBOUNCE_SECONDS: z.coerce.number().int().min(0).default(120),
   /** How many documents of each kind one tick claims. */
-  TRANSLATION_BATCH: z.coerce.number().int().min(1).default(5),
+  TEXT_ANALYSIS_BATCH: z.coerce.number().int().min(1).default(5),
   /**
-   * Translation calls one owner's documents may cost per UTC day. OpenRouter's
-   * key limit is the global budget, and it knows nothing of our users; this is
-   * what keeps one account mass-creating documents from spending it.
+   * Text analysis calls one owner's documents may cost per UTC day.
+   * OpenRouter's key limit is the global budget, and it knows nothing of our
+   * users; this is what keeps one account mass-creating documents from
+   * spending it.
    */
-  TRANSLATION_DAILY_LIMIT_PER_USER: z.coerce.number().int().min(1).default(50),
+  TEXT_ANALYSIS_DAILY_LIMIT_PER_USER: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .default(50),
 
   /** Lifetime of the one-shot mail tokens (verification, password reset). */
   AUTH_TOKEN_TTL_MINUTES: z.coerce.number().int().min(1).default(60),
@@ -292,6 +305,17 @@ export const envSchema = variables
       });
     }
   })
+  .check((ctx) => {
+    if (ctx.value.MODERATION_AUTO_HIDE && !ctx.value.REPORT_MAIL_TO) {
+      ctx.issues.push({
+        code: 'custom',
+        input: ctx.value.REPORT_MAIL_TO,
+        path: ['REPORT_MAIL_TO'],
+        message:
+          'must be set with MODERATION_AUTO_HIDE — every automatic hide is mailed to it'
+      });
+    }
+  })
   // Resolved here so every consumer reads a value rather than re-deriving the
   // rules.
   .transform((env) => ({
@@ -303,8 +327,8 @@ export const envSchema = variables
     OAUTH_RETURN_URL: env.OAUTH_RETURN_URL ?? `${env.PUBLIC_URL}/login`,
     // Off without a key as well as when switched off: either way nothing may
     // be claimed, since a claimed document is one somebody expects sent.
-    TRANSLATION_WORKER_ENABLED:
-      env.TRANSLATION_ENABLED && Boolean(env.OPENROUTER_API_KEY)
+    TEXT_ANALYSIS_WORKER_ENABLED:
+      env.TEXT_ANALYSIS_ENABLED && Boolean(env.OPENROUTER_API_KEY)
   }));
 
 /**

@@ -1,34 +1,30 @@
 import type { Locale } from '../common/locale';
+import type { ModerationVerdict } from '../moderation/moderation-verdict';
+import type { DocumentTranslation } from '../translation/document-translation';
 
 /**
- * What a translator is given about one document: its two texts as stored, and
- * the language the writer's interface was in when they were last written. The
- * hint is only that — the author never names the original's language, and an
- * English interface writes German text as readily as English.
+ * What an analyzer is given about one document: its two texts as stored, the
+ * language the writer's interface was in when they were last written, and the
+ * author's own versions. The hint is only that — the author never names the
+ * original's language, and an English interface writes German text as readily
+ * as English.
  */
-export interface TranslationInput {
+export interface AnalysisInput {
   name: string;
   description: string;
   hint: string | null;
+  /**
+   * Shown to readers in place of the original, so they are judged with it.
+   * They are never translated: the reply describes the original alone.
+   */
+  versions: readonly AuthorVersion[];
 }
 
-/** One language's machine text; null where the field keeps the original. */
-export interface TranslatedText {
+/** The author's own text in one site language; a null field has none. */
+export interface AuthorVersion {
+  language: Locale;
   name: string | null;
   description: string | null;
-}
-
-/**
- * Detection and translation of one document, as they may be stored.
- *
- * Each language is ISO 639-1 or `zxx` (nothing to translate), and need not be
- * a site language. `texts` holds only languages in which at least one field
- * changes, so a language the model kept as written is simply absent.
- */
-export interface DocumentTranslation {
-  nameLanguage: string;
-  descriptionLanguage: string;
-  texts: Partial<Record<Locale, TranslatedText>>;
 }
 
 /**
@@ -59,7 +55,7 @@ export interface ReplyRejection {
 }
 
 /**
- * Why a document was not translated, by what the caller has to do about it.
+ * Why a document was not analyzed, by what the caller has to do about it.
  *
  * - `document`: this text failed. It counts an attempt against the text, and
  *   repeating the same request would fail the same way.
@@ -69,22 +65,30 @@ export interface ReplyRejection {
  *   changes, so the loop pauses. `budget` lifts by itself once the key's limit
  *   resets; `configuration` needs somebody to fix the key or the preset.
  */
-export type TranslationFailure =
+export type AnalysisFailure =
   | { kind: 'document'; reason: string }
   | { kind: 'transient'; reason: string; retryAfterSeconds: number | null }
   | { kind: 'system'; pause: 'budget' | 'configuration'; reason: string };
 
-export type TranslationOutcome = (
+export type AnalysisOutcome = (
   | {
       kind: 'success';
       translation: DocumentTranslation;
       /** The served model of the call whose reply was kept, for the stored rows. */
       model: string | null;
     }
-  | TranslationFailure
+  | AnalysisFailure
 ) & {
   /** Every call made for the outcome, a retried one included. */
   calls: CallUsage[];
+  /**
+   * The strictest verdict of every reply that matched the schema, a refused
+   * translation's included, so failing the translation check is no way past
+   * moderation; null when no reply got that far.
+   */
+  verdict: ModerationVerdict | null;
+  /** The call whose reply gave {@link verdict}, for the report. */
+  verdictCall: CallUsage | null;
   /** Replies refused on the way, including one a retry then replaced. */
   rejections: ReplyRejection[];
 };
@@ -103,21 +107,18 @@ export type KeyBudget =
   | { kind: 'unavailable'; reason: string };
 
 /**
- * Detection and translation of a document's name and description, one call
- * per document. Behind {@link TRANSLATOR} so the E2E harness can run the worker
- * against a fake that never leaves the process.
+ * Language detection, translation and moderation of a document's name and
+ * description, in one call per document. Behind {@link TEXT_ANALYZER} so the
+ * E2E harness can run the worker against a fake that never leaves the process.
  */
-export interface Translator {
+export interface TextAnalyzer {
   /**
    * Never throws for anything the route or the reply does: every failure comes
    * back classified. `documentId` is for logging, which names the document and
    * never its text.
    */
-  translate(
-    input: TranslationInput,
-    documentId: string
-  ): Promise<TranslationOutcome>;
+  analyze(input: AnalysisInput, documentId: string): Promise<AnalysisOutcome>;
   readBudget(): Promise<KeyBudget>;
 }
 
-export const TRANSLATOR = Symbol('TRANSLATOR');
+export const TEXT_ANALYZER = Symbol('TEXT_ANALYZER');

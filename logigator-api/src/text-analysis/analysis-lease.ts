@@ -1,11 +1,11 @@
 /**
  * How long a claim holds a document. Far above one document's work — two calls
  * of at most a minute each — so a live worker never loses a row it is still
- * translating, while a crashed one's rows come back within minutes.
+ * analyzing, while a crashed one's rows come back within minutes.
  */
-export const TRANSLATION_LEASE_MINUTES = 10;
+export const ANALYSIS_LEASE_MINUTES = 10;
 
-const LEASE_MS = TRANSLATION_LEASE_MINUTES * 60_000;
+const LEASE_MS = ANALYSIS_LEASE_MINUTES * 60_000;
 const DAY_MS = 24 * 60 * 60_000;
 
 /** The UTC calendar day `now` falls in, as `YYYY-MM-DD`. */

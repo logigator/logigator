@@ -1,4 +1,5 @@
 import {
+  char,
   index,
   pgEnum,
   pgTable,
@@ -25,6 +26,9 @@ export const reportReason = pgEnum('report_reason', [
   'other'
 ]);
 
+/** Who sent a report: a reader, or the text analysis worker's verdict. */
+export const reportSource = pgEnum('report_source', ['reader', 'machine']);
+
 /**
  * A notice about a document, from anybody who could open it. Kept as a record
  * of what was reported and when, so the document is named by kind and id
@@ -46,6 +50,12 @@ export const documentReports = pgTable(
     reporterId: uuid('reporter_id').references(() => users.id, {
       onDelete: 'set null'
     }),
+    source: reportSource('source').notNull().default('reader'),
+    /**
+     * The `textDigest` a machine report judged, which resolving it clears;
+     * null for a reader's, who reports the document rather than one text.
+     */
+    textDigest: char('text_digest', { length: 32 }),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -151,13 +151,20 @@ export async function humanVersionsOf(
 }
 
 /**
- * Whether the document is marked done for its current text because its authors
- * wrote it in every site language: a field the model looked at always has a
- * detected language, so a current mark with a field without one was made
- * without the model, and holds no machine rows.
+ * Sends the document back to the text analysis worker after a write to its
+ * author's versions. Those are shown to readers and judged with the original
+ * in one call, and a version moves no `text_digest`, so the write makes the
+ * document pending itself. It also gives up a claim in flight, whose result
+ * would judge versions that are gone, and a worker's hold, which the next
+ * claim sets again where it still applies. The claim's debounce waits on the
+ * version's own write time.
+ *
+ * Until the new call lands, the original's detected languages read as unknown,
+ * since they count only while `translated_digest` is the current digest: a
+ * reader is shown no language and no machine translation for the debounce and
+ * the call. The machine rows themselves stay until the call replaces them.
  */
-const SETTLED_BY_AUTHORS = sql`translated_digest = text_digest
-  AND (name_language IS NULL OR description_language IS NULL)`;
+const REJUDGE = sql`translated_digest = NULL, translation_claimed_at = NULL`;
 
 /**
  * Writes the author's version in one language, replacing any before it whole.
@@ -169,10 +176,7 @@ const SETTLED_BY_AUTHORS = sql`translated_digest = text_digest
  * between the two would leave a fresh version marked as written for the older
  * text, or a stale one marked as current.
  *
- * A document its authors settled is made pending again by the same statement:
- * a version that leaves a field out uncovers that field in this language, and
- * the worker settles it again without a call while every language is still
- * covered.
+ * The same statement sends the document to be judged again ({@link REJUDGE}).
  *
  * Neither `version` nor `last_edited_at` moves. The version is not snapshot
  * content, and the edit time is when the original last changed.
@@ -199,9 +203,9 @@ export async function putHumanText(
              source_digest = excluded.source_digest,
              created_at = now()
       RETURNING document_id
-    ), reopened AS (
-      UPDATE ${table} SET translated_digest = NULL
-       WHERE id IN (SELECT document_id FROM written) AND ${SETTLED_BY_AUTHORS}
+    ), rejudged AS (
+      UPDATE ${table} SET ${REJUDGE}
+       WHERE id IN (SELECT document_id FROM written)
     )
     SELECT document_id FROM written
   `);
@@ -210,11 +214,9 @@ export async function putHumanText(
 
 /**
  * Removes the author's version in one language. Ownership is in the statement,
- * as it is for every owner write. A machine row of the same language stays, so
- * readers fall back to the original with its button and no new call. A
- * document its authors settled has no machine rows, so it is made pending
- * again by the same statement, and the worker translates what is now
- * uncovered.
+ * as it is for every owner write. A machine row of the same language stays,
+ * and readers fall back to the original with it once the document is judged
+ * again, which the same statement asks for ({@link REJUDGE}).
  */
 export async function deleteHumanText(
   db: Queryable,
@@ -235,8 +237,8 @@ export async function deleteHumanText(
          AND ${texts.origin} = 'human'
       RETURNING ${texts.documentId}
     )
-    UPDATE ${table} SET translated_digest = NULL
-     WHERE id IN (SELECT document_id FROM removed) AND ${SETTLED_BY_AUTHORS}
+    UPDATE ${table} SET ${REJUDGE}
+     WHERE id IN (SELECT document_id FROM removed)
   `);
 }
 

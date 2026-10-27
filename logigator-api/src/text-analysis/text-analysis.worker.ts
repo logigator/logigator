@@ -6,7 +6,6 @@ import {
   type OnApplicationBootstrap
 } from '@nestjs/common';
 import { SchedulerRegistry } from '@nestjs/schedule';
-import { NOT_TRANSLATABLE } from '@logigator/contract';
 import { ENV, type Env } from '../config/env';
 import { DB, type Database } from '../database/database.module';
 import {
@@ -15,12 +14,10 @@ import {
   projects
 } from '../database/schema';
 import type { CircuitTable } from '../documents/circuit-queries';
+import { humanVersionsOf } from '../documents/document-text-queries';
+import { MachineModerationService } from '../moderation/machine-moderation.service';
 import { RedisService } from '../redis/redis.service';
-import {
-  leaseRunningOutAt,
-  startOfNextUtcDay,
-  utcDay
-} from './translation-lease';
+import { leaseRunningOutAt, startOfNextUtcDay, utcDay } from './analysis-lease';
 import {
   claimPending,
   type ClaimedDocument,
@@ -28,14 +25,14 @@ import {
   recordFailure,
   releaseClaim,
   renewForCall,
-  settleTranslation
-} from './translation-queries';
-import { documentShortcut } from './translation-shortcuts';
+  settleAnalysis
+} from './analysis-queries';
 import {
-  type TranslationFailure,
-  TRANSLATOR,
-  type Translator
-} from './translator';
+  type AnalysisFailure,
+  type AnalysisOutcome,
+  TEXT_ANALYZER,
+  type TextAnalyzer
+} from './text-analyzer';
 
 /**
  * The worker's sense of time, for everything it decides in memory: when a
@@ -43,13 +40,13 @@ import {
  * harness can move it; the database keeps its own clock for leases and the
  * debounce.
  */
-export interface TranslationClock {
+export interface AnalysisClock {
   now(): number;
 }
 
-export const TRANSLATION_CLOCK = Symbol('TRANSLATION_CLOCK');
+export const ANALYSIS_CLOCK = Symbol('ANALYSIS_CLOCK');
 
-export const systemClock: TranslationClock = { now: () => Date.now() };
+export const systemClock: AnalysisClock = { now: () => Date.now() };
 
 /** How often a budget pause asks the key whether it may resume. */
 const BUDGET_RECHECK_MS = 30 * 60_000;
@@ -79,7 +76,7 @@ const MAX_RETRY_AFTER_MS = 60 * 60_000;
  */
 const USER_COUNTER_TTL_SECONDS = 2 * 24 * 60 * 60;
 
-const INTERVAL_NAME = 'translation-worker';
+const INTERVAL_NAME = 'text-analysis-worker';
 
 /** Why the loop is not claiming: a route that failed, or the whole system. */
 interface Pause {
@@ -88,12 +85,13 @@ interface Pause {
 }
 
 /**
- * Detects and translates the names and descriptions of shared documents, a
- * few at a time, oldest edit first.
+ * Analyzes the names and descriptions of shared documents, a few at a time,
+ * oldest edit first: one call per document detects their language,
+ * translates them and gives a moderation verdict.
  *
- * Registered only where translation is switched on and a key is configured.
- * Reads never depend on it: they answer from the database, so translations
- * made while it ran are served as long as their text is current.
+ * Registered only where text analysis is switched on and a key is
+ * configured. Reads never depend on it: they answer from the database, so
+ * translations made while it ran are served as long as their text is current.
  *
  * Failures are handled by what they say about the next call. A document
  * failure counts against that text, which is parked after
@@ -103,12 +101,16 @@ interface Pause {
  * failure for a day without counting it. Whatever the batch still held when
  * the loop stops is released, so another tick or another instance takes it
  * up.
+ *
+ * Every call's moderation verdict is handed on before the outcome is handled,
+ * whatever the outcome: a text whose translation keeps failing is judged all
+ * the same.
  */
 @Injectable()
-export class TranslationWorker
+export class TextAnalysisWorker
   implements OnApplicationBootstrap, BeforeApplicationShutdown
 {
-  private readonly logger = new Logger(TranslationWorker.name);
+  private readonly logger = new Logger(TextAnalysisWorker.name);
 
   private pause: Pause | null = null;
   /** The pause the loop last came out of, until a call shows it is over. */
@@ -129,10 +131,11 @@ export class TranslationWorker
   constructor(
     @Inject(ENV) private readonly env: Env,
     @Inject(DB) private readonly db: Database,
-    @Inject(TRANSLATOR) private readonly translator: Translator,
-    @Inject(TRANSLATION_CLOCK) private readonly clock: TranslationClock,
+    @Inject(TEXT_ANALYZER) private readonly analyzer: TextAnalyzer,
+    @Inject(ANALYSIS_CLOCK) private readonly clock: AnalysisClock,
     private readonly redis: RedisService,
-    private readonly scheduler: SchedulerRegistry
+    private readonly scheduler: SchedulerRegistry,
+    private readonly moderation: MachineModerationService
   ) {}
 
   /**
@@ -144,7 +147,7 @@ export class TranslationWorker
       INTERVAL_NAME,
       setInterval(
         () => void this.tick(),
-        this.env.TRANSLATION_POLL_SECONDS * 1000
+        this.env.TEXT_ANALYSIS_POLL_SECONDS * 1000
       )
     );
   }
@@ -156,7 +159,7 @@ export class TranslationWorker
   }
 
   /**
-   * One pass: claim and translate a batch of each kind. A tick that is due
+   * One pass: claim and analyze a batch of each kind. A tick that is due
    * while the previous one still runs joins it rather than starting another,
    * so one process never holds two batches.
    */
@@ -184,8 +187,8 @@ export class TranslationWorker
       for (const table of tables) {
         if (this.halted()) return;
         const claimed = await claimPending(this.db, table, {
-          debounceSeconds: this.env.TRANSLATION_DEBOUNCE_SECONDS,
-          batch: this.env.TRANSLATION_BATCH
+          debounceSeconds: this.env.TEXT_ANALYSIS_DEBOUNCE_SECONDS,
+          batch: this.env.TEXT_ANALYSIS_BATCH
         });
         for (const [index, claim] of claimed.entries()) {
           if (this.halted()) {
@@ -199,7 +202,7 @@ export class TranslationWorker
       }
     } catch (error) {
       // Rows claimed before the failure come back when their lease runs out.
-      this.logger.error('Translation tick failed', error);
+      this.logger.error('Text analysis tick failed', error);
     }
   }
 
@@ -229,11 +232,11 @@ export class TranslationWorker
    * key endpoint that cannot be reached says nothing about the budget, and the
    * key's limit holds on OpenRouter's side whatever is read here: a call made
    * past it fails as a budget pause, costs nothing, and stops the loop the
-   * same way. Skipping instead would stop translation whenever that one
+   * same way. Skipping instead would stop the analysis whenever that one
    * endpoint is unwell while the completions work.
    */
   private async budgetAllows(): Promise<boolean> {
-    const budget = await this.translator.readBudget();
+    const budget = await this.analyzer.readBudget();
     const previous = this.lastBudget;
     this.lastBudget = budget.kind === 'refused' ? 'available' : budget.kind;
     switch (budget.kind) {
@@ -241,20 +244,20 @@ export class TranslationWorker
         // Logged when the wait begins, not on each half-hourly look.
         if (this.lifted !== 'budget') {
           this.logger.warn(
-            `Translation paused for budget: the key has $${budget.remainingUsd} left`
+            `Text analysis paused for budget: the key has $${budget.remainingUsd} left`
           );
         }
         return false;
       case 'refused':
         this.budgetCheck = false;
         this.logger.warn(
-          `The key endpoint refuses this key (${budget.status}); translation goes by the calls' own failures from here on`
+          `The key endpoint refuses this key (${budget.status}); text analysis goes by the calls' own failures from here on`
         );
         return true;
       case 'unavailable':
         if (previous !== 'unavailable') {
           this.logger.warn(
-            `The key's budget could not be read (${budget.reason}); translating anyway`
+            `The key's budget could not be read (${budget.reason}); analyzing anyway`
           );
         }
         return true;
@@ -268,12 +271,10 @@ export class TranslationWorker
     claimed: ClaimedDocument,
     overLimit: Set<string>
   ): Promise<void> {
-    if (await this.settleWithoutModel(table, claimed)) return;
-
     const claim = await renewForCall(this.db, table, claimed);
     if (claim === null) {
-      // Made private or edited since the claim: the first may not be sent,
-      // and the second's result would be discarded.
+      // Made private, edited or given a version since the claim: the first
+      // may not be sent, and the others' result would be discarded.
       await releaseClaim(this.db, table, claimed);
       return;
     }
@@ -284,7 +285,7 @@ export class TranslationWorker
     if (counter === null) {
       if (!overLimit.has(claim.userId)) {
         this.logger.log(
-          `Owner ${claim.userId} reached the daily translation limit; their documents wait for the next UTC day`
+          `Owner ${claim.userId} reached the daily text analysis limit; their documents wait for the next UTC day`
         );
       }
       overLimit.add(claim.userId);
@@ -297,11 +298,18 @@ export class TranslationWorker
       return;
     }
 
-    const outcome = await this.translator.translate(
+    // Read after the renewal: a version written from here on gives the claim
+    // up, so the result is never settled for versions the call did not see.
+    const stored = await humanVersionsOf(this.db, table, [claim.id]);
+    const versions = (stored.get(claim.id) ?? []).map(
+      ({ language, name, description }) => ({ language, name, description })
+    );
+    const outcome = await this.analyzer.analyze(
       {
         name: claim.name,
         description: claim.description,
-        hint: claim.textLanguageHint
+        hint: claim.textLanguageHint,
+        versions
       },
       claim.id
     );
@@ -309,18 +317,19 @@ export class TranslationWorker
     if (outcome.calls.length > 1) {
       await this.redis.client.incrBy(counter, outcome.calls.length - 1);
     }
+    await this.moderate(table, claim, outcome);
 
     if (outcome.kind === 'success') {
       this.callWorked();
-      const { translation } = outcome;
-      const written = await settleTranslation(this.db, table, claim, {
-        nameLanguage: translation.nameLanguage,
-        descriptionLanguage: translation.descriptionLanguage,
-        texts: translation.texts,
-        model: outcome.model
-      });
-      // An edit landed during the call: the result describes a text that is
-      // gone. The new one is claimable once it settles.
+      const written = await settleAnalysis(
+        this.db,
+        table,
+        claim,
+        outcome.translation,
+        outcome.model
+      );
+      // An edit or a version landed during the call: the result describes a
+      // document that is gone. The new one is claimable once it settles.
       if (!written) await releaseClaim(this.db, table, claim);
       return;
     }
@@ -329,47 +338,32 @@ export class TranslationWorker
   }
 
   /**
-   * Marks a document done where nothing needs the model: every field is
-   * either without linguistic content or written by its author in every site
-   * language. Returns whether the claim is finished with.
+   * Hands the call's verdict to moderation, for the text that was claimed: an
+   * edit made during the call leaves a verdict for a text that is gone, which
+   * moderation's own digest guard sees. A failure there is logged and leaves
+   * the translation to be handled as usual, so a broken report path neither
+   * loses a translation nor repeats a paid call.
    */
-  private async settleWithoutModel(
+  private async moderate(
     table: CircuitTable,
-    claim: ClaimedDocument
-  ): Promise<boolean> {
-    const shortcut = documentShortcut(claim);
-    const requireHuman = (['name', 'description'] as const).filter(
-      (field) => shortcut[field] === 'human'
-    );
-    // Not covered at the claim: the guard below would refuse, so it is not
-    // asked. Covered, it is asked anyway, since a version may have been
-    // removed since.
-    if (requireHuman.some((field) => !claim.authoredEverywhere[field])) {
-      return false;
+    claim: ClaimedDocument,
+    outcome: AnalysisOutcome
+  ): Promise<void> {
+    if (outcome.verdict === null) return;
+    try {
+      await this.moderation.apply({
+        kind: table === projects ? 'project' : 'component',
+        documentId: claim.id,
+        textDigest: claim.textDigest,
+        verdict: outcome.verdict,
+        call: outcome.verdictCall
+      });
+    } catch (error) {
+      this.logger.error(
+        `Moderation of ${claim.id} failed; its translation goes on`,
+        error
+      );
     }
-    // Null for a field its authors settled: there is no original language a
-    // reader is ever shown it in.
-    const settled = await settleTranslation(
-      this.db,
-      table,
-      claim,
-      {
-        nameLanguage:
-          shortcut.name === NOT_TRANSLATABLE ? NOT_TRANSLATABLE : null,
-        descriptionLanguage:
-          shortcut.description === NOT_TRANSLATABLE ? NOT_TRANSLATABLE : null,
-        texts: {},
-        model: null
-      },
-      requireHuman
-    );
-    if (settled) return true;
-    if (requireHuman.length > 0) return false;
-
-    // Nothing to ask the model, and the guard refused only because the text
-    // moved; the new one gets its own claim.
-    await releaseClaim(this.db, table, claim);
-    return true;
   }
 
   /**
@@ -379,9 +373,9 @@ export class TranslationWorker
    * key, or null when the owner is over the limit and no call may be made.
    */
   private async reserveCall(userId: string): Promise<string | null> {
-    const key = `translation:user:${userId}:${utcDay(this.clock.now())}`;
+    const key = `text-analysis:user:${userId}:${utcDay(this.clock.now())}`;
     const count = await this.redis.countInWindow(key, USER_COUNTER_TTL_SECONDS);
-    return count <= this.env.TRANSLATION_DAILY_LIMIT_PER_USER
+    return count <= this.env.TEXT_ANALYSIS_DAILY_LIMIT_PER_USER
       ? this.redis.key(key)
       : null;
   }
@@ -389,7 +383,7 @@ export class TranslationWorker
   private async handleFailure(
     table: CircuitTable,
     claim: ClaimedDocument,
-    failure: TranslationFailure
+    failure: AnalysisFailure
   ): Promise<void> {
     switch (failure.kind) {
       case 'document': {
@@ -398,7 +392,7 @@ export class TranslationWorker
         const attempts = await recordFailure(this.db, table, claim);
         if (attempts !== null && attempts >= MAX_TRANSLATION_ATTEMPTS) {
           this.logger.warn(
-            `Translation of ${claim.id} failed ${attempts} times and waits for an edit: ${failure.reason}`
+            `Analysis of ${claim.id} failed ${attempts} times and waits for an edit: ${failure.reason}`
           );
         }
         return;
@@ -426,7 +420,7 @@ export class TranslationWorker
   private callWorked(): void {
     this.transientStreak = 0;
     if (this.lifted === 'budget' || this.lifted === 'configuration') {
-      this.logger.log(`Translation resumed after a ${this.lifted} pause`);
+      this.logger.log(`Text analysis resumed after a ${this.lifted} pause`);
     }
     this.lifted = null;
   }
@@ -441,7 +435,7 @@ export class TranslationWorker
       retryAfterSeconds !== null
         ? Math.min(retryAfterSeconds * 1000, MAX_RETRY_AFTER_MS)
         : Math.min(
-            this.env.TRANSLATION_POLL_SECONDS *
+            this.env.TEXT_ANALYSIS_POLL_SECONDS *
               1000 *
               2 ** this.transientStreak,
             MAX_BACKOFF_MS
@@ -451,18 +445,18 @@ export class TranslationWorker
   }
 
   private pauseFor(
-    failure: Extract<TranslationFailure, { kind: 'system' }>
+    failure: Extract<AnalysisFailure, { kind: 'system' }>
   ): void {
     const now = this.clock.now();
     if (failure.pause === 'budget') {
       // Logged when the pause begins, not on each half-hourly look.
       if (this.lifted !== 'budget') {
-        this.logger.warn(`Translation paused for budget: ${failure.reason}`);
+        this.logger.warn(`Text analysis paused for budget: ${failure.reason}`);
       }
       this.pause = { kind: 'budget', until: now + BUDGET_RECHECK_MS };
     } else {
       this.logger.error(
-        `Translation paused, the key or the preset needs fixing: ${failure.reason}. One call is retried each hour.`
+        `Text analysis paused, the key or the preset needs fixing: ${failure.reason}. One call is retried each hour.`
       );
       this.pause = {
         kind: 'configuration',

@@ -1,24 +1,24 @@
 import { Module } from '@nestjs/common';
 import { ENV, type Env } from '../config/env';
 import { OpenRouterClient } from './openrouter/openrouter.client';
-import { TRANSLATOR } from './translator';
+import { TEXT_ANALYZER } from './text-analyzer';
 
 /**
- * The translator behind {@link TRANSLATOR}, through OpenRouter. It belongs
+ * The analyzer behind {@link TEXT_ANALYZER}, through OpenRouter. It belongs
  * only in an application whose environment carries a key — where
- * `TRANSLATION_WORKER_ENABLED` is true, or where a harness overrides the token
- * with a fake — since a provider that cannot reach anybody is better refused
- * at boot than discovered at the first claim.
+ * `TEXT_ANALYSIS_WORKER_ENABLED` is true, or where a harness overrides the
+ * token with a fake — since a provider that cannot reach anybody is better
+ * refused at boot than discovered at the first claim.
  */
 @Module({
   providers: [
     {
-      provide: TRANSLATOR,
+      provide: TEXT_ANALYZER,
       inject: [ENV],
       useFactory: (env: Env) => {
         if (!env.OPENROUTER_API_KEY || !env.OPENROUTER_PRESET) {
           throw new Error(
-            'The translator needs OPENROUTER_API_KEY and OPENROUTER_PRESET.'
+            'The text analyzer needs OPENROUTER_API_KEY and OPENROUTER_PRESET.'
           );
         }
         return new OpenRouterClient({
@@ -29,6 +29,6 @@ import { TRANSLATOR } from './translator';
       }
     }
   ],
-  exports: [TRANSLATOR]
+  exports: [TEXT_ANALYZER]
 })
-export class TranslationModule {}
+export class TextAnalysisModule {}

@@ -18,6 +18,12 @@ export interface MailParams {
   linkLifetimeMinutes: number;
   /** Site root, for the logo and the footer links. */
   publicUrl: string;
+  /**
+   * What the wording's other placeholders stand for, `{name}` and `{reason}`
+   * of the moderation mails. Plain text, escaped where it lands like the
+   * username: a document's name is its author's and a reason a moderator's.
+   */
+  values?: Record<string, string>;
 }
 
 /**
@@ -99,7 +105,12 @@ export function renderMail(
   const { common, mails } = MAIL_STRINGS[locale];
   const strings = mails[kind];
   const greeting = fill(common.greeting, { username: params.username });
+  const values = params.values ?? {};
+  // Filled before escaping, in one pass, so a value is never read for
+  // placeholders of its own.
+  const body = strings.body.map((text) => fill(text, values));
   const footnote = fill(strings.footnote, {
+    ...values,
     duration: formatLifetime(params.linkLifetimeMinutes, locale)
   });
   const site = `${params.publicUrl}/${locale}`;
@@ -137,7 +148,7 @@ export function renderMail(
 </style>
 </head>
 <body class="lg-page" style="margin:0;padding:0;background:${LIGHT.page};font-family:${FONT}">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0">${escapeHtml(strings.body[0])}</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">${escapeHtml(body[0])}</div>
 <table role="presentation" class="lg-page" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${LIGHT.page}">
 <tr><td align="center" style="background:${LIGHT.bar};padding:12px 16px">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px">
@@ -151,7 +162,7 @@ export function renderMail(
 <tr><td class="lg-card-cell" style="padding:32px;font-family:${FONT}">
 <h1 class="lg-heading" style="margin:0 0 20px 0;font-size:22px;line-height:30px;font-weight:500;color:${LIGHT.heading}">${escapeHtml(strings.heading)}</h1>
 <p class="lg-text" style="${paragraph}">${escapeHtml(greeting)}</p>
-${strings.body.map((text) => `<p class="lg-text" style="${paragraph}">${escapeHtml(text)}</p>`).join('\n')}
+${body.map((text) => `<p class="lg-text" style="${paragraph}">${escapeHtml(text)}</p>`).join('\n')}
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px 0">
 <tr><td class="lg-button" style="background:${LIGHT.button};border-radius:6px">
 <a href="${link}" style="display:inline-block;padding:12px 20px;font-family:${FONT};font-size:16px;line-height:24px;font-weight:500;color:${LIGHT.buttonText};text-decoration:none;border-radius:6px">${escapeHtml(strings.button)}</a>
@@ -181,7 +192,7 @@ ${strings.body.map((text) => `<p class="lg-text" style="${paragraph}">${escapeHt
   const text = [
     strings.heading,
     greeting,
-    ...strings.body,
+    ...body,
     `${strings.button}: ${params.link}`,
     footnote,
     `${common.imprint}: ${site}/imprint\n${common.privacyPolicy}: ${site}/privacy-policy`
