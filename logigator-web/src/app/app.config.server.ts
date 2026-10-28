@@ -2,6 +2,7 @@ import {
   ApplicationConfig,
   CSP_NONCE,
   DOCUMENT,
+  ErrorHandler,
   inject,
   mergeApplicationConfig,
   provideEnvironmentInitializer,
@@ -10,10 +11,12 @@ import {
 } from '@angular/core';
 import { provideServerRendering, withRoutes } from '@angular/ssr';
 import { apiOrigin } from '../api-origin';
-import { cspNonceOf, stampCspNonce } from '../content-security-policy';
+import { stampCspNonce } from '../content-security-policy';
+import { cspNonceOf } from '../render-context';
 import { appConfig } from './app.config';
 import { serverRoutes } from './app.routes.server';
 import { API_ORIGIN } from './api/server-api.interceptor';
+import { RenderErrorHandler } from './render-error-handler';
 import { SITE_ORIGIN } from './seo/site-origin';
 
 /** Only reachable if a render ever runs without a request; see `SITE_ORIGIN`. */
@@ -47,7 +50,8 @@ const serverConfig: ApplicationConfig = {
     provideEnvironmentInitializer(() => {
       const nonce = inject(CSP_NONCE);
       if (nonce) stampCspNonce(inject(DOCUMENT), nonce);
-    })
+    }),
+    { provide: ErrorHandler, useClass: RenderErrorHandler }
   ]
 };
 

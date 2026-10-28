@@ -6,8 +6,15 @@ import {
   HttpRequest,
   HttpResponse
 } from '@angular/common/http';
-import { inject, InjectionToken, REQUEST, RESPONSE_INIT } from '@angular/core';
+import {
+  inject,
+  InjectionToken,
+  REQUEST,
+  REQUEST_CONTEXT,
+  RESPONSE_INIT
+} from '@angular/core';
 import { tap } from 'rxjs';
+import { renderRequestId } from '../../render-context';
 
 /**
  * Origin the server render reaches the API at. Provided only in the server
@@ -103,6 +110,11 @@ export const apiOriginInterceptor: HttpInterceptorFn = (
       new URL(incoming.url).protocol.replace(':', '')
     );
   }
+
+  // The API names a request by its `Cf-Ray`, so the render's own id under that
+  // header puts the API's lines for this hop under the visitor's request.
+  const id = renderRequestId(inject(REQUEST_CONTEXT, { optional: true }));
+  if (id && !headers.has('cf-ray')) headers = headers.set('cf-ray', id);
 
   return next(
     request.clone({

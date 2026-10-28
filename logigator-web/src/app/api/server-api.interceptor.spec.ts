@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { HttpTestingController } from '@angular/common/http/testing';
-import { REQUEST, RESPONSE_INIT } from '@angular/core';
+import { REQUEST, REQUEST_CONTEXT, RESPONSE_INIT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { configureTestBed } from '../../testing/configure-test-bed';
+import type { RenderContext } from '../../render-context';
 import { API_ORIGIN } from './server-api.interceptor';
 
 const API = 'http://api:3000';
@@ -20,10 +21,15 @@ function visitorRequest(headers: Record<string, string> = {}): Request {
   });
 }
 
-function arrange(incoming: Request | null, responseInit: ResponseInit = {}) {
+function arrange(
+  incoming: Request | null,
+  responseInit: ResponseInit = {},
+  context: RenderContext | null = null
+) {
   configureTestBed([
     { provide: API_ORIGIN, useValue: API },
     { provide: REQUEST, useValue: incoming },
+    { provide: REQUEST_CONTEXT, useValue: context },
     { provide: RESPONSE_INIT, useValue: responseInit }
   ]);
   return {
@@ -84,6 +90,22 @@ describe('apiOriginInterceptor', () => {
 
       backend.expectOne('https://example.test/thing').flush({});
     });
+  });
+
+  it("names the hop by the render's request id, as the API reads it", () => {
+    ({ http, backend } = arrange(
+      visitorRequest(),
+      {},
+      {
+        cspNonce: 'nonce',
+        requestId: 'b7c1e0d2'
+      }
+    ));
+    http.get('/api/user').subscribe();
+
+    const sent = backend.expectOne(`${API}/api/user`);
+    expect(sent.request.headers.get('cf-ray')).toBe('b7c1e0d2');
+    sent.flush({});
   });
 
   it('derives the scheme from the resolved URL, not the header', () => {

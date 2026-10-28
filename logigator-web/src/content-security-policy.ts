@@ -22,17 +22,6 @@ export function reportingEndpoints(origin: string): string {
   return `${CSP_REPORT_GROUP}="${new URL(CSP_REPORT_URL, origin).href}"`;
 }
 
-/** What `server.ts` hands a render as its `REQUEST_CONTEXT`. */
-export interface RenderContext {
-  cspNonce: string;
-}
-
-/** The nonce a render was handed, or `null` outside a request. */
-export function cspNonceOf(context: unknown): string | null {
-  const nonce = (context as Partial<RenderContext> | null)?.cspNonce;
-  return typeof nonce === 'string' ? nonce : null;
-}
-
 /**
  * Hands a render's document its nonce before the app renders into it. The
  * template's own scripts take it directly, event replay's contract among them;

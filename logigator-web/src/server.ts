@@ -17,11 +17,16 @@ import {
   CONTENT_SECURITY_POLICY_HEADER,
   createCspNonce,
   reportingEndpoints,
-  siteContentSecurityPolicy,
-  type RenderContext
+  siteContentSecurityPolicy
 } from './content-security-policy';
+import type { RenderContext } from './render-context';
 import { requestOrigin } from './request-origin';
-import { createErrorHandler, logProcessFailures } from './server-errors';
+import {
+  createErrorHandler,
+  createRequestLogger,
+  logProcessFailures,
+  requestId
+} from './server-log';
 import { pathInLanguage } from './app/translation/language-url';
 import { negotiateRequestLanguage } from './app/translation/language-negotiation';
 import {
@@ -64,6 +69,9 @@ const app = express();
 // Names the framework to every response for no reader's benefit.
 app.disable('x-powered-by');
 const angularApp = new AngularNodeAppEngine();
+
+/** One log line per request, static files included. */
+app.use(createRequestLogger());
 
 /** The served path of a file, as {@link IMMUTABLE_PATH} expects to see it. */
 function toUrlPath(absolutePath: string): string {
@@ -328,7 +336,9 @@ function rootRelative(url: string): string {
  * request either way.
  *
  * The policy's nonce is new per response, and the render stamps it on the
- * inline scripts it writes. Its reports go to the Reporting API group only
+ * inline scripts it writes. The request id goes along so that the render's
+ * log lines and its calls to the API name the request as the error handler
+ * would. Its reports go to the Reporting API group only
  * where {@link requestOrigin} vouches for the host the endpoint is named on.
  */
 app.use((req, res, next) => {
@@ -341,7 +351,10 @@ app.use((req, res, next) => {
     siteContentSecurityPolicy(cspNonce, { reportTo: origin !== null })
   );
   angularApp
-    .handle(req, { cspNonce } satisfies RenderContext)
+    .handle(req, {
+      cspNonce,
+      requestId: requestId(req)
+    } satisfies RenderContext)
     .then((response) =>
       response ? writeResponseToNodeResponse(response, res) : next()
     )
