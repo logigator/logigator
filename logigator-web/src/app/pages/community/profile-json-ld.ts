@@ -25,8 +25,7 @@ export function profileJsonLd(context: JsonLdContext): JsonLdNode[] {
   const links = inject(SiteLinks);
   const profileUrl = `${context.origin}${links.communityUser(profile.id)}`;
   // The avatar's widest rung, absolutized: a crawler resolves against nothing.
-  // JPEG, which is the fallback the ladder carries for a photograph.
-  const avatarUrl = crawlerImageUrl(profile.avatar, 'jpeg');
+  const avatarUrl = crawlerImageUrl(profile.avatar);
   const avatar = avatarUrl ? context.absolute(avatarUrl) : null;
 
   /**
