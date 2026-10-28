@@ -57,17 +57,12 @@ export class LoginAttemptsService {
   }
 }
 
-/**
- * The account is keyed by a hash of its address, never the address itself,
- * and a sign-in shares that key with a session's check of the same account.
- */
+/** A sign-in shares its account key with a session's check of that account. */
 export function failureBudgets(
   ip: string,
   { email, signedInAs }: PasswordAccount
 ): Budget[] {
-  const account = createHash('sha256')
-    .update(normalizeEmail(email))
-    .digest('base64url');
+  const account = accountKey(email);
   const budgets = [
     { key: `rate:login-failures:account:${account}:${ip}`, limit: PER_ACCOUNT },
     { key: `rate:login-failures:address:${ip}`, limit: PER_ADDRESS }
@@ -79,4 +74,12 @@ export function failureBudgets(
     });
   }
   return budgets;
+}
+
+/**
+ * Names a mailbox in a counter key: a hash of its normalized address, so the
+ * address itself never sits in Redis.
+ */
+export function accountKey(email: string): string {
+  return createHash('sha256').update(normalizeEmail(email)).digest('base64url');
 }

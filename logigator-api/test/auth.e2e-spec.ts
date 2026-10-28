@@ -604,6 +604,57 @@ describe('wrong-password budgets', () => {
   });
 });
 
+describe('password reset budgets', () => {
+  let api: E2eApp;
+
+  beforeAll(async () => {
+    api = await startE2eApp();
+    await api.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { username: 'Ada', ...CREDENTIALS }
+    });
+  });
+
+  afterAll(async () => {
+    await api.close();
+  });
+
+  /** Each request from its own client address, so only the mailbox's budget is shared. */
+  function requestReset(email: string, attempt: number) {
+    return api.inject({
+      method: 'POST',
+      url: '/api/auth/password-reset',
+      remoteAddress: `203.0.113.${attempt + 1}`,
+      payload: { email }
+    });
+  }
+
+  it('sends one mailbox five mails an hour, however many addresses ask', async () => {
+    api.mail.clear();
+    const statuses = [];
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      // One mailbox, however its address is spelled.
+      const email = attempt % 2 ? 'Ada@Example.COM' : CREDENTIALS.email;
+      statuses.push((await requestReset(email, attempt)).statusCode);
+    }
+
+    expect(statuses).toEqual([204, 204, 204, 204, 204, 429]);
+    expect(api.mail.sent).toHaveLength(5);
+  });
+
+  it('runs out the same way for an address with no account', async () => {
+    const statuses = [];
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      statuses.push(
+        (await requestReset('nobody@example.com', attempt)).statusCode
+      );
+    }
+
+    expect(statuses).toEqual([204, 204, 204, 204, 204, 429]);
+  });
+});
+
 /**
  * Resolves once the process clock has left the millisecond it was in.
  *

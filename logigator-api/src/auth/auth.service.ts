@@ -7,14 +7,20 @@ import type {
 } from '@logigator/contract';
 import { ApiException } from '../common/api-exception';
 import type { Locale } from '../common/locale';
+import { spendBudgets } from '../common/rate-limit';
 import type { UserRow } from '../database/schema';
 import { isUniqueViolation } from '../database/unique-violation';
 import { MailService } from '../mail/mail.service';
+import { RedisService } from '../redis/redis.service';
 import { SessionService } from '../session/session.service';
 import { UsersService } from '../users/users.service';
 import { AuthTokenService } from './auth-token.service';
-import { LoginAttemptsService } from './login-attempts.service';
+import { accountKey, LoginAttemptsService } from './login-attempts.service';
 import { PasswordService } from './password.service';
+
+/** Reset mails one mailbox may be sent per window, whoever asks. */
+const RESETS_PER_RECIPIENT = 5;
+const RESET_WINDOW_SECONDS = 3600;
 
 /** Local (email + password) authentication. */
 @Injectable()
@@ -27,7 +33,8 @@ export class AuthService {
     private readonly tokens: AuthTokenService,
     private readonly mail: MailService,
     private readonly sessions: SessionService,
-    private readonly attempts: LoginAttemptsService
+    private readonly attempts: LoginAttemptsService,
+    private readonly redis: RedisService
   ) {}
 
   /**
@@ -126,8 +133,23 @@ export class AuthService {
    * Mails a reset link, if the address belongs to an account that can use one.
    * Answers the same either way: whether an address has an account is not
    * something an unauthenticated caller gets to probe.
+   *
+   * Each mailbox has its own budget, counted before the lookup so an unknown
+   * address runs out the same way. Somebody spending it to block a reset has
+   * sent the owner working links already.
    */
   async requestPasswordReset(email: string, locale: Locale): Promise<void> {
+    await spendBudgets(
+      this.redis,
+      [
+        {
+          key: `rate:password-reset:recipient:${accountKey(email)}`,
+          limit: RESETS_PER_RECIPIENT
+        }
+      ],
+      RESET_WINDOW_SECONDS
+    );
+
     const user = await this.users.findByEmail(email);
     if (!user) return;
 

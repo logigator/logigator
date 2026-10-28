@@ -35,7 +35,9 @@ import { AuthService } from './auth.service';
  * The credential endpoints, all JSON. Each one that sends a mail or redeems a
  * token is rate limited per address. A password check counts only wrong
  * passwords, against one budget for `login` and `resend-verification` alike,
- * so spreading guesses across the two buys nothing.
+ * so spreading guesses across the two buys nothing. Login also has a loose
+ * budget for every attempt, since each one runs bcrypt even with credentials
+ * that are right.
  */
 @Controller('auth')
 @UseGuards(RateLimitGuard)
@@ -58,6 +60,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @RateLimit({ limit: 600, windowSeconds: 600, scope: 'login' })
   async login(
     @Body({ schema: loginRequestSchema }) body: LoginRequest,
     @Req() request: FastifyRequest
