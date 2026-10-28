@@ -1,11 +1,7 @@
 import * as z from 'zod';
 
-/**
- * The encodings the API derives from an uploaded image. WebP is what almost
- * every client gets; the fallback follows the content — JPEG for photographic
- * sources, PNG where transparency and hard edges have to survive.
- */
-export const imageFormatSchema = z.enum(['webp', 'jpeg', 'png']);
+/** The encodings the API derives from an uploaded image: WebP alone. */
+export const imageFormatSchema = z.enum(['webp']);
 
 export type ImageFormat = z.infer<typeof imageFormatSchema>;
 
