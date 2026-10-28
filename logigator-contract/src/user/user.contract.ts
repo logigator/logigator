@@ -7,17 +7,60 @@ import {
   socialUrlSchema
 } from '../social/social.contract';
 
+/** Mirrors the column behind it. */
+const MAX_USERNAME_LENGTH = 32;
+
+/**
+ * Latin letters, accented ones included, plus digits, the space and a few
+ * marks names carry: `D'Onofrio`, `Schraud (Stevo)`. Both apostrophes, since
+ * phone keyboards type the curly one.
+ */
+const USERNAME_CHARACTERS = /^(?:(?=\p{Script=Latin})\p{L}|[0-9 ._'’()-])+$/u;
+
 /**
  * The field rules shared by registration, profile updates and password resets.
- * The constraints match the legacy form validators', so an existing account
- * still satisfies them.
+ *
+ * A username is a display name, not a handle: it is not unique, and no URL or
+ * mention names it. It is normalized like every authored string, with each run
+ * of whitespace one space.
+ *
+ * Its letters are the Latin alphabet's and no other script's. The fonts happen
+ * to cover Greek and Cyrillic, but allowing those while Korean, Japanese or
+ * Chinese stay out would favour some members' names over others'; one alphabet
+ * for everyone is the line that treats them alike. `@` is not allowed: a
+ * display name taken from an account was sometimes its address, which a
+ * profile would then publish.
  */
 export const usernameSchema = z
   .string()
-  .trim()
-  .min(2)
-  .max(20)
-  .regex(/^[a-zA-Z0-9_-]+$/, 'may contain letters, digits, `_` and `-` only');
+  .transform((raw) => normalizeAuthoredText(raw).replace(/\s+/g, ' '))
+  .pipe(
+    z
+      .string()
+      .min(2)
+      .max(MAX_USERNAME_LENGTH)
+      .regex(
+        USERNAME_CHARACTERS,
+        "may contain Latin letters, digits, spaces and . _ - ' ( ) only"
+      )
+      .regex(/[\p{L}0-9]/u, 'must contain a letter or a digit')
+  );
+
+/**
+ * Free text reduced to what a username may hold, for a name taken from
+ * elsewhere: refused characters dropped, whitespace runs made one space, cut
+ * to the length. The result can still fail the schema — too short, or no
+ * letter left — so callers parse it.
+ */
+export function reduceToUsername(text: string): string {
+  return [...normalizeAuthoredText(text)]
+    .filter((char) => /\s/.test(char) || USERNAME_CHARACTERS.test(char))
+    .join('')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_USERNAME_LENGTH)
+    .trim();
+}
 
 export const emailSchema = z.string().trim().toLowerCase().email().max(254);
 

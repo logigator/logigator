@@ -137,8 +137,9 @@ const en = {
       invalid: 'This value was not accepted.',
       emailInvalid: 'Enter a valid email address.',
       usernameTooShort: 'Use at least 2 characters.',
-      usernameTooLong: 'Use at most 20 characters.',
-      usernamePattern: 'Use letters, digits, “_” and “-” only.',
+      usernameTooLong: 'Use at most 32 characters.',
+      usernamePattern:
+        "Use letters A–Z (accents are fine), digits, spaces and “. _ - ' ( )”.",
       passwordTooShort: 'Use at least 8 characters.',
       passwordTooLong: 'Use at most 200 characters.',
       passwordComplexity: 'Use at least one letter and one digit.',
@@ -155,6 +156,8 @@ const en = {
       serviceUnavailable:
         'The service is temporarily unavailable. Please try again in a moment.',
       validationFailed: 'Please check your entries and try again.',
+      storageFull:
+        'Your cloud storage is full. Delete projects or components you no longer need to make room.',
       network: 'No connection to the server. Check your network and try again.',
       unknown: 'Something went wrong. Please try again.'
     }

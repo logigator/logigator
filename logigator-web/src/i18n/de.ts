@@ -123,8 +123,9 @@ const de: TranslationSchema = {
       invalid: 'Dieser Wert wurde nicht akzeptiert.',
       emailInvalid: 'Gib eine gültige E-Mail-Adresse ein.',
       usernameTooShort: 'Verwende mindestens 2 Zeichen.',
-      usernameTooLong: 'Verwende höchstens 20 Zeichen.',
-      usernamePattern: 'Erlaubt sind nur Buchstaben, Ziffern, „_“ und „-“.',
+      usernameTooLong: 'Verwende höchstens 32 Zeichen.',
+      usernamePattern:
+        "Erlaubt sind Buchstaben von A bis Z (auch mit Akzent), Ziffern, Leerzeichen und „. _ - ' ( )“.",
       passwordTooShort: 'Verwende mindestens 8 Zeichen.',
       passwordTooLong: 'Verwende höchstens 200 Zeichen.',
       passwordComplexity:
@@ -145,6 +146,8 @@ const de: TranslationSchema = {
         'Der Dienst ist vorübergehend nicht verfügbar. Bitte versuche es gleich noch einmal.',
       validationFailed:
         'Bitte überprüfe deine Eingaben und versuche es erneut.',
+      storageFull:
+        'Dein Cloud-Speicher ist voll. Lösche Projekte oder Komponenten, die du nicht mehr brauchst, um Platz zu schaffen.',
       network:
         'Keine Verbindung zum Server. Überprüfe deine Verbindung und versuche es erneut.',
       unknown: 'Etwas ist schiefgelaufen. Bitte versuche es erneut.'

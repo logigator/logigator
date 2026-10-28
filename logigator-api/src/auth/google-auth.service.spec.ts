@@ -23,9 +23,18 @@ describe('usernameFrom', () => {
   });
 
   it('keeps what it can of the name it was given', () => {
-    expect(usernameFrom('Ada Lovelace', 'x@example.com')).toBe('Ada_Lovelace');
+    expect(usernameFrom('Ada Lovelace', 'x@example.com')).toBe('Ada Lovelace');
+    expect(usernameFrom('Tom Jäger#2', 'x@example.com')).toBe('Tom Jäger2');
     expect(usernameFrom(undefined, 'grace.hopper@example.com')).toBe(
-      'gracehopper'
+      'grace.hopper'
     );
+  });
+
+  it('never makes an address into a public name', () => {
+    expect(usernameFrom('ada@example.com', 'ada@example.com')).toBe('ada');
+  });
+
+  it('falls back to the address when no Latin letter is left', () => {
+    expect(usernameFrom('Дмитрий', 'dmitri@example.com')).toBe('dmitri');
   });
 });

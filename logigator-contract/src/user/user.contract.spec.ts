@@ -1,9 +1,58 @@
 import { describe, expect, it } from 'vitest';
 import {
   bioSchema,
+  reduceToUsername,
   updateUserRequestSchema,
+  usernameSchema,
   websiteUrlSchema
 } from './user.contract';
+
+describe('usernameSchema', () => {
+  it.each([
+    'Sergio Assumpção',
+    "Diego D'Onofrio",
+    'Br3ck St8r’s',
+    'Stefan Schraud (Stevo)',
+    'Ada_Lovelace-1',
+    'J. R. R. Tolkien'
+  ])('accepts %j', (name) => {
+    expect(usernameSchema.parse(name)).toBe(name);
+  });
+
+  it.each(['Дмитрий', 'Αλέξανδρος', '김민준', '山田太郎'])(
+    'holds every script but Latin to the same rule: refuses %j',
+    (name) => {
+      expect(usernameSchema.safeParse(name).success).toBe(false);
+    }
+  );
+
+  it('refuses an address, which a profile would publish', () => {
+    expect(usernameSchema.safeParse('ada@example.com').success).toBe(false);
+  });
+
+  it('refuses a name with no letter or digit in it', () => {
+    expect(usernameSchema.safeParse('( . )').success).toBe(false);
+  });
+
+  it('stores one space for each run of whitespace', () => {
+    expect(usernameSchema.parse('  Ada \n\t Lovelace ')).toBe('Ada Lovelace');
+  });
+
+  it('allows as many characters as the column holds', () => {
+    expect(usernameSchema.safeParse('x'.repeat(32)).success).toBe(true);
+    expect(usernameSchema.safeParse('x'.repeat(33)).success).toBe(false);
+  });
+});
+
+describe('reduceToUsername', () => {
+  it('drops what the schema refuses and keeps the rest', () => {
+    expect(reduceToUsername('Tom Jäger #2 🎮')).toBe('Tom Jäger 2');
+  });
+
+  it('cuts to the length without leaving a trailing space', () => {
+    expect(reduceToUsername(`${'x'.repeat(31)} y`)).toBe('x'.repeat(31));
+  });
+});
 
 describe('updateUserRequestSchema', () => {
   it('carries the profile fields beside the credential ones', () => {

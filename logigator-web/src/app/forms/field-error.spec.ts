@@ -76,9 +76,9 @@ describe('fieldError', () => {
 
     form.controls.username.setValue('a');
     expect(errors['username']()).toBe('forms.errors.usernameTooShort');
-    form.controls.username.setValue('a b');
+    form.controls.username.setValue('a#b');
     expect(errors['username']()).toBe('forms.errors.usernamePattern');
-    form.controls.username.setValue('x'.repeat(21));
+    form.controls.username.setValue('x'.repeat(33));
     expect(errors['username']()).toBe('forms.errors.usernameTooLong');
 
     form.controls.password.setValue('short1');

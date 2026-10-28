@@ -46,6 +46,7 @@ export {
   bioSchema,
   emailSchema,
   passwordSchema,
+  reduceToUsername,
   usernameSchema,
   websiteUrlSchema,
   userResponseSchema,

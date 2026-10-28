@@ -122,8 +122,9 @@ const es: TranslationSchema = {
       invalid: 'Este valor no se aceptó.',
       emailInvalid: 'Introduce una dirección de correo válida.',
       usernameTooShort: 'Usa al menos 2 caracteres.',
-      usernameTooLong: 'Usa como máximo 20 caracteres.',
-      usernamePattern: 'Solo se permiten letras, dígitos, «_» y «-».',
+      usernameTooLong: 'Usa como máximo 32 caracteres.',
+      usernamePattern:
+        "Solo se permiten letras de la A a la Z (con o sin tilde), dígitos, espacios y «. _ - ' ( )».",
       passwordTooShort: 'Usa al menos 8 caracteres.',
       passwordTooLong: 'Usa como máximo 200 caracteres.',
       passwordComplexity: 'Usa al menos una letra y un dígito.',
@@ -142,6 +143,8 @@ const es: TranslationSchema = {
       serviceUnavailable:
         'El servicio no está disponible temporalmente. Inténtalo de nuevo en un momento.',
       validationFailed: 'Revisa lo que has introducido e inténtalo de nuevo.',
+      storageFull:
+        'Tu almacenamiento en la nube está lleno. Elimina proyectos o componentes que ya no necesites para hacer sitio.',
       network:
         'Sin conexión con el servidor. Comprueba tu red e inténtalo de nuevo.',
       unknown: 'Algo ha salido mal. Inténtalo de nuevo.'

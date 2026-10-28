@@ -9,7 +9,7 @@ import {
   randomState,
   type Configuration
 } from 'openid-client';
-import { usernameSchema } from '@logigator/contract';
+import { reduceToUsername, usernameSchema } from '@logigator/contract';
 import { safeReturnPath } from '@logigator/core';
 import { ApiException } from '../common/api-exception';
 import { ENV, type Env } from '../config/env';
@@ -435,20 +435,20 @@ async function readCapped(
  * be one, the address' local part otherwise.
  *
  * Neither is usable as given — a display name is free text, and the contract
- * says 2 to 20 characters of letters, digits, `_` and `-`. Storing one verbatim
- * would put values in the column that the API's own schema rejects, so each
- * candidate is reduced to that shape and checked against the schema itself. The
- * last resort is a name that needs no cleaning.
+ * allows 2 to 32 characters of Latin letters, digits, spaces and a few marks.
+ * Storing one verbatim would put values in the column that the API's own schema
+ * rejects, so each candidate loses what the schema refuses and is checked
+ * against it; what is stored is the schema's normalized output. A display name
+ * holding an `@` is skipped whole: it is usually the address itself, and
+ * dropping the `@` would still publish it. The last resort is a name that needs
+ * no cleaning.
  */
 export function usernameFrom(name: unknown, email: string): string {
   for (const candidate of [name, email.split('@')[0]]) {
-    if (typeof candidate !== 'string') continue;
+    if (typeof candidate !== 'string' || candidate.includes('@')) continue;
 
-    const cleaned = candidate
-      .replaceAll(/\s+/g, '_')
-      .replaceAll(/[^a-zA-Z0-9_-]/g, '')
-      .slice(0, 20);
-    if (usernameSchema.safeParse(cleaned).success) return cleaned;
+    const parsed = usernameSchema.safeParse(reduceToUsername(candidate));
+    if (parsed.success) return parsed.data;
   }
 
   return 'user';
