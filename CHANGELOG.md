@@ -76,6 +76,7 @@ and print text while they run.
   selectors, memory and timing. Categories you fold stay folded.
 - A component you are placing is centred on the pointer.
 - Text components hold up to 1,000 characters, twice as many as before.
+- A ROM can have up to 12 address inputs, for 4,096 words instead of 2,048.
 - The switch for tips sits with the other editor settings, and turning it off
   ends a running tutorial.
 - An account whose email address isn't confirmed within 90 days is deleted.

@@ -31,14 +31,14 @@ export const romMeta = {
       max: 64,
       default: 4
     },
-    // Capped at 11 rather than the engine's 16 so a fully populated ROM's
-    // bit-packed contents fit the v0 `s` field's 32768 chars: 2^11 × 64-bit
-    // words = 16 KiB ≈ 21 845 base64 chars.
+    // Capped at 12 rather than the engine's 16: the contents are stored in the
+    // document, and a full ROM at 2^12 × 64-bit words is 32 KiB ≈ 43 690
+    // base64 chars, where 16 bits would be 512 KiB per ROM.
     addressSize: {
       kind: 'number',
       label: 'components.def.ROM.options.addressSize',
       min: 1,
-      max: 11,
+      max: 12,
       default: 4
     },
     data: {

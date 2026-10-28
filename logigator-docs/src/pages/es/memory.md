@@ -90,10 +90,10 @@ La ROM da la palabra guardada en la dirección presente en sus entradas A. No ti
 | Opción              | Valores                    | Predeterminado |
 | ------------------- | -------------------------- | -------------- |
 | Tamaño de palabra   | 1 a 64                     | 4              |
-| Tamaño de dirección | 1 a 11                     | 4              |
+| Tamaño de dirección | 1 a 12                     | 4              |
 | Editar contenido    | Abre el editor hexadecimal | Vacía          |
 
-Tamaño de palabra fija cuántos bits tiene una palabra y, con ello, el número de salidas. Tamaño de dirección fija el número de entradas de dirección. Una ROM guarda 2ⁿ palabras con un tamaño de dirección n: 16 palabras de forma predeterminada, 2048 como máximo.
+Tamaño de palabra fija cuántos bits tiene una palabra y, con ello, el número de salidas. Tamaño de dirección fija el número de entradas de dirección. Una ROM guarda 2ⁿ palabras con un tamaño de dirección n: 16 palabras de forma predeterminada, 4096 como máximo.
 
 ### Editar el contenido {#editing-the-contents}
 

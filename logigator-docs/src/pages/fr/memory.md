@@ -90,10 +90,10 @@ La ROM donne le mot stocké à l'adresse présente sur ses entrées A. Elle n'a 
 | Option              | Valeurs                     | Par défaut |
 | ------------------- | --------------------------- | ---------- |
 | Taille de mot       | 1 à 64                      | 4          |
-| Taille d'adresse    | 1 à 11                      | 4          |
+| Taille d'adresse    | 1 à 12                      | 4          |
 | Modifier le contenu | Ouvre l'éditeur hexadécimal | Vide       |
 
-Taille de mot fixe le nombre de bits par mot, et donc le nombre de sorties. Taille d'adresse fixe le nombre d'entrées d'adresse. Une ROM contient 2ⁿ mots pour une taille d'adresse de n : 16 mots par défaut, 2 048 au plus.
+Taille de mot fixe le nombre de bits par mot, et donc le nombre de sorties. Taille d'adresse fixe le nombre d'entrées d'adresse. Une ROM contient 2ⁿ mots pour une taille d'adresse de n : 16 mots par défaut, 4 096 au plus.
 
 ### Modification du contenu {#editing-the-contents}
 

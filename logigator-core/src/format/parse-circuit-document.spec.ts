@@ -8,6 +8,7 @@ import {
 import { CURRENT_FILE_VERSION } from './circuit-file-version';
 import { decodeLgix, encodeLgix } from './lgix-container';
 import { BuiltInComponentType } from '../model/component-type.enum';
+import { romMeta } from '../catalog/built-ins/rom.meta';
 import { encodeComponentBlocks } from '../codecs/component-block.codec';
 import { SerializedComponentBody } from '../model/serialized-circuit';
 
@@ -339,7 +340,7 @@ describe('parseCircuitDocument', () => {
       const and = result.body.components.find(
         (c) => c.type === BuiltInComponentType.AND
       )!;
-      expect(rom.options['addressSize']).toBe(11);
+      expect(rom.options['addressSize']).toBe(romMeta.options.addressSize.max);
       expect(rom.options['wordSize']).toBe(8);
       expect(and.options['numInputs']).toBe(2);
     });
@@ -366,7 +367,9 @@ describe('parseCircuitDocument', () => {
       expect(reread.body.components.map((c) => c.type)).toEqual([
         BuiltInComponentType.ROM
       ]);
-      expect(reread.body.components[0].options['addressSize']).toBe(11);
+      expect(reread.body.components[0].options['addressSize']).toBe(
+        romMeta.options.addressSize.max
+      );
     });
 
     it('lenient falls back to the default when there is no nearest value', () => {

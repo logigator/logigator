@@ -82,6 +82,8 @@ circuitos reciben entradas y muestran texto mientras se simulan.
   siguen plegadas.
 - Un componente que estás colocando queda centrado bajo el puntero.
 - Los componentes de Texto admiten hasta 1000 caracteres, el doble que antes.
+- Una ROM puede tener hasta 12 entradas de dirección, con 4096 palabras en
+  lugar de 2048.
 - El interruptor de los consejos está junto a los demás ajustes del editor, y
   al desactivarlo termina el tutorial en curso.
 - Una cuenta cuya dirección de correo no se confirma en 90 días se elimina.

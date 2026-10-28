@@ -90,10 +90,10 @@ The ROM outputs the word stored at the address on its A inputs. It has no clock:
 | Option        | Values               | Default |
 | ------------- | -------------------- | ------- |
 | Word Size     | 1 to 64              | 4       |
-| Address Size  | 1 to 11              | 4       |
+| Address Size  | 1 to 12              | 4       |
 | Edit contents | Opens the hex editor | Empty   |
 
-Word Size sets how many bits a word has, and so the number of outputs. Address Size sets the number of address inputs. A ROM holds 2ⁿ words for an Address Size of n: 16 words by default, 2,048 at most.
+Word Size sets how many bits a word has, and so the number of outputs. Address Size sets the number of address inputs. A ROM holds 2ⁿ words for an Address Size of n: 16 words by default, 4,096 at most.
 
 ### Editing the contents {#editing-the-contents}
 

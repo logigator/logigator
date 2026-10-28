@@ -90,10 +90,10 @@ Das ROM gibt das Wort aus, das an der Adresse an seinen A-Eingängen gespeichert
 | Option            | Werte                 | Standard |
 | ----------------- | --------------------- | -------- |
 | Wortbreite        | 1 bis 64              | 4        |
-| Adressgröße       | 1 bis 11              | 4        |
+| Adressgröße       | 1 bis 12              | 4        |
 | Inhalt bearbeiten | Öffnet den Hex-Editor | Leer     |
 
-Wortbreite legt fest, wie viele Bits ein Wort hat, und damit die Zahl der Ausgänge. Adressgröße legt die Zahl der Adresseingänge fest. Ein ROM mit Adressgröße n hält 2ⁿ Wörter: standardmäßig 16, höchstens 2.048.
+Wortbreite legt fest, wie viele Bits ein Wort hat, und damit die Zahl der Ausgänge. Adressgröße legt die Zahl der Adresseingänge fest. Ein ROM mit Adressgröße n hält 2ⁿ Wörter: standardmäßig 16, höchstens 4.096.
 
 ### Den Inhalt bearbeiten {#editing-the-contents}
 
