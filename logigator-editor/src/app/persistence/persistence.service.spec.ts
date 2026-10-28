@@ -52,7 +52,7 @@ import {
   gzippedBody
 } from '../../testing/vitest-helpers';
 import { signal } from '@angular/core';
-import type { UserResponse } from '@logigator/contract';
+import { isApiError, type UserResponse } from '@logigator/contract';
 import { makeUser } from '../../testing/user-fixtures';
 import { makeNot } from '../../testing/factories';
 import { UserService } from '../user/user.service';
@@ -1073,6 +1073,116 @@ describe('PersistenceService', () => {
       expect(browserStore.records.has('stored-1')).toBe(false);
       expect(projectService.mainProject()).toBe(main);
       expect(metadataStore.getMetadata(main)!.source).toBe('browser');
+    });
+  });
+
+  describe('a refused upload', () => {
+    const storageFull = {
+      status: 403,
+      statusText: 'Forbidden'
+    };
+    const tick = () => new Promise((r) => setTimeout(r, 0));
+    // Reaches the upload coordinator unwrapped, which picks its message by it.
+    const isStorageFull = (err: unknown) => isApiError(err, 'storage_full');
+
+    async function storeLocalComponent(id: string): Promise<number> {
+      const circuitFile = TestBed.inject(CircuitFileService);
+      await componentStore.save({
+        id,
+        version: 1,
+        name: 'Comp',
+        symbol: 'C',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        content: circuitFile.toJson(new Project(), 'Comp')
+      });
+      return registry.createMaster(
+        { id, symbol: 'C', name: 'Comp' },
+        'browser'
+      );
+    }
+
+    it('keeps the local project when it is refused after a dependency was uploaded', async () => {
+      const depTypeId = await storeLocalComponent('local-dep');
+      const project = new Project();
+      metadataStore.register(project, {
+        id: 'browser-1',
+        name: 'Local',
+        type: 'project',
+        source: 'browser',
+        visibility: 'private'
+      });
+      metadataStore.markDirty(project);
+      await service.saveProject(project);
+
+      const dep = promotion.promoteComponentToServer(depTypeId);
+      await tick();
+      (await expectGzipped(httpMock, COMPONENTS_URL)).flush(
+        componentSummaryResponse({ id: uuid('srv-dep') })
+      );
+      await dep;
+
+      const upload = promotion.promoteProjectToServer(project, 'public');
+      (await expectGzipped(httpMock, PROJECTS_LIST_URL)).flush(
+        apiError('storage_full'),
+        storageFull
+      );
+
+      await expect(upload).rejects.toSatisfy(isStorageFull);
+      expect(browserStore.records.has('browser-1')).toBe(true);
+      const metadata = metadataStore.getMetadata(project)!;
+      expect(metadata.source).toBe('browser');
+      expect(metadata.id).toBe('browser-1');
+      expect(locationGo).not.toHaveBeenCalled();
+      // The dependency that did go up is a cloud component now, still
+      // resolvable from the project's stored snapshots by its old id.
+      expect(registry.getDefinition(depTypeId)!.source).toBe('server');
+      expect(registry.masterTypeIdForId('local-dep')).toBe(depTypeId);
+    });
+
+    it('keeps a stored project uploaded through a throwaway copy', async () => {
+      const stored = new Project();
+      metadataStore.register(stored, {
+        id: 'stored-1',
+        name: 'Archived',
+        type: 'project',
+        source: 'browser',
+        visibility: 'private'
+      });
+      metadataStore.markDirty(stored);
+      await service.saveProject(stored);
+      service.createAndSetEmptyProject();
+
+      const upload = promotion.uploadStoredProjectToServer(
+        'stored-1',
+        'public'
+      );
+      await Promise.resolve();
+      (await expectGzipped(httpMock, PROJECTS_LIST_URL)).flush(
+        apiError('storage_full'),
+        storageFull
+      );
+
+      await expect(upload).rejects.toSatisfy(isStorageFull);
+      expect(browserStore.records.has('stored-1')).toBe(true);
+    });
+
+    it('keeps the local component and its master', async () => {
+      const masterTypeId = await storeLocalComponent('local-1');
+
+      const upload = promotion.promoteComponentToServer(masterTypeId);
+      await tick();
+      (await expectGzipped(httpMock, COMPONENTS_URL)).flush(
+        apiError('storage_full'),
+        storageFull
+      );
+
+      await expect(upload).rejects.toSatisfy(isStorageFull);
+      expect(await componentStore.get('local-1')).toBeDefined();
+      expect(registry.getDefinition(masterTypeId)!.source).toBe('browser');
+      expect(idMapStore.records.has('local-1')).toBe(false);
     });
   });
 

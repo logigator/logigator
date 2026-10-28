@@ -806,7 +806,13 @@ const en = {
     analyzeFailed: 'Could not read the circuit to prepare the upload.',
     dependencyFailed:
       'Could not upload component “{{name}}”. The upload stopped there, so try again.',
-    uploadFailed: 'Could not upload “{{name}}” to the cloud.'
+    dependencyStorageFull:
+      'Your cloud storage is full, so component “{{name}}” was not uploaded and the upload stopped there. Delete projects or components you no longer need to make room.',
+    uploadFailed: 'Could not upload “{{name}}” to the cloud.',
+    storageFull:
+      'Your cloud storage is full, so “{{name}}” stays in local storage. Delete projects or components you no longer need to make room.',
+    draftStorageFull:
+      'Your cloud storage is full, so “{{name}}” was not saved. Save it locally instead, or delete projects or components you no longer need.'
   },
   closeTab: {
     header: 'Unsaved changes',
@@ -951,6 +957,12 @@ const en = {
       'This circuit is too large to save to the cloud. Remove some components and try again.',
     versionMismatch:
       'This project was changed somewhere else. Reload it before saving again.',
+    storageFull:
+      'Your cloud storage is full. Delete projects or components you no longer need to make room.',
+    saveStorageFull:
+      'Your cloud storage is full, so the changes were not saved. Delete projects or components you no longer need, or keep a copy with File → Export to File.',
+    componentSaveStorageFull:
+      'Your cloud storage is full, so the changes were not saved. Delete projects or components you no longer need to make room.',
     loadFailed: 'Could not load the project.',
     componentLoadFailed: 'Could not load the component.',
     shareLoadFailed: 'Could not load the shared circuit.',

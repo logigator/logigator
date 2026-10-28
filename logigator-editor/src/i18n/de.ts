@@ -816,7 +816,13 @@ const de: TranslationSchema = {
     analyzeFailed: 'Die Schaltung konnte für den Upload nicht gelesen werden.',
     dependencyFailed:
       'Die Komponente „{{name}}“ konnte nicht hochgeladen werden. Der Upload hat dort aufgehört, versuche es also erneut.',
-    uploadFailed: '„{{name}}“ konnte nicht in die Cloud hochgeladen werden.'
+    dependencyStorageFull:
+      'Dein Cloud-Speicher ist voll, deshalb wurde die Komponente „{{name}}“ nicht hochgeladen und der Upload hat dort aufgehört. Lösche Projekte oder Komponenten, die du nicht mehr brauchst, um Platz zu schaffen.',
+    uploadFailed: '„{{name}}“ konnte nicht in die Cloud hochgeladen werden.',
+    storageFull:
+      'Dein Cloud-Speicher ist voll, deshalb bleibt „{{name}}“ im lokalen Speicher. Lösche Projekte oder Komponenten, die du nicht mehr brauchst, um Platz zu schaffen.',
+    draftStorageFull:
+      'Dein Cloud-Speicher ist voll, deshalb wurde „{{name}}“ nicht gespeichert. Speichere es stattdessen lokal oder lösche Projekte oder Komponenten, die du nicht mehr brauchst.'
   },
   closeTab: {
     header: 'Ungespeicherte Änderungen',
@@ -970,6 +976,12 @@ const de: TranslationSchema = {
       'Diese Schaltung ist zu groß, um in der Cloud gespeichert zu werden. Entferne einige Komponenten und versuche es erneut.',
     versionMismatch:
       'Dieses Projekt wurde an anderer Stelle geändert. Lade es neu, bevor du erneut speicherst.',
+    storageFull:
+      'Dein Cloud-Speicher ist voll. Lösche Projekte oder Komponenten, die du nicht mehr brauchst, um Platz zu schaffen.',
+    saveStorageFull:
+      'Dein Cloud-Speicher ist voll, deshalb wurden die Änderungen nicht gespeichert. Lösche Projekte oder Komponenten, die du nicht mehr brauchst, oder behalte eine Kopie mit Datei → Als Datei exportieren.',
+    componentSaveStorageFull:
+      'Dein Cloud-Speicher ist voll, deshalb wurden die Änderungen nicht gespeichert. Lösche Projekte oder Komponenten, die du nicht mehr brauchst, um Platz zu schaffen.',
     loadFailed: 'Das Projekt konnte nicht geladen werden.',
     componentLoadFailed: 'Die Komponente konnte nicht geladen werden.',
     shareLoadFailed: 'Die geteilte Schaltung konnte nicht geladen werden.',

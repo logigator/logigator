@@ -809,7 +809,13 @@ const es: TranslationSchema = {
     analyzeFailed: 'No se pudo leer el circuito para preparar la subida.',
     dependencyFailed:
       'No se pudo subir el componente «{{name}}». La subida se detuvo ahí, así que inténtalo de nuevo.',
-    uploadFailed: 'No se pudo subir «{{name}}» a la nube.'
+    dependencyStorageFull:
+      'Tu almacenamiento en la nube está lleno, así que el componente «{{name}}» no se subió y la subida se detuvo ahí. Elimina proyectos o componentes que ya no necesites para hacer sitio.',
+    uploadFailed: 'No se pudo subir «{{name}}» a la nube.',
+    storageFull:
+      'Tu almacenamiento en la nube está lleno, así que «{{name}}» se queda en el almacenamiento local. Elimina proyectos o componentes que ya no necesites para hacer sitio.',
+    draftStorageFull:
+      'Tu almacenamiento en la nube está lleno, así que «{{name}}» no se guardó. Guárdalo en local o elimina proyectos o componentes que ya no necesites.'
   },
   closeTab: {
     header: 'Cambios sin guardar',
@@ -958,6 +964,12 @@ const es: TranslationSchema = {
       'Este circuito es demasiado grande para guardarlo en la nube. Elimina algunos componentes e inténtalo de nuevo.',
     versionMismatch:
       'Este proyecto se modificó en otro sitio. Recárgalo antes de volver a guardarlo.',
+    storageFull:
+      'Tu almacenamiento en la nube está lleno. Elimina proyectos o componentes que ya no necesites para hacer sitio.',
+    saveStorageFull:
+      'Tu almacenamiento en la nube está lleno, así que los cambios no se guardaron. Elimina proyectos o componentes que ya no necesites, o guarda una copia con Archivo → Exportar a archivo.',
+    componentSaveStorageFull:
+      'Tu almacenamiento en la nube está lleno, así que los cambios no se guardaron. Elimina proyectos o componentes que ya no necesites para hacer sitio.',
     loadFailed: 'No se pudo cargar el proyecto.',
     componentLoadFailed: 'No se pudo cargar el componente.',
     shareLoadFailed: 'No se pudo cargar el circuito compartido.',

@@ -814,7 +814,13 @@ const fr: TranslationSchema = {
       'Impossible de lire le circuit pour préparer le téléversement.',
     dependencyFailed:
       'Impossible de téléverser le composant « {{name}} ». Le téléversement s’est arrêté là, réessayez.',
-    uploadFailed: 'Impossible de téléverser « {{name}} » vers le cloud.'
+    dependencyStorageFull:
+      'Votre stockage cloud est plein : le composant « {{name}} » n’a pas été téléversé et le téléversement s’est arrêté là. Supprimez des projets ou des composants dont vous n’avez plus besoin pour libérer de la place.',
+    uploadFailed: 'Impossible de téléverser « {{name}} » vers le cloud.',
+    storageFull:
+      'Votre stockage cloud est plein : « {{name}} » reste dans le stockage local. Supprimez des projets ou des composants dont vous n’avez plus besoin pour libérer de la place.',
+    draftStorageFull:
+      'Votre stockage cloud est plein : « {{name}} » n’a pas été enregistré. Enregistrez-le plutôt en local, ou supprimez des projets ou des composants dont vous n’avez plus besoin.'
   },
   closeTab: {
     header: 'Modifications non enregistrées',
@@ -965,6 +971,12 @@ const fr: TranslationSchema = {
       'Ce circuit est trop volumineux pour être enregistré dans le cloud. Supprimez des composants et réessayez.',
     versionMismatch:
       'Ce projet a été modifié ailleurs. Rechargez-le avant de l’enregistrer à nouveau.',
+    storageFull:
+      'Votre stockage cloud est plein. Supprimez des projets ou des composants dont vous n’avez plus besoin pour libérer de la place.',
+    saveStorageFull:
+      'Votre stockage cloud est plein : les modifications n’ont pas été enregistrées. Supprimez des projets ou des composants dont vous n’avez plus besoin, ou gardez-en une copie avec Fichier → Exporter vers un fichier.',
+    componentSaveStorageFull:
+      'Votre stockage cloud est plein : les modifications n’ont pas été enregistrées. Supprimez des projets ou des composants dont vous n’avez plus besoin pour libérer de la place.',
     loadFailed: 'Impossible de charger le projet.',
     componentLoadFailed: 'Impossible de charger le composant.',
     shareLoadFailed: 'Impossible de charger le circuit partagé.',

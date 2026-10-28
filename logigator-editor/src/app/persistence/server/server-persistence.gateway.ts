@@ -665,7 +665,7 @@ export class ServerPersistenceGateway {
         );
         this.metadataStore.updateVersion(project, summary.version);
       } catch (err) {
-        this._reportSaveError(err);
+        this._reportSaveError(err, 'project');
         throw err;
       }
     });
@@ -713,7 +713,7 @@ export class ServerPersistenceGateway {
           );
         }
       } catch (err) {
-        this._reportSaveError(err);
+        this._reportSaveError(err, 'comp');
         throw err;
       }
     });
@@ -735,8 +735,11 @@ export class ServerPersistenceGateway {
    * `payload_too_large` is the request never reaching a handler: the circuit
    * is past the size the API accepts, which is about the board rather than
    * about this save, so the generic detail would say nothing.
+   *
+   * `storage_full` is a save that would take the account past its quota. A
+   * project can still be kept as a file, so its message points there.
    */
-  private _reportSaveError(err: unknown): void {
+  private _reportSaveError(err: unknown, kind: 'project' | 'comp'): void {
     if (isApiError(err, 'unauthorized')) {
       this.userService.sessionExpired();
       this.toast.error(
@@ -753,6 +756,16 @@ export class ServerPersistenceGateway {
     } else if (isApiError(err, 'payload_too_large')) {
       this.toast.error(
         this.translation.translate('persistence.saveTooLarge'),
+        'ServerPersistenceGateway',
+        err
+      );
+    } else if (isApiError(err, 'storage_full')) {
+      this.toast.error(
+        this.translation.translate(
+          kind === 'project'
+            ? 'persistence.saveStorageFull'
+            : 'persistence.componentSaveStorageFull'
+        ),
         'ServerPersistenceGateway',
         err
       );

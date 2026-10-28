@@ -10,7 +10,7 @@ import { ComponentLibraryService } from './component-library.service';
 import { PromotionService } from '../persistence/promotion.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { CustomComponentDetails } from '@logigator/core';
-import type { DocumentVisibility } from '@logigator/contract';
+import { isApiError, type DocumentVisibility } from '@logigator/contract';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
 import { Action } from '../actions/action';
@@ -23,6 +23,7 @@ import { DialogService } from '@logigator/ui';
 import { DefinitionBinding } from './definition-binding';
 import { WireRepairService } from '../project/wire-repair.service';
 import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
+import { isHandledSaveError } from '../persistence/persistence-errors';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
 import {
@@ -83,11 +84,18 @@ export class CustomComponentService {
         });
         return project;
       } catch (e) {
-        this.toast.error(
-          this.translation.translate('componentActions.createFailed'),
-          'CustomComponentService',
-          e
-        );
+        // A signed-out session was already toasted at the guard.
+        if (!isHandledSaveError(e)) {
+          this.toast.error(
+            this.translation.translate(
+              isApiError(e, 'storage_full')
+                ? 'persistence.storageFull'
+                : 'componentActions.createFailed'
+            ),
+            'CustomComponentService',
+            e
+          );
+        }
         throw e;
       }
     }

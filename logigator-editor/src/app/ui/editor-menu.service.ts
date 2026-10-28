@@ -27,6 +27,7 @@ import { ConsentService } from '../consent/consent.service';
 import { WireRepairService } from '../project/wire-repair.service';
 import { ToastService } from '../logging/toast.service';
 import { isHandledSaveError } from '../persistence/persistence-errors';
+import { isApiError } from '@logigator/contract';
 
 /**
  * Builds the menu models and owns the commands behind them: the desktop menubar
@@ -540,7 +541,11 @@ export class EditorMenuService {
     } catch (err) {
       if (!isHandledSaveError(err)) {
         this.toastService.error(
-          this.translation.translate('persistence.shareCloneFailed'),
+          this.translation.translate(
+            isApiError(err, 'storage_full')
+              ? 'persistence.storageFull'
+              : 'persistence.shareCloneFailed'
+          ),
           'EditorMenuService',
           err
         );

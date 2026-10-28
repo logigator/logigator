@@ -13,7 +13,7 @@ import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { ToastService } from '../../logging/toast.service';
 import { Project } from '../../project/project';
-import type { DocumentVisibility } from '@logigator/contract';
+import { isApiError, type DocumentVisibility } from '@logigator/contract';
 import {
   UploadDialogComponent,
   UploadDialogData,
@@ -110,7 +110,7 @@ export class UploadCoordinatorService {
       // primitive is silent, so the coordinator reports those.
       if (target.kind !== 'save-server' && !isHandledSaveError(err)) {
         this.toast.error(
-          this.translation.translate('uploadDialog.uploadFailed', { name }),
+          this.translation.translate(this._failureKey(target, err), { name }),
           'UploadCoordinatorService',
           err
         );
@@ -194,9 +194,12 @@ export class UploadCoordinatorService {
       } catch (err) {
         if (!isHandledSaveError(err)) {
           this.toast.error(
-            this.translation.translate('uploadDialog.dependencyFailed', {
-              name: depName
-            }),
+            this.translation.translate(
+              isApiError(err, 'storage_full')
+                ? 'uploadDialog.dependencyStorageFull'
+                : 'uploadDialog.dependencyFailed',
+              { name: depName }
+            ),
             'UploadCoordinatorService',
             err
           );
@@ -205,6 +208,18 @@ export class UploadCoordinatorService {
       }
     }
     return true;
+  }
+
+  /**
+   * A refused upload has changed nothing local, so a full cloud storage says
+   * where the document still is: a stored one stays in local storage, a draft
+   * stays a draft.
+   */
+  private _failureKey(target: UploadTarget, err: unknown) {
+    if (!isApiError(err, 'storage_full')) return 'uploadDialog.uploadFailed';
+    return target.kind === 'draft-to-server'
+      ? 'uploadDialog.draftStorageFull'
+      : 'uploadDialog.storageFull';
   }
 
   private _successKey(target: UploadTarget) {
