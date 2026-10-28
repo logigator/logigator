@@ -558,7 +558,7 @@ const en = {
             'Your profile was changed in another tab or window, so these edits were not saved. Loading the saved profile replaces what you typed here.',
           loadSaved: 'Load the saved profile',
           avatarRejected:
-            'That image could not be used. Try a smaller PNG, JPEG or WebP.'
+            'That image could not be used. Try a smaller PNG, JPEG, WebP or GIF.'
         },
         email: {
           heading: 'Email address',

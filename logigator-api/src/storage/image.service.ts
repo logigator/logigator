@@ -21,9 +21,10 @@ type EncodeMode = 'photo' | 'lineArt';
 /**
  * Accepted formats, as *detected from the bytes* rather than declared in a
  * header. The allowlist is the point: libvips also reads SVG, PDF and TIFF, and
- * an SVG would rasterize into a perfectly valid avatar.
+ * an SVG would rasterize into a perfectly valid avatar. A GIF is read as its
+ * first frame, like every other source (`animated: false` below).
  */
-const ACCEPTED_FORMATS = new Set(['png', 'jpeg', 'webp']);
+const ACCEPTED_FORMATS = new Set(['png', 'jpeg', 'webp', 'gif']);
 
 /**
  * Ceiling on the decoded size of an upload. `UPLOAD_MAX_BYTES` bounds what
@@ -184,7 +185,7 @@ export class ImageService {
     return new ApiException(
       HttpStatus.UNSUPPORTED_MEDIA_TYPE,
       'bad_request',
-      'The file could not be read as a PNG, JPEG or WebP image.'
+      'The file could not be read as a PNG, JPEG, WebP or GIF image.'
     );
   }
 }

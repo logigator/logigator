@@ -107,6 +107,30 @@ describe('an encoded avatar', () => {
     expect(bottom.r).toBeLessThan(60);
   });
 
+  it('takes the first frame of an animated GIF', async () => {
+    // Two 32×32 frames, red then blue, stacked as pages.
+    const raw = Buffer.alloc(32 * 64 * 3);
+    for (let i = 0; i < 32 * 32; i++) {
+      raw[i * 3] = 255;
+      raw[(32 * 32 + i) * 3 + 2] = 255;
+    }
+    const gif = await sharp(raw, {
+      raw: { width: 32, height: 64, channels: 3, pageHeight: 32 }
+    })
+      .gif()
+      .toBuffer();
+
+    const encoded = byName(await images.encodeAvatar(gif));
+    const avatar = encoded.get('256.webp') as Buffer;
+
+    const centre = await pixel(avatar, 128, 128);
+    expect(
+      (await sharp(avatar, { animated: true }).metadata()).pages ?? 1
+    ).toBe(1);
+    expect(centre.r).toBeGreaterThan(200);
+    expect(centre.b).toBeLessThan(60);
+  });
+
   it('keeps transparency', async () => {
     const transparent = await sharp({
       create: {

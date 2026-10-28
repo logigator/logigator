@@ -540,7 +540,7 @@ const fr: TranslationSchema = {
             'Votre profil a été modifié dans un autre onglet ou une autre fenêtre, ces modifications n’ont donc pas été enregistrées. Charger le profil enregistré remplace ce que vous avez saisi ici.',
           loadSaved: 'Charger le profil enregistré',
           avatarRejected:
-            'Cette image n’a pas pu être utilisée. Essayez un PNG, JPEG ou WebP plus petit.'
+            'Cette image n’a pas pu être utilisée. Essayez un PNG, JPEG, WebP ou GIF plus petit.'
         },
         email: {
           heading: 'Adresse e-mail',

@@ -547,7 +547,7 @@ const de: TranslationSchema = {
             'Dein Profil wurde in einem anderen Tab oder Fenster geändert, deshalb wurden diese Änderungen nicht gespeichert. Wenn du das gespeicherte Profil lädst, wird ersetzt, was du hier eingegeben hast.',
           loadSaved: 'Gespeichertes Profil laden',
           avatarRejected:
-            'Dieses Bild konnte nicht verwendet werden. Versuche ein kleineres PNG, JPEG oder WebP.'
+            'Dieses Bild konnte nicht verwendet werden. Versuche ein kleineres PNG, JPEG, WebP oder GIF.'
         },
         email: {
           heading: 'E-Mail-Adresse',
