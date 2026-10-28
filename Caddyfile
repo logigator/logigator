@@ -116,8 +116,11 @@
 		}
 	}
 
+	# The access log: one line per request at `info`, a failed one (5xx) at
+	# `error`. CADDY_LOG_LEVEL takes Caddy's levels, which have no `trace` or
+	# `silent`.
 	log {
 		output stdout
-		level warn
+		level {$CADDY_LOG_LEVEL:warn}
 	}
 }

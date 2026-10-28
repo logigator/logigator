@@ -108,6 +108,8 @@ services:
       # What the API writes, read-only: Caddy serves these files, and only the
       # API ever produces them.
       - storage:/srv/files:ro
+    environment:
+      - CADDY_LOG_LEVEL=${CADDY_LOG_LEVEL:-warn}
     # The editor's shell, which Caddy serves itself: the check is of the origin
     # alone, not of what it forwards to.
     healthcheck:
@@ -129,6 +131,7 @@ services:
       - net
     environment:
       - API_ORIGIN=http://api:3000
+      - LOG_LEVEL=${LOG_LEVEL:-info}
       - NG_ALLOWED_HOSTS=${SITE_HOST:-logigator.test}
       - NG_TRUST_PROXY_HEADERS=x-forwarded-host,x-forwarded-proto,x-forwarded-for
     # Answered by the server itself, without a render or an API read.
