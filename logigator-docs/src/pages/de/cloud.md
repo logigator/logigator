@@ -24,6 +24,8 @@ Lokale Dokumente liegen in diesem Browser und sind weg, wenn seine Website-Daten
 
 Auf der Website listen Meine Projekte und Meine Komponenten deine Cloud-Dokumente ebenfalls. Du kannst sie dort anlegen, umbenennen, teilen und löschen und im Editor öffnen.
 
+Jeder Account hat 20 MB Cloud-Speicher für seine Projekte und Komponenten, ihre Vorschaubilder eingeschlossen. Ist er voll, werden neue Cloud-Dokumente und Speichervorgänge, die ein Dokument größer machen, abgelehnt, bis du etwas löschst.
+
 ## In die Cloud hochladen {#uploading-to-the-cloud}
 
 | Hochladen                                 | Womit                                                                                                      |

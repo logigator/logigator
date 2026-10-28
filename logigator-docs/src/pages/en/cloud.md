@@ -24,6 +24,8 @@ Local documents live in this browser and are gone if its site data is cleared. C
 
 On the website, My projects and My components list your cloud documents as well. You can create, rename, share and delete them there, and open them in the editor.
 
+Each account has 20 MB of cloud storage for its projects and components, their preview images included. Once it is full, new cloud documents and saves that make a document bigger are refused until you delete something.
+
 ## Uploading to the cloud {#uploading-to-the-cloud}
 
 | To upload                | Use                                                                         |

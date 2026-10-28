@@ -24,6 +24,8 @@ Les documents locaux vivent dans ce navigateur et disparaissent si ses données 
 
 Sur le site, Mes projets et Mes composants listent aussi vos documents cloud. Vous pouvez les y créer, renommer, partager, supprimer et les ouvrir dans l'éditeur.
 
+Chaque compte dispose de 20 Mo de stockage cloud pour ses projets et composants, images d'aperçu comprises. Une fois ce stockage plein, les nouveaux documents cloud et les enregistrements qui agrandissent un document sont refusés jusqu'à ce que vous supprimiez quelque chose.
+
 ## Téléverser vers le cloud {#uploading-to-the-cloud}
 
 | À téléverser                    | Utilisez                                                                                                             |

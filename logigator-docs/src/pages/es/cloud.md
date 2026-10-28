@@ -24,6 +24,8 @@ Los documentos locales viven en este navegador y desaparecen si se borran sus da
 
 En el sitio web, Mis proyectos y Mis componentes listan también tus documentos de la nube. Allí puedes crearlos, renombrarlos, compartirlos, eliminarlos y abrirlos en el editor.
 
+Cada cuenta tiene 20 MB de almacenamiento en la nube para sus proyectos y componentes, con sus imágenes de vista previa incluidas. Cuando se llena, se rechazan los documentos nuevos en la nube y los guardados que hacen crecer un documento hasta que borres algo.
+
 ## Subir a la nube {#uploading-to-the-cloud}
 
 | Para subir                        | Usa                                                                                       |
