@@ -75,6 +75,7 @@ and print text while they run.
 - **A palette grouped by function**: logic gates, inputs, outputs, adders and
   selectors, memory and timing. Categories you fold stay folded.
 - A component you are placing is centred on the pointer.
+- Text components hold up to 1,000 characters, twice as many as before.
 - The switch for tips sits with the other editor settings, and turning it off
   ends a running tutorial.
 - An account whose email address isn't confirmed within 90 days is deleted.

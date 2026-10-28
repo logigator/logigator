@@ -81,6 +81,7 @@ Schaltungen während der Simulation Eingaben an und geben Text aus.
   Addierer und Selektoren, Speicher und Zeitsteuerung. Zugeklappte Kategorien
   bleiben zugeklappt.
 - Eine Komponente, die du platzierst, sitzt mittig unter dem Zeiger.
+- Text-Komponenten fassen bis zu 1.000 Zeichen, doppelt so viele wie bisher.
 - Der Schalter für die Tipps steht bei den anderen Editor-Einstellungen, und
   wenn du ihn ausschaltest, endet ein laufendes Tutorial.
 - Ein Konto, dessen E-Mail-Adresse nicht innerhalb von 90 Tagen bestätigt wird,

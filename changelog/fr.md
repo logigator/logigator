@@ -85,6 +85,8 @@ entrées et d'afficher du texte pendant la simulation.
   additionneurs et sélecteurs, mémoire et temporisation. Les catégories que vous
   repliez le restent.
 - Un composant en cours de placement est centré sous le pointeur.
+- Les composants Texte acceptent jusqu'à 1 000 caractères, deux fois plus
+  qu'avant.
 - L'interrupteur des conseils se trouve avec les autres réglages de l'éditeur,
   et le désactiver met fin à un tutoriel en cours.
 - Un compte dont l'adresse e-mail n'est pas confirmée dans les 90 jours est

@@ -25,7 +25,7 @@ export const textMeta = {
       kind: 'textarea',
       label: 'components.def.TEXT.options.text',
       placeholder: 'components.def.TEXT.options.placeholder',
-      maxLength: 500,
+      maxLength: 1000,
       default: '[insert text]'
     }
   },

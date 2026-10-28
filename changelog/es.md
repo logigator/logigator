@@ -81,6 +81,7 @@ circuitos reciben entradas y muestran texto mientras se simulan.
   sumadores y selectores, memoria y temporización. Las categorías que pliegas
   siguen plegadas.
 - Un componente que estás colocando queda centrado bajo el puntero.
+- Los componentes de Texto admiten hasta 1000 caracteres, el doble que antes.
 - El interruptor de los consejos está junto a los demás ajustes del editor, y
   al desactivarlo termina el tutorial en curso.
 - Una cuenta cuya dirección de correo no se confirma en 90 días se elimina.
