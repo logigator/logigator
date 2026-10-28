@@ -1,6 +1,5 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import type { FastifyInstance } from 'fastify';
-import type { Env } from '../config/env';
 import { RedisService } from '../redis/redis.service';
 import { CspReportLog } from './csp-report-log';
 
@@ -11,16 +10,6 @@ const CSP_REPORT_TYPES = ['application/csp-report', 'application/reports+json'];
 
 /** A full Reporting API batch is a few kilobytes. */
 export const CSP_REPORT_MAX_BYTES = 16 * 1024;
-
-const LOG_LEVELS = [
-  'trace',
-  'debug',
-  'info',
-  'warn',
-  'error',
-  'fatal',
-  'silent'
-] as const;
 
 /**
  * `POST /api/csp-report`, where browsers send the policies' violation reports.
@@ -33,13 +22,10 @@ const LOG_LEVELS = [
  * here it is this route's alone. Every answer but the framework's 413 and 415
  * is an empty `204`, so a sender learns nothing about what was kept.
  *
- * It never opens a session, and its level is at least `warn`: Fastify's
- * per-request lines carry the address, and would log every report the limits
- * hold back.
+ * It never opens a session.
  */
 export async function registerCspReportRoute(
-  app: NestFastifyApplication,
-  env: Env
+  app: NestFastifyApplication
 ): Promise<void> {
   const redis = app.get(RedisService);
 
@@ -62,13 +48,6 @@ export async function registerCspReportRoute(
       CSP_REPORT_PATH,
       {
         bodyLimit: CSP_REPORT_MAX_BYTES,
-        logLevel:
-          LOG_LEVELS[
-            Math.max(
-              LOG_LEVELS.indexOf(env.LOG_LEVEL),
-              LOG_LEVELS.indexOf('warn')
-            )
-          ],
         config: { sessionless: true },
         errorHandler: (error, request, reply) => {
           const status = (error as { statusCode?: unknown }).statusCode;

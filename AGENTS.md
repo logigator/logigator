@@ -290,8 +290,7 @@ and the E2E harness).
 - `AuthGuard` is per-route, never global.
 - **`POST /api/csp-report` is a plain Fastify route in a plugin of its own**
   (`reports/csp-report.route.ts`), so its content-type parsers and 16 KB limit reach no other route.
-  It answers an empty `204`, opens no session (`config.sessionless`), and logs only what
-  `CspReportLog`'s dedupe and caps let through, with opaque path segments hidden.
+  It answers an empty `204` and opens no session (`config.sessionless`).
 - **Changing how an account signs in or where its mail goes** (password, address, Google link and
   unlink, deletion) takes the current password, or a sign-in from the last ten minutes where there
   is none; `ReauthenticationService` is the one check.

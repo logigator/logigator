@@ -8,8 +8,7 @@ export class MetaController {
 
   /**
    * Also serves as the liveness probe: it answers without touching anything
-   * external. A readiness endpoint that checks the database and Redis arrives
-   * with them.
+   * external.
    */
   @Get()
   getMeta(): MetaResponse {

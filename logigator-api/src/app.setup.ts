@@ -62,7 +62,7 @@ export async function configureApiApp(
     requestEncodings: ['gzip']
   });
   await registerSessionPlugins(app, env);
-  await registerCspReportRoute(app, env);
+  await registerCspReportRoute(app);
 
   // Caddy proxies `/api/*` here; controllers declare their paths without it.
   app.setGlobalPrefix('api');
