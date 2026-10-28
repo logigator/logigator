@@ -132,8 +132,8 @@ export interface DocImage {
 const en: Readonly<Record<string, DocImage>> = {
   './images/account-menu.webp': {
     url: accountMenuEn,
-    width: 610,
-    height: 1354
+    width: 622,
+    height: 1426
   },
   './images/board-overview.webp': {
     url: boardOverviewEn,
@@ -386,8 +386,8 @@ const en: Readonly<Record<string, DocImage>> = {
 const de: Readonly<Record<string, DocImage>> = {
   './images/account-menu.webp': {
     url: accountMenuDe,
-    width: 748,
-    height: 1354
+    width: 788,
+    height: 1426
   },
   './images/board-overview.webp': {
     url: boardOverviewDe,
@@ -478,8 +478,8 @@ const de: Readonly<Record<string, DocImage>> = {
 const fr: Readonly<Record<string, DocImage>> = {
   './images/account-menu.webp': {
     url: accountMenuFr,
-    width: 828,
-    height: 1354
+    width: 858,
+    height: 1426
   },
   './images/board-overview.webp': {
     url: boardOverviewFr,
@@ -570,8 +570,8 @@ const fr: Readonly<Record<string, DocImage>> = {
 const es: Readonly<Record<string, DocImage>> = {
   './images/account-menu.webp': {
     url: accountMenuEs,
-    width: 752,
-    height: 1354
+    width: 792,
+    height: 1426
   },
   './images/board-overview.webp': {
     url: boardOverviewEs,
