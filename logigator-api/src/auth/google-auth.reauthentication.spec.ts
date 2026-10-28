@@ -140,4 +140,21 @@ describe('a Google round trip from a session', () => {
     });
     expect(users.accounts[1]?.googleUserId).toBeNull();
   });
+
+  it('links nothing when the identity a stale session started from is unlinked before Google answers', async () => {
+    googleSub = 'google-stranger';
+    await google.createAuthorizationUrl(
+      { userId: 'ada', signedInRecently: false },
+      '/en/my/account'
+    );
+    await users.update('ada', { googleUserId: null });
+
+    await expect(
+      google.completeCallback({ state: 'state' }, 'ada')
+    ).rejects.toMatchObject({
+      failure: 'google_reauthentication_required',
+      returnPath: '/en/my/account'
+    });
+    expect(users.accounts[0]?.googleUserId).toBeNull();
+  });
 });

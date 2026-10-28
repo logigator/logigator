@@ -39,6 +39,13 @@ interface PendingFlow {
   /** For `link`, the account that asked — the callback refuses any other. */
   userId?: string;
   /**
+   * For `link`, whether the session counted as a recent sign-in when the flow
+   * started. Only such a flow may link a first identity: one started on the
+   * strength of an identity the account had may find it unlinked by the time
+   * Google answers, and must not link another in its place.
+   */
+  signedInRecently?: boolean;
+  /**
    * Where to send the browser once the round trip ends, as a path on the public
    * origin. Kept with the flow rather than passed through Google, so the value
    * the callback redirects to is the one this server accepted at the start.
@@ -143,15 +150,19 @@ export class GoogleAuthService {
     const verifier = randomPKCECodeVerifier();
     const state = randomState();
     const nonce = randomNonce();
-    const signedInUserId = caller?.userId;
 
     await this.redis.setJson(
       flowKey(state),
       {
         verifier,
         nonce,
-        mode: signedInUserId ? 'link' : 'login',
-        ...(signedInUserId ? { userId: signedInUserId } : {}),
+        mode: caller ? 'link' : 'login',
+        ...(caller
+          ? {
+              userId: caller.userId,
+              signedInRecently: caller.signedInRecently
+            }
+          : {}),
         ...(destination ? { returnPath: destination } : {})
       } satisfies PendingFlow,
       FLOW_TTL_SECONDS
@@ -220,7 +231,11 @@ export class GoogleAuthService {
       if (!signedInUserId || signedInUserId !== flow.userId) {
         throw new GoogleAuthError('google_state_invalid');
       }
-      return this.linkOrReauthenticate(flow.userId, googleUserId);
+      return this.linkOrReauthenticate(
+        flow.userId,
+        googleUserId,
+        flow.signedInRecently === true
+      );
     }
 
     return this.findOrCreate(googleUserId, email, claims);
@@ -259,14 +274,15 @@ export class GoogleAuthService {
   /**
    * A round trip started from a session: the identity the account already has
    * signs it in again; a new one is linked, unless the account already has a
-   * different one. Only the first proves anything about the account, so only
+   * different one or the flow did not start from a recent sign-in. Only the first proves anything about the account, so only
    * the first answers it — a Google account the member also controls is proof
    * of that Google account alone, and replacing the linked identity with it
    * would hand the account to whoever holds the session.
    */
   private async linkOrReauthenticate(
     userId: string,
-    googleUserId: string
+    googleUserId: string,
+    signedInRecently: boolean
   ): Promise<UserRow | null> {
     const existing = await this.users.findByGoogleUserId(googleUserId);
     if (existing && existing.id !== userId) {
@@ -277,6 +293,9 @@ export class GoogleAuthService {
     const account = await this.users.findById(userId);
     if (account?.googleUserId) {
       throw new GoogleAuthError('google_account_mismatch');
+    }
+    if (!signedInRecently) {
+      throw new GoogleAuthError('google_reauthentication_required');
     }
 
     try {
