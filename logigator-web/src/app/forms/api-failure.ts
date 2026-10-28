@@ -17,6 +17,8 @@ export function genericFailureKey(error: unknown): TranslationKey {
       return 'forms.errors.serviceUnavailable';
     case 'validation_failed':
       return 'forms.errors.validationFailed';
+    case 'storage_full':
+      return 'forms.errors.storageFull';
     default:
       // Status 0 is what a request that never reached the server looks like:
       // offline, or a proxy that dropped it.
