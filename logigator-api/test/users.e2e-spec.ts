@@ -590,7 +590,7 @@ describe('the signed-in user', () => {
       // Sharded, named after nothing the client sent, and not a `.png` —
       // the upload was re-encoded rather than stored, and a PNG arrived.
       expect(variant.url).toMatch(
-        /^\/files\/profile\/[0-9a-f]{2}\/[0-9a-f-]{36}\/\d+\.(webp|jpg)$/
+        /^\/files\/profile\/[0-9a-f]{2}\/[0-9a-f-]{36}\/\d+\.webp$/
       );
       // What the response promises has to be on the volume.
       const file = await stat(assetFilePath(api, variant.url));

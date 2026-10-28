@@ -50,14 +50,12 @@ export interface ShareCard extends ComposedCard {
 
 /**
  * The rung a card is built from. The dark render because the card is dark, at
- * the size it was stored so the trim sees every pixel there is; the avatar's
- * **WebP** because its JPEG fallback was flattened onto white, which would
- * composite a white square onto the card.
+ * the size it was stored so the trim sees every pixel there is.
  */
 const RENDER_FILE = variantFile(PREVIEW_VARIANTS, {
   slot: 'dark',
   width: 1024,
-  format: 'png'
+  format: 'webp'
 });
 const AVATAR_FILE = variantFile(AVATAR_VARIANTS, {
   slot: null,

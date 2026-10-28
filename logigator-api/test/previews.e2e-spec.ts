@@ -113,14 +113,14 @@ describe('circuit previews', () => {
 
       // Two lists: the client picks by the theme it draws in.
       for (const slot of ['light', 'dark'] as const) {
-        expect(preview[slot]).toHaveLength(4);
+        expect(preview[slot]).toHaveLength(2);
         expect(
-          preview[slot].map((v: { format: string }) => v.format).sort()
-        ).toEqual(['png', 'png', 'webp', 'webp']);
+          preview[slot].map((v: { format: string }) => v.format)
+        ).toEqual(['webp', 'webp']);
         for (const variant of preview[slot]) {
           expect(variant.url).toMatch(
             new RegExp(
-              `^/files/preview/[0-9a-f]{2}/[0-9a-f-]{36}/${slot}-\\d+\\.(webp|png)$`
+              `^/files/preview/[0-9a-f]{2}/[0-9a-f-]{36}/${slot}-\\d+\\.webp$`
             )
           );
         }

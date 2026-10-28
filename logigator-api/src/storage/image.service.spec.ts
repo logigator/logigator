@@ -107,11 +107,7 @@ describe('an encoded avatar', () => {
     expect(bottom.r).toBeLessThan(60);
   });
 
-  /**
-   * JPEG has no alpha, and an unflattened transparent source comes out black —
-   * a logo would reach every fallback client as a black square.
-   */
-  it('keeps transparency in WebP and flattens it onto white for JPEG', async () => {
+  it('keeps transparency', async () => {
     const transparent = await sharp({
       create: {
         width: 300,
@@ -128,11 +124,6 @@ describe('an encoded avatar', () => {
     expect(await pixel(encoded.get('256.webp') as Buffer, 4, 4)).toMatchObject({
       alpha: 0
     });
-    const fallback = await pixel(encoded.get('256.jpg') as Buffer, 4, 4);
-    expect(fallback.alpha).toBe(255);
-    expect(fallback.r).toBeGreaterThan(250);
-    expect(fallback.g).toBeGreaterThan(250);
-    expect(fallback.b).toBeGreaterThan(250);
   });
 
   /** A face belongs in the frame, not in a letterbox with bars around it. */
@@ -207,7 +198,7 @@ describe('encoded previews', () => {
    * renders on.
    */
   it('pad to square instead of cropping, on transparency', async () => {
-    const content = files.get('light-512.png') as Buffer;
+    const content = files.get('light-512.webp') as Buffer;
 
     expect(await pixel(content, 256, 16)).toMatchObject({ alpha: 0 });
     expect(await pixel(content, 256, 256)).toMatchObject({ alpha: 255 });
@@ -215,8 +206,8 @@ describe('encoded previews', () => {
 
   /**
    * Near-lossless, not lossy: anti-aliased hairlines are what a lossy encoder
-   * smears first, so every WebP rung stays within two levels of the exact PNG
-   * of the same size.
+   * smears first, so every rung stays within two levels of the exact render
+   * scaled to the same size.
    */
   it('keep WebP within two levels of the exact render', async () => {
     const hairlines = await hairlineRender().png().toBuffer();
@@ -224,8 +215,11 @@ describe('encoded previews', () => {
       await images.encodePreviews({ light: hairlines, dark: hairlines })
     );
 
-    for (const spec of PREVIEW_VARIANTS.filter((s) => s.format === 'webp')) {
-      const exact = encoded.get(spec.file.replace('.webp', '.png')) as Buffer;
+    for (const spec of PREVIEW_VARIANTS) {
+      const exact = await sharp(hairlines)
+        .resize(spec.width, spec.height)
+        .png()
+        .toBuffer();
       expect({
         file: spec.file,
         difference: await largestDifference(

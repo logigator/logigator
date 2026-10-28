@@ -11,11 +11,10 @@ import {
 } from './image-variants';
 
 /**
- * - `photo` — an avatar. Cropped square, lossy WebP, JPEG fallback flattened
- *   onto white (JPEG has no alpha, and transparency would render black).
+ * - `photo` — an avatar. Cropped square, lossy WebP, transparency kept.
  * - `lineArt` — a circuit preview. Padded square so nothing is cropped,
- *   transparency kept, WebP near-lossless and PNG lossless. Plain lossy WebP
- *   destroys hairlines first and on this content produces bigger files anyway.
+ *   transparency kept, WebP near-lossless. Plain lossy WebP destroys
+ *   hairlines first and on this content produces bigger files anyway.
  */
 type EncodeMode = 'photo' | 'lineArt';
 
@@ -164,25 +163,15 @@ export class ImageService {
     mode: EncodeMode
   ): Promise<Buffer> {
     // The master is square and at least this big, so this only ever downscales.
-    const image = master.clone().resize(spec.width, spec.height);
-
-    switch (spec.format) {
-      case 'webp':
-        return image
-          .webp(
-            mode === 'photo'
-              ? { quality: PHOTO_QUALITY }
-              : { nearLossless: true, quality: LINE_ART_NEAR_LOSSLESS }
-          )
-          .toBuffer();
-      case 'jpeg':
-        return image
-          .flatten({ background: '#ffffff' })
-          .jpeg({ quality: PHOTO_QUALITY, mozjpeg: true })
-          .toBuffer();
-      case 'png':
-        return image.png({ compressionLevel: 9 }).toBuffer();
-    }
+    return master
+      .clone()
+      .resize(spec.width, spec.height)
+      .webp(
+        mode === 'photo'
+          ? { quality: PHOTO_QUALITY }
+          : { nearLossless: true, quality: LINE_ART_NEAR_LOSSLESS }
+      )
+      .toBuffer();
   }
 
   /**

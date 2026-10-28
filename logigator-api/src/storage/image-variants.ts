@@ -29,37 +29,26 @@ export interface ImageVariantSpec {
   readonly format: ImageFormat;
 }
 
-/** JPEG's extension is not its format name, and `.jpg` is what the web uses. */
-const EXTENSION: Record<ImageFormat, string> = {
-  webp: 'webp',
-  jpeg: 'jpg',
-  png: 'png'
-};
-
+/** Every variant is WebP; there is no fallback encoding. */
 function matrix(
   sizes: readonly number[],
-  formats: readonly ImageFormat[],
   slot: ImageSlot | null
 ): ImageVariantSpec[] {
-  return sizes.flatMap((size) =>
-    formats.map((format) => ({
-      file: `${slot ? `${slot}-` : ''}${size}.${EXTENSION[format]}`,
-      slot,
-      width: size,
-      height: size,
-      format
-    }))
-  );
+  return sizes.map((size) => ({
+    file: `${slot ? `${slot}-` : ''}${size}.webp`,
+    slot,
+    width: size,
+    height: size,
+    format: 'webp'
+  }));
 }
 
 /**
  * Avatars: 64 for the places that show one inline, 256 for an account page and
- * for either at twice the device pixel ratio. Photographic, so the fallback is
- * JPEG.
+ * for either at twice the device pixel ratio.
  */
 export const AVATAR_VARIANTS: readonly ImageVariantSpec[] = matrix(
   [64, 256],
-  ['webp', 'jpeg'],
   null
 );
 
@@ -70,14 +59,9 @@ export const AVATAR_VARIANTS: readonly ImageVariantSpec[] = matrix(
  * resize. No listing draws a preview much below 300px, so a 256 rung was never
  * picked; and nothing between the two pays, since a downscale blends the
  * render's one-pixel lines — at 640 it is as many bytes as 1024, at 768 more.
- *
- * PNG fallback, not JPEG: a circuit render is line art on a transparent ground,
- * which JPEG cannot carry and whose one-pixel wires it smears. Anti-aliased
- * hairlines are the worst case for a DCT — a lossy WebP measured *larger* than
- * a lossless one.
  */
 export const PREVIEW_VARIANTS: readonly ImageVariantSpec[] =
-  IMAGE_SLOTS.flatMap((slot) => matrix([512, 1024], ['webp', 'png'], slot));
+  IMAGE_SLOTS.flatMap((slot) => matrix([512, 1024], slot));
 
 /**
  * The file one rung of a matrix was written as, for the one consumer that reads

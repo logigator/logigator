@@ -17,7 +17,7 @@ async function storedRender(size = 1024): Promise<Buffer> {
   const left = (size - CONTENT.width) / 2;
   const top = (size - CONTENT.height) / 2;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><g transform="translate(${left} ${top})" stroke="#e4e4e7" stroke-width="3" fill="none"><rect x="10" y="10" width="${CONTENT.width - 20}" height="${CONTENT.height - 20}"/><path d="M10 10L${CONTENT.width - 10} ${CONTENT.height - 10}"/></g></svg>`;
-  return sharp(Buffer.from(svg)).png().toBuffer();
+  return sharp(Buffer.from(svg)).webp({ lossless: true }).toBuffer();
 }
 
 /** A render with nothing on it at all, which a blank board produces. */
@@ -30,7 +30,7 @@ async function blankRender(size = 1024): Promise<Buffer> {
       background: { r: 0, g: 0, b: 0, alpha: 0 }
     }
   })
-    .png()
+    .webp({ lossless: true })
     .toBuffer();
 }
 
