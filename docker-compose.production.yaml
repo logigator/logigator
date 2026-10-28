@@ -109,7 +109,7 @@ services:
       # API ever produces them.
       - storage:/srv/files:ro
     environment:
-      - CADDY_LOG_LEVEL=${CADDY_LOG_LEVEL:-warn}
+      - CADDY_LOG_LEVEL=${CADDY_LOG_LEVEL:-info}
     # The editor's shell, which Caddy serves itself: the check is of the origin
     # alone, not of what it forwards to.
     healthcheck:

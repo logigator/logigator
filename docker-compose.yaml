@@ -24,7 +24,7 @@ services:
       - net
     environment:
       - LOGIGATOR_EDITOR=dev_server
-      - CADDY_LOG_LEVEL=${CADDY_LOG_LEVEL:-warn}
+      - CADDY_LOG_LEVEL=${CADDY_LOG_LEVEL:-info}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       # What the API writes under STORAGE_DIR, read-only: Caddy serves these
