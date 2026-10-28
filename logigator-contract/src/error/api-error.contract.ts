@@ -55,6 +55,11 @@ export const apiErrorCodeSchema = z.enum([
    */
   'version_conflict',
   /**
+   * The write would take the account's documents and previews past its
+   * storage quota. Nothing was stored; deleting documents frees the space.
+   */
+  'storage_full',
+  /**
    * A new share link was asked for while the document is public. Its page lives
    * at `/community/{kind}/{link}`, so rotating the token would move an address
    * that is already out in the world; the document has to be unlisted first.
