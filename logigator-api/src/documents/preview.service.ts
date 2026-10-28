@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { and, eq } from 'drizzle-orm';
-import { DB, type Database } from '../database/database.module';
+import { DB, type Database, type Queryable } from '../database/database.module';
 import {
   components,
   projects,
@@ -13,6 +13,7 @@ import { circuitNotFound } from './circuit-errors';
 import { type CircuitRow, type CircuitTable, kindOf } from './circuit-queries';
 import { findOwned } from './circuit-queries';
 import type { PreviewSources } from './preview-upload';
+import { StorageQuotaService } from './storage-quota.service';
 
 /**
  * A stored circuit's preview: written by the editor, served as files. Shared
@@ -23,14 +24,17 @@ import type { PreviewSources } from './preview-upload';
  * asset the pointer never reached is removed again.
  *
  * A preview is a picture of the circuit, not a change to it, so writing one
- * leaves `version` and the edit time alone.
+ * leaves `version` and the edit time alone. Its files count against the
+ * owner's storage quota all the same, and a replacement that would take the
+ * account past it is refused, leaving the old preview in place.
  */
 @Injectable()
 export class PreviewService {
   constructor(
     @Inject(DB) private readonly db: Database,
     private readonly images: ImageService,
-    private readonly files: FileStorageService
+    private readonly files: FileStorageService,
+    private readonly quota: StorageQuotaService
   ) {}
 
   replace(
@@ -54,8 +58,22 @@ export class PreviewService {
     const existing = await this.require(table, userId, id);
     const files = await this.images.encodePreviews(sources);
     const previewId = await this.files.writeAsset('preview', files);
+    const previewBytes = files.reduce(
+      (sum, file) => sum + file.content.byteLength,
+      0
+    );
 
-    const row = await this.point(table, userId, id, previewId);
+    let row: CircuitRow | null;
+    try {
+      row = await this.db.transaction((tx) =>
+        this.quota.guard(tx, userId, () =>
+          this.point(tx, table, userId, id, previewId, previewBytes)
+        )
+      );
+    } catch (error) {
+      await this.files.removeAsset('preview', previewId);
+      throw error;
+    }
     if (!row) {
       // Deleted between the check and the write; nothing names the new asset.
       await this.files.removeAsset('preview', previewId);
@@ -86,7 +104,7 @@ export class PreviewService {
     const existing = await this.require(table, userId, id);
     if (!existing.previewId) return existing;
 
-    const row = await this.point(table, userId, id, null);
+    const row = await this.point(this.db, table, userId, id, null, 0);
     if (!row) throw circuitNotFound(kindOf(table));
 
     await this.files.removeAsset('preview', existing.previewId);
@@ -94,14 +112,16 @@ export class PreviewService {
   }
 
   private async point(
+    db: Queryable,
     table: CircuitTable,
     userId: string,
     id: string,
-    previewId: string | null
+    previewId: string | null,
+    previewBytes: number
   ): Promise<CircuitRow | null> {
-    const [row] = await this.db
+    const [row] = await db
       .update(table)
-      .set({ previewId })
+      .set({ previewId, previewBytes })
       .where(and(eq(table.id, id), eq(table.userId, userId)))
       .returning();
     return row ?? null;

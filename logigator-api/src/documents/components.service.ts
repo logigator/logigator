@@ -50,6 +50,7 @@ import {
 } from './document-text-queries';
 import { COMPONENT_EDGES, DependenciesService } from './dependencies.service';
 import { renameInDocument } from './rename-in-document';
+import { StorageQuotaService } from './storage-quota.service';
 
 /**
  * The caller's own library components.
@@ -67,7 +68,8 @@ export class ComponentsService {
     @Inject(ENV) private readonly env: Env,
     private readonly documents: CircuitDocumentService,
     private readonly dependencies: DependenciesService,
-    private readonly files: FileStorageService
+    private readonly files: FileStorageService,
+    private readonly quota: StorageQuotaService
   ) {}
 
   async list(
@@ -116,39 +118,41 @@ export class ComponentsService {
     const ingested = this.documents.ingest(body.document, body.name);
     const forkedFromId = await this.resolveParent(ingested.claimedParentId);
 
-    return this.db.transaction(async (tx) => {
-      const [row] = await tx
-        .insert(components)
-        .values({
-          userId,
-          name: body.name,
-          symbol: body.symbol,
-          description: body.description ?? '',
-          textLanguageHint: locale,
-          // Absent means `unlisted`, as it does for a project: a component
-          // nobody was told about, with a link its author can hand out.
-          visibility: body.visibility ?? 'unlisted',
-          document: ingested.document,
-          formatVersion: ingested.formatVersion,
-          componentCount: ingested.componentCount,
-          wireCount: ingested.wireCount,
-          numInputs: ingested.summary.numInputs,
-          numOutputs: ingested.summary.numOutputs,
-          labels: ingested.summary.labels,
-          forkedFromId
-        })
-        .returning(
-          withCheckState(components, this.env.TEXT_ANALYSIS_WORKER_ENABLED)
-        );
+    return this.db.transaction((tx) =>
+      this.quota.guard(tx, userId, async () => {
+        const [row] = await tx
+          .insert(components)
+          .values({
+            userId,
+            name: body.name,
+            symbol: body.symbol,
+            description: body.description ?? '',
+            textLanguageHint: locale,
+            // Absent means `unlisted`, as it does for a project: a component
+            // nobody was told about, with a link its author can hand out.
+            visibility: body.visibility ?? 'unlisted',
+            document: ingested.document,
+            formatVersion: ingested.formatVersion,
+            componentCount: ingested.componentCount,
+            wireCount: ingested.wireCount,
+            numInputs: ingested.summary.numInputs,
+            numOutputs: ingested.summary.numOutputs,
+            labels: ingested.summary.labels,
+            forkedFromId
+          })
+          .returning(
+            withCheckState(components, this.env.TEXT_ANALYSIS_WORKER_ENABLED)
+          );
 
-      await this.dependencies.replace(
-        tx,
-        COMPONENT_EDGES,
-        row.id,
-        ingested.dependencies
-      );
-      return toWrittenComponentSummary(row);
-    });
+        await this.dependencies.replace(
+          tx,
+          COMPONENT_EDGES,
+          row.id,
+          ingested.dependencies
+        );
+        return toWrittenComponentSummary(row);
+      })
+    );
   }
 
   /**
@@ -164,43 +168,45 @@ export class ComponentsService {
     const existing = await this.require(userId, id);
     const ingested = this.documents.ingest(body.document, existing.name);
 
-    return this.db.transaction(async (tx) => {
-      const [row] = await tx
-        .update(components)
-        .set({
-          document: ingested.document,
-          formatVersion: ingested.formatVersion,
-          componentCount: ingested.componentCount,
-          wireCount: ingested.wireCount,
-          numInputs: ingested.summary.numInputs,
-          numOutputs: ingested.summary.numOutputs,
-          labels: ingested.summary.labels,
-          version: body.version + 1,
-          lastEditedAt: new Date()
-        })
-        .where(
-          and(
-            eq(components.id, id),
-            eq(components.userId, userId),
-            eq(components.version, body.version)
+    return this.db.transaction((tx) =>
+      this.quota.guard(tx, userId, async () => {
+        const [row] = await tx
+          .update(components)
+          .set({
+            document: ingested.document,
+            formatVersion: ingested.formatVersion,
+            componentCount: ingested.componentCount,
+            wireCount: ingested.wireCount,
+            numInputs: ingested.summary.numInputs,
+            numOutputs: ingested.summary.numOutputs,
+            labels: ingested.summary.labels,
+            version: body.version + 1,
+            lastEditedAt: new Date()
+          })
+          .where(
+            and(
+              eq(components.id, id),
+              eq(components.userId, userId),
+              eq(components.version, body.version)
+            )
           )
-        )
-        .returning();
+          .returning();
 
-      if (!row) {
-        throw (await findOwned(tx, components, userId, id))
-          ? versionConflict()
-          : circuitNotFound('component');
-      }
+        if (!row) {
+          throw (await findOwned(tx, components, userId, id))
+            ? versionConflict()
+            : circuitNotFound('component');
+        }
 
-      await this.dependencies.replace(
-        tx,
-        COMPONENT_EDGES,
-        id,
-        ingested.dependencies
-      );
-      return toComponentSummary(row);
-    });
+        await this.dependencies.replace(
+          tx,
+          COMPONENT_EDGES,
+          id,
+          ingested.dependencies
+        );
+        return toComponentSummary(row);
+      })
+    );
   }
 
   /**
@@ -214,6 +220,8 @@ export class ComponentsService {
    * while the component is public. That refusal is a decision about the state
    * the document is in, which is why this reads the row before it writes; the
    * body alone cannot say it.
+   *
+   * Not held to the storage quota, as a project's rename is not.
    */
   async update(
     userId: string,

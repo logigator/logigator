@@ -116,6 +116,17 @@ const variables = z.object({
    * orphan except by age.
    */
   STORAGE_SWEEP_GRACE_MINUTES: z.coerce.number().int().min(0).default(1440),
+  /**
+   * How much one account's projects and components may hold, documents and
+   * previews together. A write that would take an account past it is refused;
+   * one that grows nothing never is, so an account over it, after this is
+   * lowered, can still save smaller and delete.
+   */
+  STORAGE_QUOTA_BYTES: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .default(20 * 1024 * 1024),
 
   /**
    * Signs the session cookie: a comma-separated list, each of 32+ characters.

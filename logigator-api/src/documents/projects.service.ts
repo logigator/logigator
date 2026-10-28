@@ -50,6 +50,7 @@ import {
 } from './document-text-queries';
 import { DependenciesService, PROJECT_EDGES } from './dependencies.service';
 import { renameInDocument } from './rename-in-document';
+import { StorageQuotaService } from './storage-quota.service';
 
 /**
  * The caller's own boards. Ownership is in every predicate, so this service has
@@ -68,7 +69,8 @@ export class ProjectsService {
     @Inject(ENV) private readonly env: Env,
     private readonly documents: CircuitDocumentService,
     private readonly dependencies: DependenciesService,
-    private readonly files: FileStorageService
+    private readonly files: FileStorageService,
+    private readonly quota: StorageQuotaService
   ) {}
 
   async list(
@@ -121,7 +123,7 @@ export class ProjectsService {
    *
    * It and `update` answer with where the row now stands for its owner, through
    * the selection the owner's listing reads (`withCheckState`), returned by the
-   * write itself.
+   * write itself. It and `save` are held to the storage quota.
    */
   async create(
     userId: string,
@@ -131,36 +133,38 @@ export class ProjectsService {
     const ingested = this.documents.ingest(body.document, body.name);
     const forkedFromId = await this.resolveParent(ingested.claimedParentId);
 
-    return this.db.transaction(async (tx) => {
-      const [row] = await tx
-        .insert(projects)
-        .values({
-          userId,
-          name: body.name,
-          description: body.description ?? '',
-          textLanguageHint: locale,
-          // Absent means `unlisted`: a document created by a client that names
-          // no state is one nobody was told about, and a link that resolves is
-          // what its owner needs to hand it out.
-          visibility: body.visibility ?? 'unlisted',
-          document: ingested.document,
-          formatVersion: ingested.formatVersion,
-          componentCount: ingested.componentCount,
-          wireCount: ingested.wireCount,
-          forkedFromId
-        })
-        .returning(
-          withCheckState(projects, this.env.TEXT_ANALYSIS_WORKER_ENABLED)
-        );
+    return this.db.transaction((tx) =>
+      this.quota.guard(tx, userId, async () => {
+        const [row] = await tx
+          .insert(projects)
+          .values({
+            userId,
+            name: body.name,
+            description: body.description ?? '',
+            textLanguageHint: locale,
+            // Absent means `unlisted`: a document created by a client that names
+            // no state is one nobody was told about, and a link that resolves is
+            // what its owner needs to hand it out.
+            visibility: body.visibility ?? 'unlisted',
+            document: ingested.document,
+            formatVersion: ingested.formatVersion,
+            componentCount: ingested.componentCount,
+            wireCount: ingested.wireCount,
+            forkedFromId
+          })
+          .returning(
+            withCheckState(projects, this.env.TEXT_ANALYSIS_WORKER_ENABLED)
+          );
 
-      await this.dependencies.replace(
-        tx,
-        PROJECT_EDGES,
-        row.id,
-        ingested.dependencies
-      );
-      return toWrittenProjectSummary(row);
-    });
+        await this.dependencies.replace(
+          tx,
+          PROJECT_EDGES,
+          row.id,
+          ingested.dependencies
+        );
+        return toWrittenProjectSummary(row);
+      })
+    );
   }
 
   /**
@@ -180,42 +184,44 @@ export class ProjectsService {
     const existing = await this.require(userId, id);
     const ingested = this.documents.ingest(body.document, existing.name);
 
-    return this.db.transaction(async (tx) => {
-      const [row] = await tx
-        .update(projects)
-        .set({
-          document: ingested.document,
-          formatVersion: ingested.formatVersion,
-          componentCount: ingested.componentCount,
-          wireCount: ingested.wireCount,
-          version: body.version + 1,
-          lastEditedAt: new Date()
-        })
-        .where(
-          and(
-            eq(projects.id, id),
-            eq(projects.userId, userId),
-            eq(projects.version, body.version)
+    return this.db.transaction((tx) =>
+      this.quota.guard(tx, userId, async () => {
+        const [row] = await tx
+          .update(projects)
+          .set({
+            document: ingested.document,
+            formatVersion: ingested.formatVersion,
+            componentCount: ingested.componentCount,
+            wireCount: ingested.wireCount,
+            version: body.version + 1,
+            lastEditedAt: new Date()
+          })
+          .where(
+            and(
+              eq(projects.id, id),
+              eq(projects.userId, userId),
+              eq(projects.version, body.version)
+            )
           )
-        )
-        .returning();
+          .returning();
 
-      // Nothing matched though the row existed a moment ago: one read on the
-      // failure path tells a moved version from a deleted project.
-      if (!row) {
-        throw (await findOwned(tx, projects, userId, id))
-          ? versionConflict()
-          : circuitNotFound('project');
-      }
+        // Nothing matched though the row existed a moment ago: one read on the
+        // failure path tells a moved version from a deleted project.
+        if (!row) {
+          throw (await findOwned(tx, projects, userId, id))
+            ? versionConflict()
+            : circuitNotFound('project');
+        }
 
-      await this.dependencies.replace(
-        tx,
-        PROJECT_EDGES,
-        id,
-        ingested.dependencies
-      );
-      return toProjectSummary(row);
-    });
+        await this.dependencies.replace(
+          tx,
+          PROJECT_EDGES,
+          id,
+          ingested.dependencies
+        );
+        return toProjectSummary(row);
+      })
+    );
   }
 
   /**
@@ -236,6 +242,9 @@ export class ProjectsService {
    * before it writes; the body alone cannot say it. Read only where the
    * rotation is actually asked for: a rename or a visibility pick needs no such
    * answer, and the update below reports a row that is not there.
+   *
+   * Not held to the storage quota: a rename grows the document by at most a
+   * name, and an account that is full still has to be able to tidy up.
    */
   async update(
     userId: string,

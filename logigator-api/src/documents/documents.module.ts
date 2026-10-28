@@ -10,6 +10,7 @@ import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 import { RenormalizeService } from './renormalize.service';
 import { SeedExamplesService } from './seed-examples.service';
+import { StorageQuotaService } from './storage-quota.service';
 
 /**
  * Stored circuits: the caller's own projects and library components.
@@ -33,7 +34,8 @@ import { SeedExamplesService } from './seed-examples.service';
     ProjectsService,
     ComponentsService,
     RenormalizeService,
-    SeedExamplesService
+    SeedExamplesService,
+    StorageQuotaService
   ],
   exports: [
     CircuitDocumentService,
@@ -41,7 +43,8 @@ import { SeedExamplesService } from './seed-examples.service';
     ProjectsService,
     ComponentsService,
     RenormalizeService,
-    SeedExamplesService
+    SeedExamplesService,
+    StorageQuotaService
   ]
 })
 export class DocumentsModule {}

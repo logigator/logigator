@@ -73,6 +73,17 @@ function circuitColumns() {
      */
     document: jsonb('document').$type<CurrentCircuitFile>().notNull(),
     /**
+     * What the document costs against its owner's storage quota: its JSON as
+     * Postgres writes it out. Generated, so every write of `document`, the
+     * rename that edits it in SQL included, keeps it right without knowing the
+     * quota exists. Stored, not virtual: the quota sums it over an account on
+     * every guarded write, and re-serializing each document there would cost
+     * far more than the column.
+     */
+    documentBytes: integer('document_bytes')
+      .notNull()
+      .generatedAlwaysAs(sql`octet_length("document"::text)`),
+    /**
      * Denormalized out of the JSON so the re-normalization job that follows a
      * format bump finds its work with an indexed scan.
      */
@@ -149,6 +160,13 @@ function circuitColumns() {
      * replaced together.
      */
     previewId: uuid('preview_id'),
+    /**
+     * The preview's files on the volume, summed, for the storage quota; `0`
+     * without one. Written with `previewId`, which it describes: the files
+     * never change under a pointer, so the size is measured once, from the
+     * bytes the write produced.
+     */
+    previewBytes: integer('preview_bytes').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

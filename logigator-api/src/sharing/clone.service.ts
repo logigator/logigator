@@ -25,6 +25,7 @@ import {
   PROJECT_EDGES
 } from '../documents/dependencies.service';
 import { copyTexts } from '../documents/document-text-queries';
+import { StorageQuotaService } from '../documents/storage-quota.service';
 import { FileStorageService } from '../storage/file-storage.service';
 import { transitiveDependencyIds } from './dependency-graph';
 import {
@@ -70,7 +71,8 @@ export class CloneService {
     private readonly share: ShareService,
     private readonly documents: CircuitDocumentService,
     private readonly dependencies: DependenciesService,
-    private readonly files: FileStorageService
+    private readonly files: FileStorageService,
+    private readonly quota: StorageQuotaService
   ) {}
 
   async cloneByLink(
@@ -88,19 +90,35 @@ export class CloneService {
 
     try {
       // One transaction over the lot: a half-cloned library is a set of
-      // documents whose snapshots name masters that were never created.
-      return await this.db.transaction(async (tx) => {
-        const copies: ComponentSummary[] = [];
-        for (const source of sources) {
-          copies.push(
-            toComponentSummary(
-              await this.copyComponent(tx, userId, source, idMap, previews)
-            )
-          );
-        }
+      // documents whose snapshots name masters that were never created. The
+      // storage quota judges the copy as a whole for the same reason.
+      return await this.db.transaction((tx) =>
+        this.quota.guard(tx, userId, async () => {
+          const copies: ComponentSummary[] = [];
+          for (const source of sources) {
+            copies.push(
+              toComponentSummary(
+                await this.copyComponent(tx, userId, source, idMap, previews)
+              )
+            );
+          }
 
-        if (target.kind === 'project') {
-          const project = await this.copyProject(
+          if (target.kind === 'project') {
+            const project = await this.copyProject(
+              tx,
+              userId,
+              target.row,
+              idMap,
+              previews
+            );
+            return {
+              kind: 'project',
+              project: toProjectSummary(project),
+              dependencies: copies
+            };
+          }
+
+          const component = await this.copyComponent(
             tx,
             userId,
             target.row,
@@ -108,25 +126,12 @@ export class CloneService {
             previews
           );
           return {
-            kind: 'project',
-            project: toProjectSummary(project),
+            kind: 'component',
+            component: toComponentSummary(component),
             dependencies: copies
           };
-        }
-
-        const component = await this.copyComponent(
-          tx,
-          userId,
-          target.row,
-          idMap,
-          previews
-        );
-        return {
-          kind: 'component',
-          component: toComponentSummary(component),
-          dependencies: copies
-        };
-      });
+        })
+      );
     } catch (error) {
       // Nothing names the copies; removing them here saves the sweep the work.
       await Promise.all(
@@ -215,7 +220,7 @@ export class CloneService {
         formatVersion: ingested.formatVersion,
         componentCount: ingested.componentCount,
         wireCount: ingested.wireCount,
-        previewId: previews.get(source.id) ?? null,
+        ...previewColumns(source, previews),
         ...textColumns(source),
         // The attribution trust anchor: every author in the chain is derived
         // from these keys.
@@ -263,7 +268,7 @@ export class CloneService {
         numInputs: ingested.summary.numInputs,
         numOutputs: ingested.summary.numOutputs,
         labels: ingested.summary.labels,
-        previewId: previews.get(source.id) ?? null,
+        ...previewColumns(source, previews),
         ...textColumns(source),
         forkedFromId: source.id
       })
@@ -278,6 +283,20 @@ export class CloneService {
     await copyTexts(tx, components, source.id, row.id);
     return row;
   }
+}
+
+/**
+ * The copy of the source's preview, if one was made. Its files are the
+ * source's, byte for byte, so the source's measure is the copy's.
+ */
+function previewColumns(
+  source: ProjectRow | ComponentRow,
+  previews: PreviewMap
+) {
+  const previewId = previews.get(source.id);
+  return previewId
+    ? { previewId, previewBytes: source.previewBytes }
+    : { previewId: null, previewBytes: 0 };
 }
 
 /**

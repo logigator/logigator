@@ -31,6 +31,7 @@ describe('loadEnv', () => {
       OAUTH_RETURN_URL: 'http://logigator.test/login',
       STORAGE_DIR: 'data/storage',
       STORAGE_SWEEP_GRACE_MINUTES: 1440,
+      STORAGE_QUOTA_BYTES: 20 * 1024 * 1024,
       UPLOAD_MAX_BYTES: 10 * 1024 * 1024,
       SESSION_SECRET: [DEVELOPMENT_SESSION_SECRET],
       SESSION_COOKIE_NAME: 'lg_sid',

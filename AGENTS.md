@@ -252,6 +252,10 @@ and the E2E harness).
 
 - **Every document write goes through `CircuitDocumentService.ingest`** (core's parser, strict).
   Counts, dependency edges and component ports are derived there, never taken from a client.
+- **A write that can grow an account's storage runs inside `StorageQuotaService.guard`**: it
+  takes the user row lock, then sums the generated `document_bytes` and the written
+  `preview_bytes`. Only growth past `STORAGE_QUOTA_BYTES` is refused. Renames and the examples
+  account are exempt; a writer outside the services (an import) sets `preview_bytes` itself.
 - **Concurrency is `version` in the `WHERE` of one guarded `UPDATE`.** No write computes a column
   from a value read in an earlier statement.
 - **A document's link is its address, not a capability**: `private` resolves for its owner alone,
