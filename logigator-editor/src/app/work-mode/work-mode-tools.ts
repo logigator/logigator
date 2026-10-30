@@ -22,8 +22,15 @@ export interface WorkModeToolDescriptor {
 }
 
 /**
+ * The tools the desktop tool bar puts in one slot, the way design tools pair
+ * move and hand: the slot shows the active or last used one, and a dropdown
+ * picks the other. The mobile HUD keeps them as separate buttons.
+ */
+export const MOVE_TOOL_IDS: readonly WorkModeToolId[] = ['select', 'pan'];
+
+/**
  * The editing tool set shared by every tool surface, so the two can never
- * drift. `isActive`/`activate` stay functions because the TEXT tool is
+ * drift. The select tool comes first: it is the default. `isActive`/`activate` stay functions because the TEXT tool is
  * COMPONENT_PLACEMENT plus a selected type, which a `{ mode }`-only descriptor
  * could not express.
  */
@@ -33,6 +40,17 @@ export function createWorkModeTools(
   const mode = workMode.mode;
   const type = workMode.selectedComponentType;
   return [
+    {
+      // The select tool covers both marquee flavors; the scissor variant is a
+      // sub-state driven by the toggle below or the held SELECT_SCISSOR key.
+      id: 'select',
+      icon: 'ph ph-selection',
+      labelKey: 'toolBar.select',
+      shortcut: ShortcutActionEnum.TOOL_SELECT,
+      isActive: () =>
+        mode() === WorkMode.SELECT || mode() === WorkMode.SELECT_EXACT,
+      activate: () => workMode.setMode(WorkMode.SELECT)
+    },
     {
       id: 'pan',
       icon: 'ph ph-hand',
@@ -48,17 +66,6 @@ export function createWorkModeTools(
       shortcut: ShortcutActionEnum.TOOL_WIRE,
       isActive: () => mode() === WorkMode.WIRE_TOOL,
       activate: () => workMode.setMode(WorkMode.WIRE_TOOL)
-    },
-    {
-      // The select tool covers both marquee flavors; the scissor variant is a
-      // sub-state driven by the toggle below or the held SELECT_SCISSOR key.
-      id: 'select',
-      icon: 'ph ph-selection',
-      labelKey: 'toolBar.select',
-      shortcut: ShortcutActionEnum.TOOL_SELECT,
-      isActive: () =>
-        mode() === WorkMode.SELECT || mode() === WorkMode.SELECT_EXACT,
-      activate: () => workMode.setMode(WorkMode.SELECT)
     },
     {
       id: 'erase',

@@ -868,6 +868,7 @@ const de: TranslationSchema = {
     zoomOut: 'Auszoomen',
     zoomIn: 'Einzoomen',
     pan: 'Schwenken',
+    moveTools: 'Auswählen oder Schwenken',
     parts: 'Bauteile',
     placeComponent: 'Komponente platzieren',
 

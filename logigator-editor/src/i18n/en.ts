@@ -855,6 +855,7 @@ const en = {
     zoomOut: 'Zoom out',
     zoomIn: 'Zoom in',
     pan: 'Pan',
+    moveTools: 'Select or Pan',
     parts: 'Parts',
     placeComponent: 'Placing component',
 

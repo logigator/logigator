@@ -97,13 +97,13 @@ scoped to `takeUntil(merge(destroy$, projectChange$))`.
 
 ## Desktop chrome
 
-| Component            | Role                                                                                                                                                                                                                  |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TitleBarComponent`  | Logo, the `lg-menubar` fed by `EditorMenuService.items`, inline rename (real projects only, not component editors or read-only shares), source indicator, account menu                                                |
-| `ToolBarComponent`   | File/clipboard/history/rotate/zoom buttons plus the shared `createWorkModeTools` descriptors; swaps wholesale to `app-simulation-controls` in SIMULATION. `EditorCommandStateService` disables the no-op-able buttons |
-| `SideBarComponent`   | The `aside` content: ports panel first while editing a component, then the palette                                                                                                                                    |
-| `TabBarComponent`    | Pinned main project plus one tab per open component editor, over the generic `LgTabStrip`; inert during simulation                                                                                                    |
-| `StatusBarComponent` | Work mode (with the live scissor key hint), cursor position, dirty state, selection count                                                                                                                             |
+| Component            | Role                                                                                                                                                                                                                                                                                                |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TitleBarComponent`  | Logo, the `lg-menubar` fed by `EditorMenuService.items`, inline rename (real projects only, not component editors or read-only shares), source indicator, account menu                                                                                                                              |
+| `ToolBarComponent`   | File/clipboard/history/rotate/zoom buttons plus the shared `createWorkModeTools` descriptors, select and pan (`MOVE_TOOL_IDS`) sharing one slot with an `lg-menu` dropdown; swaps wholesale to `app-simulation-controls` in SIMULATION. `EditorCommandStateService` disables the no-op-able buttons |
+| `SideBarComponent`   | The `aside` content: ports panel first while editing a component, then the palette                                                                                                                                                                                                                  |
+| `TabBarComponent`    | Pinned main project plus one tab per open component editor, over the generic `LgTabStrip`; inert during simulation                                                                                                                                                                                  |
+| `StatusBarComponent` | Work mode (with the live scissor key hint), cursor position, dirty state, selection count                                                                                                                                                                                                           |
 
 `EditorMenuService` builds both menu models from one set of per-item builders —
 the File/Edit/View/Help tree for the menubar and the curated flat

@@ -67,6 +67,44 @@ describe('ToolBarComponent', () => {
     expect(isDisabled(el)).toBe(true);
   });
 
+  it('puts select and pan in one slot that shows the active or last used one', async () => {
+    const el = await waitForRender();
+    const workMode = TestBed.inject(WorkModeService);
+    const has = (icon: string) => el.querySelector('.' + icon) !== null;
+
+    // The default tool fills the slot; pan waits in the dropdown.
+    expect(has('ph-selection')).toBe(true);
+    expect(has('ph-hand')).toBe(false);
+    expect(has('ph-caret-down')).toBe(true);
+
+    workMode.setMode(WorkMode.PAN);
+    await waitForRender();
+    expect(has('ph-hand')).toBe(true);
+    expect(has('ph-selection')).toBe(false);
+
+    // Another tool leaves the slot on the last one used.
+    workMode.setMode(WorkMode.WIRE_TOOL);
+    await waitForRender();
+    expect(has('ph-hand')).toBe(true);
+    expect(has('ph-selection')).toBe(false);
+  });
+
+  it('picks the other tool of the slot from its dropdown', async () => {
+    const el = await waitForRender();
+    const workMode = TestBed.inject(WorkModeService);
+
+    el.querySelector('.ph-caret-down')!.closest('button')!.click();
+    fixture.detectChanges();
+    const rows = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[role="menuitem"]')
+    );
+    const panRow = rows.find((row) => row.querySelector('.ph-hand'));
+    expect(panRow).toBeDefined();
+
+    panRow!.click();
+    expect(workMode.mode()).toBe(WorkMode.PAN);
+  });
+
   it('swaps to the simulation control set in simulation mode', async () => {
     TestBed.inject(WorkModeService).setSimulationMode(true);
     const el = await waitForRender();

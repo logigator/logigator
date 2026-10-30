@@ -865,6 +865,7 @@ const fr: TranslationSchema = {
     zoomOut: 'Zoom arrière',
     zoomIn: 'Zoom avant',
     pan: 'Déplacement',
+    moveTools: 'Sélectionner ou Déplacement',
     parts: 'Pièces',
     placeComponent: 'Placement du composant',
 

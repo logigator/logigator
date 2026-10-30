@@ -1,11 +1,20 @@
-import { Component, computed, inject } from '@angular/core';
-import { DialogService, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
+import { Component, computed, inject, linkedSignal } from '@angular/core';
+import {
+  DialogService,
+  LgButton,
+  LgDivider,
+  LgMenu,
+  LgShortcut,
+  LgTooltip,
+  MenuItem
+} from '@logigator/ui';
 import { DialogId } from '../../analytics/analytics.mapping';
 import { TranslationService } from '../../translation/translation.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import {
   createWorkModeTools,
+  MOVE_TOOL_IDS,
   WorkModeToolDescriptor
 } from '../../work-mode/work-mode-tools';
 import { ClipboardService } from '../../clipboard/clipboard.service';
@@ -27,6 +36,8 @@ import { TranslateDirective } from '../../translation/translate.directive';
   imports: [
     LgButton,
     LgDivider,
+    LgMenu,
+    LgShortcut,
     LgTooltip,
     TranslateDirective,
     SimulationControlsComponent,
@@ -50,9 +61,37 @@ export class ToolBarComponent {
   protected readonly actions = ShortcutActionEnum;
 
   /** Shared editing tool set; the mobile HUD renders the same one. */
-  protected readonly tools: WorkModeToolDescriptor[] = createWorkModeTools(
+  private readonly _allTools: WorkModeToolDescriptor[] = createWorkModeTools(
     this.workModeService
   );
+  /** Select and pan, sharing one slot with a dropdown. */
+  protected readonly moveTools = this._allTools.filter((tool) =>
+    MOVE_TOOL_IDS.includes(tool.id)
+  );
+  /** Every other tool, one button each. */
+  protected readonly tools = this._allTools.filter(
+    (tool) => !MOVE_TOOL_IDS.includes(tool.id)
+  );
+
+  /** The slot's tool: the active one of the pair, else the last one used. */
+  protected readonly moveTool = linkedSignal<
+    WorkModeToolDescriptor | undefined,
+    WorkModeToolDescriptor
+  >({
+    source: () => this.moveTools.find((tool) => tool.isActive()),
+    computation: (active, previous) =>
+      active ?? previous?.value ?? this.moveTools[0]
+  });
+
+  /** The dropdown's rows; each row's chrome reads its tool (see toolOf). */
+  protected readonly moveToolItems: MenuItem[] = this.moveTools.map((tool) => ({
+    command: () => tool.activate()
+  }));
+
+  /** The tool behind a dropdown row, for the row template. */
+  protected toolOf(item: MenuItem): WorkModeToolDescriptor {
+    return this.moveTools[this.moveToolItems.indexOf(item)];
+  }
 
   /** The current key binding shown in a button's tooltip. */
   protected shortcutBinding(
