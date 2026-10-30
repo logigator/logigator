@@ -96,7 +96,6 @@ const de: TranslationSchema = {
       fpsCounter: 'FPS-Anzeige',
       showGrid: 'Raster anzeigen',
       autoStartSimulation: 'Simulation automatisch starten',
-      dragSelectionInPanMode: 'Auswahl im Schwenkmodus verschieben',
       highlightConflicts: 'Konflikte hervorheben',
       onboardingTips: 'Einführungstipps anzeigen'
     },
@@ -106,8 +105,6 @@ const de: TranslationSchema = {
         'Zeichnet das Punktraster. Komponenten rasten in beiden Fällen ein.',
       autoStartSimulation:
         'Lässt die Schaltung laufen, sobald du die Simulation betrittst. Aus wartet sie pausiert bei Tick 0.',
-      dragSelectionInPanMode:
-        'Ein Ziehen mit „Schwenken“, das in der Auswahl beginnt, verschiebt die Auswahl. Aus verschiebt jedes Ziehen die Ansicht.',
       highlightConflicts:
         'Zeichnet in der Simulation eine Leitung orange, wenn die Ausgänge an ihr verschiedene Werte ausgeben oder ein SR-Flip-Flop mit S und R gleichzeitig auf 1 getaktet wurde.',
       onboardingTips:

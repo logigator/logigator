@@ -96,7 +96,6 @@ const en = {
       fpsCounter: 'FPS Counter',
       showGrid: 'Show Grid',
       autoStartSimulation: 'Auto-start simulation',
-      dragSelectionInPanMode: 'Drag selection in Pan mode',
       highlightConflicts: 'Highlight conflicts',
       onboardingTips: 'Show onboarding tips'
     },
@@ -105,8 +104,6 @@ const en = {
       showGrid: 'Draws the dot grid. Components snap to the grid either way.',
       autoStartSimulation:
         'Starts the circuit running as soon as you enter simulation. Off, it waits paused at tick 0.',
-      dragSelectionInPanMode:
-        'A drag with the Pan tool that starts inside the selection moves the selection. Off, every drag pans.',
       highlightConflicts:
         'During simulation, draws a wire in orange when the outputs driving it disagree, or when an SR flip-flop was clocked with S and R both at 1.',
       onboardingTips:

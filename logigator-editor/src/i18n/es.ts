@@ -95,7 +95,6 @@ const es: TranslationSchema = {
       fpsCounter: 'Contador de FPS',
       showGrid: 'Mostrar cuadrícula',
       autoStartSimulation: 'Iniciar la simulación automáticamente',
-      dragSelectionInPanMode: 'Arrastrar la selección en modo Desplazar',
       highlightConflicts: 'Resaltar conflictos',
       onboardingTips: 'Mostrar consejos de introducción'
     },
@@ -106,8 +105,6 @@ const es: TranslationSchema = {
         'Dibuja la cuadrícula de puntos. Los componentes se ajustan a ella en cualquier caso.',
       autoStartSimulation:
         'Pone en marcha el circuito en cuanto entras en la simulación. Desactivado, espera en pausa en el tick 0.',
-      dragSelectionInPanMode:
-        'Un arrastre con Desplazar que empieza dentro de la selección mueve la selección. Desactivado, todo arrastre desplaza la vista.',
       highlightConflicts:
         'Durante la simulación, dibuja un cable en naranja cuando las salidas que lo controlan dan valores distintos, o cuando un biestable SR recibió un flanco de reloj con S y R a 1.',
       onboardingTips:

@@ -191,7 +191,7 @@ ends, `onSessionStart` yields the preview to a starting session's ghosts.
 
 | Tool             | Press opens                   | Notes                                                                                                                                                                                                         |
 | ---------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PanTool`        | `PanSession`                  | Tap single-selects.                                                                                                                                                                                           |
+| `PanTool`        | `PanSession`                  | Pans only; a tap does nothing.                                                                                                                                                                                |
 | `SimulationTool` | `PanSession` or `HoldSession` | A press on a button holds it until the gesture ends and never pans. Otherwise a tap activates: pulse button/switch → `userInput$`, inspectable → `inspectRequest$`. The only canvas interaction while locked. |
 | `WireTool`       | `WireToolSession`             | Tap negates a port or toggles a junction; hovers preview the negation bubble / connection dot.                                                                                                                |
 | `SelectTool`     | move or marquee session       | One instance per flavor (SELECT, SELECT_EXACT); a press inside the committed grab zone moves instead of marqueeing.                                                                                           |
@@ -204,10 +204,6 @@ a drag; after a tap they re-derive in place. Its connection ghost dry-runs
 
 Per tool, beyond the table above:
 
-- **`PanTool`** — with `dragSelectionInPanMode` on (the default) a press that
-  grabs the committed selection opens a `SelectionMoveSession` instead, so a
-  selection made by a tap can be dragged without leaving the hand tool; every
-  other press pans, and the setting off pans on every press.
 - **`WireTool`** — a press inside a selected component's body opens a
   `SelectionMoveSession` instead of drawing (a run from there collides with that
   body and is discarded anyway). Tap precedence: port negation →

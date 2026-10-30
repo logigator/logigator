@@ -95,7 +95,6 @@ const fr: TranslationSchema = {
       fpsCounter: 'Compteur FPS',
       showGrid: 'Afficher la grille',
       autoStartSimulation: 'Démarrage automatique de la simulation',
-      dragSelectionInPanMode: 'Faire glisser la sélection en mode Déplacement',
       highlightConflicts: 'Mettre en évidence les conflits',
       onboardingTips: "Afficher les conseils d'intégration"
     },
@@ -106,8 +105,6 @@ const fr: TranslationSchema = {
         "Dessine la grille de points. Les composants s'alignent sur la grille dans tous les cas.",
       autoStartSimulation:
         'Lance le circuit dès que vous entrez en simulation. Désactivé, elle attend en pause au tick 0.',
-      dragSelectionInPanMode:
-        'Un glisser avec Déplacement qui commence dans la sélection déplace la sélection. Désactivé, tout glisser déplace la vue.',
       highlightConflicts:
         "Pendant la simulation, dessine un fil en orange quand les sorties qui le pilotent donnent des valeurs différentes, ou quand une bascule SR a reçu un front d'horloge avec S et R à 1.",
       onboardingTips:
