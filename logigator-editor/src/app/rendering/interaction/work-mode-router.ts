@@ -1,7 +1,7 @@
 import { computed, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Point, Rectangle } from 'pixi.js';
-import { WorkMode } from '../../work-mode/work-mode.enum';
+import { DEFAULT_WORK_MODE, WorkMode } from '../../work-mode/work-mode.enum';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
@@ -37,7 +37,7 @@ import { SimulationTool } from './tools/simulation.tool';
  */
 export class WorkModeRouter implements PointerToolTarget, ToolHost {
   private _project: Project | null = null;
-  private _mode: WorkMode = WorkMode.PAN;
+  private _mode: WorkMode = DEFAULT_WORK_MODE;
   private _activeDrag: DragSession | null = null;
   // `_activeDrag` for the board's cursor, which must follow it reactively.
   private readonly _session = signal<DragSession | null>(null);
@@ -198,8 +198,11 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
       return;
     }
 
-    if (this._mode !== WorkMode.PAN && this._mode !== WorkMode.SIMULATION) {
-      getStaticDI(WorkModeService).setMode(WorkMode.PAN);
+    if (
+      this._mode !== DEFAULT_WORK_MODE &&
+      this._mode !== WorkMode.SIMULATION
+    ) {
+      getStaticDI(WorkModeService).setMode(DEFAULT_WORK_MODE);
     }
   }
 

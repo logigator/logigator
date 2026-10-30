@@ -742,8 +742,8 @@ describe('WorkModeRouter cancel shortcut (Escape)', () => {
     expect(setMode).not.toHaveBeenCalled(); // stays in SELECT
   });
 
-  it('falls back to the pan tool once the selection is empty', () => {
-    router.setMode(WorkMode.SELECT);
+  it('falls back to the select tool once the selection is empty', () => {
+    router.setMode(WorkMode.WIRE_TOOL);
     const comp = makeAnd(2, undefined, 3, 3);
     project.addComponent(comp);
     project.selectionManager.select([comp], []);
@@ -752,20 +752,23 @@ describe('WorkModeRouter cancel shortcut (Escape)', () => {
     expect(project.selectionManager.isEmpty).toBe(true);
     expect(setMode).not.toHaveBeenCalled();
 
-    pressEscape(); // second: nothing left to clear → back to pan
-    expect(setMode).toHaveBeenCalledWith(WorkMode.PAN);
+    pressEscape(); // second: nothing left to clear → back to select
+    expect(setMode).toHaveBeenCalledWith(WorkMode.SELECT);
   });
 
-  it('returns to the pan tool from any non-pan tool with nothing selected', () => {
-    router.setMode(WorkMode.WIRE_TOOL);
+  it.each([WorkMode.WIRE_TOOL, WorkMode.PAN, WorkMode.SELECT_EXACT])(
+    'returns to the select tool from %s with nothing selected',
+    (mode) => {
+      router.setMode(mode);
 
-    pressEscape();
+      pressEscape();
 
-    expect(setMode).toHaveBeenCalledWith(WorkMode.PAN);
-  });
+      expect(setMode).toHaveBeenCalledWith(WorkMode.SELECT);
+    }
+  );
 
-  it('does nothing extra when already in the pan tool with no selection', () => {
-    router.setMode(WorkMode.PAN);
+  it('does nothing extra when already in the select tool with no selection', () => {
+    router.setMode(WorkMode.SELECT);
 
     pressEscape();
 

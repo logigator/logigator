@@ -167,8 +167,9 @@ the tools; the router owns what must hold across all of them.
 - `move` goes to `_activeDrag.onMove`, or to the tool's `hover` with no session.
 - `up` asks `session.canEnd()` first; see the commit rules below.
 - `cancel()` (a second finger) aborts via `onCancel()`. Escape unwinds one layer
-  per press: active drag, then the selection, then the tool (escalating to PAN
-  through `WorkModeService` so the toolbar follows). Simulation stays put.
+  per press: active drag, then the selection, then the tool (escalating to
+  `DEFAULT_WORK_MODE`, the select tool, through `WorkModeService` so the
+  toolbar follows). Simulation stays put.
 - `setProject` / `setMode` cancel the in-flight session and `deactivate` the old
   tool on the old project, tearing down hover previews.
 - **Undo lock** — while a session is live, `ActionManager.locked` is set:

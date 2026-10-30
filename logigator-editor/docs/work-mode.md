@@ -9,9 +9,9 @@ descriptors the tool bar and mobile HUD share.
 
 | Member                | Value          | Notes                                                  |
 | --------------------- | -------------- | ------------------------------------------------------ |
-| `PAN`                 | `'pan'`        | Hand tool; the navigate-first default                  |
+| `PAN`                 | `'pan'`        | Hand tool; a drag pans, nothing else                   |
 | `WIRE_TOOL`           | `'wireTool'`   | Drag draws; a tap negates a port or toggles a junction |
-| `SELECT`              | `'sel'`        |                                                        |
+| `SELECT`              | `'sel'`        | The default (`DEFAULT_WORK_MODE`)                      |
 | `SELECT_EXACT`        | `'selExact'`   | The select tool's scissor sub-state                    |
 | `ERASE`               | `'erase'`      |                                                        |
 | `COMPONENT_PLACEMENT` | `'placeComp'`  | Also covers text placement (the TEXT component type)   |
