@@ -82,7 +82,7 @@ The same two classes drive the board and every watch canvas.
 
 **File:** `interaction/pointer-controller.ts`
 
-Per-canvas listener bundle (pointer, wheel, contextmenu; detached through one
+Per-canvas listener bundle (pointer, wheel, Safari gesture, contextmenu; detached through one
 `AbortController`). Every event becomes a `PointerInput` —
 `{ pointerId, pointerType, global, grid, clickCount }`, where `global` is
 canvas-local CSS pixels (what `viewport.pan`/`zoomBy` expect) and `grid` is that
@@ -129,10 +129,14 @@ it is fresh before the next render.
   buttons alone; `zoomBy` resyncs it so a button press continues from wherever
   the wheel left the zoom. A wheel pan renders through a `'single'` ticker
   signal from the board's `pan`, a no-op while a drag runs the ticker.
-- **Trackpad pinch** — browsers send it as a ctrl-wheel of small pixel deltas
-  (`isPinch`). It zooms at its own rate, always at the pointer: the scroll
-  events a browser interleaves with a pinch, carrying the fingers' drift, are
-  dropped until the pinch ends.
+- **Trackpad pinch** — Chromium and Firefox send it as a ctrl-wheel of small
+  pixel deltas (`isPinch`), Safari as `gesturestart`/`gesturechange`/
+  `gestureend` with a running `scale`. Either zooms at its own rate, always at
+  the pointer: the scroll events a browser interleaves with a pinch, carrying
+  the fingers' drift, are dropped until the pinch ends, and while Safari's
+  gesture events are arriving its ctrl-wheels are dropped too, so a pinch sent
+  both ways counts once. Safari reports a touchscreen pinch as gestures as
+  well; that one is left to `MultiTouchGesture`.
 
 The `PointerNavTarget` comes from the host (the board maps it onto the active
 project plus ticker; a watch wraps `pan` to re-blit). Handlers are public so
