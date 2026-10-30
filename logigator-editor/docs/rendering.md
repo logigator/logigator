@@ -142,6 +142,14 @@ The `PointerNavTarget` comes from the host (the board maps it onto the active
 project plus ticker; a watch wraps `pan` to re-blit). Handlers are public so
 specs drive them with plain objects instead of synthesized DOM events.
 
+The hosts set the canvas cursor, since nothing else in the scene does: a
+closed hand (`grabbing`) while `setActive` brackets a navigation drag or a
+`PanSession` has passed its tap threshold (`PanSession.panning`, surfaced by
+the router as `panning`), and on the board an open hand (`grab`) while the
+`PAN_HOLD` key (Space by default) is held and no session is open. A press with
+that key held opens a `PanSession` whatever the mode, whose tap does nothing.
+A wheel pan changes no cursor.
+
 ### `WorkModeRouter`
 
 **File:** `interaction/work-mode-router.ts`

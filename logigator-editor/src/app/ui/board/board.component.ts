@@ -1,5 +1,6 @@
 import {
   Component,
+  computed,
   effect,
   ElementRef,
   inject,
@@ -76,6 +77,17 @@ export class BoardComponent implements OnInit, OnDestroy {
   // sessions, the controller handles navigation against the active project.
   private readonly _router = new WorkModeRouter();
   private _controller: PointerController | null = null;
+  // A navigation drag: middle or right button, or two fingers.
+  private readonly _navDragging = signal(false);
+
+  /** An open hand while the held pan key makes a drag pan, closed while
+   *  anything pans the board by dragging. */
+  protected readonly cursor = computed(() => {
+    if (this._navDragging() || this._router.panning()) return 'grabbing';
+    return this._router.panKeyHeld() && !this._router.hasSession()
+      ? 'grab'
+      : null;
+  });
   private readonly _cursorMove$ = new Subject<Point>();
 
   /** The render loop's ticker; only valid once `loaded()` is true. */
@@ -174,8 +186,10 @@ export class BoardComponent implements OnInit, OnDestroy {
           zoomOut: (center) => this._router.project?.viewport.zoomOut(center),
           zoomBy: (factor, center) =>
             this._router.project?.viewport.zoomBy(factor, center),
-          setActive: (active) =>
-            this._router.project?.triggerTicker(active ? 'on' : 'off')
+          setActive: (active) => {
+            this._navDragging.set(active);
+            this._router.project?.triggerTicker(active ? 'on' : 'off');
+          }
         },
         tool: this._router,
         onCursorMove: (grid) => this._cursorMove$.next(grid)

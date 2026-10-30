@@ -1116,6 +1116,7 @@ const en = {
       toolSelect: 'Select',
       selectScissor: 'Cut Wires at Selection Edge (hold)',
       selectAdditive: 'Add to or Remove from Selection (hold)',
+      panHold: 'Pan by Dragging (hold)',
       toolErase: 'Erase',
       toolPlaceText: 'Place Text',
       toggleSimulation: 'Start/Stop Simulation',

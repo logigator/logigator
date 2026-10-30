@@ -48,6 +48,19 @@ describe('PanSession', () => {
     });
   });
 
+  it('reports panning once the press passes the tap threshold', () => {
+    const session = new PanSession(
+      makeProject(),
+      new Point(50, 50),
+      new Point(0, 0)
+    );
+
+    session.onMove(makePanEvent(52, 51));
+    expect(session.panning()).toBe(false);
+    session.onMove(makePanEvent(70, 50));
+    expect(session.panning()).toBe(true);
+  });
+
   it('does not pan or mutate the start point within the tap threshold', () => {
     const start = new Point(50, 50);
     const project = makeProject();

@@ -119,6 +119,14 @@ export class ShortcutService implements OnDestroy {
       )
       .subscribe((e) => {
         for (const [action, binding] of this._bindings.entries()) {
+          // The held pan key is Space by default, which a focused control
+          // needs for itself: claiming it there would stop it activating.
+          if (
+            action === ShortcutActionEnum.PAN_HOLD &&
+            !this.isEditorFocused(e.target)
+          ) {
+            continue;
+          }
           if (binding && this._matchesBinding(binding, e)) {
             e.preventDefault();
             this.loggingService.debug(
@@ -133,7 +141,12 @@ export class ShortcutService implements OnDestroy {
 
     this._holdSubs = [
       fromEvent<KeyboardEvent>(window, 'keydown').subscribe((e) => {
-        this._heldKeys.add(e.key);
+        // A character key pressed on a focused control (text typed into a
+        // field, Space on a button) belongs to that control, not to a held
+        // binding: it must not turn the board's next drag into a pan.
+        const forControl =
+          e.key.length === 1 && !this.isEditorFocused(e.target);
+        if (!forControl) this._heldKeys.add(e.key);
         this._trackModifiers(e);
         this._notifyHeldChange();
       }),
@@ -412,6 +425,18 @@ export class ShortcutService implements OnDestroy {
       a.shift === b.shift &&
       a.alt === b.alt
     );
+  }
+
+  /**
+   * Whether keyboard input belongs to the editor rather than to a focused
+   * control: nothing has the focus (the event lands on the window, the
+   * document or the body) or the board canvas has it.
+   */
+  public isEditorFocused(
+    target: EventTarget | null = document.activeElement
+  ): boolean {
+    if (!(target instanceof HTMLElement)) return true;
+    return target === document.body || target instanceof HTMLCanvasElement;
   }
 
   private _isInputTarget(target: EventTarget | null): boolean {
