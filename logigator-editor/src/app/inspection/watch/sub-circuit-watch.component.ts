@@ -75,7 +75,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
 
   private controller: PointerController | null = null;
   private readonly session = signal<DragSession | null>(null);
-  // A navigation drag: middle or right button, or two fingers.
+  // A navigation drag: middle button, or two fingers.
   private readonly navDragging = signal(false);
 
   /** A closed hand while a drag pans the watch; a tap there acts instead. */

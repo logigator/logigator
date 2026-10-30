@@ -51,13 +51,12 @@ const WHEEL_BURST_GAP_MS = 150;
 // so one event zooms by at most e^0.75.
 const PINCH_ZOOM_PER_PX = 0.015;
 
-/** Middle and right: the two buttons a press pans with, whatever the tool. */
+/** The button a press pans with, whatever the tool. */
 const MIDDLE_BUTTON = 1;
-const RIGHT_BUTTON = 2;
 
 export type { WheelEventLike } from './wheel-input';
 
-/** Viewport navigation the controller drives (middle/right-drag and wheel pan,
+/** Viewport navigation the controller drives (middle-drag and wheel pan,
  *  ctrl-wheel zoom and trackpad pinch, two-finger touch pan/pinch). Deltas and
  *  centers are canvas-local CSS px. */
 export interface PointerNavTarget {
@@ -99,8 +98,9 @@ export interface PointerControllerOptions {
  *
  * - Primary button: captured, streamed to the tool target from down to up.
  *   Click-vs-drag semantics live in the sessions.
- * - Middle and right button: pan-only drag by successive position deltas; the
- *   canvas context menu and the middle press's autoscroll are suppressed.
+ * - Middle button: pan-only drag by successive position deltas; its
+ *   autoscroll is suppressed. The right button does nothing on the canvas,
+ *   and its context menu is suppressed.
  * - Touch: pointers feed the {@link MultiTouchGesture} first; a second finger
  *   hands it navigation and cancels the tool stream, so a finger never both
  *   operates a tool and navigates.
@@ -130,7 +130,6 @@ export class PointerController {
   private _gestureScale = 1;
   private _gestureLast = -Infinity;
   private _panPointer: number | null = null;
-  private _panButton = RIGHT_BUTTON;
   private readonly _panLast = new Point();
 
   // Click counting, the DOM's rule (see PointerInput.clickCount): a primary
@@ -231,10 +230,7 @@ export class PointerController {
     // press starts afresh.
     if (e.pointerId === this._toolPointer && e.button === 0) {
       this._cancelTool();
-    } else if (
-      e.pointerId === this._panPointer &&
-      e.button === this._panButton
-    ) {
+    } else if (e.pointerId === this._panPointer && e.button === MIDDLE_BUTTON) {
       this._endPan();
     }
     if (e.pointerType === 'touch') {
@@ -249,9 +245,8 @@ export class PointerController {
       this._capture(e.pointerId);
       this._countClick(e, local);
       this.opts.tool.down(this._input(e, local, project));
-    } else if (e.button === MIDDLE_BUTTON || e.button === RIGHT_BUTTON) {
+    } else if (e.button === MIDDLE_BUTTON) {
       this._panPointer = e.pointerId;
-      this._panButton = e.button;
       this._panLast.copyFrom(local);
       this._capture(e.pointerId);
       this.opts.nav.setActive(true);

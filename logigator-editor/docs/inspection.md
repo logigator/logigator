@@ -202,7 +202,7 @@ slot)` is the absolute path automation drives.
   the CSS-pixel viewport transform up to the canvas's DPR-sized backing store.
 - **`SubCircuitWatchComponent`** — the canvas; the breadcrumb trail renders in
   the hosting header via `titleParts`. Input runs through the board's own
-  `PointerController` (shared middle/right-drag/wheel/pinch navigation) with a
+  `PointerController` (shared middle-drag/wheel/pinch navigation) with a
   `PanSession` as its tool, whose tap action routes back to the model — or a
   `HoldSession` over `holdFor` (slot `0`) for a press on an inner `hold` input
   operated on the canvas (`holdInputAt`), cancelled like

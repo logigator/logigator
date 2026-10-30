@@ -136,31 +136,40 @@ describe('PointerController', () => {
     expect(tool.move).not.toHaveBeenCalled();
   });
 
-  it.each([2, 1])(
-    'button-%i drag pans by successive deltas and never reaches the tool',
-    (button) => {
-      controller.onPointerDown(mouse(1, button, 200, 150));
-      expect(tool.down).not.toHaveBeenCalled();
-      expect(nav.setActive).toHaveBeenCalledWith(true);
+  it('pans on a middle-button drag by successive deltas, never reaching the tool', () => {
+    const button = 1; // middle
+    controller.onPointerDown(mouse(1, button, 200, 150));
+    expect(tool.down).not.toHaveBeenCalled();
+    expect(nav.setActive).toHaveBeenCalledWith(true);
 
-      controller.onPointerMove(mouse(1, button, 210, 145));
-      expect(nav.pan).toHaveBeenCalledTimes(1);
-      expect(vi.mocked(nav.pan).mock.calls[0][0]).toMatchObject({
-        x: 10,
-        y: -5
-      });
+    controller.onPointerMove(mouse(1, button, 210, 145));
+    expect(nav.pan).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(nav.pan).mock.calls[0][0]).toMatchObject({
+      x: 10,
+      y: -5
+    });
 
-      controller.onPointerMove(mouse(1, button, 230, 145));
-      expect(vi.mocked(nav.pan).mock.calls[1][0]).toMatchObject({
-        x: 20,
-        y: 0
-      });
+    controller.onPointerMove(mouse(1, button, 230, 145));
+    expect(vi.mocked(nav.pan).mock.calls[1][0]).toMatchObject({
+      x: 20,
+      y: 0
+    });
 
-      controller.onPointerUp(mouse(1, button, 230, 145));
-      expect(nav.setActive).toHaveBeenCalledWith(false);
-      expect(tool.up).not.toHaveBeenCalled();
-    }
-  );
+    controller.onPointerUp(mouse(1, button, 230, 145));
+    expect(nav.setActive).toHaveBeenCalledWith(false);
+    expect(tool.up).not.toHaveBeenCalled();
+  });
+
+  it('neither pans nor reaches the tool on a right-button drag', () => {
+    controller.onPointerDown(mouse(1, 2, 200, 150));
+    controller.onPointerMove(mouse(1, 2, 260, 150));
+    controller.onPointerUp(mouse(1, 2, 260, 150));
+
+    expect(nav.setActive).not.toHaveBeenCalled();
+    expect(nav.pan).not.toHaveBeenCalled();
+    expect(tool.down).not.toHaveBeenCalled();
+    expect(tool.up).not.toHaveBeenCalled();
+  });
 
   it('suppresses the middle press default and leaves the primary one alone', () => {
     const mousedown = listeners.get('mousedown');
@@ -177,10 +186,10 @@ describe('PointerController', () => {
 
   it('ignores a second button while an interaction is active', () => {
     controller.onPointerDown(mouse(1, 0, 110, 60));
-    controller.onPointerDown(mouse(2, 2, 120, 70));
+    controller.onPointerDown(mouse(2, 1, 120, 70));
 
     expect(nav.setActive).not.toHaveBeenCalled();
-    controller.onPointerMove(mouse(2, 2, 140, 90));
+    controller.onPointerMove(mouse(2, 1, 140, 90));
     expect(nav.pan).not.toHaveBeenCalled();
   });
 
@@ -417,11 +426,11 @@ describe('PointerController', () => {
   });
 
   it('ends a button pan when its pointer loses capture', () => {
-    controller.onPointerDown(mouse(1, 2, 200, 150));
+    controller.onPointerDown(mouse(1, 1, 200, 150));
     controller.onLostPointerCapture({ pointerId: 1 });
 
     expect(nav.setActive).toHaveBeenLastCalledWith(false);
-    controller.onPointerMove(mouse(1, 2, 210, 150));
+    controller.onPointerMove(mouse(1, 1, 210, 150));
     expect(nav.pan).not.toHaveBeenCalled();
   });
 
@@ -438,18 +447,18 @@ describe('PointerController', () => {
   });
 
   it('ends a pan whose release was lost when its pointer presses again', () => {
-    controller.onPointerDown(mouse(1, 2, 200, 150));
-    controller.onPointerDown(mouse(1, 2, 300, 150)); // no pointer-up between
+    controller.onPointerDown(mouse(1, 1, 200, 150));
+    controller.onPointerDown(mouse(1, 1, 300, 150)); // no pointer-up between
 
     expect(nav.setActive).toHaveBeenNthCalledWith(2, false);
     expect(nav.setActive).toHaveBeenLastCalledWith(true);
     // Deltas run from the fresh press, not from the lost stream's last point.
-    controller.onPointerMove(mouse(1, 2, 310, 150));
+    controller.onPointerMove(mouse(1, 1, 310, 150));
     expect(vi.mocked(nav.pan).mock.calls[0][0]).toMatchObject({ x: 10, y: 0 });
   });
 
   it('keeps a pan when its pointer presses another button', () => {
-    controller.onPointerDown(mouse(1, 2, 200, 150));
+    controller.onPointerDown(mouse(1, 1, 200, 150));
     controller.onPointerDown(mouse(1, 0, 200, 150));
 
     expect(tool.down).not.toHaveBeenCalled();

@@ -106,10 +106,12 @@ it is fresh before the next render.
   counted from `event.timeStamp` on the press itself), so a tool can tell a
   double click from two deliberate single clicks. Only the wire tool acts on it
   (`work-mode.md` § _Taps and modifiers_).
-- **Middle or right button** — pan-only drag by position deltas, bracketed by
-  `nav.setActive(true/false)`. The canvas context menu is suppressed outright,
-  as is the middle press's `mousedown`, which the browsers would otherwise turn
-  into autoscroll.
+- **Middle button** — pan-only drag by position deltas, bracketed by
+  `nav.setActive(true/false)`. Its `mousedown` is suppressed, which the
+  browsers would otherwise turn into autoscroll. The right button does nothing
+  on the canvas; its context menu is suppressed outright. A left drag pans only
+  through a `PanSession`: the Pan tool, a simulation drag, or the held
+  `PAN_HOLD` key in any mode.
 - **Touch** — pointers feed `MultiTouchGesture` first; a second finger hands
   over to two-finger pan/pinch and cancels the tool stream, so one finger never
   both operates a tool and navigates.

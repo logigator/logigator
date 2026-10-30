@@ -77,7 +77,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   // sessions, the controller handles navigation against the active project.
   private readonly _router = new WorkModeRouter();
   private _controller: PointerController | null = null;
-  // A navigation drag: middle or right button, or two fingers.
+  // A navigation drag: middle button, or two fingers.
   private readonly _navDragging = signal(false);
 
   /** An open hand while the held pan key makes a drag pan, closed while
