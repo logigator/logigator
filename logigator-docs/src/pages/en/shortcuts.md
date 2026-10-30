@@ -28,6 +28,7 @@ These are the default bindings, in the order Edit → Keyboard Shortcuts lists t
 | Place Text                              | `T`            |
 | Cut Wires at Selection Edge (hold)      | `Alt`          |
 | Add to or Remove from Selection (hold)  | `Ctrl`         |
+| Pan by Dragging (hold)                  | `Space`        |
 | Start/Stop Simulation                   | `Enter`        |
 | Cancel                                  | `Escape`       |
 
@@ -35,13 +36,13 @@ Shortcuts do nothing while you type in a text field, except `Escape`. During a s
 
 ## Held keys {#held-keys}
 
-The two actions marked "hold" act while the key is down instead of firing once. Hold `Alt` while releasing a selection box to cut the wires at its edge (see [Board and tools](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Hold `Ctrl` while clicking or drawing a box to add to the selection or remove from it. That works with Select, Pan and the Wire tool.
+The three actions marked "hold" act while the key is down instead of firing once. Hold `Alt` while releasing a selection box to cut the wires at its edge (see [Board and tools](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Hold `Ctrl` while clicking or drawing a box to add to the selection or remove from it. That works with Select and the Wire tool. Hold `Space` and drag with the left button to pan the board, whatever the tool; the pointer turns into a hand while you hold it.
 
 ## Changing a binding {#changing-a-binding}
 
 ![The keyboard shortcut manager.](./images/shortcut-manager.webp)
 
-Edit → Keyboard Shortcuts lists every action. Click the pencil next to one and press the new combination. `Escape` cancels the recording, which is why it can't be bound to anything else. A single modifier key such as `Alt` can only be bound to the two held actions.
+Edit → Keyboard Shortcuts lists every action. Click the pencil next to one and press the new combination. `Escape` cancels the recording, which is why it can't be bound to anything else. A single modifier key such as `Alt` can only be bound to the held actions.
 
 If the combination already belongs to another action, that action loses it and a message says which one. Reset puts one action back to its default, Unassign leaves it without a shortcut, and Reset All restores every default.
 

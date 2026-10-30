@@ -8,7 +8,7 @@ You don't need an account. Without one, projects are saved in the browser or [ex
 
 ## The editor window {#the-editor-window}
 
-- The board in the middle is the grid you build on. The mouse wheel zooms, and dragging with the right or middle button pans.
+- The board in the middle is the grid you build on. Scrolling pans, `Ctrl`+scroll (`⌘` on a Mac) zooms, and dragging with the middle button, or with the left one while holding `Space`, pans as well.
 - The title bar shows the project's name and where it is stored (Draft, Local, Cloud or Shared), followed by the File, Edit, View and Help menus. The pencil next to the name renames the project.
 - The toolbar holds buttons for saving and opening, the clipboard, rotating, undo and zoom, then the five [tools](docs:board-and-tools#tools), and Start simulation at the right end.
 - The component palette on the left lists every part you can place.

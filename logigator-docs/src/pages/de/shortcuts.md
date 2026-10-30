@@ -28,6 +28,7 @@ Das sind die Standardbelegungen, in der Reihenfolge, in der Bearbeiten → Tasta
 | Text platzieren                                        | `T`            |
 | Leitungen an der Auswahlkante schneiden (halten)       | `Alt`          |
 | Zur Auswahl hinzufügen oder daraus entfernen (halten)  | `Ctrl`         |
+| Durch Ziehen verschieben (halten)                      | `Space`        |
 | Simulation starten/stoppen                             | `Enter`        |
 | Abbrechen                                              | `Escape`       |
 
@@ -35,13 +36,13 @@ Während du in ein Textfeld tippst, reagiert kein Kürzel außer `Escape`. In ei
 
 ## Gehaltene Tasten {#held-keys}
 
-Die beiden mit „halten“ markierten Aktionen wirken, solange die Taste gedrückt ist, statt einmal auszulösen. Halte `Alt`, während du einen Auswahlrahmen loslässt, um die Leitungen an seiner Kante zu schneiden (siehe [Arbeitsfläche und Werkzeuge](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Halte `Ctrl` beim Klicken oder Aufziehen eines Rahmens, um zur Auswahl hinzuzufügen oder daraus zu entfernen. Das funktioniert mit Auswählen, Schwenken und dem Leitungswerkzeug.
+Die drei mit „halten“ markierten Aktionen wirken, solange die Taste gedrückt ist, statt einmal auszulösen. Halte `Alt`, während du einen Auswahlrahmen loslässt, um die Leitungen an seiner Kante zu schneiden (siehe [Arbeitsfläche und Werkzeuge](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Halte `Ctrl` beim Klicken oder Aufziehen eines Rahmens, um zur Auswahl hinzuzufügen oder daraus zu entfernen. Das funktioniert mit Auswählen und dem Leitungswerkzeug. Halte `Space` und ziehe mit der linken Taste, um die Arbeitsfläche zu verschieben, egal welches Werkzeug aktiv ist; solange du die Taste hältst, wird der Zeiger zur Hand.
 
 ## Eine Belegung ändern {#changing-a-binding}
 
 ![Die Verwaltung der Tastaturbefehle.](./images/shortcut-manager.webp)
 
-Bearbeiten → Tastaturbefehle listet jede Aktion. Klicke auf den Stift daneben und drücke die neue Kombination. `Escape` bricht die Aufzeichnung ab und lässt sich deshalb nicht anders belegen. Eine einzelne Modifikatortaste wie `Alt` kann nur einer der beiden Halte-Aktionen zugewiesen werden.
+Bearbeiten → Tastaturbefehle listet jede Aktion. Klicke auf den Stift daneben und drücke die neue Kombination. `Escape` bricht die Aufzeichnung ab und lässt sich deshalb nicht anders belegen. Eine einzelne Modifikatortaste wie `Alt` kann nur einer der Halte-Aktionen zugewiesen werden.
 
 Gehört die Kombination schon zu einer anderen Aktion, verliert diese sie, und eine Meldung nennt sie. „Zurücksetzen“ stellt die Standardbelegung einer Aktion wieder her, „Zuweisung aufheben“ lässt sie ohne Kürzel, und „Alle zurücksetzen“ stellt alle Standardbelegungen wieder her.
 

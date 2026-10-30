@@ -28,6 +28,7 @@ Estos son los atajos predeterminados, en el orden en que los lista Editar → At
 | Colocar texto                                                 | `T`            |
 | Cortar cables en el borde de la selección (mantener)          | `Alt`          |
 | Añadir a la selección o quitarlo de ella (mantener)           | `Ctrl`         |
+| Desplazar la vista arrastrando (mantener)                     | `Space`        |
 | Iniciar/detener simulación                                    | `Enter`        |
 | Cancelar                                                      | `Escape`       |
 
@@ -35,13 +36,13 @@ Mientras escribes en un campo de texto, ningún atajo responde salvo `Escape`. D
 
 ## Teclas mantenidas {#held-keys}
 
-Las dos acciones marcadas con «mantener» actúan mientras la tecla está pulsada, en lugar de dispararse una vez. Mantén `Alt` al soltar un marco de selección para cortar los cables en su borde (consulta [Tablero y herramientas](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Mantén `Ctrl` al hacer clic o trazar un marco para añadir a la selección o quitar de ella. Funciona con Seleccionar, Desplazar y la herramienta de cable.
+Las tres acciones marcadas con «mantener» actúan mientras la tecla está pulsada, en lugar de dispararse una vez. Mantén `Alt` al soltar un marco de selección para cortar los cables en su borde (consulta [Tablero y herramientas](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Mantén `Ctrl` al hacer clic o trazar un marco para añadir a la selección o quitar de ella. Funciona con Seleccionar y la herramienta de cable. Mantén `Space` y arrastra con el botón izquierdo para desplazar el tablero, sea cual sea la herramienta; mientras la mantienes, el puntero se convierte en una mano.
 
 ## Cambiar un atajo {#changing-a-binding}
 
 ![El gestor de atajos de teclado.](./images/shortcut-manager.webp)
 
-Editar → Atajos de teclado lista cada acción. Haz clic en el lápiz junto a una y pulsa la nueva combinación. `Escape` cancela la grabación, por eso no se puede asignar a otra cosa. Una tecla modificadora sola, como `Alt`, solo puede asignarse a las dos acciones mantenidas.
+Editar → Atajos de teclado lista cada acción. Haz clic en el lápiz junto a una y pulsa la nueva combinación. `Escape` cancela la grabación, por eso no se puede asignar a otra cosa. Una tecla modificadora sola, como `Alt`, solo puede asignarse a las acciones mantenidas.
 
 Si la combinación ya pertenece a otra acción, esa acción la pierde y un mensaje dice cuál. «Restablecer» devuelve el atajo predeterminado de una acción, «Desasignar» la deja sin atajo y «Restablecer todo» restaura todos los predeterminados.
 

@@ -4,27 +4,27 @@ Le plan de travail est la grille sur laquelle vous construisez. Composants et fi
 
 ## Se déplacer {#moving-around}
 
-La molette de la souris zoome à l'endroit du pointeur, tout comme un balayage à deux doigts ou un pincement sur le pavé tactile. Les boutons de zoom de la barre d'outils et Affichage → Zoom avant, Zoom arrière et Zoom 100 % font de même par paliers fixes.
+La molette de la souris et un balayage à deux doigts sur le pavé tactile déplacent le plan ; maintenez `Shift` pour faire défiler la molette de côté. Pour zoomer à l'endroit du pointeur, maintenez `Ctrl` (`⌘` sur Mac) en faisant défiler, ou pincez le pavé tactile. Les boutons de zoom de la barre d'outils et Affichage → Zoom avant, Zoom arrière et Zoom 100 % zooment par paliers fixes.
 
-Pour déplacer la vue, faites glisser avec le bouton droit ou central de la souris. Cela fonctionne avec tous les outils. Quand l'outil Déplacement est actif, un glisser avec le bouton gauche déplace aussi la vue.
+Vous pouvez aussi déplacer la vue en faisant glisser avec le bouton central de la souris, ou avec le bouton gauche en maintenant `Space`. Cela fonctionne avec tous les outils. Quand l'outil Déplacement est actif, un glisser avec le bouton gauche déplace la vue même sans `Space`.
 
 La minicarte, dans le coin inférieur droit, montre tout le circuit avec un cadre autour de la partie visible. Cliquez ou faites glisser dedans pour y amener la vue. « Masquer la minicarte » la replie, et l'éditeur s'en souvient.
 
 ## Outils {#tools}
 
-Un seul outil est actif à la fois. Chacun a un bouton dans la barre d'outils et un raccourci d'une touche.
+Un seul outil est actif à la fois. Chacun a un raccourci d'une touche et un bouton dans la barre d'outils, où Sélectionner et Déplacement en partagent un : la flèche à côté choisit l'autre. L'éditeur démarre avec Sélectionner.
 
 | Outil        | Touche | Ce que fait un glisser                                                        |
 | ------------ | ------ | ----------------------------------------------------------------------------- |
-| Déplacement  | `P`    | Déplace la vue, ou la sélection si vous commencez à l'intérieur               |
-| Outil fil    | `W`    | Trace un fil (voir [Fils et connexions](docs:wires-and-connections))          |
 | Sélectionner | `S`    | Trace un cadre de sélection, ou déplace la sélection si vous commencez dedans |
+| Déplacement  | `P`    | Déplace la vue, et rien d'autre                                               |
+| Outil fil    | `W`    | Trace un fil (voir [Fils et connexions](docs:wires-and-connections))          |
 | Gomme        | `E`    | Supprime tout ce qu'elle traverse                                             |
 | Texte        | `T`    | Place une étiquette de texte (un clic suffit)                                 |
 
-Un clic sans glisser sélectionne l'élément sous le pointeur avec Déplacement, Outil fil et Sélectionner. L'outil fil vérifie d'abord si vous avez touché un port ou un croisement de fils, car un appui dessus inverse ou connecte à la place.
+Un clic sans glisser sélectionne l'élément sous le pointeur avec Sélectionner et l'outil fil. L'outil fil vérifie d'abord si vous avez touché un port ou un croisement de fils, car un appui dessus inverse ou connecte à la place.
 
-![Les cinq boutons d'outils dans la barre d'outils.](./images/tool-buttons.webp)
+![Les boutons d'outils dans la barre d'outils.](./images/tool-buttons.webp)
 
 ## Placer des composants {#placing-components}
 
@@ -34,7 +34,7 @@ Rien n'est placé là où l'aperçu chevauche un autre composant. `Escape` ou le
 
 ## Sélectionner et déplacer {#selecting-and-moving}
 
-Avec Sélectionner, tracez un cadre sur les éléments voulus. Chaque composant et chaque fil touché par le cadre est sélectionné. Maintenez `Ctrl` (`⌘` sur Mac) pour modifier la sélection au lieu de la remplacer : un clic ajoute ou retire un élément, et un cadre ajoute ce qu'il couvre. Cela fonctionne aussi avec Déplacement et l'outil fil.
+Avec Sélectionner, tracez un cadre sur les éléments voulus. Chaque composant et chaque fil touché par le cadre est sélectionné. Maintenez `Ctrl` (`⌘` sur Mac) pour modifier la sélection au lieu de la remplacer : un clic ajoute ou retire un élément, et un cadre ajoute ce qu'il couvre. Cela fonctionne aussi avec l'outil fil.
 
 Faites glisser la sélection pour la déplacer. `R` la tourne dans le sens horaire, `Shift+R` dans le sens antihoraire, et les flèches la déplacent d'un pas de grille. Si la sélection atterrit sur autre chose, elle reste soulevée et suit vos mouvements suivants jusqu'à trouver une place libre.
 
@@ -42,7 +42,7 @@ Faites glisser la sélection pour la déplacer. `R` la tourne dans le sens horai
 
 1. Annule un glisser en cours.
 2. Vide la sélection.
-3. Passe à Déplacement.
+3. Passe à Sélectionner.
 
 ## Couper les fils au bord de la sélection {#cutting-wires-at-the-selection-edge}
 
