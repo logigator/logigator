@@ -7,11 +7,14 @@ import { ZOOM_STEP_BASE } from '../../project/viewport-controller';
 export interface WheelEventLike {
   clientX: number;
   clientY: number;
+  deltaX?: number;
   deltaY: number;
   /** `WheelEvent.deltaMode`: 0 pixels (the default), 1 lines, 2 pages. */
   deltaMode?: number;
   /** Set on a trackpad pinch, which browsers deliver as a ctrl-wheel. */
   ctrlKey?: boolean;
+  metaKey?: boolean;
+  shiftKey?: boolean;
   timeStamp?: number;
   preventDefault(): void;
 }
@@ -55,4 +58,15 @@ export function isPinch(e: WheelEventLike): boolean {
   if (!e.ctrlKey) return false;
   if (e.deltaMode !== undefined && e.deltaMode !== 0) return false;
   return Math.abs(e.deltaY) < PINCH_MAX_DELTA_PX;
+}
+
+/**
+ * How far a wheel event scrolls, in pixels along each axis. Shift turns a
+ * vertical-only wheel horizontal where the browser has not already swapped
+ * the axes itself.
+ */
+export function wheelScroll(e: WheelEventLike): { x: number; y: number } {
+  const dx = e.deltaX ?? 0;
+  if (e.shiftKey && dx === 0) return { x: wheelPixels(e, e.deltaY), y: 0 };
+  return { x: wheelPixels(e, dx), y: wheelPixels(e, e.deltaY) };
 }

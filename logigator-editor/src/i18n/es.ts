@@ -467,7 +467,7 @@ const es: TranslationSchema = {
   },
   statusBar: {
     modes: {
-      pan: 'Desplazar: arrastra para mover el tablero · desplaza o pellizca para hacer zoom',
+      pan: 'Desplazar: arrastra o usa la rueda para mover el tablero · Ctrl+rueda o pellizca para hacer zoom',
       wireTool:
         'Herramienta de cable: arrastra para dibujar · toca un puerto para negarlo · toca un cruce para conectar/desconectar · toca para seleccionar · {{additiveKey}} para añadir o quitar',
       sel: 'Seleccionar: arrastra un recuadro para seleccionar · arrastra la selección para moverla · mantén {{scissorKey}} para cortar cables',
@@ -1206,7 +1206,7 @@ const es: TranslationSchema = {
           moveAround: {
             title: 'Moverse',
             textDesktop:
-              'Desplaza para hacer zoom, arrastra con el botón derecho o el botón central para desplazarte.',
+              'Usa la rueda para desplazarte, mantén Ctrl (⌘ en un Mac) mientras la usas o pellizca para hacer zoom.',
             textCompact:
               'Pellizca para hacer zoom, arrastra con dos dedos para desplazarte.'
           },

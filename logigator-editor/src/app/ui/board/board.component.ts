@@ -164,7 +164,12 @@ export class BoardComponent implements OnInit, OnDestroy {
         canvas: this.canvas.nativeElement,
         project: () => this._router.project,
         nav: {
-          pan: (delta) => this._router.project?.viewport.pan(delta),
+          // A drag pans with the ticker running, a wheel without: the
+          // 'single' is a no-op while it runs.
+          pan: (delta) => {
+            this._router.project?.viewport.pan(delta);
+            this._router.project?.triggerTicker('single');
+          },
           zoomIn: (center) => this._router.project?.viewport.zoomIn(center),
           zoomOut: (center) => this._router.project?.viewport.zoomOut(center),
           zoomBy: (factor, center) =>

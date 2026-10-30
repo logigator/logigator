@@ -6,7 +6,8 @@ import {
   isPinch,
   WHEEL_ZOOM_PER_PX,
   WheelEventLike,
-  wheelPixels
+  wheelPixels,
+  wheelScroll
 } from './wheel-input';
 
 /**
@@ -43,8 +44,9 @@ const RIGHT_BUTTON = 2;
 
 export type { WheelEventLike } from './wheel-input';
 
-/** Viewport navigation the controller drives (middle/right-drag pan, wheel
- *  zoom and trackpad pinch, two-finger touch pan/pinch). Deltas and centers are canvas-local CSS px. */
+/** Viewport navigation the controller drives (middle/right-drag and wheel pan,
+ *  ctrl-wheel zoom and trackpad pinch, two-finger touch pan/pinch). Deltas and
+ *  centers are canvas-local CSS px. */
 export interface PointerNavTarget {
   pan(delta: Point): void;
   zoomIn(center: Point): void;
@@ -89,8 +91,8 @@ export interface PointerControllerOptions {
  * - Touch: pointers feed the {@link MultiTouchGesture} first; a second finger
  *   hands it navigation and cancels the tool stream, so a finger never both
  *   operates a tool and navigates.
- * - Wheel: zoom anchored at the cursor, non-passive so page scroll/zoom is
- *   suppressed over the canvas.
+ * - Wheel: scrolls the board; with ctrl or ⌘ held, and as a trackpad pinch
+ *   (a ctrl-wheel), zooms at the cursor. Non-passive, so page scroll/zoom is suppressed over the canvas.
  *
  * Pointer capture keeps move/up flowing when a drag leaves the canvas; a
  * pointer that loses it while still pressed ends its stream like a cancel,
@@ -297,12 +299,12 @@ export class PointerController {
   }
 
   /**
-   * Every wheel input zooms at the pointer, continuously: a mouse wheel and a
-   * two-finger trackpad swipe alike. The DOM does not say which device
-   * scrolled, and no heuristic tells them apart reliably on every device, so
-   * nothing here tries — the board pans by drag. A trackpad pinch, which
-   * browsers deliver as a ctrl-wheel of small deltas ({@link isPinch}), zooms
-   * at its own rate.
+   * The wheel scrolls the board, ctrl or ⌘ held makes it zoom at the pointer,
+   * the way design tools navigate. The DOM does not say which device
+   * scrolled, so a mouse wheel and a two-finger trackpad swipe both scroll and
+   * nothing here tries to tell them apart. A trackpad pinch, which browsers
+   * deliver as a ctrl-wheel of small deltas ({@link isPinch}), zooms at its
+   * own rate.
    */
   public onWheel(e: WheelEventLike): void {
     e.preventDefault();
@@ -317,17 +319,25 @@ export class PointerController {
       this.opts.nav.zoomBy(Math.exp(-e.deltaY * PINCH_ZOOM_PER_PX), center);
       return;
     }
+    // The scroll events carrying the fingers' drift during a pinch.
     if (this._wheelPinch && !e.ctrlKey) return;
 
-    if (e.deltaY === 0) return;
-    // Continuous, proportional to the delta: a notch is one zoom-button step,
-    // input merged into one event zooms by all of it, and a high-resolution
-    // wheel zooms smoothly. The zoom buttons keep their ladder; `zoomBy`
-    // resyncs it so a button press continues from here.
-    this.opts.nav.zoomBy(
-      Math.exp(-wheelPixels(e, e.deltaY) * WHEEL_ZOOM_PER_PX),
-      center
-    );
+    if (e.ctrlKey || e.metaKey) {
+      if (e.deltaY === 0) return;
+      // Continuous, proportional to the delta: a notch is one zoom-button
+      // step, input merged into one event zooms by all of it, and a
+      // high-resolution wheel zooms smoothly. The zoom buttons keep their
+      // ladder; `zoomBy` resyncs it so a button press continues from here.
+      this.opts.nav.zoomBy(
+        Math.exp(-wheelPixels(e, e.deltaY) * WHEEL_ZOOM_PER_PX),
+        center
+      );
+      return;
+    }
+
+    const scroll = wheelScroll(e);
+    if (scroll.x === 0 && scroll.y === 0) return;
+    this.opts.nav.pan(new Point(-scroll.x, -scroll.y));
   }
 
   private _endPan(): void {

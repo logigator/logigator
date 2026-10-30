@@ -467,7 +467,7 @@ const en = {
   },
   statusBar: {
     modes: {
-      pan: 'Pan: drag to move the board · scroll or pinch to zoom',
+      pan: 'Pan: drag or scroll to move the board · Ctrl+scroll or pinch to zoom',
       wireTool:
         'Wire tool: drag to draw · tap a port to negate · tap a junction to connect/disconnect · tap to select · {{additiveKey}} to add or remove',
       sel: 'Select: drag a box to select · drag the selection to move · hold {{scissorKey}} to cut wires',
@@ -1195,7 +1195,7 @@ const en = {
           moveAround: {
             title: 'Move around',
             textDesktop:
-              'Scroll to zoom, drag with the right or middle button to pan.',
+              'Scroll to pan, hold Ctrl (⌘ on a Mac) and scroll or pinch to zoom.',
             textCompact: 'Pinch to zoom, drag with two fingers to pan.'
           },
           placeAnd: {

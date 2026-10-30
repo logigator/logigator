@@ -113,21 +113,26 @@ it is fresh before the next render.
 - **Touch** — pointers feed `MultiTouchGesture` first; a second finger hands
   over to two-finger pan/pinch and cancels the tool stream, so one finger never
   both operates a tool and navigates.
-- **Wheel** — non-passive, so page scroll/zoom stops. A mouse wheel zooms at
-  the cursor, continuously and in proportion to its delta (`zoomBy`): a 100 px
-  notch is one zoom-button step (×1.2). Proportional matters because Chromium
-  merges the wheel input between two frames into one event and sums its delta,
-  so a fast scroll over a slow frame is one event several notches long. The
-  1.2 ladder belongs to the zoom buttons alone; `zoomBy` resyncs it so a button
-  press continues from wherever the wheel left the zoom. Every wheel input zooms
-  — a two-finger trackpad swipe as much as a mouse wheel. The DOM does not say
-  which device scrolled, and no heuristic tells them apart on every device (a
+- **Wheel** — non-passive, so page scroll/zoom stops. The board navigates
+  like a design tool: a plain wheel event pans it by its `deltaX`/`deltaY`
+  (`wheel-input.ts` `wheelScroll`, in pixels whatever the `deltaMode`; `Shift`
+  turns a vertical-only wheel sideways), and with `Ctrl` or `⌘` held it zooms
+  at the cursor. The DOM does not say which device scrolled, and no heuristic
+  tells a mouse wheel from a two-finger trackpad swipe on every device (a
   horizontal-component rule flipped near-vertical swipes between zoom and pan
   mid-gesture, and fractional deltas come from high-resolution mice too), so
-  the board pans by drag only. A trackpad pinch, which browsers send as a
-  ctrl-wheel of small pixel deltas (`wheel-input.ts` `isPinch`), zooms at its
-  own rate, always at the pointer: the scroll events a browser interleaves with
-  a pinch, carrying the fingers' drift, are dropped until the pinch ends.
+  both pan alike. The modifier zoom is continuous and in proportion to its
+  delta (`zoomBy`): a 100 px notch is one zoom-button step (×1.2).
+  Proportional matters because Chromium merges the wheel input between two
+  frames into one event and sums its delta, so a fast scroll over a slow frame
+  is one event several notches long. The 1.2 ladder belongs to the zoom
+  buttons alone; `zoomBy` resyncs it so a button press continues from wherever
+  the wheel left the zoom. A wheel pan renders through a `'single'` ticker
+  signal from the board's `pan`, a no-op while a drag runs the ticker.
+- **Trackpad pinch** — browsers send it as a ctrl-wheel of small pixel deltas
+  (`isPinch`). It zooms at its own rate, always at the pointer: the scroll
+  events a browser interleaves with a pinch, carrying the fingers' drift, are
+  dropped until the pinch ends.
 
 The `PointerNavTarget` comes from the host (the board maps it onto the active
 project plus ticker; a watch wraps `pan` to re-blit). Handlers are public so

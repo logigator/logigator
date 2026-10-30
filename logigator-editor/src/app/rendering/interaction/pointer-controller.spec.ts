@@ -187,78 +187,81 @@ describe('PointerController', () => {
   // One notch of 100 px is one zoom-button step.
   const notches = (n: number) => Math.pow(1.2, n);
   const lastZoom = () => vi.mocked(nav.zoomBy).mock.lastCall!;
+  const lastPan = () => vi.mocked(nav.pan).mock.lastCall![0];
 
-  it('zooms at the cursor on wheel and suppresses the page scroll', () => {
+  describe('wheel', () => {
     const preventDefault = vi.fn();
-    controller.onWheel({
-      clientX: 100 + 32,
-      clientY: 50 + 16,
-      deltaY: 100,
-      preventDefault
-    });
-    expect(preventDefault).toHaveBeenCalled();
-    expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
-    expect(lastZoom()[1]).toMatchObject({ x: 32, y: 16 });
+    const at = (timeStamp: number, fields: Partial<WheelEventLike>) =>
+      controller.onWheel({
+        clientX: 100 + 32,
+        clientY: 50 + 16,
+        deltaY: 0,
+        preventDefault,
+        timeStamp,
+        ...fields
+      });
 
-    controller.onWheel({
-      clientX: 100,
-      clientY: 50,
-      deltaY: -100,
-      preventDefault
-    });
-    expect(lastZoom()[0]).toBeCloseTo(notches(1), 10);
-  });
+    it('scrolls the board and suppresses the page scroll', () => {
+      at(0, { deltaY: 100 });
+      expect(preventDefault).toHaveBeenCalled();
+      expect(lastPan()).toMatchObject({ x: -0, y: -100 });
 
-  it('zooms in proportion to the delta, so merged and fine input are not lost', () => {
-    const preventDefault = vi.fn();
-    // Five notches Chromium merged into one event over a slow frame.
-    controller.onWheel({
-      clientX: 100,
-      clientY: 50,
-      deltaY: 500,
-      preventDefault
+      at(1000, { deltaX: -30, deltaY: 12 });
+      expect(lastPan()).toMatchObject({ x: 30, y: -12 });
+      expect(nav.zoomBy).not.toHaveBeenCalled();
     });
-    expect(lastZoom()[0]).toBeCloseTo(1 / notches(5), 10);
 
-    // Firefox's line mode: two notches of three lines each.
-    controller.onWheel({
-      clientX: 100,
-      clientY: 50,
-      deltaY: -6,
-      deltaMode: 1,
-      preventDefault
+    it('scrolls by lines and pages in pixels', () => {
+      // Firefox's line mode: one notch of three lines.
+      at(0, { deltaY: 3, deltaMode: 1 });
+      expect(lastPan().y).toBeCloseTo(-100, 10);
+      at(1000, { deltaY: 1, deltaMode: 2 });
+      expect(lastPan().y).toBe(-800);
     });
-    expect(lastZoom()[0]).toBeCloseTo(notches(2), 10);
 
-    // A high-resolution wheel's fraction of a notch.
-    controller.onWheel({
-      clientX: 100,
-      clientY: 50,
-      deltaY: -25,
-      preventDefault
-    });
-    expect(lastZoom()[0]).toBeCloseTo(notches(0.25), 10);
-  });
+    it('scrolls sideways with shift held, unless the browser swapped the axes', () => {
+      at(0, { shiftKey: true, deltaY: 100 });
+      expect(lastPan()).toMatchObject({ x: -100, y: -0 });
 
-  it('zooms for a high-resolution wheel reporting fractional deltas', () => {
-    // Chromium on Linux: a notch of a high-resolution wheel.
-    controller.onWheel({
-      clientX: 100,
-      clientY: 50,
-      deltaY: 53.333,
-      preventDefault: vi.fn()
+      at(1000, { shiftKey: true, deltaX: 100 });
+      expect(lastPan()).toMatchObject({ x: -100, y: -0 });
     });
-    expect(lastZoom()[0]).toBeCloseTo(1 / notches(0.53333), 10);
-  });
 
-  it('ignores a wheel event with no vertical delta', () => {
-    controller.onWheel({
-      clientX: 100,
-      clientY: 50,
-      deltaY: 0,
-      preventDefault: vi.fn()
+    it('ignores a wheel event that moves nothing', () => {
+      at(0, {});
+      at(1000, { shiftKey: true });
+      expect(nav.pan).not.toHaveBeenCalled();
+      expect(nav.zoomBy).not.toHaveBeenCalled();
     });
-    expect(nav.zoomBy).not.toHaveBeenCalled();
+
+    it('zooms at the cursor with ctrl or cmd held', () => {
+      at(0, { ctrlKey: true, deltaY: 100 });
+      expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
+      expect(lastZoom()[1]).toMatchObject({ x: 32, y: 16 });
+
+      at(1000, { metaKey: true, deltaY: -100 });
+      expect(lastZoom()[0]).toBeCloseTo(notches(1), 10);
+      expect(nav.pan).not.toHaveBeenCalled();
+    });
+
+    it('zooms in proportion to the delta, so merged and fine input are not lost', () => {
+      // Five notches Chromium merged into one event over a slow frame.
+      at(0, { metaKey: true, deltaY: 500 });
+      expect(lastZoom()[0]).toBeCloseTo(1 / notches(5), 10);
+
+      // Firefox's line mode: two notches of three lines each.
+      at(1000, { ctrlKey: true, deltaY: -6, deltaMode: 1 });
+      expect(lastZoom()[0]).toBeCloseTo(notches(2), 10);
+
+      // A high-resolution wheel's fraction of a notch (Chromium on Linux).
+      at(2000, { ctrlKey: true, deltaY: 53.333 });
+      expect(lastZoom()[0]).toBeCloseTo(1 / notches(0.53333), 10);
+    });
+
+    it('zooms a ctrl-held mouse wheel by notches, not at the pinch rate', () => {
+      at(0, { ctrlKey: true, deltaY: 3, deltaMode: 1 });
+      expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
+    });
   });
 
   describe('trackpad input', () => {
@@ -272,29 +275,10 @@ describe('PointerController', () => {
         timeStamp,
         ...fields
       });
-
-    it('zooms with a two-finger swipe, like a wheel', () => {
-      at(0, { deltaY: -7 });
-      expect(lastZoom()[0]).toBeCloseTo(notches(0.07), 10);
-      expect(lastZoom()[1]).toMatchObject({ x: 32, y: 16 });
-    });
-
-    it('drops the finger drift a browser interleaves with a pinch', () => {
-      at(0, { ctrlKey: true, deltaY: -5 });
-      // The fingers' midpoint moving, sent between the pinch's own events.
-      at(8, { deltaY: -3 });
-      at(16, { ctrlKey: true, deltaY: -4 });
-      at(24, { deltaY: 4 });
-
-      // Only the pinch's own events zoom, each at the pinch rate.
-      expect(vi.mocked(nav.zoomBy).mock.calls.map(([f]) => f)).toEqual([
-        Math.exp(0.075),
-        Math.exp(0.06)
-      ]);
-
-      // Once the pinch has ended, a swipe zooms again.
-      at(300, { deltaY: -3 });
-      expect(nav.zoomBy).toHaveBeenCalledTimes(3);
+    it('pans with a two-finger swipe, like a wheel', () => {
+      at(0, { deltaX: 4, deltaY: -7 });
+      expect(lastPan()).toMatchObject({ x: -4, y: 7 });
+      expect(nav.zoomBy).not.toHaveBeenCalled();
     });
 
     it('zooms continuously with a pinch, at the pointer', () => {
@@ -306,14 +290,23 @@ describe('PointerController', () => {
       expect(center).toMatchObject({ x: 32, y: 16 });
     });
 
-    it('zooms a ctrl-held mouse wheel in pixels at the wheel rate, not the pinch rate', () => {
-      at(0, { ctrlKey: true, deltaY: 100 });
-      expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
-    });
+    it('drops the finger drift a browser interleaves with a pinch', () => {
+      at(0, { ctrlKey: true, deltaY: -5 });
+      // The fingers' midpoint moving, sent between the pinch's own events.
+      at(8, { deltaY: -3 });
+      at(16, { ctrlKey: true, deltaY: -4 });
+      at(24, { deltaX: 2, deltaY: 4 });
 
-    it('zooms a ctrl-held mouse wheel by notches, not at the pinch rate', () => {
-      at(0, { ctrlKey: true, deltaY: 3, deltaMode: 1 });
-      expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
+      // Only the pinch's own events zoom, each at the pinch rate.
+      expect(vi.mocked(nav.zoomBy).mock.calls.map(([f]) => f)).toEqual([
+        Math.exp(0.075),
+        Math.exp(0.06)
+      ]);
+      expect(nav.pan).not.toHaveBeenCalled();
+
+      // Once the pinch has ended, a swipe pans again.
+      at(300, { deltaY: -3 });
+      expect(nav.pan).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -467,7 +460,7 @@ describe('PointerController', () => {
 
     expect(tool.down).not.toHaveBeenCalled();
     expect(tool.hover).not.toHaveBeenCalled();
-    expect(nav.zoomBy).not.toHaveBeenCalled();
+    expect(nav.pan).not.toHaveBeenCalled();
   });
 
   // A disposed project stays reachable until the host re-homes the
@@ -494,6 +487,6 @@ describe('PointerController', () => {
     expect(tool.move).not.toHaveBeenCalled();
     expect(tool.hover).not.toHaveBeenCalled();
     expect(tool.up).not.toHaveBeenCalled();
-    expect(nav.zoomBy).not.toHaveBeenCalled();
+    expect(nav.pan).not.toHaveBeenCalled();
   });
 });

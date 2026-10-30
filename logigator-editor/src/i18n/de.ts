@@ -473,7 +473,7 @@ const de: TranslationSchema = {
   },
   statusBar: {
     modes: {
-      pan: 'Schwenken: ziehen, um die Arbeitsfläche zu verschieben · scrollen oder mit zwei Fingern zoomen',
+      pan: 'Schwenken: ziehen oder scrollen, um die Arbeitsfläche zu verschieben · Ctrl+Scrollen oder mit zwei Fingern zoomen',
       wireTool:
         'Leitungswerkzeug: ziehen zum Zeichnen · auf einen Anschluss tippen zum Negieren · auf eine Kreuzung tippen zum Verbinden/Trennen · tippen zum Auswählen · {{additiveKey}} zum Hinzufügen oder Entfernen',
       sel: 'Auswählen: Auswahlrahmen ziehen zum Selektieren · Auswahl ziehen zum Verschieben · {{scissorKey}} halten zum Schneiden von Leitungen',
@@ -1220,7 +1220,7 @@ const de: TranslationSchema = {
           moveAround: {
             title: 'Navigieren',
             textDesktop:
-              'Scrollen zum Zoomen, mit rechter oder mittlerer Maustaste ziehen zum Schwenken.',
+              'Scrollen zum Schwenken, mit gedrücktem Ctrl (⌘ auf dem Mac) scrollen oder zwei Finger aufziehen zum Zoomen.',
             textCompact:
               'Spreizen zum Zoomen, mit zwei Fingern ziehen zum Schwenken.'
           },

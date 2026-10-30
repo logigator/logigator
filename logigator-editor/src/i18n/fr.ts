@@ -471,7 +471,7 @@ const fr: TranslationSchema = {
   },
   statusBar: {
     modes: {
-      pan: 'Déplacement : faites glisser pour déplacer le plan de travail · molette ou pincement pour zoomer',
+      pan: 'Déplacement : faites glisser ou défiler pour déplacer le plan de travail · Ctrl+molette ou pincement pour zoomer',
       wireTool:
         "Outil fil : faites glisser pour tracer · touchez un port pour l'inverser · touchez une jonction pour connecter/déconnecter · touchez pour sélectionner · {{additiveKey}} pour ajouter ou retirer",
       sel: 'Sélection : faites glisser un cadre pour sélectionner · faites glisser la sélection pour la déplacer · maintenez {{scissorKey}} pour couper les fils',
@@ -1213,7 +1213,7 @@ const fr: TranslationSchema = {
           moveAround: {
             title: 'Se déplacer',
             textDesktop:
-              'Faites défiler pour zoomer, faites glisser avec le bouton droit ou le bouton central pour vous déplacer.',
+              'Faites défiler pour vous déplacer, maintenez Ctrl (⌘ sur Mac) en faisant défiler ou pincez pour zoomer.',
             textCompact:
               'Pincez pour zoomer, faites glisser avec deux doigts pour vous déplacer.'
           },
