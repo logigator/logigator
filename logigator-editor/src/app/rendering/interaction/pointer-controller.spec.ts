@@ -273,6 +273,23 @@ describe('PointerController', () => {
         timeStamp,
         ...fields
       });
+    const gesture = (
+      phase: 'start' | 'change' | 'end',
+      timeStamp: number,
+      scale: number
+    ) => {
+      const event = {
+        clientX: 100 + 32,
+        clientY: 50 + 16,
+        scale,
+        timeStamp,
+        preventDefault: vi.fn()
+      };
+      if (phase === 'start') controller.onGestureStart(event);
+      else if (phase === 'change') controller.onGestureChange(event);
+      else controller.onGestureEnd(event);
+      return event;
+    };
 
     it('zooms with a straight vertical two-finger swipe, like a wheel', () => {
       at(0, { deltaY: -7 });
@@ -342,6 +359,44 @@ describe('PointerController', () => {
     it('zooms a ctrl-held mouse wheel by notches, not at the pinch rate', () => {
       at(0, { ctrlKey: true, deltaY: 3, deltaMode: 1 });
       expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
+    });
+
+    it("zooms with Safari's pinch by the change in scale, at the pointer", () => {
+      const start = gesture('start', 0, 1);
+      expect(start.preventDefault).toHaveBeenCalled();
+      gesture('change', 16, 1.5);
+      gesture('change', 32, 1.2);
+      const end = gesture('end', 48, 1.2);
+      expect(end.preventDefault).toHaveBeenCalled();
+
+      const calls = vi.mocked(nav.zoomBy).mock.calls;
+      expect(calls.map(([f]) => f)).toEqual([1.5, 1.2 / 1.5]);
+      expect(calls[0][1]).toMatchObject({ x: 32, y: 16 });
+    });
+
+    it('counts a pinch once when Safari sends it as gestures and wheel alike', () => {
+      gesture('start', 0, 1);
+      at(8, { ctrlKey: true, deltaY: -5 });
+      gesture('change', 16, 1.1);
+      at(20, { deltaY: -2 });
+      gesture('end', 32, 1.1);
+      at(40, { ctrlKey: true, deltaY: -1 });
+
+      expect(vi.mocked(nav.zoomBy).mock.calls.map(([f]) => f)).toEqual([1.1]);
+      expect(nav.pan).not.toHaveBeenCalled();
+
+      // A later pinch arriving as wheel events alone zooms again.
+      at(1000, { ctrlKey: true, deltaY: -5 });
+      expect(nav.zoomBy).toHaveBeenCalledTimes(2);
+    });
+
+    it('leaves a touchscreen pinch Safari also reports as gestures to the fingers', () => {
+      controller.onPointerDown(touch(1, 110, 60));
+      controller.onPointerDown(touch(2, 150, 60));
+      gesture('start', 0, 1);
+      gesture('change', 16, 2);
+
+      expect(nav.zoomBy).not.toHaveBeenCalled();
     });
   });
 
