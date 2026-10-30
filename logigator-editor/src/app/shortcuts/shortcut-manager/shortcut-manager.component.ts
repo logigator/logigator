@@ -70,7 +70,8 @@ export class ShortcutManagerComponent {
         ShortcutActionEnum.TOOL_ERASE,
         ShortcutActionEnum.TOOL_PLACE_TEXT,
         ShortcutActionEnum.SELECT_SCISSOR,
-        ShortcutActionEnum.SELECT_ADDITIVE
+        ShortcutActionEnum.SELECT_ADDITIVE,
+        ShortcutActionEnum.PAN_HOLD
       ]
     },
     {
@@ -83,7 +84,8 @@ export class ShortcutManagerComponent {
   protected allowsModifierOnly(action: ShortcutActionEnum): boolean {
     return (
       action === ShortcutActionEnum.SELECT_SCISSOR ||
-      action === ShortcutActionEnum.SELECT_ADDITIVE
+      action === ShortcutActionEnum.SELECT_ADDITIVE ||
+      action === ShortcutActionEnum.PAN_HOLD
     );
   }
 

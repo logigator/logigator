@@ -135,6 +135,12 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
     shift: false,
     alt: false
   },
+  [ShortcutActionEnum.PAN_HOLD]: {
+    key: ' ',
+    ctrl: false,
+    shift: false,
+    alt: false
+  },
   [ShortcutActionEnum.TOOL_ERASE]: {
     key: 'e',
     ctrl: false,
