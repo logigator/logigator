@@ -4,27 +4,27 @@ Die Arbeitsfläche ist das Raster, auf dem du baust. Komponenten und Leitungen r
 
 ## Bewegen {#moving-around}
 
-Das Mausrad zoomt an der Zeigerposition, ebenso ein Wischen mit zwei Fingern oder Aufziehen auf dem Trackpad. Die Zoom-Schaltflächen in der Werkzeugleiste und Ansicht → Einzoomen, Auszoomen und Zoom 100% tun dasselbe in festen Stufen.
+Das Mausrad und ein Wischen mit zwei Fingern auf dem Trackpad verschieben die Arbeitsfläche; mit gedrücktem `Shift` scrollt das Mausrad seitwärts. Zum Zoomen an der Zeigerposition hältst du beim Scrollen `Ctrl` (`⌘` auf dem Mac) gedrückt oder ziehst auf dem Trackpad zwei Finger auseinander. Die Zoom-Schaltflächen in der Werkzeugleiste und Ansicht → Einzoomen, Auszoomen und Zoom 100% zoomen in festen Stufen.
 
-Zum Verschieben der Ansicht ziehst du mit der rechten oder mittleren Maustaste. Das funktioniert in jedem Werkzeug. Ist das Werkzeug „Schwenken“ aktiv, verschiebt auch Ziehen mit der linken Taste.
+Die Ansicht verschiebst du auch, indem du mit der mittleren Maustaste ziehst, oder mit der linken, während du `Space` hältst. Das funktioniert in jedem Werkzeug. Ist das Werkzeug „Schwenken“ aktiv, verschiebt Ziehen mit der linken Taste auch ohne `Space`.
 
 Die Minimap in der rechten unteren Ecke zeigt die ganze Schaltung mit einem Rahmen um den sichtbaren Ausschnitt. Klicke oder ziehe darin, um die Ansicht dorthin zu bewegen. „Minimap ausblenden“ klappt sie ein, und der Editor merkt sich das.
 
 ## Werkzeuge {#tools}
 
-Es ist immer ein Werkzeug aktiv. Jedes hat eine Schaltfläche in der Werkzeugleiste und ein Kürzel mit einer Taste.
+Es ist immer ein Werkzeug aktiv. Jedes hat ein Kürzel mit einer Taste und eine Schaltfläche in der Werkzeugleiste, wobei sich Auswählen und Schwenken eine teilen: Der Pfeil daneben wählt das andere. Der Editor startet mit Auswählen.
 
 | Werkzeug         | Taste | Was Ziehen bewirkt                                                                     |
 | ---------------- | ----- | -------------------------------------------------------------------------------------- |
-| Schwenken        | `P`   | Verschiebt die Ansicht, oder die Auswahl, wenn du in ihr beginnst                      |
-| Leitungswerkzeug | `W`   | Zeichnet eine Leitung (siehe [Leitungen und Verbindungen](docs:wires-and-connections)) |
 | Auswählen        | `S`   | Zieht einen Auswahlrahmen auf, oder verschiebt die Auswahl, wenn du in ihr beginnst    |
+| Schwenken        | `P`   | Verschiebt die Ansicht, und sonst nichts                                               |
+| Leitungswerkzeug | `W`   | Zeichnet eine Leitung (siehe [Leitungen und Verbindungen](docs:wires-and-connections)) |
 | Radiergummi      | `E`   | Löscht alles, worüber es fährt                                                         |
 | Text             | `T`   | Setzt eine Textbeschriftung (ein Klick genügt)                                         |
 
-Ein Klick ohne Ziehen wählt in Schwenken, Leitungswerkzeug und Auswählen das Element unter dem Zeiger aus. Das Leitungswerkzeug prüft vorher, ob du einen Anschluss oder eine Leitungskreuzung getroffen hast, denn ein Tippen darauf negiert oder verbindet stattdessen.
+Ein Klick ohne Ziehen wählt in Auswählen und im Leitungswerkzeug das Element unter dem Zeiger aus. Das Leitungswerkzeug prüft vorher, ob du einen Anschluss oder eine Leitungskreuzung getroffen hast, denn ein Tippen darauf negiert oder verbindet stattdessen.
 
-![Die fünf Werkzeug-Schaltflächen in der Werkzeugleiste.](./images/tool-buttons.webp)
+![Die Werkzeug-Schaltflächen in der Werkzeugleiste.](./images/tool-buttons.webp)
 
 ## Komponenten platzieren {#placing-components}
 
@@ -34,7 +34,7 @@ Wo die Vorschau eine andere Komponente überlappt, wird nichts platziert. Mit `E
 
 ## Auswählen und verschieben {#selecting-and-moving}
 
-Ziehe mit „Auswählen“ einen Rahmen über die gewünschten Elemente. Jede Komponente und jede Leitung, die der Rahmen berührt, wird ausgewählt. Halte `Ctrl` (`⌘` auf dem Mac), um die Auswahl zu ändern statt sie zu ersetzen: Ein Klick fügt ein Element hinzu oder entfernt es, ein Rahmen fügt hinzu, was er abdeckt. Das funktioniert auch in Schwenken und im Leitungswerkzeug.
+Ziehe mit „Auswählen“ einen Rahmen über die gewünschten Elemente. Jede Komponente und jede Leitung, die der Rahmen berührt, wird ausgewählt. Halte `Ctrl` (`⌘` auf dem Mac), um die Auswahl zu ändern statt sie zu ersetzen: Ein Klick fügt ein Element hinzu oder entfernt es, ein Rahmen fügt hinzu, was er abdeckt. Das funktioniert auch im Leitungswerkzeug.
 
 Ziehe die Auswahl, um sie zu verschieben. `R` dreht sie im Uhrzeigersinn, `Shift+R` dagegen, und die Pfeiltasten verschieben sie um einen Rasterschritt. Landet die Auswahl auf etwas anderem, bleibt sie angehoben und folgt deinen nächsten Bewegungen, bis sie auf einem freien Platz liegt.
 
@@ -42,7 +42,7 @@ Ziehe die Auswahl, um sie zu verschieben. `R` dreht sie im Uhrzeigersinn, `Shift
 
 1. Bricht ein laufendes Ziehen ab.
 2. Hebt die Auswahl auf.
-3. Wechselt zu Schwenken.
+3. Wechselt zu Auswählen.
 
 ## Leitungen an der Auswahlkante schneiden {#cutting-wires-at-the-selection-edge}
 

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { isPinch, WheelEventLike, wheelPixels } from './wheel-input';
+import {
+  isPinch,
+  WheelEventLike,
+  wheelPixels,
+  wheelScroll
+} from './wheel-input';
 
 const wheel = (fields: Partial<WheelEventLike>): WheelEventLike => ({
   clientX: 0,
@@ -30,5 +35,29 @@ describe('wheelPixels', () => {
     expect(wheelPixels({ deltaMode: 0 }, 42)).toBe(42);
     expect(wheelPixels({ deltaMode: 1 }, 3)).toBeCloseTo(100, 10);
     expect(wheelPixels({ deltaMode: 2 }, 1)).toBe(800);
+  });
+});
+
+describe('wheelScroll', () => {
+  it('reads both axes in pixels', () => {
+    expect(wheelScroll(wheel({ deltaX: 4, deltaY: -7 }))).toEqual({
+      x: 4,
+      y: -7
+    });
+    expect(wheelScroll(wheel({ deltaY: 3, deltaMode: 1 })).y).toBeCloseTo(
+      100,
+      10
+    );
+  });
+
+  it('turns a vertical wheel sideways with shift held', () => {
+    expect(wheelScroll(wheel({ shiftKey: true, deltaY: 100 }))).toEqual({
+      x: 100,
+      y: 0
+    });
+    // The browser already swapped the axes.
+    expect(
+      wheelScroll(wheel({ shiftKey: true, deltaX: 100, deltaY: 0 }))
+    ).toEqual({ x: 100, y: 0 });
   });
 });

@@ -95,7 +95,6 @@ const fr: TranslationSchema = {
       fpsCounter: 'Compteur FPS',
       showGrid: 'Afficher la grille',
       autoStartSimulation: 'Démarrage automatique de la simulation',
-      dragSelectionInPanMode: 'Faire glisser la sélection en mode Déplacement',
       highlightConflicts: 'Mettre en évidence les conflits',
       onboardingTips: "Afficher les conseils d'intégration"
     },
@@ -106,8 +105,6 @@ const fr: TranslationSchema = {
         "Dessine la grille de points. Les composants s'alignent sur la grille dans tous les cas.",
       autoStartSimulation:
         'Lance le circuit dès que vous entrez en simulation. Désactivé, elle attend en pause au tick 0.',
-      dragSelectionInPanMode:
-        'Un glisser avec Déplacement qui commence dans la sélection déplace la sélection. Désactivé, tout glisser déplace la vue.',
       highlightConflicts:
         "Pendant la simulation, dessine un fil en orange quand les sorties qui le pilotent donnent des valeurs différentes, ou quand une bascule SR a reçu un front d'horloge avec S et R à 1.",
       onboardingTips:
@@ -471,7 +468,7 @@ const fr: TranslationSchema = {
   },
   statusBar: {
     modes: {
-      pan: 'Déplacement : faites glisser pour déplacer le plan de travail · molette ou pincement pour zoomer',
+      pan: 'Déplacement : faites glisser ou défiler pour déplacer le plan de travail · Ctrl+molette ou pincement pour zoomer',
       wireTool:
         "Outil fil : faites glisser pour tracer · touchez un port pour l'inverser · touchez une jonction pour connecter/déconnecter · touchez pour sélectionner · {{additiveKey}} pour ajouter ou retirer",
       sel: 'Sélection : faites glisser un cadre pour sélectionner · faites glisser la sélection pour la déplacer · maintenez {{scissorKey}} pour couper les fils',
@@ -868,6 +865,7 @@ const fr: TranslationSchema = {
     zoomOut: 'Zoom arrière',
     zoomIn: 'Zoom avant',
     pan: 'Déplacement',
+    moveTools: 'Sélectionner ou Déplacement',
     parts: 'Pièces',
     placeComponent: 'Placement du composant',
 
@@ -1133,6 +1131,7 @@ const fr: TranslationSchema = {
       toolSelect: 'Sélectionner',
       selectScissor: 'Couper les fils au bord de la sélection (maintenir)',
       selectAdditive: 'Ajouter à la sélection ou l’en retirer (maintenir)',
+      panHold: 'Déplacer la vue en faisant glisser (maintenir)',
       toolErase: 'Effacer',
       toolPlaceText: 'Placer du texte',
       toggleSimulation: 'Démarrer/Arrêter la simulation',
@@ -1213,7 +1212,7 @@ const fr: TranslationSchema = {
           moveAround: {
             title: 'Se déplacer',
             textDesktop:
-              'Faites défiler pour zoomer, faites glisser avec le bouton droit ou le bouton central pour vous déplacer.',
+              'Faites défiler pour vous déplacer, maintenez Ctrl (⌘ sur Mac) en faisant défiler ou pincez pour zoomer.',
             textCompact:
               'Pincez pour zoomer, faites glisser avec deux doigts pour vous déplacer.'
           },

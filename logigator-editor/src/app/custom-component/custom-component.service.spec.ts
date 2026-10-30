@@ -233,7 +233,7 @@ describe('CustomComponentService', () => {
 
     await service.openComponentForEdit('browser-x');
 
-    expect(workMode.mode()).toBe(WorkMode.PAN);
+    expect(workMode.mode()).toBe(WorkMode.SELECT);
     expect(workMode.selectedComponentType()).toBeNull();
   });
 
@@ -590,7 +590,7 @@ describe('CustomComponentService', () => {
 
     await service.deleteComponent(masterTypeId);
 
-    expect(workMode.mode()).toBe(WorkMode.PAN);
+    expect(workMode.mode()).toBe(WorkMode.SELECT);
     expect(workMode.selectedComponentType()).toBeNull();
   });
 

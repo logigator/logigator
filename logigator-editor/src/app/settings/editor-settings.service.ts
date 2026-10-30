@@ -47,14 +47,6 @@ export class EditorSettingsService {
     () => this.persist()
   );
 
-  public readonly dragSelectionInPanMode = new EditorSetting(
-    'dragSelectionInPanMode',
-    'settings.options.dragSelectionInPanMode',
-    'settings.descriptions.dragSelectionInPanMode',
-    this.stored['dragSelectionInPanMode'] ?? true,
-    () => this.persist()
-  );
-
   /** Master switch for the tutorials, hints and first-run nudge. */
   public readonly onboardingTips = new EditorSetting(
     'onboardingTips',
@@ -68,7 +60,6 @@ export class EditorSettingsService {
     this.showGrid,
     this.autoStartSimulation,
     this.highlightConflicts,
-    this.dragSelectionInPanMode,
     this.fpsCounter,
     this.onboardingTips
   ];

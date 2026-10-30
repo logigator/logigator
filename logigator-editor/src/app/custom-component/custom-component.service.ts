@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
-import { WorkMode } from '../work-mode/work-mode.enum';
+import { DEFAULT_WORK_MODE } from '../work-mode/work-mode.enum';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { PersistenceService } from '../persistence/persistence.service';
 import { buildProject, instantiateBody } from '../persistence/circuit-builder';
@@ -277,7 +277,7 @@ export class CustomComponentService {
     }
     // The palette tile is gone, so a placement still pointed at it must go.
     if (this.workModeService.selectedComponentType() === masterTypeId) {
-      this.workModeService.setMode(WorkMode.PAN);
+      this.workModeService.setMode(DEFAULT_WORK_MODE);
     }
     this.registry.removeMaster(masterTypeId);
 
@@ -358,7 +358,7 @@ export class CustomComponentService {
       typeId !== undefined &&
       this.workModeService.selectedComponentType() === typeId
     ) {
-      this.workModeService.setMode(WorkMode.PAN);
+      this.workModeService.setMode(DEFAULT_WORK_MODE);
     }
   }
 

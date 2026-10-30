@@ -8,7 +8,7 @@ No necesitas una cuenta. Sin ella, guardas los proyectos en el navegador o los [
 
 ## La ventana del editor {#the-editor-window}
 
-- El tablero, en el centro, es la cuadrícula en la que construyes. La rueda del ratón hace zoom, y arrastrar con el botón derecho o central desplaza la vista.
+- El tablero, en el centro, es la cuadrícula en la que construyes. Desplazar con la rueda mueve la vista, `Ctrl`+rueda (`⌘` en un Mac) hace zoom, y arrastrar con el botón central, o con el izquierdo mientras mantienes `Space`, también desplaza la vista.
 - La barra de título muestra el nombre del proyecto y dónde está guardado (Borrador, Local, Nube o Compartido), seguido de los menús Archivo, Editar, Vista y Ayuda. El lápiz junto al nombre cambia el nombre del proyecto.
 - La barra de herramientas tiene botones para guardar y abrir, el portapapeles, girar, deshacer y hacer zoom, luego las cinco [herramientas](docs:board-and-tools#tools) y, en el extremo derecho, «Iniciar simulación».
 - La paleta de componentes, a la izquierda, lista todas las piezas que puedes colocar.

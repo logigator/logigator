@@ -31,7 +31,6 @@ import { tunnelComponentConfig } from '../../components/component-types/tunnel/t
 import { inputComponentConfig } from '../../components/component-types/input/input.config';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
-import { EditorSettingsService } from '../../settings/editor-settings.service';
 import { ThemingService } from '../../theming/theming.service';
 import { environment } from '../../../environments/environment';
 import { Project, UserInputEvent } from '../../project/project';
@@ -201,6 +200,21 @@ describe('WorkModeRouter in SIMULATION mode', () => {
     expect(emissions).toEqual([]); // it was a pan, not a tap
   });
 
+  it('reports a pan only once the drag passes the tap threshold', () => {
+    router.setMode(WorkMode.SIMULATION);
+
+    router.down(makeInput(2, 2));
+    expect(router.hasSession()).toBe(true);
+    expect(router.panning()).toBe(false);
+
+    router.move(makeInput(60, 60));
+    expect(router.panning()).toBe(true);
+
+    router.up();
+    expect(router.panning()).toBe(false);
+    expect(router.hasSession()).toBe(false);
+  });
+
   describe('a press on a button', () => {
     let button: Component;
 
@@ -307,6 +321,92 @@ describe('WorkModeRouter in SELECT mode', () => {
   afterEach(() => {
     router.destroy();
     project.destroy({ children: true });
+  });
+
+  describe('with the pan key held', () => {
+    const holdSpace = () =>
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+    afterEach(() =>
+      window.dispatchEvent(new KeyboardEvent('keyup', { key: ' ' }))
+    );
+
+    it('pans on a drag instead of moving the selection', () => {
+      const comp = makeAnd(2);
+      comp.position.set(3, 3);
+      project.addComponent(comp);
+      project.selectionManager.select([comp], []);
+      const panSpy = vi.spyOn(project.viewport, 'pan');
+
+      holdSpace();
+      expect(router.panKeyHeld()).toBe(true);
+      router.down(makeInput(4, 4));
+      router.move(makeInput(60, 60));
+      expect(router.panning()).toBe(true);
+      router.up();
+
+      expect(panSpy).toHaveBeenCalled();
+      expect(comp.position.x).toBe(3);
+      expect(comp.position.y).toBe(3);
+    });
+
+    it('leaves the selection alone on a tap', () => {
+      const comp = makeAnd(2);
+      comp.position.set(3, 3);
+      project.addComponent(comp);
+      project.selectionManager.select([comp], []);
+
+      holdSpace();
+      tap(router, 20, 20);
+
+      expect(project.selectionManager.selectedComponents.has(comp)).toBe(true);
+    });
+  });
+
+  it('grabs a rect-less floating selection again, without cancelling it', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    const other = makeAnd(2, undefined, 8, 3);
+    project.addComponent(comp);
+    project.addComponent(other);
+    project.addComponent(makeAnd(2, undefined, 14, 3)); // the collision target
+
+    // A rect-less two-element selection: ctrl-clicks, so no grab rect exists.
+    withAdditiveKey(() => tap(router, 4, 4));
+    withAdditiveKey(() => tap(router, 9, 4));
+    expect(project.selectionManager.grabRect()).toBeNull();
+
+    // Dragging onto the third AND freezes the session, the elements detached.
+    router.down(makeInput(4, 4));
+    router.move(makeInput(15, 4));
+    router.up();
+    expect(router.hasActiveSession).toBe(true);
+
+    // Pressing the floating group anchors it again rather than cancelling —
+    // and dragging it clear of the third AND commits the move.
+    router.down(makeInput(15, 4));
+    router.move(makeInput(1, 4));
+    router.up();
+
+    expect(router.hasActiveSession).toBe(false);
+    expect(comp.position.x).toBe(0);
+  });
+
+  it('does not turn a keyboard round trip into a click', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    const other = makeAnd(2, undefined, 8, 3);
+    project.addComponent(comp);
+    project.addComponent(other);
+    project.selectionManager.select([comp, other], []);
+
+    router.down(makeInput(4, 4));
+    for (let i = 0; i < 4; i++) {
+      project.requestSelectionRotation(1); // four turns: net rotation zero
+    }
+    router.up();
+
+    // Nothing was committed, but the gesture turned the group: not a click.
+    expect(project.selectionManager.selectedComponents.size).toBe(2);
   });
 
   it('dragging from the grab margin (off the element bounds) moves the selection', () => {
@@ -558,170 +658,19 @@ describe('WorkModeRouter in PAN mode', () => {
     project = new Project();
     router = new WorkModeRouter();
     router.setProject(project);
+    router.setMode(WorkMode.PAN);
   });
 
   afterEach(() => {
-    // The settings persist to localStorage, which outlives the TestBed: put
-    // the default back so nothing leaks into the describes that follow.
-    TestBed.inject(EditorSettingsService).dragSelectionInPanMode.set(true);
     router.destroy();
     project.destroy({ children: true });
   });
 
-  it('drags the selection a tap just made, without panning', () => {
-    // AND at (3,3): body x ∈ [3, 5], y ∈ [3, 5].
-    const comp = makeAnd(2);
-    comp.position.set(3, 3);
-    project.addComponent(comp);
-    const panSpy = vi.spyOn(project.viewport, 'pan');
-
-    tap(router, 4, 4);
-    expect(project.selectionManager.selectedComponents.has(comp)).toBe(true);
-
-    router.down(makeInput(4, 4)); // pressing the selection grabs it
-    router.move(makeInput(8, 4));
-    router.up();
-
-    expect(comp.position.x).toBe(7);
-    expect(comp.position.y).toBe(3);
-    expect(panSpy).not.toHaveBeenCalled();
-    expect(project.actionManager.undoAvailable).toBe(true);
-  });
-
-  it('grabs a rect-less floating selection again, without cancelling it', () => {
-    const comp = makeAnd(2);
-    comp.position.set(3, 3);
-    const other = makeAnd(2, undefined, 8, 3);
-    project.addComponent(comp);
-    project.addComponent(other);
-    project.addComponent(makeAnd(2, undefined, 14, 3)); // the collision target
-
-    // A rect-less two-element selection: ctrl-clicks, so no grab rect exists.
-    withAdditiveKey(() => tap(router, 4, 4));
-    withAdditiveKey(() => tap(router, 9, 4));
-    expect(project.selectionManager.grabRect()).toBeNull();
-
-    // Dragging onto the third AND freezes the session, the elements detached.
-    router.down(makeInput(4, 4));
-    router.move(makeInput(15, 4));
-    router.up();
-    expect(router.hasActiveSession).toBe(true);
-
-    // Pressing the floating group anchors it again rather than cancelling —
-    // and dragging it clear of the third AND commits the move.
-    router.down(makeInput(15, 4));
-    router.move(makeInput(1, 4));
-    router.up();
-
-    expect(router.hasActiveSession).toBe(false);
-    expect(comp.position.x).toBe(0);
-  });
-
-  it('does not turn a keyboard round trip into a click', () => {
-    const comp = makeAnd(2);
-    comp.position.set(3, 3);
-    const other = makeAnd(2, undefined, 8, 3);
-    project.addComponent(comp);
-    project.addComponent(other);
-    project.selectionManager.select([comp, other], []);
-
-    router.down(makeInput(4, 4));
-    for (let i = 0; i < 4; i++) {
-      project.requestSelectionRotation(1); // four turns: net rotation zero
-    }
-    router.up();
-
-    // Nothing was committed, but the gesture turned the group: not a click.
-    expect(project.selectionManager.selectedComponents.size).toBe(2);
-  });
-
-  it('adds to the selection with the modifier held', () => {
-    const first = makeAnd(2);
-    first.position.set(3, 3);
-    const second = makeAnd(2, undefined, 8, 3);
-    project.addComponent(first);
-    project.addComponent(second);
-
-    tap(router, 4, 4); // selects `first`
-    withAdditiveKey(() => tap(router, 9, 4)); // the second AND's body
-
-    expect(project.selectionManager.selectedComponents.has(first)).toBe(true);
-    expect(project.selectionManager.selectedComponents.has(second)).toBe(true);
-  });
-
-  it('toggles a selected element out on a modified click, without panning', () => {
+  it('pans over the selection instead of moving it', () => {
     const comp = makeAnd(2);
     comp.position.set(3, 3);
     project.addComponent(comp);
     project.selectionManager.select([comp], []);
-    const panSpy = vi.spyOn(project.viewport, 'pan');
-
-    withAdditiveKey(() => {
-      router.down(makeInput(4, 4));
-      router.up();
-    });
-
-    expect(project.selectionManager.isEmpty).toBe(true);
-    expect(panSpy).not.toHaveBeenCalled();
-    expect(comp.position.x).toBe(3);
-  });
-
-  it('moves the selection on a modified drag, as it does without the modifier', () => {
-    const comp = makeAnd(2);
-    comp.position.set(3, 3);
-    project.addComponent(comp);
-    project.selectionManager.select([comp], []);
-
-    withAdditiveKey(() => {
-      router.down(makeInput(4, 4));
-      router.move(makeInput(8, 4));
-      router.up();
-    });
-
-    expect(comp.position.x).toBe(7);
-  });
-
-  it('narrows the selection on a plain click on one of its elements', () => {
-    const comp = makeAnd(2);
-    comp.position.set(3, 3);
-    const other = makeAnd(2, undefined, 8, 3);
-    project.addComponent(comp);
-    project.addComponent(other);
-    project.selectionManager.select([comp, other], []);
-
-    router.down(makeInput(9, 4)); // inside the move grab, released without moving
-    router.up();
-
-    expect(project.selectionManager.selectedComponents.has(other)).toBe(true);
-    expect(project.selectionManager.selectedComponents.has(comp)).toBe(false);
-    expect(other.position.x).toBe(8);
-  });
-
-  it('pans instead when the press misses the selection', () => {
-    const comp = makeAnd(2);
-    comp.position.set(3, 3);
-    project.addComponent(comp);
-    project.selectionManager.select([comp], []);
-    const panSpy = vi.spyOn(project.viewport, 'pan');
-
-    router.down(makeInput(20, 20));
-    router.move(makeInput(60, 20));
-    router.up();
-
-    expect(panSpy).toHaveBeenCalled();
-    expect(comp.position.x).toBe(3);
-    // A pan is not a tap: the selection it started next to survives.
-    expect(project.selectionManager.selectedComponents.has(comp)).toBe(true);
-  });
-
-  it('pans over the selection with the setting turned off', () => {
-    const comp = makeAnd(2);
-    comp.position.set(3, 3);
-    project.addComponent(comp);
-    project.selectionManager.select([comp], []);
-    // Restored in afterEach: the setting persists to localStorage, which
-    // outlives the TestBed and would leak into every later describe.
-    TestBed.inject(EditorSettingsService).dragSelectionInPanMode.set(false);
     const panSpy = vi.spyOn(project.viewport, 'pan');
 
     router.down(makeInput(4, 4));
@@ -731,6 +680,30 @@ describe('WorkModeRouter in PAN mode', () => {
     expect(panSpy).toHaveBeenCalled();
     expect(comp.position.x).toBe(3);
     expect(project.actionManager.undoAvailable).toBe(false);
+    // A pan is not a tap: the selection survives it.
+    expect(project.selectionManager.selectedComponents.has(comp)).toBe(true);
+  });
+
+  it('selects nothing on a tap, plain or modified', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+
+    tap(router, 4, 4);
+    withAdditiveKey(() => tap(router, 4, 4));
+
+    expect(project.selectionManager.isEmpty).toBe(true);
+  });
+
+  it('keeps the selection on a tap elsewhere', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    tap(router, 20, 20);
+
+    expect(project.selectionManager.selectedComponents.has(comp)).toBe(true);
   });
 });
 
@@ -769,8 +742,8 @@ describe('WorkModeRouter cancel shortcut (Escape)', () => {
     expect(setMode).not.toHaveBeenCalled(); // stays in SELECT
   });
 
-  it('falls back to the pan tool once the selection is empty', () => {
-    router.setMode(WorkMode.SELECT);
+  it('falls back to the select tool once the selection is empty', () => {
+    router.setMode(WorkMode.WIRE_TOOL);
     const comp = makeAnd(2, undefined, 3, 3);
     project.addComponent(comp);
     project.selectionManager.select([comp], []);
@@ -779,20 +752,23 @@ describe('WorkModeRouter cancel shortcut (Escape)', () => {
     expect(project.selectionManager.isEmpty).toBe(true);
     expect(setMode).not.toHaveBeenCalled();
 
-    pressEscape(); // second: nothing left to clear → back to pan
-    expect(setMode).toHaveBeenCalledWith(WorkMode.PAN);
+    pressEscape(); // second: nothing left to clear → back to select
+    expect(setMode).toHaveBeenCalledWith(WorkMode.SELECT);
   });
 
-  it('returns to the pan tool from any non-pan tool with nothing selected', () => {
-    router.setMode(WorkMode.WIRE_TOOL);
+  it.each([WorkMode.WIRE_TOOL, WorkMode.PAN, WorkMode.SELECT_EXACT])(
+    'returns to the select tool from %s with nothing selected',
+    (mode) => {
+      router.setMode(mode);
 
-    pressEscape();
+      pressEscape();
 
-    expect(setMode).toHaveBeenCalledWith(WorkMode.PAN);
-  });
+      expect(setMode).toHaveBeenCalledWith(WorkMode.SELECT);
+    }
+  );
 
-  it('does nothing extra when already in the pan tool with no selection', () => {
-    router.setMode(WorkMode.PAN);
+  it('does nothing extra when already in the select tool with no selection', () => {
+    router.setMode(WorkMode.SELECT);
 
     pressEscape();
 

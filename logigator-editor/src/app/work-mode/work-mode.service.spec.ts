@@ -48,10 +48,10 @@ describe('WorkModeService', () => {
     expect(service.selectedComponentType()).toBeNull();
 
     service.setSimulationMode(false);
-    expect(service.mode()).toBe(WorkMode.PAN);
+    expect(service.mode()).toBe(WorkMode.SELECT);
   });
 
-  it('boots into the navigate-first PAN default', () => {
-    expect(service.mode()).toBe(WorkMode.PAN);
+  it('boots into the select tool', () => {
+    expect(service.mode()).toBe(WorkMode.SELECT);
   });
 });

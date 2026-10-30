@@ -8,7 +8,7 @@ Aucun compte n'est nécessaire. Sans compte, vous enregistrez vos projets dans l
 
 ## La fenêtre de l'éditeur {#the-editor-window}
 
-- Le plan de travail, au centre, est la grille sur laquelle vous construisez. La molette de la souris zoome, et un glisser avec le bouton droit ou central déplace la vue.
+- Le plan de travail, au centre, est la grille sur laquelle vous construisez. Faire défiler déplace la vue, `Ctrl`+défilement (`⌘` sur Mac) zoome, et un glisser avec le bouton central, ou avec le bouton gauche en maintenant `Space`, déplace aussi la vue.
 - La barre de titre affiche le nom du projet et l'endroit où il est stocké (Brouillon, Local, Cloud ou Partagé), puis les menus Fichier, Édition, Affichage et Aide. Le crayon à côté du nom renomme le projet.
 - La barre d'outils contient les boutons pour enregistrer et ouvrir, le presse-papiers, la rotation, l'annulation et le zoom, puis les cinq [outils](docs:board-and-tools#tools), et « Démarrer la simulation » tout à droite.
 - La palette de composants, à gauche, liste toutes les pièces que vous pouvez placer.

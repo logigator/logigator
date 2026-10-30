@@ -82,7 +82,7 @@ The same two classes drive the board and every watch canvas.
 
 **File:** `interaction/pointer-controller.ts`
 
-Per-canvas listener bundle (pointer, wheel, contextmenu; detached through one
+Per-canvas listener bundle (pointer, wheel, Safari gesture, contextmenu; detached through one
 `AbortController`). Every event becomes a `PointerInput` —
 `{ pointerId, pointerType, global, grid, clickCount }`, where `global` is
 canvas-local CSS pixels (what `viewport.pan`/`zoomBy` expect) and `grid` is that
@@ -106,32 +106,51 @@ it is fresh before the next render.
   counted from `event.timeStamp` on the press itself), so a tool can tell a
   double click from two deliberate single clicks. Only the wire tool acts on it
   (`work-mode.md` § _Taps and modifiers_).
-- **Middle or right button** — pan-only drag by position deltas, bracketed by
-  `nav.setActive(true/false)`. The canvas context menu is suppressed outright,
-  as is the middle press's `mousedown`, which the browsers would otherwise turn
-  into autoscroll.
+- **Middle button** — pan-only drag by position deltas, bracketed by
+  `nav.setActive(true/false)`. Its `mousedown` is suppressed, which the
+  browsers would otherwise turn into autoscroll. The right button does nothing
+  on the canvas; its context menu is suppressed outright. A left drag pans only
+  through a `PanSession`: the Pan tool, a simulation drag, or the held
+  `PAN_HOLD` key in any mode.
 - **Touch** — pointers feed `MultiTouchGesture` first; a second finger hands
   over to two-finger pan/pinch and cancels the tool stream, so one finger never
   both operates a tool and navigates.
-- **Wheel** — non-passive, so page scroll/zoom stops. A mouse wheel zooms at
-  the cursor, continuously and in proportion to its delta (`zoomBy`): a 100 px
-  notch is one zoom-button step (×1.2). Proportional matters because Chromium
-  merges the wheel input between two frames into one event and sums its delta,
-  so a fast scroll over a slow frame is one event several notches long. The
-  1.2 ladder belongs to the zoom buttons alone; `zoomBy` resyncs it so a button
-  press continues from wherever the wheel left the zoom. Every wheel input zooms
-  — a two-finger trackpad swipe as much as a mouse wheel. The DOM does not say
-  which device scrolled, and no heuristic tells them apart on every device (a
+- **Wheel** — non-passive, so page scroll/zoom stops. The board navigates
+  like a design tool: a plain wheel event pans it by its `deltaX`/`deltaY`
+  (`wheel-input.ts` `wheelScroll`, in pixels whatever the `deltaMode`; `Shift`
+  turns a vertical-only wheel sideways), and with `Ctrl` or `⌘` held it zooms
+  at the cursor. The DOM does not say which device scrolled, and no heuristic
+  tells a mouse wheel from a two-finger trackpad swipe on every device (a
   horizontal-component rule flipped near-vertical swipes between zoom and pan
   mid-gesture, and fractional deltas come from high-resolution mice too), so
-  the board pans by drag only. A trackpad pinch, which browsers send as a
-  ctrl-wheel of small pixel deltas (`wheel-input.ts` `isPinch`), zooms at its
-  own rate, always at the pointer: the scroll events a browser interleaves with
-  a pinch, carrying the fingers' drift, are dropped until the pinch ends.
+  both pan alike. The modifier zoom is continuous and in proportion to its
+  delta (`zoomBy`): a 100 px notch is one zoom-button step (×1.2).
+  Proportional matters because Chromium merges the wheel input between two
+  frames into one event and sums its delta, so a fast scroll over a slow frame
+  is one event several notches long. The 1.2 ladder belongs to the zoom
+  buttons alone; `zoomBy` resyncs it so a button press continues from wherever
+  the wheel left the zoom. A wheel pan renders through a `'single'` ticker
+  signal from the board's `pan`, a no-op while a drag runs the ticker.
+- **Trackpad pinch** — Chromium and Firefox send it as a ctrl-wheel of small
+  pixel deltas (`isPinch`), Safari as `gesturestart`/`gesturechange`/
+  `gestureend` with a running `scale`. Either zooms at its own rate, always at
+  the pointer: the scroll events a browser interleaves with a pinch, carrying
+  the fingers' drift, are dropped until the pinch ends, and while Safari's
+  gesture events are arriving its ctrl-wheels are dropped too, so a pinch sent
+  both ways counts once. Safari reports a touchscreen pinch as gestures as
+  well; that one is left to `MultiTouchGesture`.
 
 The `PointerNavTarget` comes from the host (the board maps it onto the active
 project plus ticker; a watch wraps `pan` to re-blit). Handlers are public so
 specs drive them with plain objects instead of synthesized DOM events.
+
+The hosts set the canvas cursor, since nothing else in the scene does: a
+closed hand (`grabbing`) while `setActive` brackets a navigation drag or a
+`PanSession` has passed its tap threshold (`PanSession.panning`, surfaced by
+the router as `panning`), and on the board an open hand (`grab`) while the
+`PAN_HOLD` key (Space by default) is held and no session is open. A press with
+that key held opens a `PanSession` whatever the mode, whose tap does nothing.
+A wheel pan changes no cursor.
 
 ### `WorkModeRouter`
 
@@ -148,8 +167,9 @@ the tools; the router owns what must hold across all of them.
 - `move` goes to `_activeDrag.onMove`, or to the tool's `hover` with no session.
 - `up` asks `session.canEnd()` first; see the commit rules below.
 - `cancel()` (a second finger) aborts via `onCancel()`. Escape unwinds one layer
-  per press: active drag, then the selection, then the tool (escalating to PAN
-  through `WorkModeService` so the toolbar follows). Simulation stays put.
+  per press: active drag, then the selection, then the tool (escalating to
+  `DEFAULT_WORK_MODE`, the select tool, through `WorkModeService` so the
+  toolbar follows). Simulation stays put.
 - `setProject` / `setMode` cancel the in-flight session and `deactivate` the old
   tool on the old project, tearing down hover previews.
 - **Undo lock** — while a session is live, `ActionManager.locked` is set:
@@ -172,7 +192,7 @@ ends, `onSessionStart` yields the preview to a starting session's ghosts.
 
 | Tool             | Press opens                   | Notes                                                                                                                                                                                                         |
 | ---------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PanTool`        | `PanSession`                  | Tap single-selects.                                                                                                                                                                                           |
+| `PanTool`        | `PanSession`                  | Pans only; a tap does nothing.                                                                                                                                                                                |
 | `SimulationTool` | `PanSession` or `HoldSession` | A press on a button holds it until the gesture ends and never pans. Otherwise a tap activates: pulse button/switch → `userInput$`, inspectable → `inspectRequest$`. The only canvas interaction while locked. |
 | `WireTool`       | `WireToolSession`             | Tap negates a port or toggles a junction; hovers preview the negation bubble / connection dot.                                                                                                                |
 | `SelectTool`     | move or marquee session       | One instance per flavor (SELECT, SELECT_EXACT); a press inside the committed grab zone moves instead of marqueeing.                                                                                           |
@@ -185,10 +205,6 @@ a drag; after a tap they re-derive in place. Its connection ghost dry-runs
 
 Per tool, beyond the table above:
 
-- **`PanTool`** — with `dragSelectionInPanMode` on (the default) a press that
-  grabs the committed selection opens a `SelectionMoveSession` instead, so a
-  selection made by a tap can be dragged without leaving the hand tool; every
-  other press pans, and the setting off pans on every press.
 - **`WireTool`** — a press inside a selected component's body opens a
   `SelectionMoveSession` instead of drawing (a run from there collides with that
   body and is discarded anyway). Tap precedence: port negation →

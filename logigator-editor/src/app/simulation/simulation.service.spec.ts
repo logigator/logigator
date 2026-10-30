@@ -201,7 +201,7 @@ describe('SimulationService', () => {
 
     fakeWorker.emit({ kind: 'error', reqId: null, message: 'engine died' });
 
-    expect(workModeService.mode()).toBe(WorkMode.PAN);
+    expect(workModeService.mode()).toBe(WorkMode.SELECT);
     expect(service.state()).toBe('inactive');
     expect(error).toHaveBeenCalledWith('engine died', 'SimulationService');
   });
@@ -1228,7 +1228,7 @@ describe('SimulationService', () => {
 
     expect(() => service.exit()).toThrow();
 
-    expect(workModeService.mode()).toBe(WorkMode.PAN);
+    expect(workModeService.mode()).toBe(WorkMode.SELECT);
     expect(service.board).toBeNull();
     expect(service.applier).toBeNull();
     expect(service.state()).toBe('inactive');
@@ -1257,7 +1257,7 @@ describe('SimulationService', () => {
     expect(watch.applyFull).not.toHaveBeenCalled();
   });
 
-  it('exit resets sim state and restores PAN mode', async () => {
+  it('exit resets sim state and restores the select tool', async () => {
     const switchComp = makeSwitch();
     project.addComponent(switchComp);
     await enterAndBoot();
@@ -1265,7 +1265,7 @@ describe('SimulationService', () => {
 
     service.exit();
 
-    expect(workModeService.mode()).toBe(WorkMode.PAN);
+    expect(workModeService.mode()).toBe(WorkMode.SELECT);
     expect(switchComp.isActive(0)).toBe(false);
     expect(service.board).toBeNull();
     expect(service.applier).toBeNull();
@@ -1283,7 +1283,7 @@ describe('SimulationService', () => {
     // The outgoing project is destroyed right after this notification.
     TestBed.inject(ProjectService).setMainProject(replacement);
 
-    expect(workModeService.mode()).toBe(WorkMode.PAN);
+    expect(workModeService.mode()).toBe(WorkMode.SELECT);
     expect(service.state()).toBe('inactive');
     expect(service.board).toBeNull();
     // The teardown ran while the outgoing project was live.

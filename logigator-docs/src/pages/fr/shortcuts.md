@@ -28,6 +28,7 @@ Voici les raccourcis par défaut, dans l'ordre où Édition → Raccourcis clavi
 | Placer du texte                                            | `T`            |
 | Couper les fils au bord de la sélection (maintenir)        | `Alt`          |
 | Ajouter à la sélection ou l'en retirer (maintenir)         | `Ctrl`         |
+| Déplacer la vue en faisant glisser (maintenir)             | `Space`        |
 | Démarrer/Arrêter la simulation                             | `Enter`        |
 | Annuler                                                    | `Escape`       |
 
@@ -35,13 +36,13 @@ Pendant la saisie dans un champ de texte, seul `Escape` réagit. Pendant une sim
 
 ## Touches maintenues {#held-keys}
 
-Les deux actions marquées « maintenir » agissent tant que la touche est enfoncée, au lieu de se déclencher une fois. Maintenez `Alt` en relâchant un cadre de sélection pour couper les fils à son bord (voir [Plan de travail et outils](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Maintenez `Ctrl` en cliquant ou en traçant un cadre pour ajouter à la sélection ou en retirer. Cela fonctionne avec Sélectionner, Déplacement et l'outil fil.
+Les trois actions marquées « maintenir » agissent tant que la touche est enfoncée, au lieu de se déclencher une fois. Maintenez `Alt` en relâchant un cadre de sélection pour couper les fils à son bord (voir [Plan de travail et outils](docs:board-and-tools#cutting-wires-at-the-selection-edge)). Maintenez `Ctrl` en cliquant ou en traçant un cadre pour ajouter à la sélection ou en retirer. Cela fonctionne avec Sélectionner et l'outil fil. Maintenez `Space` et faites glisser avec le bouton gauche pour déplacer le plan, quel que soit l'outil ; le pointeur devient une main tant que vous la maintenez.
 
 ## Modifier un raccourci {#changing-a-binding}
 
 ![Le gestionnaire de raccourcis clavier.](./images/shortcut-manager.webp)
 
-Édition → Raccourcis clavier liste chaque action. Cliquez sur le crayon à côté et appuyez sur la nouvelle combinaison. `Escape` annule l'enregistrement, et ne peut donc pas être attribué à autre chose. Une touche de modification seule, comme `Alt`, ne peut être attribuée qu'aux deux actions maintenues.
+Édition → Raccourcis clavier liste chaque action. Cliquez sur le crayon à côté et appuyez sur la nouvelle combinaison. `Escape` annule l'enregistrement, et ne peut donc pas être attribué à autre chose. Une touche de modification seule, comme `Alt`, ne peut être attribuée qu'aux actions maintenues.
 
 Si la combinaison appartient déjà à une autre action, celle-ci la perd et un message indique laquelle. « Réinitialiser » rétablit le raccourci par défaut d'une action, « Désassigner » la laisse sans raccourci, et « Tout réinitialiser » rétablit tous les raccourcis par défaut.
 

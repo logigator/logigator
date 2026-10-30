@@ -8,7 +8,7 @@ Ein Account ist nicht nötig. Ohne Account speicherst du Projekte im Browser ode
 
 ## Das Editorfenster {#the-editor-window}
 
-- Die Arbeitsfläche in der Mitte ist das Raster, auf dem du baust. Das Mausrad zoomt, Ziehen mit der rechten oder mittleren Maustaste verschiebt die Ansicht.
+- Die Arbeitsfläche in der Mitte ist das Raster, auf dem du baust. Scrollen verschiebt die Ansicht, `Ctrl`+Scrollen (`⌘` auf dem Mac) zoomt, und Ziehen mit der mittleren Maustaste, oder mit der linken bei gehaltenem `Space`, verschiebt sie ebenfalls.
 - Die Titelleiste zeigt den Namen des Projekts und wo es gespeichert ist (Entwurf, Lokal, Cloud oder Geteilt), danach die Menüs Datei, Bearbeiten, Ansicht und Hilfe. Mit dem Stift neben dem Namen benennst du das Projekt um.
 - Die Werkzeugleiste enthält Schaltflächen zum Speichern und Öffnen, für die Zwischenablage, zum Drehen, Rückgängigmachen und Zoomen, dann die fünf [Werkzeuge](docs:board-and-tools#tools) und ganz rechts „Simulation starten“.
 - Die Komponentenpalette links listet alle Bauteile, die du platzieren kannst.

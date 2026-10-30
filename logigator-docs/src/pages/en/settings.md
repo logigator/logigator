@@ -10,16 +10,15 @@ Theme switches between Light and Dark. Dark is the default. Language offers Engl
 
 ## Editor settings {#editor-settings}
 
-| Setting                    | Default | What it does                                                                                                                                                                       |
-| -------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Show Grid                  | on      | Draws the dot grid. Components snap to the grid either way.                                                                                                                        |
-| Auto-start simulation      | on      | Starts the circuit running as soon as you enter [simulation](docs:simulation). Off, it waits paused at tick 0.                                                                     |
-| Highlight conflicts        | on      | During [simulation](docs:simulation#conflicting-signals), draws a wire in orange when the outputs driving it disagree, or when an SR flip-flop was clocked with S and R both at 1. |
-| Drag selection in Pan mode | on      | A drag with the Pan tool that starts inside the selection moves the selection. Off, every drag pans.                                                                               |
-| FPS Counter                | off     | Shows frames per second in the corner of the board.                                                                                                                                |
-| Show onboarding tips       | on      | Shows a tip the first time you meet something new in the editor. See [Getting started](docs:getting-started#tutorial-and-tips).                                                    |
+| Setting               | Default | What it does                                                                                                                                                                       |
+| --------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Show Grid             | on      | Draws the dot grid. Components snap to the grid either way.                                                                                                                        |
+| Auto-start simulation | on      | Starts the circuit running as soon as you enter [simulation](docs:simulation). Off, it waits paused at tick 0.                                                                     |
+| Highlight conflicts   | on      | During [simulation](docs:simulation#conflicting-signals), draws a wire in orange when the outputs driving it disagree, or when an SR flip-flop was clocked with S and R both at 1. |
+| FPS Counter           | off     | Shows frames per second in the corner of the board.                                                                                                                                |
+| Show onboarding tips  | on      | Shows a tip the first time you meet something new in the editor. See [Getting started](docs:getting-started#tutorial-and-tips).                                                    |
 
-These six settings, your keyboard shortcuts and the minimap's state are stored in this browser only. A different browser or device starts with the defaults, and clearing the site data resets them.
+These five settings, your keyboard shortcuts and the minimap's state are stored in this browser only. A different browser or device starts with the defaults, and clearing the site data resets them.
 
 ## See also {#see-also}
 

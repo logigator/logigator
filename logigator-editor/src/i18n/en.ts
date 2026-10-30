@@ -96,7 +96,6 @@ const en = {
       fpsCounter: 'FPS Counter',
       showGrid: 'Show Grid',
       autoStartSimulation: 'Auto-start simulation',
-      dragSelectionInPanMode: 'Drag selection in Pan mode',
       highlightConflicts: 'Highlight conflicts',
       onboardingTips: 'Show onboarding tips'
     },
@@ -105,8 +104,6 @@ const en = {
       showGrid: 'Draws the dot grid. Components snap to the grid either way.',
       autoStartSimulation:
         'Starts the circuit running as soon as you enter simulation. Off, it waits paused at tick 0.',
-      dragSelectionInPanMode:
-        'A drag with the Pan tool that starts inside the selection moves the selection. Off, every drag pans.',
       highlightConflicts:
         'During simulation, draws a wire in orange when the outputs driving it disagree, or when an SR flip-flop was clocked with S and R both at 1.',
       onboardingTips:
@@ -467,7 +464,7 @@ const en = {
   },
   statusBar: {
     modes: {
-      pan: 'Pan: drag to move the board · scroll or pinch to zoom',
+      pan: 'Pan: drag or scroll to move the board · Ctrl+scroll or pinch to zoom',
       wireTool:
         'Wire tool: drag to draw · tap a port to negate · tap a junction to connect/disconnect · tap to select · {{additiveKey}} to add or remove',
       sel: 'Select: drag a box to select · drag the selection to move · hold {{scissorKey}} to cut wires',
@@ -858,6 +855,7 @@ const en = {
     zoomOut: 'Zoom out',
     zoomIn: 'Zoom in',
     pan: 'Pan',
+    moveTools: 'Select or Pan',
     parts: 'Parts',
     placeComponent: 'Placing component',
 
@@ -1116,6 +1114,7 @@ const en = {
       toolSelect: 'Select',
       selectScissor: 'Cut Wires at Selection Edge (hold)',
       selectAdditive: 'Add to or Remove from Selection (hold)',
+      panHold: 'Pan by Dragging (hold)',
       toolErase: 'Erase',
       toolPlaceText: 'Place Text',
       toggleSimulation: 'Start/Stop Simulation',
@@ -1195,7 +1194,7 @@ const en = {
           moveAround: {
             title: 'Move around',
             textDesktop:
-              'Scroll to zoom, drag with the right or middle button to pan.',
+              'Scroll to pan, hold Ctrl (⌘ on a Mac) and scroll or pinch to zoom.',
             textCompact: 'Pinch to zoom, drag with two fingers to pan.'
           },
           placeAnd: {

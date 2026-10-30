@@ -1,5 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { WorkMode } from './work-mode.enum';
+import { DEFAULT_WORK_MODE, WorkMode } from './work-mode.enum';
 import { ComponentType, Direction } from '@logigator/core';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { LoggingService } from '../logging/logging.service';
@@ -12,8 +12,7 @@ export class WorkModeService {
   private readonly componentProviderService = inject(ComponentProviderService);
   private readonly logging = inject(LoggingService);
 
-  // Navigate-first: the board boots ready to pan, not to mutate.
-  private readonly _mode = signal<WorkMode>(WorkMode.PAN);
+  private readonly _mode = signal<WorkMode>(DEFAULT_WORK_MODE);
   public readonly mode = computed(this._mode);
 
   private readonly _selectedComponentType = signal<ComponentType | null>(null);
@@ -85,8 +84,8 @@ export class WorkModeService {
   /** The simulation lifecycle's only doorway past the editing lock above. */
   public setSimulationMode(simulating: boolean): void {
     this._selectedComponentType.set(null);
-    // Leaving a simulation lands back in the navigate-first default.
-    this._mode.set(simulating ? WorkMode.SIMULATION : WorkMode.PAN);
+    // Leaving a simulation lands back in the default tool.
+    this._mode.set(simulating ? WorkMode.SIMULATION : DEFAULT_WORK_MODE);
   }
 
   public setSelectedComponentType(componentType: ComponentType | null): void {

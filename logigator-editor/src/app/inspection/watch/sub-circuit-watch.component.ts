@@ -1,12 +1,14 @@
 import {
   AfterViewInit,
   Component,
+  computed,
   effect,
   ElementRef,
   inject,
   Injector,
   input,
   OnDestroy,
+  signal,
   untracked,
   ViewChild
 } from '@angular/core';
@@ -48,7 +50,11 @@ import {
 @Component({
   selector: 'app-sub-circuit-watch',
   host: { class: 'block h-full' },
-  template: `<canvas #canvas class="block h-full w-full touch-none"></canvas>`
+  template: `<canvas
+    #canvas
+    class="block h-full w-full touch-none"
+    [class.cursor-grabbing]="grabbing()"
+  ></canvas>`
 })
 export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   public readonly inspection = input.required<SubCircuitWatch>();
@@ -68,7 +74,17 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   private tickerSub: Subscription | null = null;
 
   private controller: PointerController | null = null;
-  private session: DragSession | null = null;
+  private readonly session = signal<DragSession | null>(null);
+  // A navigation drag: middle button, or two fingers.
+  private readonly navDragging = signal(false);
+
+  /** A closed hand while a drag pans the watch; a tap there acts instead. */
+  protected readonly grabbing = computed(() => {
+    const session = this.session();
+    return (
+      this.navDragging() || (session instanceof PanSession && session.panning())
+    );
+  });
 
   /**
    * The visible level's project, or null once there is none to draw. Closing
@@ -99,17 +115,17 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
         zoomOut: (center) => this.project?.viewport.zoomOut(center),
         zoomBy: (factor, center) =>
           this.project?.viewport.zoomBy(factor, center),
-        setActive: () => undefined
+        setActive: (active) => this.navDragging.set(active)
       },
       tool: {
         down: (input) => this.startSession(input),
         move: (input) => {
-          this.session?.onMove(input);
+          this.session()?.onMove(input);
           this.render();
         },
         up: () => {
-          this.session?.onEnd();
-          this.session = null;
+          this.session()?.onEnd();
+          this.session.set(null);
         },
         cancel: () => this.cancelSession()
       }
@@ -161,15 +177,17 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     const holdInput = holdInputAt(project, input.grid);
     const hold = holdInput ? this.inspection().holdFor(holdInput, 0) : null;
     if (hold) {
-      this.session = new HoldSession(hold.press, hold.release);
+      this.session.set(new HoldSession(hold.press, hold.release));
       return;
     }
-    this.session = new PanSession(project, input.global, input.grid, (tap) => {
-      const [component] = componentBodiesAt(project, tap);
-      if (component) {
-        this.inspection().activate(component);
-      }
-    });
+    this.session.set(
+      new PanSession(project, input.global, input.grid, (tap) => {
+        const [component] = componentBodiesAt(project, tap);
+        if (component) {
+          this.inspection().activate(component);
+        }
+      })
+    );
   }
 
   /**
@@ -198,8 +216,8 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   }
 
   private cancelSession(): void {
-    this.session?.onCancel();
-    this.session = null;
+    this.session()?.onCancel();
+    this.session.set(null);
   }
 
   /**

@@ -35,6 +35,9 @@ export enum ShortcutActionEnum {
   // and outranks the wire tool's port and junction taps (checked via
   // ShortcutService.isHeld, not on()).
   SELECT_ADDITIVE = 'selectAdditive',
+  // Hold-style binding: a primary drag pans the board whatever the tool, and
+  // the board shows an open hand (checked via ShortcutService.isHeld).
+  PAN_HOLD = 'panHold',
   TOOL_ERASE = 'toolErase',
   TOOL_PLACE_TEXT = 'toolPlaceText',
 

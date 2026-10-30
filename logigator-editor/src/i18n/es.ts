@@ -95,7 +95,6 @@ const es: TranslationSchema = {
       fpsCounter: 'Contador de FPS',
       showGrid: 'Mostrar cuadrícula',
       autoStartSimulation: 'Iniciar la simulación automáticamente',
-      dragSelectionInPanMode: 'Arrastrar la selección en modo Desplazar',
       highlightConflicts: 'Resaltar conflictos',
       onboardingTips: 'Mostrar consejos de introducción'
     },
@@ -106,8 +105,6 @@ const es: TranslationSchema = {
         'Dibuja la cuadrícula de puntos. Los componentes se ajustan a ella en cualquier caso.',
       autoStartSimulation:
         'Pone en marcha el circuito en cuanto entras en la simulación. Desactivado, espera en pausa en el tick 0.',
-      dragSelectionInPanMode:
-        'Un arrastre con Desplazar que empieza dentro de la selección mueve la selección. Desactivado, todo arrastre desplaza la vista.',
       highlightConflicts:
         'Durante la simulación, dibuja un cable en naranja cuando las salidas que lo controlan dan valores distintos, o cuando un biestable SR recibió un flanco de reloj con S y R a 1.',
       onboardingTips:
@@ -467,7 +464,7 @@ const es: TranslationSchema = {
   },
   statusBar: {
     modes: {
-      pan: 'Desplazar: arrastra para mover el tablero · desplaza o pellizca para hacer zoom',
+      pan: 'Desplazar: arrastra o usa la rueda para mover el tablero · Ctrl+rueda o pellizca para hacer zoom',
       wireTool:
         'Herramienta de cable: arrastra para dibujar · toca un puerto para negarlo · toca un cruce para conectar/desconectar · toca para seleccionar · {{additiveKey}} para añadir o quitar',
       sel: 'Seleccionar: arrastra un recuadro para seleccionar · arrastra la selección para moverla · mantén {{scissorKey}} para cortar cables',
@@ -862,6 +859,7 @@ const es: TranslationSchema = {
     zoomOut: 'Alejar',
     zoomIn: 'Acercar',
     pan: 'Desplazar',
+    moveTools: 'Seleccionar o Desplazar',
     parts: 'Piezas',
     placeComponent: 'Colocando componente',
 
@@ -1126,6 +1124,7 @@ const es: TranslationSchema = {
       toolSelect: 'Seleccionar',
       selectScissor: 'Cortar cables en el borde de la selección (mantener)',
       selectAdditive: 'Añadir a la selección o quitarlo de ella (mantener)',
+      panHold: 'Desplazar la vista arrastrando (mantener)',
       toolErase: 'Borrar',
       toolPlaceText: 'Colocar texto',
       toggleSimulation: 'Iniciar/detener simulación',
@@ -1206,7 +1205,7 @@ const es: TranslationSchema = {
           moveAround: {
             title: 'Moverse',
             textDesktop:
-              'Desplaza para hacer zoom, arrastra con el botón derecho o el botón central para desplazarte.',
+              'Usa la rueda para desplazarte, mantén Ctrl (⌘ en un Mac) mientras la usas o pellizca para hacer zoom.',
             textCompact:
               'Pellizca para hacer zoom, arrastra con dos dedos para desplazarte.'
           },

@@ -4,27 +4,27 @@ The board is the grid you build on. Components and wires snap to it, and the sta
 
 ## Moving around {#moving-around}
 
-The mouse wheel zooms at the pointer, and so does a two-finger swipe or pinch on a trackpad. The zoom buttons in the toolbar and View → Zoom In, Zoom Out and Zoom 100% do the same in fixed steps.
+The mouse wheel and a two-finger swipe on a trackpad move the board; hold `Shift` to scroll sideways with a mouse wheel. To zoom at the pointer, hold `Ctrl` (`⌘` on a Mac) while you scroll, or pinch the trackpad. The zoom buttons in the toolbar and View → Zoom In, Zoom Out and Zoom 100% zoom in fixed steps.
 
-To pan, drag with the right or middle mouse button. That works with every tool. With the Pan tool active, a left drag pans as well.
+You can also pan by dragging with the middle mouse button, or with the left one while you hold `Space`. That works with every tool. With the Pan tool active, a left drag pans on its own.
 
 The minimap in the bottom-right corner shows the whole circuit with a frame around the part in view. Click or drag in it to move the view there. Hide minimap collapses it, and the editor remembers that.
 
 ## Tools {#tools}
 
-One tool is active at a time. Each has a button in the toolbar and a single-key shortcut.
+One tool is active at a time. Each has a single-key shortcut and a button in the toolbar, where Select and Pan share one: the arrow beside it picks the other. The editor starts with Select.
 
 | Tool      | Key | What a drag does                                                       |
 | --------- | --- | ---------------------------------------------------------------------- |
-| Pan       | `P` | Pans the board, or moves the selection if you start inside it          |
-| Wire tool | `W` | Draws a wire (see [Wires and connections](docs:wires-and-connections)) |
 | Select    | `S` | Draws a selection box, or moves the selection if you start inside it   |
+| Pan       | `P` | Pans the board, and nothing else                                       |
+| Wire tool | `W` | Draws a wire (see [Wires and connections](docs:wires-and-connections)) |
 | Eraser    | `E` | Deletes everything it passes over                                      |
 | Text      | `T` | Places a text label (a click is enough)                                |
 
-A click without dragging selects the element under the pointer in Pan, Wire tool and Select. The Wire tool first checks for a port or a wire crossing, since tapping those negates or connects instead.
+A click without dragging selects the element under the pointer in Select and the Wire tool. The Wire tool first checks for a port or a wire crossing, since tapping those negates or connects instead.
 
-![The five tool buttons in the toolbar.](./images/tool-buttons.webp)
+![The tool buttons in the toolbar.](./images/tool-buttons.webp)
 
 ## Placing components {#placing-components}
 
@@ -34,7 +34,7 @@ Nothing is placed where the ghost overlaps another component. Press `Escape` or 
 
 ## Selecting and moving {#selecting-and-moving}
 
-With Select, drag a box over the elements you want. Every component and wire the box touches is selected. Hold `Ctrl` (`⌘` on a Mac) to change the selection instead of replacing it: a click adds or removes one element, and a box adds what it covers. This works in Pan and the Wire tool too.
+With Select, drag a box over the elements you want. Every component and wire the box touches is selected. Hold `Ctrl` (`⌘` on a Mac) to change the selection instead of replacing it: a click adds or removes one element, and a box adds what it covers. This works in the Wire tool too.
 
 Drag the selection to move it. `R` rotates it clockwise, `Shift+R` counter-clockwise, and the arrow keys move it one grid step. When the selection ends up on top of something, it stays lifted and follows your next moves until it reaches a free spot.
 
@@ -42,7 +42,7 @@ Drag the selection to move it. `R` rotates it clockwise, `Shift+R` counter-clock
 
 1. Cancels a drag in progress.
 2. Clears the selection.
-3. Switches to Pan.
+3. Switches to Select.
 
 ## Cutting wires at the selection edge {#cutting-wires-at-the-selection-edge}
 

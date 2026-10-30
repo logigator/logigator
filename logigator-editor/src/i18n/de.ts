@@ -96,7 +96,6 @@ const de: TranslationSchema = {
       fpsCounter: 'FPS-Anzeige',
       showGrid: 'Raster anzeigen',
       autoStartSimulation: 'Simulation automatisch starten',
-      dragSelectionInPanMode: 'Auswahl im Schwenkmodus verschieben',
       highlightConflicts: 'Konflikte hervorheben',
       onboardingTips: 'Einführungstipps anzeigen'
     },
@@ -106,8 +105,6 @@ const de: TranslationSchema = {
         'Zeichnet das Punktraster. Komponenten rasten in beiden Fällen ein.',
       autoStartSimulation:
         'Lässt die Schaltung laufen, sobald du die Simulation betrittst. Aus wartet sie pausiert bei Tick 0.',
-      dragSelectionInPanMode:
-        'Ein Ziehen mit „Schwenken“, das in der Auswahl beginnt, verschiebt die Auswahl. Aus verschiebt jedes Ziehen die Ansicht.',
       highlightConflicts:
         'Zeichnet in der Simulation eine Leitung orange, wenn die Ausgänge an ihr verschiedene Werte ausgeben oder ein SR-Flip-Flop mit S und R gleichzeitig auf 1 getaktet wurde.',
       onboardingTips:
@@ -473,7 +470,7 @@ const de: TranslationSchema = {
   },
   statusBar: {
     modes: {
-      pan: 'Schwenken: ziehen, um die Arbeitsfläche zu verschieben · scrollen oder mit zwei Fingern zoomen',
+      pan: 'Schwenken: ziehen oder scrollen, um die Arbeitsfläche zu verschieben · Ctrl+Scrollen oder mit zwei Fingern zoomen',
       wireTool:
         'Leitungswerkzeug: ziehen zum Zeichnen · auf einen Anschluss tippen zum Negieren · auf eine Kreuzung tippen zum Verbinden/Trennen · tippen zum Auswählen · {{additiveKey}} zum Hinzufügen oder Entfernen',
       sel: 'Auswählen: Auswahlrahmen ziehen zum Selektieren · Auswahl ziehen zum Verschieben · {{scissorKey}} halten zum Schneiden von Leitungen',
@@ -871,6 +868,7 @@ const de: TranslationSchema = {
     zoomOut: 'Auszoomen',
     zoomIn: 'Einzoomen',
     pan: 'Schwenken',
+    moveTools: 'Auswählen oder Schwenken',
     parts: 'Bauteile',
     placeComponent: 'Komponente platzieren',
 
@@ -1140,6 +1138,7 @@ const de: TranslationSchema = {
       toolSelect: 'Auswählen',
       selectScissor: 'Leitungen an der Auswahlkante schneiden (halten)',
       selectAdditive: 'Zur Auswahl hinzufügen oder daraus entfernen (halten)',
+      panHold: 'Durch Ziehen verschieben (halten)',
       toolErase: 'Radieren',
       toolPlaceText: 'Text platzieren',
       toggleSimulation: 'Simulation starten/stoppen',
@@ -1220,7 +1219,7 @@ const de: TranslationSchema = {
           moveAround: {
             title: 'Navigieren',
             textDesktop:
-              'Scrollen zum Zoomen, mit rechter oder mittlerer Maustaste ziehen zum Schwenken.',
+              'Scrollen zum Schwenken, mit gedrücktem Ctrl (⌘ auf dem Mac) scrollen oder zwei Finger aufziehen zum Zoomen.',
             textCompact:
               'Spreizen zum Zoomen, mit zwei Fingern ziehen zum Schwenken.'
           },
