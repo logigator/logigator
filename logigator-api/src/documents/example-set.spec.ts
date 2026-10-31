@@ -5,7 +5,7 @@ import { loadExampleSet, parseExampleManifest } from './example-set';
 
 function manifest(project: Record<string, unknown>): unknown {
   return {
-    account: { username: 'Logigator', email: 'support@logigator.com' },
+    account: { username: 'Logigator', email: 'contact@logigator.com' },
     components: [],
     projects: [
       {

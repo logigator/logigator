@@ -200,7 +200,8 @@ describe('machine moderation verdicts', () => {
     // The note is the model's words over the author's text: never theirs.
     expect(owner?.text).not.toContain(SEVERE.note);
     expect(owner?.html).not.toContain(SEVERE.note);
-    expect(owner?.replyTo).toBe(OPERATOR);
+    // No reply-to is configured here, so the mail carries none.
+    expect(owner?.replyTo).toBe('');
   });
 
   it('mails the owner in the language the text was written in', async () => {

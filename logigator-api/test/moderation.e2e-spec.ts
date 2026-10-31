@@ -107,7 +107,10 @@ describe('moderation', () => {
     );
 
   beforeAll(async () => {
-    api = await startE2eApp({ REPORT_MAIL_TO: 'ops@logigator.test' });
+    api = await startE2eApp({
+      REPORT_MAIL_TO: 'ops@logigator.test',
+      MAIL_REPLY_TO: 'contact@logigator.test'
+    });
     moderation = api.app.get(ModerationService);
     ada = await signUp('ada@example.com', 'Ada');
     grace = await signUp('grace@example.com', 'Grace');
@@ -311,8 +314,8 @@ describe('moderation', () => {
       expect(hiddenMail.text).toContain('Copied from <a> book');
       expect(hiddenMail.html).toContain('Copied from &lt;a&gt; book');
       expect(hiddenMail.text).toContain(`/en/community/projects/${other.link}`);
-      // Objecting is a reply, and it reaches the operator.
-      expect(hiddenMail.replyTo).toBe('ops@logigator.test');
+      // Objecting is a reply, and it reaches the public contact address.
+      expect(hiddenMail.replyTo).toBe('contact@logigator.test');
 
       expect(await moderation.unhide('project', other.link)).toEqual({
         ownerMailed: true

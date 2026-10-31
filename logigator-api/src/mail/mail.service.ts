@@ -81,10 +81,8 @@ export class MailService {
   }
 
   /**
-   * Tells a document's owner it was taken out of the community, and why. The
-   * reply-to is the operator's address where there is one, so objecting is a
-   * reply; the wording names the imprint's contact address, which holds
-   * either way.
+   * Tells a document's owner it was taken out of the community, and why.
+   * Objecting is a reply to the contact address, the one the wording names.
    */
   async sendDocumentHidden(
     recipient: MailRecipient,
@@ -102,8 +100,7 @@ export class MailService {
             hide.by === 'machine'
               ? MAIL_STRINGS[recipient.locale].hiddenReasons[hide.category]
               : hide.reason
-        },
-        replyTo: this.env.REPORT_MAIL_TO
+        }
       }
     );
   }
@@ -117,7 +114,7 @@ export class MailService {
       'documentUnhidden',
       recipient,
       this.documentLink(recipient, document),
-      { values: { name: document.name }, replyTo: this.env.REPORT_MAIL_TO }
+      { values: { name: document.name } }
     );
   }
 
@@ -211,9 +208,9 @@ export class MailService {
     kind: MailKind,
     recipient: MailRecipient,
     link: string,
-    options: { values?: Record<string, string>; replyTo?: string } = {}
+    options: { values?: Record<string, string> } = {}
   ): Promise<void> {
-    const { values, replyTo } = options;
+    const { values } = options;
     const mail = renderMail(kind, recipient.locale, {
       username: recipient.username,
       link,
@@ -228,7 +225,7 @@ export class MailService {
       subject: mail.subject,
       html: mail.html,
       text: mail.text,
-      ...(replyTo ? { replyTo } : {})
+      ...(this.env.MAIL_REPLY_TO ? { replyTo: this.env.MAIL_REPLY_TO } : {})
     });
 
     if (!this.env.SMTP_URL) {

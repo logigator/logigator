@@ -75,6 +75,12 @@ const variables = z.object({
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().min(1).default('Logigator <noreply@logigator.com>'),
   /**
+   * The reply-to of every mail sent to a user, so answering one reaches the
+   * public contact address rather than the sender, which nobody reads. Unset
+   * means the mails carry no reply-to.
+   */
+  MAIL_REPLY_TO: z.string().optional(),
+  /**
    * Where client-side error reports and document reports are mailed. Unset
    * means logged only; document reports are stored either way.
    */
