@@ -52,14 +52,14 @@ const de: TranslationSchema = {
   },
   user: {
     loadFailed:
-      'Dein Account konnte nicht geladen werden. Bitte melde dich erneut an.'
+      'Dein Konto konnte nicht geladen werden. Bitte melde dich erneut an.'
   },
   userSettings: {
     notSignedIn: 'Nicht angemeldet',
     theme: 'Design',
     language: 'Sprache',
     editorSettings: 'Editor-Einstellungen',
-    account: 'Account',
+    account: 'Konto',
     logOut: 'Abmelden',
     logIn: 'Anmelden',
     signUp: 'Registrieren'
@@ -907,7 +907,7 @@ const de: TranslationSchema = {
     ticks: '{{ticks}} Ticks'
   },
   mobile: {
-    account: 'Account',
+    account: 'Konto',
     palette: 'Komponenten',
     settings: 'Einstellungen',
     ports: 'Anschlüsse'
@@ -1085,7 +1085,7 @@ const de: TranslationSchema = {
     saveLoggedOut:
       'Du bist abgemeldet. Melde dich erneut an, um in der Cloud zu speichern.',
     saveForeign:
-      '„{{name}}“ gehört zu einem anderen Account und kann nicht gespeichert werden.'
+      '„{{name}}“ gehört zu einem anderen Konto und kann nicht gespeichert werden.'
   },
   routing: {
     notFound: 'Dieser Link konnte nicht geöffnet werden.'
