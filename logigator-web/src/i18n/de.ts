@@ -245,7 +245,8 @@ const de: TranslationSchema = {
         headline: 'Baue, simuliere und teile Logikschaltungen kostenlos.',
         lede: 'Beginne mit einem einzelnen Gatter und einer LED und arbeite dich bis zu deiner eigenen CPU vor.',
         cta: 'Zum Editor',
-        ctaSecondary: 'Beispiele ansehen'
+        ctaSecondary: 'Beispiele ansehen',
+        boardLink: 'Schau dir diese Schaltung an'
       },
       features: {
         title: 'Features',

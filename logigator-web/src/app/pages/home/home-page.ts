@@ -5,6 +5,7 @@ import {
   inject
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { HERO_EXAMPLE_ID } from '@logigator/core';
 import { LgButton } from '@logigator/ui';
 import { WireRun } from '../../design/wire-run';
 import { CircuitTiles } from '../../documents/circuit-tiles';
@@ -92,6 +93,8 @@ export class HomePage {
   private readonly content = inject(HomeContentService);
 
   protected readonly links = inject(SiteLinks);
+
+  protected readonly HERO_EXAMPLE_ID = HERO_EXAMPLE_ID;
 
   protected readonly examples = this.content.examples;
   protected readonly projects = this.content.projects;

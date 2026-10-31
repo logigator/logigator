@@ -249,7 +249,8 @@ const en = {
         headline: 'Build, simulate and share logic circuits for free.',
         lede: 'Start with a single gate and an LED, or go as far as building your own CPU.',
         cta: 'Start building',
-        ctaSecondary: 'Browse examples'
+        ctaSecondary: 'Browse examples',
+        boardLink: 'Check out this circuit'
       },
       features: {
         title: 'Features',

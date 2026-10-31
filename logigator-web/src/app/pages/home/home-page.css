@@ -73,7 +73,19 @@
   );
 }
 
+/* In the band, the page gutter in from its corner; beside the copy, under
+   the last matrix. */
+.hero-board-link {
+  right: clamp(1.25rem, 4vw, 2rem);
+  bottom: 1.25rem;
+}
+
 @media (min-width: 1024px) {
+  .hero-board-link {
+    right: calc(var(--hero-gap) + 3.5rem);
+    bottom: 1.5rem;
+  }
+
   .hero-board {
     left: auto;
     right: var(--hero-gap);

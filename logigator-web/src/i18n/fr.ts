@@ -237,7 +237,8 @@ const fr: TranslationSchema = {
           'Construisez, simulez et partagez des circuits logiques gratuitement.',
         lede: 'Commencez avec une seule porte et une LED, ou allez jusqu’à construire votre propre processeur.',
         cta: 'Commencer à construire',
-        ctaSecondary: 'Voir les exemples'
+        ctaSecondary: 'Voir les exemples',
+        boardLink: 'Découvrez ce circuit'
       },
       features: {
         title: 'Fonctionnalités',

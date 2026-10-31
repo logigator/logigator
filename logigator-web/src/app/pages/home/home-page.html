@@ -20,6 +20,16 @@
       <div
         class="hero-scrim absolute inset-0 [--hero-page:var(--lg-surface-0)] dark:[--hero-page:var(--lg-surface-950)]"
       ></div>
+      <!-- Over the scrim, so it stays clickable; the board's own example on
+           the examples page, which explains the circuit. -->
+      <a
+        class="hero-board-link absolute z-10 inline-flex items-center gap-1.5 rounded-full border border-border bg-content px-3 py-1 text-xs font-medium text-muted hover:text-text-hover"
+        [routerLink]="links.examples()"
+        [fragment]="HERO_EXAMPLE_ID"
+      >
+        <span>{{ t('pages.home.hero.boardLink') }}</span>
+        <i class="ph ph-arrow-right text-xs" aria-hidden="true"></i>
+      </a>
     </div>
 
     <div class="page-wrap relative pt-11 pb-8 lg:py-24">

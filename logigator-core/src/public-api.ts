@@ -17,7 +17,10 @@
  */
 
 // ---- origin: what every app on the origin must agree about ----
-export { EXAMPLES_ACCOUNT_ID } from './origin/examples-account';
+export {
+  EXAMPLES_ACCOUNT_ID,
+  HERO_EXAMPLE_ID
+} from './origin/examples-account';
 export {
   decodePreferences,
   encodePreferences,

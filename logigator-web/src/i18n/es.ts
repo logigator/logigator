@@ -240,7 +240,8 @@ const es: TranslationSchema = {
           'Construye, simula y comparte circuitos lógicos de forma gratuita.',
         lede: 'Empieza con una sola puerta y un LED, o llega hasta construir tu propia CPU.',
         cta: 'Empezar a construir',
-        ctaSecondary: 'Ver ejemplos'
+        ctaSecondary: 'Ver ejemplos',
+        boardLink: 'Descubre este circuito'
       },
       features: {
         title: 'Características',

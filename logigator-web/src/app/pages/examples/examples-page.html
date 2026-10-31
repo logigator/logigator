@@ -22,7 +22,9 @@
     />
     } @else if (rows().length) { @for (row of rows(); track row.id; let first =
     $first; let even = $even) {
-    <article [class]="rowClass(even)">
+    <!-- The document id is the row's anchor, so a link can land on one
+         example. -->
+    <article [id]="row.id" [class]="rowClass(even)">
       <web-circuit-preview
         [class]="figureClass(even)"
         [preview]="row.preview"
