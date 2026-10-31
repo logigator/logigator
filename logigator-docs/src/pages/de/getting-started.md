@@ -2,7 +2,7 @@
 
 Logigator ist ein Logiksimulator, der im Browser läuft. Du setzt Gatter auf ein Raster, ziehst Leitungen zwischen ihnen und startest mit „Simulation starten“, um zu sehen, wie die Signale durch die Schaltung laufen. Eine fertige Schaltung lässt sich als [benutzerdefinierte Komponente](docs:custom-components) speichern und in einer größeren als ein einzelner Baustein verwenden.
 
-Ein Account ist nicht nötig. Ohne Account speicherst du Projekte im Browser oder [exportierst sie als Datei](docs:saving-and-files#circuit-files). Mit Anmeldung kommen [Cloud-Speicher und Freigabelinks](docs:cloud) dazu.
+Ein Konto ist nicht nötig. Ohne Konto speicherst du Projekte im Browser oder [exportierst sie als Datei](docs:saving-and-files#circuit-files). Mit Anmeldung kommen [Cloud-Speicher und Freigabelinks](docs:cloud) dazu.
 
 ![Der Editor mit einem Halbaddierer auf der Arbeitsfläche.](./images/board-overview.webp)
 

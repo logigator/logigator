@@ -11,7 +11,7 @@ Eine benutzerdefinierte Komponente macht aus einer Schaltung ein einzelnes Baute
    - Name, bis 20 Zeichen, ist der Name in der Palette.
    - Symbol, bis 5 Zeichen, steht auf dem Kasten.
    - Beschreibung ist optional.
-   - Speicherort legt fest, wo die Komponente liegt. Lokal hält sie in diesem Browser. Cloud hält sie in deinem Account, setzt eine Anmeldung voraus und fragt zusätzlich, wer sie öffnen kann, mit Alle als Vorauswahl (siehe [Cloud und Teilen](docs:cloud#sharing)).
+   - Speicherort legt fest, wo die Komponente liegt. Lokal hält sie in diesem Browser. Cloud hält sie in deinem Konto, setzt eine Anmeldung voraus und fragt zusätzlich, wer sie öffnen kann, mit Alle als Vorauswahl (siehe [Cloud und Teilen](docs:cloud#sharing)).
 3. Klicke auf „Erstellen“. Die Komponente öffnet sich in einem neuen Tab mit leerer Arbeitsfläche.
 4. Baue ihre Schaltung und gib ihr [Anschlüsse](#ports).
 5. Speichere (`Ctrl+S`) in diesem Tab, um die Komponente zu speichern.
@@ -32,16 +32,16 @@ Eine platzierte Kopie behält die Schaltung, die die Komponente beim Platzieren 
 
 Die Einstellungskarte einer platzierten Kopie oder der Palettenkachel hat diese Aktionen:
 
-| Aktion                            | Was sie tut                                                                                                       |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Auf neueste Version aktualisieren | Aktualisiert diese Kopie. Nur bei einer veralteten Kopie.                                                         |
-| Alle Instanzen aktualisieren      | Aktualisiert jede veraltete Kopie in der offenen Schaltung. Die Anzahl steht in Klammern.                         |
-| Schaltung bearbeiten              | Öffnet die Schaltung der Komponente, um sie zu ändern.                                                            |
-| Details bearbeiten                | Ändert Name, Symbol und Beschreibung. Platzierte Kopien behalten die alten Details, bis du sie aktualisierst.     |
-| In die Cloud hochladen            | Verschiebt eine lokale Komponente in deinen Account. Siehe [Cloud und Teilen](docs:cloud#uploading-to-the-cloud). |
-| Teilen                            | Öffnet den Teilen-Dialog einer Cloud-Komponente. Siehe [Cloud und Teilen](docs:cloud#sharing).                    |
-| Löschen                           | Entfernt die Komponente aus deiner Bibliothek. Siehe [Löschen](#deleting).                                        |
-| Wiederherstellen & bearbeiten     | Nur bei einer Kopie, deren Komponente gelöscht wurde. Holt sie in deine lokale Bibliothek zurück.                 |
+| Aktion                            | Was sie tut                                                                                                   |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Auf neueste Version aktualisieren | Aktualisiert diese Kopie. Nur bei einer veralteten Kopie.                                                     |
+| Alle Instanzen aktualisieren      | Aktualisiert jede veraltete Kopie in der offenen Schaltung. Die Anzahl steht in Klammern.                     |
+| Schaltung bearbeiten              | Öffnet die Schaltung der Komponente, um sie zu ändern.                                                        |
+| Details bearbeiten                | Ändert Name, Symbol und Beschreibung. Platzierte Kopien behalten die alten Details, bis du sie aktualisierst. |
+| In die Cloud hochladen            | Verschiebt eine lokale Komponente in dein Konto. Siehe [Cloud und Teilen](docs:cloud#uploading-to-the-cloud). |
+| Teilen                            | Öffnet den Teilen-Dialog einer Cloud-Komponente. Siehe [Cloud und Teilen](docs:cloud#sharing).                |
+| Löschen                           | Entfernt die Komponente aus deiner Bibliothek. Siehe [Löschen](#deleting).                                    |
+| Wiederherstellen & bearbeiten     | Nur bei einer Kopie, deren Komponente gelöscht wurde. Holt sie in deine lokale Bibliothek zurück.             |
 
 Beide Aktualisierungen lassen sich rückgängig machen.
 

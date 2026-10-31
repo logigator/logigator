@@ -1,10 +1,10 @@
 # Cloud und Teilen
 
-Mit einem Logigator-Account liegen Projekte und benutzerdefinierte Komponenten in der Cloud und öffnen auf jedem Gerät, an dem du dich anmeldest. Cloud-Dokumente lassen sich per Link teilen oder in der Community auf der Logigator-Website veröffentlichen. Alles andere im Editor funktioniert ohne Account.
+Mit einem Logigator-Konto liegen Projekte und benutzerdefinierte Komponenten in der Cloud und öffnen auf jedem Gerät, an dem du dich anmeldest. Cloud-Dokumente lassen sich per Link teilen oder in der Community auf der Logigator-Website veröffentlichen. Alles andere im Editor funktioniert ohne Konto.
 
 ## An- und abmelden {#signing-in-and-out}
 
-Das Account-Menü am rechten Ende der Titelleiste zeigt „Anmelden“ und „Registrieren“, solange du abgemeldet bist. Beide öffnen die Logigator-Website in einem neuen Tab, und der Editor bemerkt von selbst, wenn du dich dort angemeldet hast. Angemeldet zeigt das Menü „Account“, das deine Account-Seite auf der Website öffnet, und „Abmelden“.
+Das Benutzermenü am rechten Ende der Titelleiste zeigt „Anmelden“ und „Registrieren“, solange du abgemeldet bist. Beide öffnen die Logigator-Website in einem neuen Tab, und der Editor bemerkt von selbst, wenn du dich dort angemeldet hast. Angemeldet zeigt das Menü „Konto“, das deine Kontoeinstellungen auf der Website öffnet, und „Abmelden“.
 
 Hat ein Cloud-Projekt oder eine Cloud-Komponente beim Abmelden ungespeicherte Änderungen, fragt der Editor, ob du vorher speichern willst:
 
@@ -18,13 +18,13 @@ Nach dem Abmelden wird ein offenes Cloud-Projekt durch einen leeren Entwurf erse
 
 ## Lokal und Cloud {#local-and-cloud}
 
-Lokale Dokumente liegen in diesem Browser und sind weg, wenn seine Website-Daten gelöscht werden. Cloud-Dokumente liegen in deinem Account. Das Kennzeichen neben dem Projektnamen sagt, was für das offene Projekt gilt, und Datei → Öffnen listet beide in getrennten Tabs, Lokale Projekte und Cloud-Projekte. Bist du angemeldet, öffnet der Dialog mit den Cloud-Projekten.
+Lokale Dokumente liegen in diesem Browser und sind weg, wenn seine Website-Daten gelöscht werden. Cloud-Dokumente liegen in deinem Konto. Das Kennzeichen neben dem Projektnamen sagt, was für das offene Projekt gilt, und Datei → Öffnen listet beide in getrennten Tabs, Lokale Projekte und Cloud-Projekte. Bist du angemeldet, öffnet der Dialog mit den Cloud-Projekten.
 
 ![Der Dialog „Projekt öffnen“ im Tab „Cloud-Projekte“.](./images/open-cloud.webp)
 
 Auf der Website listen Meine Projekte und Meine Komponenten deine Cloud-Dokumente ebenfalls. Du kannst sie dort anlegen, umbenennen, teilen und löschen und im Editor öffnen.
 
-Jeder Account hat 20 MB Cloud-Speicher für seine Projekte und Komponenten, ihre Vorschaubilder eingeschlossen. Ist er voll, werden neue Cloud-Dokumente und Speichervorgänge, die ein Dokument größer machen, abgelehnt, bis du etwas löschst.
+Jedes Konto hat 20 MB Cloud-Speicher für seine Projekte und Komponenten, ihre Vorschaubilder eingeschlossen. Ist er voll, werden neue Cloud-Dokumente und Speichervorgänge, die ein Dokument größer machen, abgelehnt, bis du etwas löschst.
 
 ## In die Cloud hochladen {#uploading-to-the-cloud}
 
@@ -70,4 +70,4 @@ Im Editor trägt ein geteiltes Dokument das Kennzeichen Geteilt. Du kannst es ä
 
 - [Speichern und Dateien](docs:saving-and-files): Speichern, Dateien und Bildexport
 - [Benutzerdefinierte Komponenten](docs:custom-components): Komponenten, die mit einem Projekt mitreisen
-- [Einstellungen](docs:settings): das Account-Menü
+- [Einstellungen](docs:settings): das Benutzermenü

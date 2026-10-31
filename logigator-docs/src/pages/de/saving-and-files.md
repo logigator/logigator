@@ -1,6 +1,6 @@
 # Speichern und Dateien
 
-Ein Projekt liegt an einem von zwei Orten: in diesem Browser (Lokal) oder in deinem Logigator-Account (Cloud). Dateien auf deinem Gerät dienen zum Exportieren und Importieren, sie sind kein dritter Speicherort. Der Editor speichert nicht automatisch.
+Ein Projekt liegt an einem von zwei Orten: in diesem Browser (Lokal) oder in deinem Logigator-Konto (Cloud). Dateien auf deinem Gerät dienen zum Exportieren und Importieren, sie sind kein dritter Speicherort. Der Editor speichert nicht automatisch.
 
 ## Ein Projekt speichern {#saving-a-project}
 
@@ -24,7 +24,7 @@ Das Kennzeichen neben dem Projektnamen zeigt, wo das offene Projekt liegt:
 | ----------- | -------------------------------------------------------------------------------------- |
 | Entwurf     | Noch nicht gespeichert.                                                                |
 | Lokal       | In diesem Browser gespeichert.                                                         |
-| Cloud       | In deinem Account gespeichert.                                                         |
+| Cloud       | In deinem Konto gespeichert.                                                           |
 | Geteilt     | Über den Freigabelink einer anderen Person geöffnet. Du kannst es nicht überschreiben. |
 
 Ein Fork-Kennzeichen daneben heißt, dass das Projekt von jemand anderem kopiert wurde. Fahre darüber, um zu sehen, von wem.

@@ -1,8 +1,8 @@
 # Einstellungen
 
-Alle Einstellungen findest du im Account-Menü, das du mit der Account-Schaltfläche am rechten Ende der Titelleiste öffnest. In der Touch-Ansicht ist es der Avatar oben links.
+Alle Einstellungen findest du im Benutzermenü, das du über die Schaltfläche am rechten Ende der Titelleiste öffnest. In der Touch-Ansicht ist es der Avatar oben links.
 
-![Das Account-Menü mit Design, Sprache und Editor-Einstellungen.](./images/account-menu.webp)
+![Das Benutzermenü mit Design, Sprache und Editor-Einstellungen.](./images/account-menu.webp)
 
 ## Design und Sprache {#theme-and-language}
 
@@ -25,4 +25,4 @@ Diese sechs Einstellungen, deine Tastaturbefehle und der Zustand der Minimap wer
 
 - [Einstieg](docs:getting-started): das Tutorial und die Tipps
 - [Simulation](docs:simulation): wo „Simulation automatisch starten“ und „Konflikte hervorheben“ wirken
-- [Cloud und Teilen](docs:cloud): Anmeldung und dein Account
+- [Cloud und Teilen](docs:cloud): Anmeldung und dein Konto

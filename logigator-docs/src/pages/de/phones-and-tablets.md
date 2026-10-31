@@ -6,7 +6,7 @@ Ist das Fenster 1024 px breit oder schmaler, wechselt der Editor zu einer Touch-
 
 ## Wo was liegt {#where-things-are}
 
-- Oben links öffnet dein Avatar die Account-Leiste mit Design, Sprache, den Editor-Einstellungen sowie An- und Abmelden.
+- Oben links öffnet dein Avatar das Benutzermenü mit Design, Sprache, den Editor-Einstellungen sowie An- und Abmelden.
 - Ein Tippen auf den Projektnamen öffnet das Projektmenü: Neues Projekt, Neue Komponente, Öffnen, In die Cloud hochladen oder Teilen, Als Datei exportieren, Bild generieren, Leitungen reparieren und die Einträge des Hilfe-Menüs.
 - Rückgängig, Wiederholen, Speichern und Simulation starten sind Schaltflächen oben rechts.
 - Eine Pille in der rechten oberen Ecke zeigt den Hinweis zum aktiven Werkzeug und die Rasterposition.

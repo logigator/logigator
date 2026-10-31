@@ -53,7 +53,7 @@ Schaltungen während der Simulation Eingaben an und geben Text aus.
   einzelnen Impuls sendet, heißt jetzt Impulstaster.
 - **Bildexport als verlustfreies WebP**, wo dein Browser es unterstützt. WebP
   wird nur noch angeboten, wo dein Browser es schreiben kann.
-- „Registrieren“ neben „Anmelden“ im Kontomenü des Editors.
+- „Registrieren“ neben „Anmelden“ im Benutzermenü des Editors.
 - Ein Hinweis, wenn dein Browser älter ist als die, mit denen der Editor getestet
   wird.
 
