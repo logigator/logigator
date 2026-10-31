@@ -4,7 +4,7 @@ Andreas Schlößl\
 Rüdengasse 9/7\
 1030 Viena, Austria
 
-**Correo electrónico:** [business@logigator.com](mailto:business@logigator.com)
+**Correo electrónico:** [contact@logigator.com](mailto:contact@logigator.com)
 
 **Actividad:** Dienstleistungen in der automatischen Datenverarbeitung und Informationstechnik (servicios informáticos), autorizada en Austria\
 **Autoridad competente:** Magistrat der Stadt Wien\

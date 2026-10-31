@@ -23,7 +23,7 @@ This policy describes which personal data Logigator processes, for what purpose,
 
 Andreas Schlößl
 
-Email: [business@logigator.com](mailto:business@logigator.com)
+Email: [contact@logigator.com](mailto:contact@logigator.com)
 
 You can contact this address with any question about data protection.
 
@@ -164,6 +164,6 @@ Except for the automatic hiding of circuits described above, which a person alwa
 
 You have the right to access your data (Art. 15 GDPR), to rectification (Art. 16), to erasure (Art. 17), to restriction of processing (Art. 18) and to data portability (Art. 20). You can object to processing based on our legitimate interest (Art. 21). You can withdraw consent at any time; processing that took place before remains lawful.
 
-To exercise these rights, write to [business@logigator.com](mailto:business@logigator.com).
+To exercise these rights, write to [contact@logigator.com](mailto:contact@logigator.com).
 
 If you believe we process your data unlawfully, you can lodge a complaint with the Austrian Data Protection Authority: Barichgasse 40–42, 1030 Vienna, [dsb@dsb.gv.at](mailto:dsb@dsb.gv.at), [dsb.gv.at](https://www.dsb.gv.at).

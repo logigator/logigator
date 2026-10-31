@@ -4,7 +4,7 @@ Andreas Schlößl\
 Rüdengasse 9/7\
 1030 Vienne, Autriche
 
-**E-mail :** [business@logigator.com](mailto:business@logigator.com)
+**E-mail :** [contact@logigator.com](mailto:contact@logigator.com)
 
 **Activité :** Dienstleistungen in der automatischen Datenverarbeitung und Informationstechnik (services informatiques), autorisée en Autriche\
 **Autorité de tutelle :** Magistrat der Stadt Wien\

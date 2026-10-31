@@ -23,7 +23,7 @@ Diese Erklärung beschreibt, welche personenbezogenen Daten Logigator verarbeite
 
 Andreas Schlößl
 
-E-Mail: [business@logigator.com](mailto:business@logigator.com)
+E-Mail: [contact@logigator.com](mailto:contact@logigator.com)
 
 An diese Adresse kannst du dich mit allen Fragen zum Datenschutz wenden.
 
@@ -164,6 +164,6 @@ Abgesehen vom oben beschriebenen automatischen Ausblenden von Schaltungen, das i
 
 Du hast das Recht auf Auskunft über deine Daten (Art. 15 DSGVO), auf Berichtigung (Art. 16), auf Löschung (Art. 17), auf Einschränkung der Verarbeitung (Art. 18) und auf Datenübertragbarkeit (Art. 20). Einer Verarbeitung, die auf unserem berechtigten Interesse beruht, kannst du widersprechen (Art. 21). Eine Einwilligung kannst du jederzeit widerrufen; was bis dahin verarbeitet wurde, bleibt rechtmäßig.
 
-Schreib uns dazu an [business@logigator.com](mailto:business@logigator.com).
+Schreib uns dazu an [contact@logigator.com](mailto:contact@logigator.com).
 
 Wenn du meinst, dass wir deine Daten nicht rechtmäßig verarbeiten, kannst du dich bei der Österreichischen Datenschutzbehörde beschweren: Barichgasse 40–42, 1030 Wien, [dsb@dsb.gv.at](mailto:dsb@dsb.gv.at), [dsb.gv.at](https://www.dsb.gv.at).

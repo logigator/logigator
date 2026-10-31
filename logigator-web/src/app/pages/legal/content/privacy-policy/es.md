@@ -23,7 +23,7 @@ Esta política describe qué datos personales trata Logigator, con qué finalida
 
 Andreas Schlößl
 
-Correo electrónico: [business@logigator.com](mailto:business@logigator.com)
+Correo electrónico: [contact@logigator.com](mailto:contact@logigator.com)
 
 Puedes escribir a esta dirección con cualquier pregunta sobre protección de datos.
 
@@ -164,6 +164,6 @@ Salvo la ocultación automática de circuitos descrita más arriba, que siempre 
 
 Tienes derecho a acceder a tus datos (art. 15 del RGPD), a su rectificación (art. 16), a su supresión (art. 17), a la limitación de su tratamiento (art. 18) y a su portabilidad (art. 20). Puedes oponerte a un tratamiento basado en nuestro interés legítimo (art. 21). Puedes retirar tu consentimiento en cualquier momento; el tratamiento realizado hasta entonces sigue siendo lícito.
 
-Para ejercer estos derechos, escríbenos a [business@logigator.com](mailto:business@logigator.com).
+Para ejercer estos derechos, escríbenos a [contact@logigator.com](mailto:contact@logigator.com).
 
 Si crees que tratamos tus datos de forma ilícita, puedes presentar una reclamación ante la Autoridad austriaca de Protección de Datos (Österreichische Datenschutzbehörde): Barichgasse 40–42, 1030 Viena, [dsb@dsb.gv.at](mailto:dsb@dsb.gv.at), [dsb.gv.at](https://www.dsb.gv.at).

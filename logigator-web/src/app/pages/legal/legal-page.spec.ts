@@ -24,7 +24,7 @@ describe('the legal pages', () => {
       'Contact point under the Digital Services Act'
     );
     expect(
-      page.querySelector('a[href="mailto:business@logigator.com"]')
+      page.querySelector('a[href="mailto:contact@logigator.com"]')
     ).not.toBeNull();
   });
 
