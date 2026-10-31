@@ -21,7 +21,7 @@ import { TranslateDirective } from '../../translation/translate.directive';
     <button
       *appTranslate="let t"
       type="button"
-      class="rounded-sm text-sm text-primary outline-none hover:underline focus-visible:outline-2 focus-visible:outline-primary"
+      class="rounded-sm text-sm whitespace-nowrap text-primary outline-none hover:underline focus-visible:outline-2 focus-visible:outline-primary"
       [attr.aria-describedby]="describedBy()"
       (click)="open()"
     >
