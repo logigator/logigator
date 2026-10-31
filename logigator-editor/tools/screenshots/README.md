@@ -58,7 +58,7 @@ written for the bundler rather than for Node, so `lib/runtime.ts` resolves its
 aliases and compiles it with TypeScript's `transpileModule` on load.
 
 ```bash
-yarn start:editor:prod --define "AUTOMATION_API=true"   # the editor to shoot
+yarn start:editor:prod --define "AUTOMATION_API=true" --no-watch   # the editor to shoot
 cd logigator-editor/tools/screenshots
 yarn capture docs ../../../logigator-docs
 ```
@@ -81,6 +81,11 @@ later. `AUTOMATION_API` is the one that has to come back on, because the script
 drives the editor through it; forgetting it is safe, since `Editor.open()`
 probes for the facade and aborts rather than producing wrong shots. No source
 edit is needed for any of this.
+
+`--no-watch` keeps the dev server from rebuilding while a run is going. The
+`docs` target writes into `logigator-docs`, which the editor imports, so a
+watching server picks up each capture, rebuilds and reloads the page under the
+next shot, which then fails with "Execution context was destroyed".
 
 Nothing outside the directory you name is touched.
 
