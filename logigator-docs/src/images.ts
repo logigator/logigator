@@ -263,7 +263,7 @@ const en: Readonly<Record<string, DocImage>> = {
   './images/component-settings.webp': {
     url: componentSettingsEn,
     width: 800,
-    height: 684
+    height: 540
   },
   './images/component-sr-flip-flop.webp': {
     url: componentSrFlipFlopEn,
@@ -322,7 +322,7 @@ const en: Readonly<Record<string, DocImage>> = {
     height: 276
   },
   './images/open-cloud.webp': { url: openCloudEn, width: 1280, height: 956 },
-  './images/open-file.webp': { url: openFileEn, width: 1280, height: 692 },
+  './images/open-file.webp': { url: openFileEn, width: 1280, height: 772 },
   './images/phone-layout.webp': {
     url: phoneLayoutEn,
     width: 780,
@@ -362,7 +362,7 @@ const en: Readonly<Record<string, DocImage>> = {
   './images/simulation-speed.webp': {
     url: simulationSpeedEn,
     width: 892,
-    height: 854
+    height: 910
   },
   './images/terminal-window.webp': {
     url: terminalWindowEn,
@@ -402,7 +402,7 @@ const de: Readonly<Record<string, DocImage>> = {
   './images/component-settings.webp': {
     url: componentSettingsDe,
     width: 800,
-    height: 684
+    height: 588
   },
   './images/export-image.webp': { url: exportImageDe, width: 896, height: 752 },
   './images/gamepad-window.webp': {
@@ -417,11 +417,11 @@ const de: Readonly<Record<string, DocImage>> = {
   },
   './images/keyboard-window.webp': {
     url: keyboardWindowDe,
-    width: 1438,
+    width: 1432,
     height: 774
   },
   './images/open-cloud.webp': { url: openCloudDe, width: 1280, height: 956 },
-  './images/open-file.webp': { url: openFileDe, width: 1280, height: 692 },
+  './images/open-file.webp': { url: openFileDe, width: 1280, height: 772 },
   './images/phone-layout.webp': {
     url: phoneLayoutDe,
     width: 780,
@@ -461,7 +461,7 @@ const de: Readonly<Record<string, DocImage>> = {
   './images/simulation-speed.webp': {
     url: simulationSpeedDe,
     width: 892,
-    height: 854
+    height: 954
   },
   './images/terminal-window.webp': {
     url: terminalWindowDe,
