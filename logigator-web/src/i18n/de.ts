@@ -46,7 +46,7 @@ const de: TranslationSchema = {
   site: {
     name: 'Logigator',
     description:
-      'Baue Logikschaltungen aus Gattern und Leitungen im Browser, simuliere sie live und verwende jede Schaltung als Komponente wieder. Kostenlos und Open Source.'
+      'Baue Logikschaltungen aus Gattern und Leitungen im Browser, simuliere sie live und verwandle jede Schaltung in eine wiederverwendbare Komponente. Kostenlos und Open Source.'
   },
   header: {
     home: 'Logigator Startseite',
@@ -57,11 +57,11 @@ const de: TranslationSchema = {
     myComponents: 'Meine Komponenten',
     login: 'Anmelden',
     register: 'Registrieren',
-    account: 'Account',
+    account: 'Konto',
     logout: 'Abmelden',
     openNavigation: 'Navigation öffnen',
     navigation: 'Navigation',
-    userMenu: 'Account-Menü',
+    userMenu: 'Benutzermenü',
     notSignedIn: 'Nicht angemeldet',
     theme: 'Design',
     themeLight: 'Hell',
@@ -89,7 +89,7 @@ const de: TranslationSchema = {
     copied: 'Link kopiert.',
     copyFailed: 'Der Link konnte nicht kopiert werden.',
     embedLabel: 'Einbetten',
-    embedHide: 'Einbetten ausblenden',
+    embedHide: 'Einbettung ausblenden',
     embedCopy: 'Code kopieren',
     embedCopied: 'Einbettungscode kopiert.',
     embedCopyFailed: 'Der Einbettungscode konnte nicht kopiert werden.',
@@ -107,7 +107,7 @@ const de: TranslationSchema = {
     },
     unlisted: {
       label: 'Alle mit dem Link',
-      hint: 'Wer den Link hat, kann sie lesend öffnen. Sie bleibt aus den Community-Listen und aus Suchmaschinen heraus.'
+      hint: 'Alle mit dem Link können sie öffnen, aber nicht bearbeiten. Sie wird weder in der Community gelistet noch von Suchmaschinen indexiert.'
     },
     public: {
       label: 'Alle',
@@ -172,7 +172,7 @@ const de: TranslationSchema = {
       alreadyLinked:
         'Dieses Google-Konto gehört bereits zu einem anderen Logigator-Konto.',
       accountMismatch:
-        'Das ist nicht das Google-Konto, das mit diesem Logigator-Account verknüpft ist.',
+        'Das ist nicht das Google-Konto, das mit diesem Logigator-Konto verknüpft ist.',
       reauthenticationRequired:
         'Deine letzte Anmeldung ist zu lange her, um Google zu verknüpfen. Melde dich zuerst noch einmal an.'
     }
@@ -183,7 +183,7 @@ const de: TranslationSchema = {
       heading: 'Willkommen zurück',
       submit: 'Anmelden',
       metaDescription:
-        'Melde dich bei Logigator an, um deine gespeicherten Schaltungen, deine Bauteilbibliothek und deine Projekte mit Stern zu öffnen.',
+        'Melde dich bei Logigator an, um deine gespeicherten Schaltungen, deine Komponentenbibliothek und die Projekte, denen du einen Stern gegeben hast, zu öffnen.',
       forgotPassword: 'Passwort vergessen?',
       noAccount: 'Noch kein Konto?',
       registerLink: 'Registrieren',
@@ -197,7 +197,7 @@ const de: TranslationSchema = {
       heading: 'Konto erstellen',
       submit: 'Registrieren',
       metaDescription:
-        'Erstelle ein kostenloses Logigator-Konto, um deine Schaltungen in der Cloud zu speichern, eine Bauteilbibliothek aufzubauen und deine Arbeit zu teilen.',
+        'Erstelle ein kostenloses Logigator-Konto, um deine Schaltungen in der Cloud zu speichern, eine Komponentenbibliothek aufzubauen und deine Arbeit zu teilen.',
       emailTaken: 'Diese E-Mail-Adresse gehört bereits zu einem Konto.',
       mailFailed:
         'Dein Konto wurde erstellt, die Bestätigungsmail konnte aber nicht gesendet werden. Melde dich an, um sie erneut anzufordern.',
@@ -243,7 +243,7 @@ const de: TranslationSchema = {
       title: 'Logikschaltungen online bauen und simulieren',
       hero: {
         headline: 'Baue, simuliere und teile Logikschaltungen kostenlos.',
-        lede: 'Fang mit einem einzelnen Gatter und einer LED an und mach weiter bis zur eigenen CPU.',
+        lede: 'Beginne mit einem einzelnen Gatter und einer LED und arbeite dich bis zu deiner eigenen CPU vor.',
         cta: 'Zum Editor',
         ctaSecondary: 'Beispiele ansehen'
       },
@@ -253,15 +253,15 @@ const de: TranslationSchema = {
         learnMoreLabel: 'Mehr erfahren: {{feature}}',
         stepping: {
           title: 'Folge jedem Signal',
-          body: 'Leitungen mit Signal leuchten auf. Halte die Simulation an und geh Tick für Tick weiter.'
+          body: 'Leitungen, auf denen ein Signal anliegt, leuchten auf. Halte die Simulation an und gehe Tick für Tick weiter.'
         },
         inspection: {
           title: 'Schau in deine Komponenten',
-          body: 'Klick während der Simulation auf eine eigene Komponente, um ihre innere Schaltung zu sehen, oder verfolge, was ein ROM oder RAM liest und schreibt.'
+          body: 'Klicke während der Simulation auf eine eigene Komponente, um ihre innere Schaltung zu sehen, oder verfolge, was ein ROM oder RAM liest und schreibt.'
         },
         components: {
           title: 'Baue eigene Komponenten',
-          body: 'Mach aus einer Schaltung eine Komponente und nutze sie in größeren. Einen Volladdierer baust du einmal und verwendest ihn achtmal.'
+          body: 'Verwandle eine Schaltung in eine Komponente und verwende sie in größeren Schaltungen wieder. Einen Volladdierer baust du einmal und setzt ihn dann achtmal ein.'
         },
         io: {
           title: 'Jede Menge zum Ausprobieren',
@@ -269,17 +269,17 @@ const de: TranslationSchema = {
         },
         share: {
           title: 'Teile, was du baust',
-          body: 'Schick einen Link oder veröffentliche in der Community. Ein Projekt lässt sich auch als Datei exportieren, das Board als Bild für Folien und Arbeitsblätter.'
+          body: 'Teile einen Link oder veröffentliche deine Schaltung in der Community. Ein Projekt kannst du auch als Datei exportieren, die Arbeitsfläche als Bild für Präsentationen und Arbeitsblätter.'
         },
         browser: {
           title: 'Nichts zu installieren',
-          body: 'Ein Konto brauchst du erst zum Speichern in der Cloud. Der Editor läuft im Browser, auch auf Tablets und Handys.'
+          body: 'Ein Konto brauchst du nur, wenn du in der Cloud speichern möchtest. Der Editor läuft im Browser, auch auf Tablets und Handys.'
         }
       },
       examples: {
         title: 'Beispielschaltungen',
         description:
-          'Lerne mit unseren Beispielen einfache, als auch komplexere Schaltungen zu bauen.',
+          'Lerne anhand unserer Beispiele, wie du einfache und komplexere Schaltungen baust.',
         more: 'Alle Beispiele',
         emptyHeading: 'Noch keine Beispiele',
         emptyBody: 'Für diese Installation wurde noch nichts veröffentlicht.',
@@ -288,25 +288,25 @@ const de: TranslationSchema = {
       video: {
         title: 'Was sind Logikschaltungen?',
         description:
-          'Wenn du nicht weißt, was Logikschaltungen oder Logikgatter sind, haben wir eine kurze Erklärung für dich gemacht.',
+          'Wenn du nicht weißt, was Logikschaltungen oder Logikgatter sind, findest du hier eine kurze animierte Erklärung.',
         play: 'Video „{{title}}“ auf YouTube abspielen'
       },
       stats: {
         projects: 'öffentliche Schaltungen',
-        components: 'öffentliche Bausteine',
+        components: 'öffentliche Komponenten',
         examples: 'erklärte Beispiele'
       },
       community: {
-        projectsTitle: 'Community erstellte Projekte',
+        projectsTitle: 'Projekte aus der Community',
         projectsDescription:
-          'Die Schaltungen mit den meisten Sternen. Öffne eine, um zu sehen, wie sie funktioniert, oder leg dir eine Kopie an und bau darauf auf.',
+          'Die Schaltungen mit den meisten Sternen. Öffne eine, um zu sehen, wie sie funktioniert, oder erstelle eine Kopie und entwickle sie weiter.',
         moreProjects: 'Alle Community-Projekte',
         projectsEmptyHeading: 'Noch keine öffentlichen Projekte',
         projectsEmptyBody: 'Bisher wurde nichts mit der Community geteilt.',
         projectsFailed: 'Projekte konnten nicht geladen werden',
-        componentsTitle: 'Community erstellte Komponenten',
+        componentsTitle: 'Komponenten aus der Community',
         componentsDescription:
-          'Fertige Bausteine von anderen. Kopier einen in deine Bibliothek und setze ihn in deine eigenen Schaltungen ein.',
+          'Fertige Bausteine von anderen. Kopiere einen in deine Bibliothek und setze ihn in deine eigenen Schaltungen ein.',
         moreComponents: 'Alle Community-Komponenten',
         componentsEmptyHeading: 'Noch keine öffentlichen Komponenten',
         componentsEmptyBody: 'Bisher wurde nichts mit der Community geteilt.',
@@ -315,7 +315,7 @@ const de: TranslationSchema = {
     },
     examples: {
       title: 'Beispielschaltungen',
-      lede: 'Lerne mit unseren Beispielen einfache, als auch komplexere Schaltungen zu bauen. Jede davon öffnet sich startklar im Editor.',
+      lede: 'Lerne anhand unserer Beispiele, wie du einfache und komplexere Schaltungen baust. Jedes lässt sich direkt im Editor öffnen und sofort simulieren.',
       open: 'Im Editor öffnen',
       openNamed: '„{{name}}“ im Editor öffnen',
       emptyHeading: 'Noch keine Beispiele',
@@ -325,13 +325,13 @@ const de: TranslationSchema = {
     community: {
       nav: {
         projects: 'Projekte',
-        components: 'Bausteine'
+        components: 'Komponenten'
       },
       browse: {
         projectsTitle: 'Community-Projekte',
         projectsLede:
-          'Alle Schaltungen, die die Community veröffentlicht hat. Öffne eine im Editor oder speichere eine Kopie und baue darauf auf.',
-        componentsTitle: 'Community-Bausteine',
+          'Alle Schaltungen, die die Community veröffentlicht hat. Öffne eine im Editor oder erstelle eine Kopie und entwickle sie weiter.',
+        componentsTitle: 'Community-Komponenten',
         componentsLede:
           'Wiederverwendbare Bausteine aus der Community. Platziere einen davon in einer eigenen Schaltung.',
         orderLabel: 'Sortieren nach',
@@ -339,11 +339,12 @@ const de: TranslationSchema = {
         orderStars: 'Meiste Sterne',
         orderLatest: 'Neueste',
         searchLabel: 'Nach Namen suchen',
-        searchPlaceholder: 'Suchen..',
+        searchPlaceholder: 'Suchen …',
         count: '{{count}} Ergebnisse',
         clearSearch: 'Suche zurücksetzen',
         noMatchHeading: 'Nichts gefunden',
-        noMatchBody: 'Keine veröffentlichte Schaltung heißt „{{search}}“.',
+        noMatchBody:
+          'Keine veröffentlichte Schaltung trägt den Namen „{{search}}“.',
         emptyHeading: 'Noch nichts vorhanden',
         emptyBody: 'Bisher wurde nichts mit der Community geteilt.',
         errorHeading: 'Die Liste konnte nicht geladen werden'
@@ -354,15 +355,15 @@ const de: TranslationSchema = {
         star: 'Stern geben',
         unstar: 'Stern gegeben',
         symbol: 'Symbol',
-        inputs: 'Ein',
-        outputs: 'Aus',
-        components: 'Bausteine',
+        inputs: 'Eingänge',
+        outputs: 'Ausgänge',
+        components: 'Komponenten',
         wires: 'Leitungen',
         edited: 'bearbeitet',
         about: 'Über diese Schaltung',
         noDescription: 'Es wurde keine Beschreibung angegeben.',
         emptyNotice:
-          'Diese Schaltung ist leer und wird deshalb noch nicht in der Community gelistet. Sie erscheint dort, sobald sie einen Baustein oder eine Leitung enthält.',
+          'Diese Schaltung ist leer und wird deshalb noch nicht in der Community gelistet. Sie erscheint dort, sobald sie eine Komponente oder eine Leitung enthält.',
         awaitingCheckNotice:
           'Diese Schaltung wird geprüft, bevor sie in der Community erscheint. Das dauert meist nur ein paar Minuten; ihren Link kannst du schon jetzt teilen.',
         forkedFrom: 'Abgeleitet von',
@@ -381,7 +382,7 @@ const de: TranslationSchema = {
       },
       report: {
         heading: 'Schaltung melden',
-        lede: 'Sag uns, was mit dieser Schaltung nicht stimmt. Jede Meldung wird von einem Menschen gelesen.',
+        lede: 'Teile uns mit, was mit dieser Schaltung nicht stimmt. Jede Meldung wird von einem Menschen gelesen.',
         reasonLabel: 'Grund',
         reasons: {
           illegal: 'Rechtswidriger Inhalt',
@@ -393,7 +394,7 @@ const de: TranslationSchema = {
         },
         explanationLabel: 'Was stimmt nicht',
         explanationHint:
-          'Beschreib, was du gefunden hast und wo. Nenn bei einer Urheberrechtsverletzung das Originalwerk.',
+          'Beschreibe, was du gefunden hast und wo. Nenne bei einer Urheberrechtsverletzung das Originalwerk.',
         emailLabel: 'E-Mail',
         emailHint:
           'Optional. Wird nur genutzt, um dir zu dieser Meldung zu antworten.',
@@ -402,30 +403,30 @@ const de: TranslationSchema = {
         done: 'Danke. Deine Meldung wurde gesendet und wird geprüft.'
       },
       stargazers: {
-        title: 'Sterne',
+        title: 'Wer einen Stern gegeben hat',
         count: '{{count}} Sterne',
-        seeAll: 'Alle ansehen, die einen Stern gegeben haben',
+        seeAll: 'Alle anzeigen, die einen Stern gegeben haben',
         emptyHeading: 'Noch keine Sterne',
-        emptyBody: 'Diese Schaltung hat noch niemand mit einem Stern versehen.',
-        errorHeading: 'Die Sterne konnten nicht geladen werden'
+        emptyBody: 'Dieser Schaltung hat noch niemand einen Stern gegeben.',
+        errorHeading: 'Die Liste konnte nicht geladen werden'
       },
       profile: {
         title: 'Mitglied',
         about: 'Über dieses Mitglied',
         tabTitle: '{{username}} – {{section}}',
         metaDescription:
-          'Die Schaltungen und Bausteine, die {{username}} auf Logigator veröffentlicht hat.',
+          'Die Schaltungen und Komponenten, die {{username}} auf Logigator veröffentlicht hat.',
         sections: 'Die Listen dieses Mitglieds',
         memberSince: 'Mitglied seit',
         projects: 'Projekte',
-        components: 'Bausteine',
+        components: 'Komponenten',
         stars: 'Sterne',
-        starredProjects: 'Projekte mit Stern',
-        starredComponents: 'Bausteine mit Stern',
+        starredProjects: 'Mit Stern markierte Projekte',
+        starredComponents: 'Mit Stern markierte Komponenten',
         emptyProjects: 'Keine öffentlichen Projekte',
-        emptyComponents: 'Keine öffentlichen Bausteine',
-        emptyStarredProjects: 'Keine Projekte mit Stern',
-        emptyStarredComponents: 'Keine Bausteine mit Stern',
+        emptyComponents: 'Keine öffentlichen Komponenten',
+        emptyStarredProjects: 'Noch keinem Projekt einen Stern gegeben',
+        emptyStarredComponents: 'Noch keiner Komponente einen Stern gegeben',
         emptyBody: 'In dieser Kategorie gibt es nichts zu zeigen.',
         errorHeading: 'Das Profil konnte nicht geladen werden',
         listErrorHeading: 'Die Liste konnte nicht geladen werden'
@@ -453,7 +454,7 @@ const de: TranslationSchema = {
         count: '{{count}} Komponenten',
         emptyHeading: 'Noch keine Komponenten',
         emptyBody:
-          'Erstelle hier eine, oder mach im Editor eine aus einer Schaltung, die du gebaut hast.'
+          'Erstelle hier eine neue oder wandle im Editor eine deiner Schaltungen in eine Komponente um.'
       },
       create: {
         headingProject: 'Neues Projekt',
@@ -468,10 +469,10 @@ const de: TranslationSchema = {
       },
       list: {
         searchLabel: 'Nach Namen suchen',
-        searchPlaceholder: 'Suchen..',
+        searchPlaceholder: 'Suchen …',
         clearSearch: 'Suche zurücksetzen',
         noMatchHeading: 'Nichts gefunden',
-        noMatchBody: 'Nichts von dir heißt „{{search}}“.',
+        noMatchBody: 'Nichts von dir trägt den Namen „{{search}}“.',
         errorHeading: 'Die Liste konnte nicht geladen werden',
         openInEditor: '„{{name}}“ im Editor öffnen',
         actionsFor: 'Aktionen für „{{name}}“',
@@ -505,13 +506,13 @@ const de: TranslationSchema = {
         visibilityLabel: 'Wer kann sie öffnen',
         linkLabel: 'Link zum Teilen',
         noLink:
-          'Solange die Schaltung privat ist, kannst nur du sie öffnen. Der Link bleibt derselbe: Wähle „Alle mit dem Link“, um ihn wieder herauszugeben oder neu zu generieren.',
+          'Solange die Schaltung privat ist, kannst nur du sie öffnen. Der Link selbst bleibt gleich. Wähle „Alle mit dem Link“, um ihn erneut zu teilen oder einen neuen Link zu erstellen.',
         viewPublicPage: 'Community-Seite ansehen',
         regenerateWarning:
           'Der alte Link hört sofort auf zu funktionieren – für alle, die ihn haben. Die Schaltung selbst bleibt unverändert.',
-        regenerate: 'Neuen Link vergeben',
+        regenerate: 'Neuen Link erstellen',
         linkPublished:
-          'Der Link wurde nicht ersetzt: Die Schaltung ist veröffentlicht, und ihr Link ist die Adresse ihrer Seite.',
+          'Der Link wurde nicht ersetzt: Die Schaltung ist veröffentlicht, und ihre Community-Seite ist unter diesem Link erreichbar.',
         close: 'Schließen'
       },
       delete: {
@@ -526,7 +527,7 @@ const de: TranslationSchema = {
         failed: '„{{name}}“ konnte nicht gelöscht werden.'
       },
       account: {
-        title: 'Account',
+        title: 'Konto',
         lede: 'Dein Name und Bild, die Adresse für die Anmeldung und wie du dich anmeldest.',
         memberSince: 'Mitglied seit {{date}}',
         currentPassword: 'Aktuelles Passwort',
@@ -534,7 +535,7 @@ const de: TranslationSchema = {
         profile: {
           heading: 'Profil',
           description:
-            'Name, Bild und Profil, die neben allem stehen, was du veröffentlichst.',
+            'Dein Name, dein Profilbild und dein Profil werden neben allem angezeigt, was du veröffentlichst.',
           changePicture: 'Bild ändern',
           removePicture: 'Entfernen',
           pictureHint:
@@ -547,7 +548,7 @@ const de: TranslationSchema = {
           save: 'Speichern',
           saved: 'Dein Profil wurde gespeichert.',
           stale:
-            'Dein Profil wurde in einem anderen Tab oder Fenster geändert, deshalb wurden diese Änderungen nicht gespeichert. Wenn du das gespeicherte Profil lädst, wird ersetzt, was du hier eingegeben hast.',
+            'Dein Profil wurde in einem anderen Tab oder Fenster geändert. Deshalb wurden deine Änderungen nicht gespeichert. Wenn du das gespeicherte Profil lädst, gehen deine Eingaben hier verloren.',
           loadSaved: 'Gespeichertes Profil laden',
           avatarRejected:
             'Dieses Bild konnte nicht verwendet werden. Versuche ein kleineres PNG, JPEG, WebP oder GIF.'
@@ -555,70 +556,70 @@ const de: TranslationSchema = {
         email: {
           heading: 'E-Mail-Adresse',
           description:
-            'Die Adresse für deine Anmeldung, und wohin Bestätigungen gehen.',
+            'Die E-Mail-Adresse, mit der du dich anmeldest und an die Bestätigungen gesendet werden.',
           current: 'Aktuell:',
           unverified: 'nicht bestätigt',
           newLabel: 'Neue E-Mail-Adresse',
           passwordHint: 'Dein Passwort bestätigt, dass du es bist.',
           submit: 'Bestätigung senden',
           pending:
-            'Ein Bestätigungslink ist an {{email}} unterwegs. Deine Adresse wechselt, sobald du ihn öffnest.',
-          taken: 'Zu dieser E-Mail-Adresse gibt es schon einen Account.',
+            'Ein Bestätigungslink wurde an {{email}} gesendet. Deine E-Mail-Adresse wird geändert, sobald du den Link öffnest.',
+          taken: 'Zu dieser E-Mail-Adresse gibt es schon ein Konto.',
           unchanged: 'Das ist bereits deine Adresse.',
           mailFailed:
             'Die Bestätigungsmail konnte nicht gesendet werden. Es hat sich nichts geändert – bitte versuche es erneut.',
           reauthenticate:
-            'Melde dich noch einmal mit Google an, um deine Adresse zu ändern. Danach kommst du hierher zurück und schließt es ab.'
+            'Melde dich noch einmal mit Google an, um deine Adresse zu ändern. Anschließend kehrst du hierher zurück, um den Vorgang abzuschließen.'
         },
         password: {
           heading: 'Passwort',
           description:
-            'Zum Ändern gehört, dass du überall sonst abgemeldet wirst.',
+            'Wenn du dein Passwort änderst, wirst du überall sonst abgemeldet.',
           setHeading: 'Passwort festlegen',
           setDescription:
-            'Du hast dich mit Google registriert und hast noch kein Passwort. Mit einem hast du einen zweiten Weg hinein.',
+            'Du hast dich mit Google registriert und hast noch kein Passwort. Mit einem Passwort kannst du dich auch ohne Google anmelden.',
           newLabel: 'Neues Passwort',
           submit: 'Passwort ändern',
           setSubmit: 'Passwort festlegen',
           saved: 'Dein Passwort wurde geändert.',
           sessionsNotice:
-            'Deine anderen Sitzungen werden abgemeldet. Diese bleibt.',
+            'Alle anderen Sitzungen werden abgemeldet. Diese Sitzung bleibt angemeldet.',
           reauthenticate:
-            'Melde dich noch einmal mit Google an, um ein Passwort festzulegen. Danach kommst du hierher zurück und schließt es ab.'
+            'Melde dich noch einmal mit Google an, um ein Passwort festzulegen. Anschließend kehrst du hierher zurück, um den Vorgang abzuschließen.'
         },
         google: {
           heading: 'Google',
           description:
-            'Anmelden mit deinem Google-Konto, zusätzlich zum Passwort.',
+            'Melde dich zusätzlich zu deinem Passwort mit deinem Google-Konto an.',
           linked: 'Dein Google-Konto ist verknüpft.',
           link: 'Google-Konto verknüpfen',
           unlink: 'Verknüpfung lösen',
           unlinkConfirm:
             'Die Anmeldung mit Google funktioniert dann nicht mehr. Du kannst sie jederzeit wieder verknüpfen.',
           needsPassword:
-            'Lege zuerst ein Passwort fest – Google ist gerade der einzige Weg in diesen Account.',
+            'Lege zuerst ein Passwort fest – Google ist gerade der einzige Weg in dieses Konto.',
           reauthenticate:
             'Deine letzte Anmeldung ist schon eine Weile her. Gib dein Passwort ein, um Google weiter zu verknüpfen.'
         },
         delete: {
-          heading: 'Account löschen',
+          heading: 'Konto löschen',
           description:
-            'Dein Account und alle Projekte, Komponenten und Markierungen darin werden gelöscht. Das lässt sich nicht rückgängig machen.',
-          submit: 'Meinen Account löschen',
+            'Dein Konto und alle dazugehörigen Projekte, Komponenten und Sterne werden gelöscht. Das lässt sich nicht rückgängig machen.',
+          submit: 'Mein Konto löschen',
           confirm:
             'Alles, was du auf Logigator gemacht hast, wird endgültig gelöscht.',
-          done: 'Dein Account wurde gelöscht.',
+          done: 'Dein Konto wurde gelöscht.',
           reauthenticate:
-            'Melde dich noch einmal mit Google an, um deinen Account zu löschen. Danach kommst du hierher zurück und schließt es ab.'
+            'Melde dich noch einmal mit Google an, um dein Konto zu löschen. Anschließend kehrst du hierher zurück, um den Vorgang abzuschließen.'
         }
       }
     },
     docs: {
       title: 'Dokumentation',
-      lede: 'Jeder Teil des Logigator-Editors, erklärt: die Arbeitsfläche und ihre Werkzeuge, das Bauen von Schaltungen, alle Komponenten, das Simulieren und das Aufbewahren deiner Arbeit.',
+      lede: 'Hier wird jeder Teil des Logigator-Editors erklärt: die Arbeitsfläche und ihre Werkzeuge, das Bauen von Schaltungen, alle Komponenten, die Simulation und das Speichern deiner Arbeit.',
       search: {
         label: 'Dokumentation durchsuchen',
-        placeholder: 'Suchen..',
+        placeholder: 'Suchen …',
         empty: 'Nichts passt zu „{{query}}“.'
       },
       navLabel: 'Dokumentationsseiten',
@@ -653,7 +654,7 @@ const de: TranslationSchema = {
     },
     changelog: {
       title: 'Änderungsprotokoll',
-      lede: 'Jede Version von Logigator, die neueste zuerst: was hinzugekommen ist, was sich geändert hat und was behoben wurde.',
+      lede: 'Alle Versionen von Logigator, die neueste zuerst: was hinzugekommen ist, was sich geändert hat und was behoben wurde.',
       feed: 'Per Atom abonnieren'
     },
     imprint: {
@@ -662,7 +663,7 @@ const de: TranslationSchema = {
     },
     privacyPolicy: {
       title: 'Datenschutzerklärung',
-      lede: 'Welche Daten Logigator verarbeitet, warum das geschieht und welche Rechte du daran hast.'
+      lede: 'Welche Daten Logigator verarbeitet, warum das geschieht und welche Rechte dir in Bezug auf diese Daten zustehen.'
     },
     notFound: {
       title: 'Seite nicht gefunden',
