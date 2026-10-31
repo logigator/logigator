@@ -151,6 +151,14 @@ const de: TranslationSchema = {
       network:
         'Keine Verbindung zum Server. Überprüfe deine Verbindung und versuche es erneut.',
       unknown: 'Etwas ist schiefgelaufen. Bitte versuche es erneut.'
+    },
+    /** Asked before leaving a page whose form has edits not yet saved. */
+    unsavedChanges: {
+      header: 'Änderungen verwerfen?',
+      message:
+        'Du hast ungespeicherte Änderungen auf dieser Seite. Wenn du sie verlässt, gehen sie verloren.',
+      accept: 'Verwerfen',
+      reject: 'Weiter bearbeiten'
     }
   },
   auth: {
@@ -547,6 +555,7 @@ const de: TranslationSchema = {
           websiteLabel: 'Webseite',
           linkLabel: 'Link {{n}}',
           save: 'Speichern',
+          viewProfile: 'Öffentliches Profil ansehen',
           saved: 'Dein Profil wurde gespeichert.',
           stale:
             'Dein Profil wurde in einem anderen Tab oder Fenster geändert. Deshalb wurden deine Änderungen nicht gespeichert. Wenn du das gespeicherte Profil lädst, gehen deine Eingaben hier verloren.',

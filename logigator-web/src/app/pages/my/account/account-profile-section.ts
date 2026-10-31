@@ -12,7 +12,8 @@ import {
   Validators
 } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { firstValueFrom, Observable } from 'rxjs';
+import { RouterLink } from '@angular/router';
+import { firstValueFrom, map, Observable } from 'rxjs';
 import {
   ApiRequestError,
   bioSchema,
@@ -32,8 +33,10 @@ import {
   LgMessage,
   LgTextarea
 } from '@logigator/ui';
+import { SiteLinks } from '../../../layout/site-links';
 import { UserApiService } from '../../../api/services/user-api.service';
 import { genericFailureKey } from '../../../forms/api-failure';
+import { warnBeforeUnload } from '../../../forms/unsaved-changes';
 import { fieldError } from '../../../forms/field-error';
 import { zodValidator } from '../../../forms/zod-validator';
 import { TranslateDirective } from '../../../translation/translate.directive';
@@ -85,6 +88,7 @@ const LINK_FIELDS = ['link0', 'link1', 'link2'] as const;
     LgMessage,
     LgTextarea,
     ReactiveFormsModule,
+    RouterLink,
     TranslateDirective
   ],
   templateUrl: './account-profile-section.html',
@@ -94,7 +98,14 @@ export class AccountProfileSection {
   private readonly userApi = inject(UserApiService);
   protected readonly session = inject(SessionService);
 
+  private readonly links = inject(SiteLinks);
+
   protected readonly accept = ACCEPTED_TYPES;
+
+  protected readonly profileUrl = computed(() => {
+    const id = this.session.user()?.id;
+    return id ? this.links.communityUser(id) : null;
+  });
 
   // One group for the whole section, so the `<form>` carries `[formGroup]` and
   // a single Save writes everything shown in it.
@@ -135,6 +146,20 @@ export class AccountProfileSection {
     initialValue: this.session.user()?.bio ?? ''
   });
 
+  private readonly dirty = toSignal(
+    this.form.events.pipe(map(() => this.form.dirty)),
+    { initialValue: false }
+  );
+
+  /**
+   * Edits not yet saved. Only while signed in: once the account or its session
+   * is gone there is nowhere left to save them, and deleting the account must
+   * not stop to ask about its profile.
+   */
+  public readonly unsaved = computed(
+    () => this.dirty() && this.session.user() !== null
+  );
+
   protected readonly usernameError = fieldError(
     this.form.controls.username,
     'username'
@@ -163,6 +188,10 @@ export class AccountProfileSection {
     const variants = this.session.user()?.avatar;
     return variants?.length ? variants : undefined;
   });
+
+  constructor() {
+    warnBeforeUnload(this.unsaved);
+  }
 
   /** The stored links, which an account with none has an empty list of. */
   private storedLinks(): SocialLink[] {

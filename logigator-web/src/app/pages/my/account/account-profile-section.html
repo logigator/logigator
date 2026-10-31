@@ -189,10 +189,16 @@
       </lg-form-field>
       }
 
-      <div>
+      <div class="flex flex-wrap items-center gap-3">
         <button lgButton type="submit" [loading]="saving()">
           {{ t('pages.my.account.profile.save') }}
         </button>
+        <!-- Shows what is saved, not what is typed: a visitor's view of it. -->
+        @if (profileUrl(); as url) {
+        <a lgButton outlined severity="secondary" [routerLink]="url">
+          {{ t('pages.my.account.profile.viewProfile') }}
+        </a>
+        }
       </div>
     </form>
   </div>

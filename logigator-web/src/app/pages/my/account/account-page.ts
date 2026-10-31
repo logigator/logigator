@@ -2,8 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  inject
+  inject,
+  viewChild
 } from '@angular/core';
+import { HoldsUnsavedChanges } from '../../../forms/unsaved-changes';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationService } from '../../../translation/translation.service';
 import { SessionService } from '../../../user/session.service';
@@ -36,10 +38,18 @@ import { AccountProfileSection } from './account-profile-section';
   templateUrl: './account-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AccountPage {
+export class AccountPage implements HoldsUnsavedChanges {
   private readonly translation = inject(TranslationService);
 
   protected readonly session = inject(SessionService);
+
+  private readonly profile = viewChild.required(AccountProfileSection);
+
+  /** The profile is the one section whose fields are worth keeping: the others
+   * hold a password or an address typed for a single request. */
+  public hasUnsavedChanges(): boolean {
+    return this.profile().unsaved();
+  }
 
   /** A calendar date in UTC, the way every other date on the site is written:
    * a zone west of midnight names the day before. */

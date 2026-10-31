@@ -249,6 +249,36 @@ describe('the account sections', () => {
     expect(http.match(() => true)).toHaveLength(0);
   });
 
+  it('holds the tab open while profile edits are unsaved', async () => {
+    const unloadIsHeld = (): boolean => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+
+    render(AccountProfileSection);
+    expect(unloadIsHeld()).toBe(false);
+
+    type('account-bio', 'Relays.');
+    await settle();
+    expect(unloadIsHeld()).toBe(true);
+
+    root.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await settle();
+    http.expectOne('/api/user').flush({
+      user: { ...USER, bio: 'Relays.' },
+      emailVerificationSent: false
+    });
+    await settle();
+    expect(unloadIsHeld()).toBe(false);
+
+    // Signed out, or the account deleted: nowhere is left to save them to.
+    type('account-bio', 'Relays and valves.');
+    session.signedOut();
+    await settle();
+    expect(unloadIsHeld()).toBe(false);
+  });
+
   /**
    * The session went with the account, so signing out is local: `logout()`
    * would spend a request on a session that no longer exists — and the API

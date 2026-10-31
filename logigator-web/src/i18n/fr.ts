@@ -147,6 +147,14 @@ const fr: TranslationSchema = {
       network:
         'Aucune connexion au serveur. Vérifiez votre réseau puis réessayez.',
       unknown: 'Une erreur est survenue. Réessayez.'
+    },
+    /** Asked before leaving a page whose form has edits not yet saved. */
+    unsavedChanges: {
+      header: 'Abandonner les modifications ?',
+      message:
+        'Vous avez des modifications non enregistrées sur cette page. Elles seront perdues si vous la quittez.',
+      accept: 'Abandonner',
+      reject: 'Continuer à modifier'
     }
   },
   auth: {
@@ -538,6 +546,7 @@ const fr: TranslationSchema = {
           websiteLabel: 'Site web',
           linkLabel: 'Lien {{n}}',
           save: 'Enregistrer',
+          viewProfile: 'Voir le profil public',
           saved: 'Votre profil a été enregistré.',
           stale:
             'Votre profil a été modifié dans un autre onglet ou une autre fenêtre, ces modifications n’ont donc pas été enregistrées. Charger le profil enregistré remplace ce que vous avez saisi ici.',

@@ -148,6 +148,14 @@ const es: TranslationSchema = {
       network:
         'Sin conexión con el servidor. Comprueba tu red e inténtalo de nuevo.',
       unknown: 'Algo ha salido mal. Inténtalo de nuevo.'
+    },
+    /** Asked before leaving a page whose form has edits not yet saved. */
+    unsavedChanges: {
+      header: '¿Descartar cambios?',
+      message:
+        'Tienes cambios sin guardar en esta página. Se perderán si la abandonas.',
+      accept: 'Descartar',
+      reject: 'Seguir editando'
     }
   },
   auth: {
@@ -541,6 +549,7 @@ const es: TranslationSchema = {
           websiteLabel: 'Sitio web',
           linkLabel: 'Enlace {{n}}',
           save: 'Guardar',
+          viewProfile: 'Ver el perfil público',
           saved: 'Tu perfil se guardó.',
           stale:
             'Tu perfil se cambió en otra pestaña o ventana, así que estos cambios no se guardaron. Al cargar el perfil guardado se reemplaza lo que escribiste aquí.',

@@ -160,6 +160,14 @@ const en = {
         'Your cloud storage is full. Delete projects or components you no longer need to make room.',
       network: 'No connection to the server. Check your network and try again.',
       unknown: 'Something went wrong. Please try again.'
+    },
+    /** Asked before leaving a page whose form has edits not yet saved. */
+    unsavedChanges: {
+      header: 'Discard changes?',
+      message:
+        'You have unsaved changes on this page. They are lost if you leave it.',
+      accept: 'Discard',
+      reject: 'Keep editing'
     }
   },
   auth: {
@@ -557,6 +565,7 @@ const en = {
           /** Numbered: the three slots are the same field three times. */
           linkLabel: 'Link {{n}}',
           save: 'Save',
+          viewProfile: 'View public profile',
           saved: 'Your profile was saved.',
           stale:
             'Your profile was changed in another tab or window, so these edits were not saved. Loading the saved profile replaces what you typed here.',

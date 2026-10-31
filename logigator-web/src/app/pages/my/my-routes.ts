@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { unsavedChangesGuard } from '../../forms/unsaved-changes';
 import { PageMeta } from '../../seo/seo.service';
 import { authGuard, authProvidersGuard } from '../../user/auth-guards';
 import { CommunityRouteData } from '../community/community-kind';
@@ -57,6 +58,7 @@ export const myRoutes: Routes = [
     // deployment offers the round trip, and a section that appeared after
     // hydration would move everything under it.
     canActivate: [authGuard, authProvidersGuard],
+    canDeactivate: [unsavedChangesGuard],
     data: {
       seo: {
         titleKey: 'pages.my.account.title',
