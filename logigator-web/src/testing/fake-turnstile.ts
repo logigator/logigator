@@ -1,4 +1,5 @@
-import type { Provider } from '@angular/core';
+import { computed, type Provider, signal } from '@angular/core';
+import { DeploymentService } from '../app/api/deployment.service';
 import {
   type TurnstileApi,
   TurnstileLoader,
@@ -42,10 +43,29 @@ export class FakeTurnstile implements TurnstileApi {
   }
 }
 
-/** Serves `fake` in place of Cloudflare's script. */
-export function provideFakeTurnstile(fake: FakeTurnstile): Provider {
-  return {
-    provide: TurnstileLoader,
-    useValue: { load: () => Promise.resolve(fake) }
-  };
+/**
+ * Serves `fake` in place of Cloudflare's script, in a deployment whose
+ * `GET /meta` names `siteKey` (`null` runs no challenge).
+ */
+export function provideFakeTurnstile(
+  fake: FakeTurnstile,
+  siteKey: string | null = 'fake-site-key'
+): Provider[] {
+  const turnstileSiteKey = signal(siteKey).asReadonly();
+  return [
+    {
+      provide: TurnstileLoader,
+      useValue: { load: () => Promise.resolve(fake) }
+    },
+    {
+      provide: DeploymentService,
+      useValue: {
+        resolve: () => Promise.resolve(),
+        resolved: computed(() => true),
+        googleAvailable: computed(() => false),
+        turnstileSiteKey,
+        posthogKey: computed(() => null)
+      } satisfies Partial<DeploymentService>
+    }
+  ];
 }

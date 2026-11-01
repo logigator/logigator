@@ -1,4 +1,8 @@
-/** Deployment configuration for the website. */
+/**
+ * The website's fixed configuration. What differs between deployments, such
+ * as the Turnstile site key and the PostHog key, comes from the API's
+ * `GET /meta` instead, so one build serves any deployment.
+ */
 export interface Environment {
   /** Logigator's version, from the root package.json. */
   version: string;
@@ -21,13 +25,10 @@ export interface Environment {
    */
   editorUrl: string;
   /**
-   * The Turnstile widget's site key (public). The API verifies the tokens it
-   * mints only where it holds the widget's secret.
+   * Where PostHog is reached. The key is the deployment's, from `GET /meta`,
+   * so a deployment without one sends nothing to either host.
    */
-  turnstileSiteKey: string;
   analytics: {
-    /** PostHog project API key (public, write-only). Empty disables PostHog. */
-    posthogKey: string;
     /** PostHog ingestion host — the `u.logigator.com` reverse proxy. */
     posthogHost: string;
     /** PostHog app host for toolbar/session links, bypassing the proxy. */

@@ -8,7 +8,7 @@ import {
 import { LgButton, LgDivider } from '@logigator/ui';
 import { RETURN_PATH_PARAM } from '@logigator/core';
 import { environment } from '../../../environments/environment';
-import { AuthProvidersService } from '../../user/auth-providers.service';
+import { DeploymentService } from '../../api/deployment.service';
 import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
@@ -25,7 +25,7 @@ import { TranslateDirective } from '../../translation/translate.directive';
   imports: [LgButton, LgDivider, TranslateDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    @if (providers.googleAvailable()) {
+    @if (deployment.googleAvailable()) {
       <div class="mt-6 flex flex-col gap-4" *webTranslate="let t">
         <div class="flex items-center gap-3 text-sm text-muted">
           <lg-divider class="flex-1" />
@@ -63,7 +63,7 @@ export class GoogleSignIn {
   /** Where the round trip should end, as a path on this origin. */
   readonly returnPath = input<string | null>(null);
 
-  protected readonly providers = inject(AuthProvidersService);
+  protected readonly deployment = inject(DeploymentService);
 
   protected readonly href = computed(() => {
     const start = `${environment.apiUrl}/api/auth/google`;

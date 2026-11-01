@@ -12,9 +12,11 @@ describe('Turnstile', () => {
   let fake: FakeTurnstile;
   let fixture: ComponentFixture<Turnstile>;
 
-  async function render(): Promise<Turnstile> {
+  async function render(
+    siteKey: string | null = 'fake-site-key'
+  ): Promise<Turnstile> {
     fake = new FakeTurnstile();
-    configureTestBed([provideFakeTurnstile(fake)], [Turnstile]);
+    configureTestBed([provideFakeTurnstile(fake, siteKey)], [Turnstile]);
     fixture = TestBed.createComponent(Turnstile);
     fixture.componentRef.setInput('action', 'register');
     await settle();
@@ -32,6 +34,18 @@ describe('Turnstile', () => {
   it('renders under the form’s action, so a token cannot serve another form', async () => {
     await render();
     expect(fake.only().action).toBe('register');
+  });
+
+  it('renders with the site key the deployment reports', async () => {
+    await render('deployment-site-key');
+    expect(fake.only().sitekey).toBe('deployment-site-key');
+  });
+
+  it('runs no challenge where the deployment has none', async () => {
+    const widget = await render(null);
+
+    expect(fake.widgets.size).toBe(0);
+    expect(widget.token()).toBeNull();
   });
 
   it('holds a token only until the challenge expires or fails', async () => {

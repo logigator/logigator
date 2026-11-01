@@ -7,7 +7,7 @@ import { of } from 'rxjs';
 import { ConfirmationService } from '@logigator/ui';
 import type { UserResponse } from '@logigator/contract';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
-import { AuthProvidersService } from '../../../user/auth-providers.service';
+import { DeploymentService } from '../../../api/deployment.service';
 import { SessionService } from '../../../user/session.service';
 import { AccountDeleteSection } from './account-delete-section';
 import { AccountEmailSection } from './account-email-section';
@@ -428,7 +428,7 @@ describe('the account sections', () => {
   describe('the Google section', () => {
     function withGoogle(query: Record<string, string> = {}): () => void {
       return () => {
-        TestBed.overrideProvider(AuthProvidersService, {
+        TestBed.overrideProvider(DeploymentService, {
           useValue: { googleAvailable: () => true }
         });
         arrivingWith(query)();

@@ -9,6 +9,7 @@ import {
 import { isPlatformBrowser } from '@angular/common';
 import type { PostHog } from 'posthog-js';
 import { ConsentService } from '../consent/consent.service';
+import { DeploymentService } from '../api/deployment.service';
 import { environment } from '../../environments/environment';
 import { TranslationService } from '../translation/translation.service';
 
@@ -32,6 +33,7 @@ const APP_ID = 'website';
 export class AnalyticsService {
   private readonly translation = inject(TranslationService);
   private readonly consent = inject(ConsentService);
+  private readonly deployment = inject(DeploymentService);
   private readonly injector = inject(Injector);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
@@ -90,7 +92,7 @@ export class AnalyticsService {
   }
 
   private syncConsent(granted: boolean): void {
-    if (granted && !this.initialized && environment.analytics.posthogKey) {
+    if (granted && !this.initialized) {
       void this.initPosthog();
     } else if (this.initialized) {
       if (granted) this.posthog?.opt_in_capturing();
@@ -99,12 +101,16 @@ export class AnalyticsService {
   }
 
   /**
-   * Downloads and initialises PostHog on the first grant. Re-runs
+   * Downloads and initialises PostHog on the first grant, under the key the
+   * deployment reports; a deployment without one never downloads it. Re-runs
    * {@link syncConsent} afterwards because consent can be withdrawn while the
    * import is in flight; {@link initialized} is set by then, so that pass takes
    * the opt-in/opt-out branch instead of initialising twice.
    */
   private async initPosthog(): Promise<void> {
+    await this.deployment.resolve();
+    const key = this.deployment.posthogKey();
+    if (!key) return;
     let posthog: PostHog;
     try {
       posthog = await this.loadPosthog();
@@ -113,7 +119,7 @@ export class AnalyticsService {
       return;
     }
     if (this.initialized) return;
-    posthog.init(environment.analytics.posthogKey, {
+    posthog.init(key, {
       api_host: environment.analytics.posthogHost,
       ui_host: environment.analytics.posthogUiHost,
       person_profiles: 'identified_only',

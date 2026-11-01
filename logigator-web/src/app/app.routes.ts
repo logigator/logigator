@@ -21,7 +21,7 @@ import { RegisterPage } from './pages/auth/register/register-page';
 import { ResetPasswordPage } from './pages/auth/reset-password/reset-password-page';
 import { VerifyEmailPage } from './pages/auth/verify-email/verify-email-page';
 import { NotFoundPage } from './pages/not-found/not-found-page';
-import { authProvidersGuard, guestGuard } from './user/auth-guards';
+import { deploymentGuard, guestGuard } from './user/auth-guards';
 import { PageMeta } from './seo/seo.service';
 
 /**
@@ -100,7 +100,7 @@ const localizedRoutes: Routes = [
   {
     path: 'login',
     component: LoginPage,
-    canActivate: [guestGuard, authProvidersGuard],
+    canActivate: [guestGuard, deploymentGuard],
     data: {
       seo: {
         titleKey: 'pages.login.title',
@@ -111,7 +111,7 @@ const localizedRoutes: Routes = [
   {
     path: 'register',
     component: RegisterPage,
-    canActivate: [guestGuard, authProvidersGuard],
+    canActivate: [guestGuard, deploymentGuard],
     data: {
       seo: {
         titleKey: 'pages.register.title',
@@ -124,6 +124,7 @@ const localizedRoutes: Routes = [
   {
     path: 'reset-password',
     component: ResetPasswordPage,
+    canActivate: [deploymentGuard],
     // Not a document: with a `?token=` it performs a one-shot action, and
     // without one it is a form. `robots.txt` closes it too.
     data: {

@@ -6,52 +6,68 @@ import {
   signal
 } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { MetaApiService } from '../api/services/meta-api.service';
+import type { MetaResponse } from '@logigator/contract';
+import { MetaApiService } from './services/meta-api.service';
 import { TransferHandoffService } from '../transfer/transfer-handoff.service';
 
-/** Where the server render leaves the deployment's sign-in methods. */
-const PROVIDERS_STATE = makeStateKey<string[]>('meta.authProviders');
+/** Where the server render leaves what the deployment says about itself. */
+const META_STATE = makeStateKey<MetaResponse | null>('meta');
 
 /**
- * Which sign-in methods this deployment offers, so the auth pages show a Google
- * button only where the round trip actually works. The API reports it from
- * `GET /meta` for exactly this reason: a client that guessed would find out
- * from a route answering 501, after the visitor had already clicked.
+ * What this deployment offers, as the API reports it from `GET /meta`: the
+ * sign-in methods, the Turnstile site key and the PostHog key. The site
+ * carries none of them itself, so one build serves any deployment, and a
+ * client that guessed would find out from a refused request, after the
+ * visitor had already acted.
  *
  * Resolved once and kept — the answer is a property of the deployment, not of
  * the request — and read through the hand-off so the server render's copy
- * arrives with the page rather than costing the browser a second request.
+ * arrives with the page rather than costing the browser a second request. An
+ * unreachable API reads as a deployment offering nothing beyond a password
+ * sign-in, and is asked again on the next {@link resolve}.
  */
 @Injectable({ providedIn: 'root' })
-export class AuthProvidersService {
+export class DeploymentService {
   private readonly metaApi = inject(MetaApiService);
   private readonly handoff = inject(TransferHandoffService);
 
-  private readonly providers = signal<string[] | null>(null);
+  /** `undefined` until resolved, `null` when the API could not be reached. */
+  private readonly meta = signal<MetaResponse | null | undefined>(undefined);
+  private pending: Promise<MetaResponse | null> | null = null;
 
-  public readonly googleAvailable = computed(() =>
-    (this.providers() ?? []).includes('google')
+  /** Whether {@link resolve} has settled, successfully or not. */
+  public readonly resolved = computed(() => this.meta() !== undefined);
+
+  public readonly googleAvailable = computed(
+    () => this.meta()?.authProviders.includes('google') ?? false
   );
 
-  public async resolve(): Promise<void> {
-    if (this.providers()) return;
+  public readonly turnstileSiteKey = computed(
+    () => this.meta()?.turnstileSiteKey ?? null
+  );
 
-    this.providers.set(
-      await this.handoff.resolve(PROVIDERS_STATE, () => this.fetch())
-    );
+  public readonly posthogKey = computed(() => this.meta()?.posthogKey ?? null);
+
+  public async resolve(): Promise<void> {
+    if (this.meta()) return;
+
+    this.pending ??= this.handoff
+      .resolve(META_STATE, () => this.fetch())
+      .finally(() => (this.pending = null));
+    this.meta.set(await this.pending);
   }
 
   /**
-   * Never throws: an unreachable API costs the Google button, not the sign-in
-   * page — and resolving to a value rather than rejecting is what lets the
-   * answer cross to the browser instead of being asked for again.
+   * Never throws: an unreachable API costs the Google button, the challenge
+   * and analytics, not the page — and resolving to a value rather than
+   * rejecting is what lets the answer cross to the browser instead of being
+   * asked for again.
    */
-  private async fetch(): Promise<string[]> {
+  private async fetch(): Promise<MetaResponse | null> {
     try {
-      const meta = await firstValueFrom(this.metaApi.get());
-      return meta.authProviders;
+      return await firstValueFrom(this.metaApi.get());
     } catch {
-      return ['local'];
+      return null;
     }
   }
 }

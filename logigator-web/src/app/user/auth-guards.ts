@@ -2,16 +2,17 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { RETURN_PATH_PARAM, safeReturnPath } from '@logigator/core';
 import { SiteLinks } from '../layout/site-links';
-import { AuthProvidersService } from './auth-providers.service';
+import { DeploymentService } from '../api/deployment.service';
 import { SessionService } from './session.service';
 
 /**
- * Loads the deployment's sign-in methods before an auth page activates, so the
- * server render already knows whether there is a Google button to draw and the
- * browser is not handed a page that grows one after hydration.
+ * Loads what the deployment offers before an auth page activates, so the
+ * server render already knows whether there is a Google button to draw and
+ * room to keep for a challenge, and the browser is not handed a page that
+ * grows or loses one after hydration.
  */
-export const authProvidersGuard: CanActivateFn = async () => {
-  await inject(AuthProvidersService).resolve();
+export const deploymentGuard: CanActivateFn = async () => {
+  await inject(DeploymentService).resolve();
   return true;
 };
 

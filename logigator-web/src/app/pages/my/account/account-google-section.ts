@@ -27,7 +27,7 @@ import { fieldError, setServerError } from '../../../forms/field-error';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationKey } from '../../../translation/translation-key.model';
 import { TranslationService } from '../../../translation/translation.service';
-import { AuthProvidersService } from '../../../user/auth-providers.service';
+import { DeploymentService } from '../../../api/deployment.service';
 import { googleErrorKey } from '../../../user/google-auth-errors';
 import { SessionService } from '../../../user/session.service';
 import { RESUME_PARAM } from './account-reauthentication';
@@ -86,7 +86,7 @@ export class AccountGoogleSection {
   private readonly document = inject(DOCUMENT);
   private readonly query = toSignal(inject(ActivatedRoute).queryParamMap);
 
-  protected readonly providers = inject(AuthProvidersService);
+  protected readonly deployment = inject(DeploymentService);
 
   protected readonly linked = computed(
     () => this.session.user()?.googleLinked ?? false
