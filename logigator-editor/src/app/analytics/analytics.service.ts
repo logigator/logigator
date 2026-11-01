@@ -8,6 +8,8 @@ import {
   untracked
 } from '@angular/core';
 import type { PostHog } from 'posthog-js';
+import { firstValueFrom } from 'rxjs';
+import { MetaApiService } from '../api/services/meta-api.service';
 import { TranslationService } from '../translation/translation.service';
 import { ConsentService } from '../consent/consent.service';
 import { environment } from '../../environments/environment';
@@ -58,6 +60,8 @@ export class AnalyticsService {
   private posthog: PostHog | null = null;
   /** In-flight (or settled) import, so concurrent consent events share one. */
   private posthogLoad: Promise<PostHog> | null = null;
+  /** In-flight (or settled) read of the deployment's key, shared likewise. */
+  private posthogKey: Promise<string | null> | null = null;
   /** Resolved in {@link init}, like the language source. */
   private consent: ConsentService | null = null;
   /** Mirrored so {@link registerSuperProperties} can restamp it whenever
@@ -158,7 +162,7 @@ export class AnalyticsService {
   }
 
   private syncConsent(granted: boolean): void {
-    if (granted && !this.initialized && environment.analytics.posthogKey) {
+    if (granted && !this.initialized) {
       // The import failure is handled inside; what is left is PostHog's own
       // `init`/`opt_in_capturing`, third-party code whose failure costs the
       // session nothing but analytics. Logged rather than left floating: a
@@ -178,12 +182,15 @@ export class AnalyticsService {
   }
 
   /**
-   * Downloads and initialises PostHog on the first grant. Re-runs
+   * Downloads and initialises PostHog on the first grant, under the key the
+   * deployment reports; a deployment without one never downloads it. Re-runs
    * {@link syncConsent} afterwards because consent can be withdrawn while the
    * import is in flight; {@link initialized} is set by then, so that pass takes
    * the opt-in/opt-out branch instead of initialising twice.
    */
   private async initPosthog(): Promise<void> {
+    const key = await this.resolvePosthogKey();
+    if (!key) return;
     let posthog: PostHog;
     try {
       posthog = await this.loadPosthog();
@@ -192,7 +199,7 @@ export class AnalyticsService {
       return;
     }
     if (this.initialized) return;
-    posthog.init(environment.analytics.posthogKey, {
+    posthog.init(key, {
       api_host: environment.analytics.posthogHost,
       ui_host: environment.analytics.posthogUiHost,
       person_profiles: 'identified_only',
@@ -260,6 +267,25 @@ export class AnalyticsService {
       },
       { injector: this.injector }
     );
+  }
+
+  /**
+   * The deployment's PostHog key from `GET /api/meta`, asked once. The API
+   * service is looked up here rather than injected, so constructing this sink
+   * stays dependency-free. An unreachable API reads as no key and is asked
+   * again on the next grant: the editor works offline, analytics need not.
+   */
+  private resolvePosthogKey(): Promise<string | null> {
+    this.posthogKey ??= firstValueFrom(
+      this.injector.get(MetaApiService).get()
+    ).then(
+      (meta) => meta.posthogKey,
+      () => {
+        this.posthogKey = null;
+        return null;
+      }
+    );
+    return this.posthogKey;
   }
 
   /** Imports `posthog-js` once, sharing the promise across concurrent calls. */
