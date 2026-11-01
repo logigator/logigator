@@ -166,7 +166,10 @@ export class GoogleAuthController {
       );
     }
 
-    await this.session.signOutEverywhere(user.id, request.session.sessionId);
+    await this.session.signOutEverywhere(
+      user.id,
+      request.session.sessionStoreId
+    );
     return toUserResponse(updated);
   }
 

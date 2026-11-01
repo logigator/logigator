@@ -1,52 +1,628 @@
 {
-  "version": "8",
+  "type": "base",
+  "version": "9",
   "dialect": "postgres",
   "id": "c3a97fa7-7606-488e-8b76-a6c0bc604461",
   "prevIds": ["00000000-0000-0000-0000-000000000000"],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "users"],
+      "writes": [
+        "s|tbl|public.users",
+        "n|tbl|public.users",
+        "e|tbl|public.users",
+        "n|rel|public.users",
+        "n|type|public.users",
+        "n|rel|public.users_pkey",
+        "n|rel|public.users_email_key",
+        "n|rel|public.users_google_user_id_key"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "components"],
+      "writes": [
+        "s|tbl|public.components",
+        "n|tbl|public.components",
+        "e|tbl|public.components",
+        "n|rel|public.components",
+        "n|type|public.components",
+        "n|rel|public.components_pkey",
+        "n|rel|public.components_link_key"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "projects"],
+      "writes": [
+        "s|tbl|public.projects",
+        "n|tbl|public.projects",
+        "e|tbl|public.projects",
+        "n|rel|public.projects",
+        "n|type|public.projects",
+        "n|rel|public.projects_pkey",
+        "n|rel|public.projects_link_key"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "component_dependencies"],
+      "writes": [
+        "s|tbl|public.component_dependencies",
+        "n|tbl|public.component_dependencies",
+        "e|tbl|public.component_dependencies",
+        "n|rel|public.component_dependencies",
+        "n|type|public.component_dependencies",
+        "n|rel|public.component_dependencies_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "project_dependencies"],
+      "writes": [
+        "s|tbl|public.project_dependencies",
+        "n|tbl|public.project_dependencies",
+        "e|tbl|public.project_dependencies",
+        "n|rel|public.project_dependencies",
+        "n|type|public.project_dependencies",
+        "n|rel|public.project_dependencies_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "component_stars"],
+      "writes": [
+        "s|tbl|public.component_stars",
+        "n|tbl|public.component_stars",
+        "e|tbl|public.component_stars",
+        "n|rel|public.component_stars",
+        "n|type|public.component_stars",
+        "n|rel|public.component_stars_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": ["table", "public", "project_stars"],
+      "writes": [
+        "s|tbl|public.project_stars",
+        "n|tbl|public.project_stars",
+        "e|tbl|public.project_stars",
+        "n|rel|public.project_stars",
+        "n|type|public.project_stars",
+        "n|rel|public.project_stars_pkey"
+      ],
+      "reads": ["n|sch|public"]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "users", "users_username_idx"],
+      "writes": [
+        "s|idx|public.users_username_idx",
+        "n|idx|public.users_username_idx",
+        "e|idx|public.users_username_idx",
+        "n|rel|public.users_username_idx"
+      ],
+      "reads": [
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.users.username"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "components",
+        "components_user_idx"
+      ],
+      "writes": [
+        "s|idx|public.components_user_idx",
+        "n|idx|public.components_user_idx",
+        "e|idx|public.components_user_idx",
+        "n|rel|public.components_user_idx"
+      ],
+      "reads": [
+        "n|tbl|public.components",
+        "n|sch|public",
+        "n|col|public.components.user_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "components",
+        "components_format_version_idx"
+      ],
+      "writes": [
+        "s|idx|public.components_format_version_idx",
+        "n|idx|public.components_format_version_idx",
+        "e|idx|public.components_format_version_idx",
+        "n|rel|public.components_format_version_idx"
+      ],
+      "reads": [
+        "n|tbl|public.components",
+        "n|sch|public",
+        "n|col|public.components.format_version"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "components",
+        "components_public_idx"
+      ],
+      "writes": [
+        "s|idx|public.components_public_idx",
+        "n|idx|public.components_public_idx",
+        "e|idx|public.components_public_idx",
+        "n|rel|public.components_public_idx"
+      ],
+      "reads": [
+        "n|tbl|public.components",
+        "n|sch|public",
+        "n|col|public.components.public",
+        "n|col|public.components.last_edited_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "components",
+        "components_forked_from_idx"
+      ],
+      "writes": [
+        "s|idx|public.components_forked_from_idx",
+        "n|idx|public.components_forked_from_idx",
+        "e|idx|public.components_forked_from_idx",
+        "n|rel|public.components_forked_from_idx"
+      ],
+      "reads": [
+        "n|tbl|public.components",
+        "n|sch|public",
+        "n|col|public.components.forked_from_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "projects", "projects_user_idx"],
+      "writes": [
+        "s|idx|public.projects_user_idx",
+        "n|idx|public.projects_user_idx",
+        "e|idx|public.projects_user_idx",
+        "n|rel|public.projects_user_idx"
+      ],
+      "reads": [
+        "n|tbl|public.projects",
+        "n|sch|public",
+        "n|col|public.projects.user_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "projects",
+        "projects_format_version_idx"
+      ],
+      "writes": [
+        "s|idx|public.projects_format_version_idx",
+        "n|idx|public.projects_format_version_idx",
+        "e|idx|public.projects_format_version_idx",
+        "n|rel|public.projects_format_version_idx"
+      ],
+      "reads": [
+        "n|tbl|public.projects",
+        "n|sch|public",
+        "n|col|public.projects.format_version"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": ["index", "public", "projects", "projects_public_idx"],
+      "writes": [
+        "s|idx|public.projects_public_idx",
+        "n|idx|public.projects_public_idx",
+        "e|idx|public.projects_public_idx",
+        "n|rel|public.projects_public_idx"
+      ],
+      "reads": [
+        "n|tbl|public.projects",
+        "n|sch|public",
+        "n|col|public.projects.public",
+        "n|col|public.projects.last_edited_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "projects",
+        "projects_forked_from_idx"
+      ],
+      "writes": [
+        "s|idx|public.projects_forked_from_idx",
+        "n|idx|public.projects_forked_from_idx",
+        "e|idx|public.projects_forked_from_idx",
+        "n|rel|public.projects_forked_from_idx"
+      ],
+      "reads": [
+        "n|tbl|public.projects",
+        "n|sch|public",
+        "n|col|public.projects.forked_from_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "component_dependencies",
+        "component_dependencies_dependency_idx"
+      ],
+      "writes": [
+        "s|idx|public.component_dependencies_dependency_idx",
+        "n|idx|public.component_dependencies_dependency_idx",
+        "e|idx|public.component_dependencies_dependency_idx",
+        "n|rel|public.component_dependencies_dependency_idx"
+      ],
+      "reads": [
+        "n|tbl|public.component_dependencies",
+        "n|sch|public",
+        "n|col|public.component_dependencies.dependency_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "project_dependencies",
+        "project_dependencies_dependency_idx"
+      ],
+      "writes": [
+        "s|idx|public.project_dependencies_dependency_idx",
+        "n|idx|public.project_dependencies_dependency_idx",
+        "e|idx|public.project_dependencies_dependency_idx",
+        "n|rel|public.project_dependencies_dependency_idx"
+      ],
+      "reads": [
+        "n|tbl|public.project_dependencies",
+        "n|sch|public",
+        "n|col|public.project_dependencies.dependency_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "component_stars",
+        "component_stars_component_idx"
+      ],
+      "writes": [
+        "s|idx|public.component_stars_component_idx",
+        "n|idx|public.component_stars_component_idx",
+        "e|idx|public.component_stars_component_idx",
+        "n|rel|public.component_stars_component_idx"
+      ],
+      "reads": [
+        "n|tbl|public.component_stars",
+        "n|sch|public",
+        "n|col|public.component_stars.component_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "project_stars",
+        "project_stars_project_idx"
+      ],
+      "writes": [
+        "s|idx|public.project_stars_project_idx",
+        "n|idx|public.project_stars_project_idx",
+        "e|idx|public.project_stars_project_idx",
+        "n|rel|public.project_stars_project_idx"
+      ],
+      "reads": [
+        "n|tbl|public.project_stars",
+        "n|sch|public",
+        "n|col|public.project_stars.project_id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "components"],
+      "writes": [
+        "s|fk|public.components.components_user_id_users_id_fkey",
+        "n|fk|public.components.components_user_id_users_id_fkey",
+        "e|fk|public.components.components_user_id_users_id_fkey",
+        "n|con|public.components.components_user_id_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.components",
+        "n|sch|public",
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.components.user_id",
+        "n|col|public.users.id",
+        "e|uniqueness|public.users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "components"],
+      "writes": [
+        "s|fk|public.components.components_forked_from_id_components_id_fkey",
+        "n|fk|public.components.components_forked_from_id_components_id_fkey",
+        "e|fk|public.components.components_forked_from_id_components_id_fkey",
+        "n|con|public.components.components_forked_from_id_components_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.components",
+        "n|sch|public",
+        "n|tbl|public.components",
+        "n|sch|public",
+        "n|col|public.components.forked_from_id",
+        "n|col|public.components.id",
+        "e|uniqueness|public.components.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "projects"],
+      "writes": [
+        "s|fk|public.projects.projects_user_id_users_id_fkey",
+        "n|fk|public.projects.projects_user_id_users_id_fkey",
+        "e|fk|public.projects.projects_user_id_users_id_fkey",
+        "n|con|public.projects.projects_user_id_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.projects",
+        "n|sch|public",
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.projects.user_id",
+        "n|col|public.users.id",
+        "e|uniqueness|public.users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "projects"],
+      "writes": [
+        "s|fk|public.projects.projects_forked_from_id_projects_id_fkey",
+        "n|fk|public.projects.projects_forked_from_id_projects_id_fkey",
+        "e|fk|public.projects.projects_forked_from_id_projects_id_fkey",
+        "n|con|public.projects.projects_forked_from_id_projects_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.projects",
+        "n|sch|public",
+        "n|tbl|public.projects",
+        "n|sch|public",
+        "n|col|public.projects.forked_from_id",
+        "n|col|public.projects.id",
+        "e|uniqueness|public.projects.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "component_dependencies"],
+      "writes": [
+        "s|fk|public.component_dependencies.component_dependencies_dependent_id_components_id_fkey",
+        "n|fk|public.component_dependencies.component_dependencies_dependent_id_components_id_fkey",
+        "e|fk|public.component_dependencies.component_dependencies_dependent_id_components_id_fkey",
+        "n|con|public.component_dependencies.component_dependencies_dependent_id_components_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.component_dependencies",
+        "n|sch|public",
+        "n|tbl|public.components",
+        "n|sch|public",
+        "n|col|public.component_dependencies.dependent_id",
+        "n|col|public.components.id",
+        "e|uniqueness|public.components.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "component_dependencies"],
+      "writes": [
+        "s|fk|public.component_dependencies.component_dependencies_dependency_id_components_id_fkey",
+        "n|fk|public.component_dependencies.component_dependencies_dependency_id_components_id_fkey",
+        "e|fk|public.component_dependencies.component_dependencies_dependency_id_components_id_fkey",
+        "n|con|public.component_dependencies.component_dependencies_dependency_id_components_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.component_dependencies",
+        "n|sch|public",
+        "n|tbl|public.components",
+        "n|sch|public",
+        "n|col|public.component_dependencies.dependency_id",
+        "n|col|public.components.id",
+        "e|uniqueness|public.components.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "project_dependencies"],
+      "writes": [
+        "s|fk|public.project_dependencies.project_dependencies_dependent_id_projects_id_fkey",
+        "n|fk|public.project_dependencies.project_dependencies_dependent_id_projects_id_fkey",
+        "e|fk|public.project_dependencies.project_dependencies_dependent_id_projects_id_fkey",
+        "n|con|public.project_dependencies.project_dependencies_dependent_id_projects_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.project_dependencies",
+        "n|sch|public",
+        "n|tbl|public.projects",
+        "n|sch|public",
+        "n|col|public.project_dependencies.dependent_id",
+        "n|col|public.projects.id",
+        "e|uniqueness|public.projects.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "project_dependencies"],
+      "writes": [
+        "s|fk|public.project_dependencies.project_dependencies_dependency_id_components_id_fkey",
+        "n|fk|public.project_dependencies.project_dependencies_dependency_id_components_id_fkey",
+        "e|fk|public.project_dependencies.project_dependencies_dependency_id_components_id_fkey",
+        "n|con|public.project_dependencies.project_dependencies_dependency_id_components_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.project_dependencies",
+        "n|sch|public",
+        "n|tbl|public.components",
+        "n|sch|public",
+        "n|col|public.project_dependencies.dependency_id",
+        "n|col|public.components.id",
+        "e|uniqueness|public.components.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "component_stars"],
+      "writes": [
+        "s|fk|public.component_stars.component_stars_user_id_users_id_fkey",
+        "n|fk|public.component_stars.component_stars_user_id_users_id_fkey",
+        "e|fk|public.component_stars.component_stars_user_id_users_id_fkey",
+        "n|con|public.component_stars.component_stars_user_id_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.component_stars",
+        "n|sch|public",
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.component_stars.user_id",
+        "n|col|public.users.id",
+        "e|uniqueness|public.users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "component_stars"],
+      "writes": [
+        "s|fk|public.component_stars.component_stars_component_id_components_id_fkey",
+        "n|fk|public.component_stars.component_stars_component_id_components_id_fkey",
+        "e|fk|public.component_stars.component_stars_component_id_components_id_fkey",
+        "n|con|public.component_stars.component_stars_component_id_components_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.component_stars",
+        "n|sch|public",
+        "n|tbl|public.components",
+        "n|sch|public",
+        "n|col|public.component_stars.component_id",
+        "n|col|public.components.id",
+        "e|uniqueness|public.components.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "project_stars"],
+      "writes": [
+        "s|fk|public.project_stars.project_stars_user_id_users_id_fkey",
+        "n|fk|public.project_stars.project_stars_user_id_users_id_fkey",
+        "e|fk|public.project_stars.project_stars_user_id_users_id_fkey",
+        "n|con|public.project_stars.project_stars_user_id_users_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.project_stars",
+        "n|sch|public",
+        "n|tbl|public.users",
+        "n|sch|public",
+        "n|col|public.project_stars.user_id",
+        "n|col|public.users.id",
+        "e|uniqueness|public.users.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": ["table", "public", "project_stars"],
+      "writes": [
+        "s|fk|public.project_stars.project_stars_project_id_projects_id_fkey",
+        "n|fk|public.project_stars.project_stars_project_id_projects_id_fkey",
+        "e|fk|public.project_stars.project_stars_project_id_projects_id_fkey",
+        "n|con|public.project_stars.project_stars_project_id_projects_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.project_stars",
+        "n|sch|public",
+        "n|tbl|public.projects",
+        "n|sch|public",
+        "n|col|public.project_stars.project_id",
+        "n|col|public.projects.id",
+        "e|uniqueness|public.projects.id"
+      ]
+    }
+  ],
   "ddl": [
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "users",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "components",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "projects",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "component_dependencies",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "project_dependencies",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "component_stars",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
       "isRlsEnabled": false,
-      "name": "project_stars",
-      "entityType": "tables",
-      "schema": "public"
+      "entityType": "tables"
     },
     {
+      "schema": "public",
+      "name": "project_stars",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "table": "users",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -54,12 +630,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "users"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "users",
+      "name": "username",
       "type": "varchar(32)",
       "typeSchema": null,
       "notNull": true,
@@ -67,12 +643,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "username",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "users"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "users",
+      "name": "email",
       "type": "varchar(254)",
       "typeSchema": null,
       "notNull": true,
@@ -80,12 +656,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "email",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "users"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "users",
+      "name": "email_verified",
       "type": "boolean",
       "typeSchema": null,
       "notNull": true,
@@ -93,12 +669,12 @@
       "default": "false",
       "generated": null,
       "identity": null,
-      "name": "email_verified",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "users"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "users",
+      "name": "password_hash",
       "type": "varchar(72)",
       "typeSchema": null,
       "notNull": false,
@@ -106,25 +682,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "password_hash",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "users"
+      "entityType": "columns"
     },
     {
-      "type": "varchar(64)",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "users",
       "name": "google_user_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "users"
-    },
-    {
       "type": "varchar(64)",
       "typeSchema": null,
       "notNull": false,
@@ -132,12 +695,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "avatar_file",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "users"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "users",
+      "name": "avatar_file",
+      "type": "varchar(64)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "users",
+      "name": "member_since",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -145,12 +721,12 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "member_since",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "users"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -158,12 +734,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "name",
       "type": "varchar(20)",
       "typeSchema": null,
       "notNull": true,
@@ -171,12 +747,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "name",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "description",
       "type": "varchar(2048)",
       "typeSchema": null,
       "notNull": true,
@@ -184,12 +760,12 @@
       "default": "''",
       "generated": null,
       "identity": null,
-      "name": "description",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "document",
       "type": "jsonb",
       "typeSchema": null,
       "notNull": true,
@@ -197,12 +773,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "document",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "format_version",
       "type": "integer",
       "typeSchema": null,
       "notNull": true,
@@ -210,12 +786,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "format_version",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "version",
       "type": "integer",
       "typeSchema": null,
       "notNull": true,
@@ -223,25 +799,12 @@
       "default": "1",
       "generated": null,
       "identity": null,
-      "name": "version",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "0",
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "components",
       "name": "component_count",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
-    },
-    {
       "type": "integer",
       "typeSchema": null,
       "notNull": true,
@@ -249,12 +812,25 @@
       "default": "0",
       "generated": null,
       "identity": null,
-      "name": "wire_count",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "wire_count",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "components",
+      "name": "link",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -262,12 +838,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "link",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "public",
       "type": "boolean",
       "typeSchema": null,
       "notNull": true,
@@ -275,25 +851,12 @@
       "default": "false",
       "generated": null,
       "identity": null,
-      "name": "public",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
-      "type": "varchar(64)",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "components",
       "name": "preview_light_file",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
-    },
-    {
       "type": "varchar(64)",
       "typeSchema": null,
       "notNull": false,
@@ -301,25 +864,25 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "components",
       "name": "preview_dark_file",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
-    },
-    {
-      "type": "timestamp with time zone",
+      "type": "varchar(64)",
       "typeSchema": null,
-      "notNull": true,
+      "notNull": false,
       "dimensions": 0,
-      "default": "now()",
+      "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "components",
       "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -327,12 +890,25 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "last_edited_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "last_edited_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "components",
+      "name": "user_id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -340,12 +916,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "forked_from_id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": false,
@@ -353,12 +929,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "forked_from_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "symbol",
       "type": "varchar(5)",
       "typeSchema": null,
       "notNull": true,
@@ -366,25 +942,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "symbol",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "0",
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "components",
       "name": "num_inputs",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
-    },
-    {
       "type": "integer",
       "typeSchema": null,
       "notNull": true,
@@ -392,12 +955,25 @@
       "default": "0",
       "generated": null,
       "identity": null,
-      "name": "num_outputs",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "num_outputs",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "components",
+      "name": "labels",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -405,12 +981,12 @@
       "default": "'{}'",
       "generated": null,
       "identity": null,
-      "name": "labels",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "components"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -418,12 +994,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "name",
       "type": "varchar(20)",
       "typeSchema": null,
       "notNull": true,
@@ -431,12 +1007,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "name",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "description",
       "type": "varchar(2048)",
       "typeSchema": null,
       "notNull": true,
@@ -444,12 +1020,12 @@
       "default": "''",
       "generated": null,
       "identity": null,
-      "name": "description",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "document",
       "type": "jsonb",
       "typeSchema": null,
       "notNull": true,
@@ -457,12 +1033,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "document",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "format_version",
       "type": "integer",
       "typeSchema": null,
       "notNull": true,
@@ -470,12 +1046,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "format_version",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "version",
       "type": "integer",
       "typeSchema": null,
       "notNull": true,
@@ -483,25 +1059,12 @@
       "default": "1",
       "generated": null,
       "identity": null,
-      "name": "version",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "columns"
     },
     {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "0",
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "projects",
       "name": "component_count",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
       "type": "integer",
       "typeSchema": null,
       "notNull": true,
@@ -509,12 +1072,25 @@
       "default": "0",
       "generated": null,
       "identity": null,
-      "name": "wire_count",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "wire_count",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "projects",
+      "name": "link",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -522,12 +1098,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "link",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "public",
       "type": "boolean",
       "typeSchema": null,
       "notNull": true,
@@ -535,25 +1111,12 @@
       "default": "false",
       "generated": null,
       "identity": null,
-      "name": "public",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "columns"
     },
     {
-      "type": "varchar(64)",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "projects",
       "name": "preview_light_file",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
       "type": "varchar(64)",
       "typeSchema": null,
       "notNull": false,
@@ -561,25 +1124,25 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "projects",
       "name": "preview_dark_file",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
-      "type": "timestamp with time zone",
+      "type": "varchar(64)",
       "typeSchema": null,
-      "notNull": true,
+      "notNull": false,
       "dimensions": 0,
-      "default": "now()",
+      "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "projects",
       "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -587,12 +1150,25 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "last_edited_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "last_edited_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "projects",
+      "name": "user_id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -600,12 +1176,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "user_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "forked_from_id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": false,
@@ -613,25 +1189,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "forked_from_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "columns"
     },
     {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "component_dependencies",
       "name": "dependent_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "component_dependencies"
-    },
-    {
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -639,12 +1202,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "dependency_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "component_dependencies"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "component_dependencies",
+      "name": "dependency_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "component_dependencies",
+      "name": "model_id",
       "type": "integer",
       "typeSchema": null,
       "notNull": true,
@@ -652,25 +1228,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "model_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "component_dependencies"
+      "entityType": "columns"
     },
     {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "project_dependencies",
       "name": "dependent_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "project_dependencies"
-    },
-    {
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -678,12 +1241,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "dependency_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "project_dependencies"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "project_dependencies",
+      "name": "dependency_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "project_dependencies",
+      "name": "model_id",
       "type": "integer",
       "typeSchema": null,
       "notNull": true,
@@ -691,25 +1267,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "model_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "project_dependencies"
+      "entityType": "columns"
     },
     {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "component_stars",
       "name": "user_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "component_stars"
-    },
-    {
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -717,25 +1280,12 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "component_stars",
       "name": "component_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "component_stars"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
-      "name": "starred_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "component_stars"
-    },
-    {
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -743,12 +1293,25 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "component_stars",
+      "name": "starred_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "project_stars",
       "name": "user_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "project_stars"
-    },
-    {
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -756,12 +1319,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "project_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "project_stars"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "project_stars",
+      "name": "project_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "project_stars",
+      "name": "starred_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -769,12 +1345,12 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "starred_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "project_stars"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "users",
+      "name": "users_username_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -790,103 +1366,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "users_username_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "users"
+      "entityType": "indexes"
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "user_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
+      "schema": "public",
+      "table": "components",
       "name": "components_user_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "components"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "format_version",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "components_format_version_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "components"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "public",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "last_edited_at",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "components_public_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "components"
-    },
-    {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "forked_from_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
-      "name": "components_forked_from_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "components"
-    },
-    {
       "nameExplicit": true,
       "columns": [
         {
@@ -902,12 +1387,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "projects_user_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "components_format_version_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -923,12 +1408,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "projects_format_version_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "components_public_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -951,12 +1436,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "projects_public_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "components",
+      "name": "components_forked_from_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -972,16 +1457,86 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "projects",
+      "name": "projects_user_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "user_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "projects",
+      "name": "projects_format_version_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "format_version",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "projects",
+      "name": "projects_public_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "public",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "last_edited_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "projects",
       "name": "projects_forked_from_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "projects"
-    },
-    {
       "nameExplicit": true,
       "columns": [
         {
-          "value": "dependency_id",
+          "value": "forked_from_id",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -993,12 +1548,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "component_dependencies",
       "name": "component_dependencies_dependency_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "component_dependencies"
-    },
-    {
       "nameExplicit": true,
       "columns": [
         {
@@ -1014,12 +1569,33 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "project_dependencies_dependency_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "project_dependencies"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "project_dependencies",
+      "name": "project_dependencies_dependency_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "dependency_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "component_stars",
+      "name": "component_stars_component_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -1035,12 +1611,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "component_stars_component_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "component_stars"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "project_stars",
+      "name": "project_stars_project_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -1056,38 +1632,38 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "project_stars_project_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "project_stars"
+      "entityType": "indexes"
     },
     {
-      "nameExplicit": false,
-      "columns": ["user_id"],
-      "schemaTo": "public",
-      "tableTo": "users",
-      "columnsTo": ["id"],
-      "onUpdate": "NO ACTION",
-      "onDelete": "CASCADE",
+      "schema": "public",
+      "table": "components",
       "name": "components_user_id_users_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "components"
-    },
-    {
       "nameExplicit": false,
-      "columns": ["forked_from_id"],
+      "columns": ["user_id"],
       "schemaTo": "public",
-      "tableTo": "components",
+      "tableTo": "users",
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
-      "onDelete": "SET NULL",
+      "onDelete": "CASCADE",
+      "entityType": "fks"
+    },
+    {
+      "schema": "public",
+      "table": "components",
       "name": "components_forked_from_id_components_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "components"
+      "nameExplicit": false,
+      "columns": ["forked_from_id"],
+      "schemaTo": "public",
+      "tableTo": "components",
+      "columnsTo": ["id"],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "projects_user_id_users_id_fkey",
       "nameExplicit": false,
       "columns": ["user_id"],
       "schemaTo": "public",
@@ -1095,12 +1671,12 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "projects_user_id_users_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "projects_forked_from_id_projects_id_fkey",
       "nameExplicit": false,
       "columns": ["forked_from_id"],
       "schemaTo": "public",
@@ -1108,12 +1684,12 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "SET NULL",
-      "name": "projects_forked_from_id_projects_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "projects"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "component_dependencies",
+      "name": "component_dependencies_dependent_id_components_id_fkey",
       "nameExplicit": false,
       "columns": ["dependent_id"],
       "schemaTo": "public",
@@ -1121,12 +1697,12 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "component_dependencies_dependent_id_components_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "component_dependencies"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "component_dependencies",
+      "name": "component_dependencies_dependency_id_components_id_fkey",
       "nameExplicit": false,
       "columns": ["dependency_id"],
       "schemaTo": "public",
@@ -1134,12 +1710,12 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "component_dependencies_dependency_id_components_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "component_dependencies"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "project_dependencies",
+      "name": "project_dependencies_dependent_id_projects_id_fkey",
       "nameExplicit": false,
       "columns": ["dependent_id"],
       "schemaTo": "public",
@@ -1147,12 +1723,12 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "project_dependencies_dependent_id_projects_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "project_dependencies"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "project_dependencies",
+      "name": "project_dependencies_dependency_id_components_id_fkey",
       "nameExplicit": false,
       "columns": ["dependency_id"],
       "schemaTo": "public",
@@ -1160,12 +1736,12 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "project_dependencies_dependency_id_components_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "project_dependencies"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "component_stars",
+      "name": "component_stars_user_id_users_id_fkey",
       "nameExplicit": false,
       "columns": ["user_id"],
       "schemaTo": "public",
@@ -1173,12 +1749,12 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "component_stars_user_id_users_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "component_stars"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "component_stars",
+      "name": "component_stars_component_id_components_id_fkey",
       "nameExplicit": false,
       "columns": ["component_id"],
       "schemaTo": "public",
@@ -1186,12 +1762,12 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "component_stars_component_id_components_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "component_stars"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "project_stars",
+      "name": "project_stars_user_id_users_id_fkey",
       "nameExplicit": false,
       "columns": ["user_id"],
       "schemaTo": "public",
@@ -1199,12 +1775,12 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "project_stars_user_id_users_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "project_stars"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "project_stars",
+      "name": "project_stars_project_id_projects_id_fkey",
       "nameExplicit": false,
       "columns": ["project_id"],
       "schemaTo": "public",
@@ -1212,103 +1788,99 @@
       "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "project_stars_project_id_projects_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "project_stars"
+      "entityType": "fks"
     },
     {
-      "columns": ["dependent_id", "dependency_id"],
-      "nameExplicit": false,
+      "schema": "public",
+      "table": "component_dependencies",
       "name": "component_dependencies_pkey",
-      "entityType": "pks",
-      "schema": "public",
-      "table": "component_dependencies"
-    },
-    {
       "columns": ["dependent_id", "dependency_id"],
       "nameExplicit": false,
-      "name": "project_dependencies_pkey",
-      "entityType": "pks",
-      "schema": "public",
-      "table": "project_dependencies"
+      "entityType": "pks"
     },
     {
+      "schema": "public",
+      "table": "project_dependencies",
+      "name": "project_dependencies_pkey",
+      "columns": ["dependent_id", "dependency_id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "component_stars",
+      "name": "component_stars_pkey",
       "columns": ["user_id", "component_id"],
       "nameExplicit": false,
-      "name": "component_stars_pkey",
-      "entityType": "pks",
-      "schema": "public",
-      "table": "component_stars"
+      "entityType": "pks"
     },
     {
+      "schema": "public",
+      "table": "project_stars",
+      "name": "project_stars_pkey",
       "columns": ["user_id", "project_id"],
       "nameExplicit": false,
-      "name": "project_stars_pkey",
-      "entityType": "pks",
-      "schema": "public",
-      "table": "project_stars"
+      "entityType": "pks"
     },
     {
-      "columns": ["id"],
-      "nameExplicit": false,
-      "name": "users_pkey",
       "schema": "public",
       "table": "users",
+      "name": "users_pkey",
+      "columns": ["id"],
+      "nameExplicit": false,
       "entityType": "pks"
     },
     {
-      "columns": ["id"],
-      "nameExplicit": false,
-      "name": "components_pkey",
       "schema": "public",
       "table": "components",
-      "entityType": "pks"
-    },
-    {
+      "name": "components_pkey",
       "columns": ["id"],
       "nameExplicit": false,
-      "name": "projects_pkey",
-      "schema": "public",
-      "table": "projects",
       "entityType": "pks"
     },
     {
+      "schema": "public",
+      "table": "projects",
+      "name": "projects_pkey",
+      "columns": ["id"],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "users",
+      "name": "users_email_key",
       "nameExplicit": false,
       "columns": ["email"],
       "nullsNotDistinct": false,
-      "name": "users_email_key",
-      "schema": "public",
-      "table": "users",
       "entityType": "uniques"
     },
     {
+      "schema": "public",
+      "table": "users",
+      "name": "users_google_user_id_key",
       "nameExplicit": false,
       "columns": ["google_user_id"],
       "nullsNotDistinct": false,
-      "name": "users_google_user_id_key",
-      "schema": "public",
-      "table": "users",
       "entityType": "uniques"
     },
     {
-      "nameExplicit": false,
-      "columns": ["link"],
-      "nullsNotDistinct": false,
-      "name": "components_link_key",
       "schema": "public",
       "table": "components",
-      "entityType": "uniques"
-    },
-    {
+      "name": "components_link_key",
       "nameExplicit": false,
       "columns": ["link"],
       "nullsNotDistinct": false,
-      "name": "projects_link_key",
+      "entityType": "uniques"
+    },
+    {
       "schema": "public",
       "table": "projects",
+      "name": "projects_link_key",
+      "nameExplicit": false,
+      "columns": ["link"],
+      "nullsNotDistinct": false,
       "entityType": "uniques"
     }
-  ],
-  "renames": []
+  ]
 }

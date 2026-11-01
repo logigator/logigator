@@ -18,7 +18,8 @@ export function createMailTransport(env: Env): Transporter {
     return createTransport({ jsonTransport: true });
   }
 
-  return createTransport(env.SMTP_URL, {
+  return createTransport({
+    url: env.SMTP_URL,
     connectionTimeout: 10_000,
     greetingTimeout: 10_000,
     socketTimeout: 10_000

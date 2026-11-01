@@ -47,8 +47,8 @@ export async function whileRowLocked<T>(
 /** Waits until some statement is queued behind a lock in this database. */
 async function waitForBlockedStatement(db: Database): Promise<void> {
   for (let attempt = 0; attempt < 500; attempt += 1) {
-    const waiting = await db.execute(
-      sql`select 1 from pg_stat_activity
+    const waiting = await db.execute<{ blocked: number }>(
+      sql`select 1 as blocked from pg_stat_activity
            where datname = current_database() and wait_event_type = 'Lock'
            limit 1`
     );

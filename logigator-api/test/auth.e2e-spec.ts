@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { sign, unsign } from '@fastify/cookie';
 import { userResponseSchema } from '@logigator/contract';
 import { users } from '../src/database/schema';
+import { RedisService } from '../src/redis/redis.service';
 import { CookieJar } from './cookie-jar';
 import { startE2eApp, type E2eApp } from './harness';
 
@@ -845,5 +846,113 @@ describe('a session secret rotated in', () => {
     });
 
     expect(response.statusCode).toBe(401);
+  });
+});
+
+describe('signing in over a session', () => {
+  const SECRET = 's'.repeat(32);
+  const ADA = { email: 'ada@example.com', password: 'lovelace1' };
+  const GRACE = { email: 'grace@example.com', password: 'hopper123' };
+
+  let api: E2eApp;
+
+  beforeAll(async () => {
+    api = await startE2eApp({ SESSION_SECRET: SECRET });
+    for (const [username, credentials] of [
+      ['Ada', ADA],
+      ['Grace', GRACE]
+    ] as const) {
+      await api.inject({
+        method: 'POST',
+        url: '/api/auth/register',
+        payload: { username, ...credentials }
+      });
+      await api.inject({
+        method: 'POST',
+        url: '/api/auth/verify-email',
+        payload: { token: api.mail.lastToken() }
+      });
+    }
+  });
+
+  afterAll(async () => {
+    await api.close();
+  });
+
+  async function login(
+    jar: CookieJar,
+    credentials: { email: string; password: string }
+  ) {
+    const response = await api.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      headers: jar.headers(),
+      payload: credentials
+    });
+    jar.store(response);
+    return response;
+  }
+
+  function currentUser(headers: Record<string, string>) {
+    return api.inject({ method: 'GET', url: '/api/user', headers });
+  }
+
+  it('leaves the new account signed in when the previous one signs out everywhere', async () => {
+    const jar = new CookieJar();
+    await login(jar, ADA);
+    await login(jar, GRACE);
+
+    // A reset signs every session of Ada's out; the browser now holds Grace's.
+    await api.inject({
+      method: 'POST',
+      url: '/api/auth/password-reset',
+      payload: { email: ADA.email }
+    });
+    const confirm = await api.inject({
+      method: 'POST',
+      url: '/api/auth/password-reset/confirm',
+      payload: { token: api.mail.lastToken(), password: 'lovelace2' }
+    });
+    expect(confirm.statusCode).toBe(204);
+
+    const response = await currentUser(jar.headers());
+    expect(response.statusCode).toBe(200);
+    expect(response.json().email).toBe(GRACE.email);
+  });
+
+  it('signs in again over a session stored before sessions had generations', async () => {
+    const jar = new CookieJar();
+    const first = await login(jar, GRACE);
+    const signed = first.cookies.find((c) => c.name === 'lg_sid')!.value;
+    const encoded = unsign(signed, SECRET).value!;
+    const [storeId] = JSON.parse(
+      Buffer.from(encoded.split('.').pop()!, 'base64url').toString()
+    ) as [string, string];
+
+    // What an older release wrote: the session without its generation, and a
+    // cookie carrying the bare store id.
+    const redis = api.app.get(RedisService);
+    const stored = (await redis.getJson<Record<string, unknown>>(
+      `sess:${storeId}`
+    ))!;
+    delete stored['__fastifySessionMetadata'];
+    await redis.setJson(`sess:${storeId}`, stored, 60 * 60);
+    const legacy = {
+      cookie: `lg_sid=${encodeURIComponent(sign(storeId, SECRET))}`
+    };
+    expect((await currentUser(legacy)).statusCode).toBe(200);
+
+    const over = await api.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      headers: legacy,
+      payload: GRACE
+    });
+    expect(over.statusCode).toBe(200);
+    const fresh = new CookieJar();
+    fresh.store(over);
+
+    expect((await currentUser(fresh.headers())).statusCode).toBe(200);
+    expect((await currentUser(legacy)).statusCode).toBe(401);
   });
 });

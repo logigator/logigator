@@ -7,7 +7,31 @@ import { RedisService } from '../redis/redis.service';
 const DAY_IN_SECONDS = 24 * 60 * 60;
 
 /**
- * Session storage in Redis: the three callbacks `@fastify/session` asks for,
+ * Replaces a stored session only while it still holds the generation the
+ * request loaded, in one step on the server. `@fastify/session` writes the
+ * generation into the session's own `__fastifySessionMetadata`; a session
+ * written before it did so counts as generation `sessionStoreId`. A missing or
+ * unreadable value is a session that no longer exists.
+ *
+ * KEYS[1] session key; ARGV: store id, expected generation, value, TTL seconds.
+ */
+const COMPARE_AND_SET = `
+local stored = redis.call('GET', KEYS[1])
+if not stored then return 0 end
+local ok, session = pcall(cjson.decode, stored)
+if not ok or type(session) ~= 'table' then return 0 end
+local generation = ARGV[1]
+local metadata = session['__fastifySessionMetadata']
+if type(metadata) == 'table' and type(metadata['generation']) == 'string' then
+  generation = metadata['generation']
+end
+if generation ~= ARGV[2] then return 0 end
+redis.call('SET', KEYS[1], ARGV[3], 'EX', ARGV[4])
+return 1
+`;
+
+/**
+ * Session storage in Redis: the four callbacks `@fastify/session` asks for,
  * and an index of which sessions belong to which account. In-repo rather than
  * `connect-redis`, which would pull in `express-session` for its `Store` base
  * class.
@@ -33,6 +57,24 @@ export class RedisSessionStore implements SessionStore {
     callback: (err?: unknown) => void
   ): void {
     this.persist(sessionId, session).then(() => callback(), callback);
+  }
+
+  /**
+   * Writes over a session only while it holds `expectedGeneration`, so a
+   * request still in flight cannot bring back a session that was destroyed or
+   * regenerated meanwhile. A miss is `ENOENT`, which `@fastify/session` answers
+   * by clearing the cookie.
+   */
+  compareAndSet(
+    sessionId: string,
+    expectedGeneration: string,
+    session: Session,
+    callback: (err?: unknown) => void
+  ): void {
+    this.persist(sessionId, session, expectedGeneration).then(
+      () => callback(),
+      callback
+    );
   }
 
   get(
@@ -75,12 +117,6 @@ export class RedisSessionStore implements SessionStore {
     await this.redis.removeFromSet(index, doomed);
   }
 
-  /** Deletes one session of an account and drops it from the index. */
-  async discard(userId: string, sessionId: string): Promise<void> {
-    await this.redis.delete(key(sessionId));
-    await this.forget(userId, sessionId);
-  }
-
   /** Drops one id from the index, for a session that is ending deliberately. */
   async forget(userId: string, sessionId: string): Promise<void> {
     await this.redis.removeFromSet(userIndexKey(userId), [sessionId]);
@@ -89,13 +125,29 @@ export class RedisSessionStore implements SessionStore {
   /**
    * Writes the session, and once it belongs to somebody records its id under
    * that account, so one user's sessions are findable without a key scan.
+   * With `expectedGeneration`, only over that generation of it.
    */
-  private async persist(sessionId: string, session: Session): Promise<void> {
-    await this.redis.setEx(
-      key(sessionId),
-      JSON.stringify(session),
-      this.ttlFor(session)
-    );
+  private async persist(
+    sessionId: string,
+    session: Session,
+    expectedGeneration?: string
+  ): Promise<void> {
+    const value = JSON.stringify(session);
+    const ttl = this.ttlFor(session);
+    if (expectedGeneration === undefined) {
+      await this.redis.setEx(key(sessionId), value, ttl);
+    } else {
+      const written = await this.redis.client.eval(COMPARE_AND_SET, {
+        keys: [this.redis.key(key(sessionId))],
+        arguments: [sessionId, expectedGeneration, value, String(ttl)]
+      });
+      if (written !== 1) {
+        throw Object.assign(
+          new Error('The session does not exist or has changed'),
+          { code: 'ENOENT' }
+        );
+      }
+    }
 
     if (session.userId) {
       await this.redis.addToSet(

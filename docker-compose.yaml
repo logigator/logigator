@@ -32,16 +32,16 @@ services:
       - ./data/storage:/srv/files:ro
 
   deps:
-    image: node:24
+    image: node:26
     networks:
       - net
     volumes:
       - ./:/app
     working_dir: /app
-    command: "sh -c 'corepack enable && exec yarn'"
+    command: "sh -c 'npm install -g corepack@0.36.0 && exec yarn'"
 
   editor:
-    image: node:24
+    image: node:26
     networks:
       - net
     depends_on:
@@ -50,10 +50,10 @@ services:
     volumes:
       - ./:/app
     working_dir: /app
-    command: "sh -c 'corepack enable && exec yarn start:editor'"
+    command: "sh -c 'npm install -g corepack@0.36.0 && exec yarn start:editor'"
 
   web:
-    image: node:24
+    image: node:26
     networks:
       - net
     depends_on:
@@ -66,10 +66,10 @@ services:
       - API_ORIGIN=http://api:3000
       - NG_ALLOWED_HOSTS=logigator.test
       - NG_TRUST_PROXY_HEADERS=x-forwarded-host,x-forwarded-proto,x-forwarded-for
-    command: "sh -c 'corepack enable && exec yarn start:web'"
+    command: "sh -c 'npm install -g corepack@0.36.0 && exec yarn start:web'"
 
   api:
-    image: node:24
+    image: node:26
     networks:
       - net
     depends_on:
@@ -87,7 +87,7 @@ services:
     env_file:
       - path: ./logigator-api/.env
         required: false
-    command: "sh -c 'corepack enable && yarn workspace logigator-api run db:migrate && exec yarn start:api'"
+    command: "sh -c 'npm install -g corepack@0.36.0 && yarn workspace logigator-api run db:migrate && exec yarn start:api'"
 
   postgres:
     image: postgres:18-alpine

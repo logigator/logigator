@@ -32,17 +32,17 @@ export class SessionService {
   /**
    * Binds the session to `userId`. The id is regenerated first: reusing an id
    * the caller already held would let whoever handed it over ride along on the
-   * new sign-in (session fixation). A session the caller was already signed in
-   * with ends here, since `regenerate` leaves it in the store, still valid for
-   * anyone holding its old cookie.
+   * new sign-in (session fixation). `regenerate` keeps the store key and moves
+   * the session to a new generation, so the old cookie stops resolving; the key
+   * leaves the previous account's index, since it now holds this sign-in.
    */
   async signIn(request: FastifyRequest, userId: string): Promise<void> {
-    const previous = request.session.userId
-      ? { userId: request.session.userId, id: request.session.sessionId }
-      : null;
+    const previousUserId = request.session.userId;
 
     await request.session.regenerate();
-    if (previous) await this.store.discard(previous.userId, previous.id);
+    if (previousUserId) {
+      await this.store.forget(previousUserId, request.session.sessionStoreId);
+    }
 
     const now = Date.now();
     request.session.userId = userId;
@@ -139,10 +139,10 @@ export class SessionService {
    */
   async signOut(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     // Read before destroying — afterwards there is no session to ask.
-    const { userId, sessionId } = request.session;
+    const { userId, sessionStoreId } = request.session;
 
     await request.session.destroy();
-    if (userId) await this.store.forget(userId, sessionId);
+    if (userId) await this.store.forget(userId, sessionStoreId);
 
     reply.clearCookie(this.env.SESSION_COOKIE_NAME, this.cookieOptions());
   }

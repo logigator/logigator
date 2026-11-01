@@ -15,7 +15,7 @@ export class PasswordService {
   constructor(@Inject(ENV) private readonly env: Env) {}
 
   hash(plain: string): Promise<string> {
-    return hash(plain, this.env.BCRYPT_COST);
+    return hash(plain, { cost: this.env.BCRYPT_COST });
   }
 
   verify(plain: string, hashed: string): Promise<boolean> {
@@ -34,7 +34,7 @@ export class PasswordService {
    * string, at the configured cost so the timing actually matches.
    */
   async verifyNothing(plain: string): Promise<false> {
-    this.dummyHash ??= hashSync(randomUUID(), this.env.BCRYPT_COST);
+    this.dummyHash ??= hashSync(randomUUID(), { cost: this.env.BCRYPT_COST });
     await verify(plain, this.dummyHash);
     return false;
   }

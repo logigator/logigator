@@ -227,7 +227,7 @@ export async function settleAnalysis(
   model: string | null
 ): Promise<boolean> {
   return db.transaction(async (tx) => {
-    const settled = await tx.execute(sql`
+    const settled = await tx.execute<{ id: string }>(sql`
       UPDATE ${table}
          SET name_language = ${translation.nameLanguage},
              description_language = ${translation.descriptionLanguage},

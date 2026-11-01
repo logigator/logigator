@@ -8,6 +8,7 @@
     "url": "git+https://github.com/logigator/logigator.git"
   },
   "private": true,
+  "type": "module",
   "sideEffects": false,
   "scripts": {
     "lint": "eslint --config eslint.config.mjs src",
@@ -18,9 +19,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.9.1",
+    "eslint": "^10.14.0",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.68.0",
-    "vitest": "^4.1.11"
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
   }
 }

@@ -7,7 +7,7 @@
 version: 2
 
 multi-ecosystem-groups:
-  # node:24 is both the compose dev image and the Dockerfile's base, so the two
+  # node:26 is both the compose dev image and the Dockerfile's base, so the two
   # ecosystems land in one pull request.
   containers:
     schedule:

@@ -2,13 +2,23 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { IncomingMessage } from 'node:http';
 import { requestOrigin } from './request-origin';
 
-/** The parts of a node request the derivation reads. */
+/**
+ * The parts of a node request the derivation reads, including the events it
+ * subscribes to for an abort.
+ */
 function request(headers: Record<string, string>): IncomingMessage {
   return {
     method: 'GET',
     url: '/en/changelog.atom',
     headers,
-    socket: {}
+    socket: {},
+    aborted: false,
+    once() {
+      return this;
+    },
+    off() {
+      return this;
+    }
   } as unknown as IncomingMessage;
 }
 

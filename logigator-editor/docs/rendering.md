@@ -596,7 +596,7 @@ a fixed screen diameter makes it zoom-dependent and every dot is dirtied.
 
 ## Render groups
 
-**pixi.js carries a local patch** (`.yarn/patches/pixi.js-npm-8.21.0-*.patch`,
+**pixi.js carries a local patch** (`.yarn/patches/pixi.js-npm-8.22.0-*.patch`,
 applied through the `patch:` protocol in `logigator-editor/package.json`). Stock
 `RenderGroupSystem._updateRenderGroups` recurses into every child render group
 without looking at whether it will be drawn, and `_buildInstructions` starts

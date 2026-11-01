@@ -8,7 +8,7 @@
     "url": "git+https://github.com/logigator/logigator.git"
   },
   "private": true,
-  "packageManager": "yarn@4.14.1",
+  "packageManager": "yarn@4.18.1",
   "workspaces": [
     "logigator-ui",
     "logigator-core",
@@ -58,14 +58,14 @@
     "format:fix": "prettier . -lw"
   },
   "devDependencies": {
-    "@angular-eslint/builder": "^22.5.0",
-    "@angular/cli": "^22.1.8",
+    "@angular-eslint/builder": "^22.6.0",
+    "@angular/cli": "^22.2.5",
     "@eslint/js": "^10.0.1",
-    "angular-eslint": "^22.5.0",
-    "concurrently": "^9.2.4",
-    "eslint": "^10.10.0",
-    "prettier": "^3.9.7",
+    "angular-eslint": "^22.6.0",
+    "concurrently": "^10.0.6",
+    "eslint": "^10.14.0",
+    "prettier": "^3.9.10",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.70.0"
+    "typescript-eslint": "^8.72.1"
   }
 }

@@ -43,6 +43,7 @@ export class TranslateDirective implements OnInit {
 
   /** Tells the template type checker what `let t` is. */
   public static ngTemplateContextGuard(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     directive: TranslateDirective,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     context: unknown

@@ -1,6 +1,8 @@
-FROM node:24 AS workspace
+FROM node:26 AS workspace
 WORKDIR /app
-RUN corepack enable
+# Node ships no corepack since 25; the npm package installs the yarn shim,
+# which runs the version the root manifest's packageManager pins.
+RUN npm install -g corepack@0.36.0
 
 # Every application is a Yarn/Angular workspace member compiling @logigator/ui,
 # @logigator/core, @logigator/contract and @logigator/docs from source via
@@ -78,7 +80,7 @@ RUN yarn build:api
 
 # The website's server. Its bundle inlines every dependency, so the image needs
 # nothing beyond the build output.
-FROM node:24-slim AS web
+FROM node:26-slim AS web
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=4000
@@ -95,9 +97,9 @@ CMD ["node", "--enable-source-maps", "dist/logigator-web/server/server.mjs"]
 # `renormalize.js`). The bundle inlines the shared packages and leaves every
 # real dependency external, so the image carries the API's production
 # dependencies alone, installed where Node resolves them from `dist/`.
-FROM node:24-slim AS api
+FROM node:26-slim AS api
 WORKDIR /app
-RUN corepack enable
+RUN npm install -g corepack@0.36.0
 
 # sharp runs libvips on a single thread under glibc's allocator, which fragments
 # in a long-running multi-threaded process; under jemalloc it uses every core.

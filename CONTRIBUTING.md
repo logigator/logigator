@@ -46,9 +46,9 @@ Run every command from the repository root, inside a container:
 docker compose exec editor yarn <command>
 ```
 
-To work without Docker for the apps themselves, you need Node 24 with
-[corepack](https://nodejs.org/api/corepack.html) enabled (`corepack enable`); the repository pins
-its Yarn version. Postgres and Redis still come from `docker compose up postgres redis`.
+To work without Docker for the apps themselves, you need Node 26 with
+[corepack](https://github.com/nodejs/corepack) installed (`npm install -g corepack`; Node no longer
+ships it), which runs the Yarn version the repository pins. Postgres and Redis still come from `docker compose up postgres redis`.
 
 To find your way around, [`AGENTS.md`](AGENTS.md) maps the repository and the rules that span
 packages, and [`logigator-editor/docs/`](logigator-editor/docs) has one page per part of the

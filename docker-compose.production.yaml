@@ -62,7 +62,7 @@ x-api-environment: &api-environment
 
 services:
   tunnel:
-    image: cloudflare/cloudflared:2026.10.0
+    image: cloudflare/cloudflared:2026.10.7
     profiles:
       - tunnel
     networks:
