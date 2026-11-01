@@ -242,12 +242,20 @@ const variables = z.object({
     .default(50),
 
   /**
-   * The secret of the site's Turnstile widget. Set, registering, asking for a
-   * password reset and reporting a document need a solved challenge; unset
-   * turns the check off and any token is ignored, which is the development
-   * default.
+   * The site's Turnstile widget: its secret, and the site key `GET /meta` hands
+   * the site. Set, registering, asking for a password reset and reporting a
+   * document need a solved challenge; unset turns the check off and any token
+   * is ignored, which is the development default.
    */
   TURNSTILE_SECRET_KEY: z.string().optional(),
+  TURNSTILE_SITE_KEY: z.string().optional(),
+
+  /**
+   * The PostHog project key the site and the editor send analytics to, handed
+   * to them by `GET /meta`. Public by design: every browser that consents
+   * receives it. Unset means no analytics, which is the development default.
+   */
+  POSTHOG_KEY: z.string().optional(),
 
   /** Lifetime of the one-shot mail tokens (verification, password reset). */
   AUTH_TOKEN_TTL_MINUTES: z.coerce.number().int().min(1).default(60),
@@ -314,6 +322,21 @@ export const envSchema = variables
         path: ['GOOGLE_CLIENT_ID'],
         message:
           'GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together, or neither (which disables Google sign-in)'
+      });
+    }
+  })
+  .check((ctx) => {
+    const { TURNSTILE_SECRET_KEY, TURNSTILE_SITE_KEY } = ctx.value;
+    // Half-configured either way breaks a form: a secret without a site key
+    // demands a token no widget can mint, and a site key without a secret
+    // shows a challenge nothing checks.
+    if (Boolean(TURNSTILE_SECRET_KEY) !== Boolean(TURNSTILE_SITE_KEY)) {
+      ctx.issues.push({
+        code: 'custom',
+        input: TURNSTILE_SITE_KEY,
+        path: ['TURNSTILE_SITE_KEY'],
+        message:
+          'TURNSTILE_SECRET_KEY and TURNSTILE_SITE_KEY must be set together, or neither (which turns the challenge off)'
       });
     }
   })

@@ -18,6 +18,9 @@
 # characters): the API refuses to start in production without one. To rotate
 # it, set `new,old` and drop `old` once SESSION_MAX_AGE_DAYS have passed. On
 # the server, also set SITE_HOST, POSTGRES_PASSWORD and CLOUDFLARE_TUNNEL_TOKEN.
+# The site and the editor carry no keys of their own: TURNSTILE_SITE_KEY (with
+# its secret) and POSTHOG_KEY reach them from the API's `GET /api/meta`, and
+# leaving them unset turns the challenge and analytics off.
 #
 # Cloudflare keeps a file under /files for a day, as the origin's
 # CDN-Cache-Control says, and that day is how long a deleted avatar or preview
@@ -50,6 +53,8 @@ x-api-environment: &api-environment
   GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
   GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
   TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+  TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+  POSTHOG_KEY: ${POSTHOG_KEY:-}
   TEXT_ANALYSIS_ENABLED: ${TEXT_ANALYSIS_ENABLED:-}
   OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
   OPENROUTER_PRESET: ${OPENROUTER_PRESET:-}

@@ -53,6 +53,7 @@ describe('the challenge on routes anybody can make mail', () => {
     api = await startE2eApp(
       {
         TURNSTILE_SECRET_KEY: 'e2e-turnstile-secret',
+        TURNSTILE_SITE_KEY: 'e2e-turnstile-site',
         REPORT_MAIL_TO: 'ops@logigator.test'
       },
       { siteverify: siteverify.fetch }

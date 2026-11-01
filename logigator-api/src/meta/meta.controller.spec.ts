@@ -25,6 +25,8 @@ describe('MetaController', () => {
     expect(metaResponseSchema.parse(controller.getMeta())).toEqual({
       formatVersion: CURRENT_FILE_VERSION,
       authProviders: ['local'],
+      turnstileSiteKey: null,
+      posthogKey: null,
       build: { version, commit: null, date: null }
     });
   });
@@ -37,5 +39,20 @@ describe('MetaController', () => {
     );
 
     expect(controller.getMeta().authProviders).toEqual(['local', 'google']);
+  });
+
+  it('passes the public keys of the deployment through', async () => {
+    const controller = await controllerFor(
+      loadEnv({
+        TURNSTILE_SECRET_KEY: 'secret',
+        TURNSTILE_SITE_KEY: 'site',
+        POSTHOG_KEY: 'phc_key'
+      })
+    );
+
+    expect(controller.getMeta()).toMatchObject({
+      turnstileSiteKey: 'site',
+      posthogKey: 'phc_key'
+    });
   });
 });

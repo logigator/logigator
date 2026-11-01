@@ -106,6 +106,17 @@ describe('loadEnv', () => {
     ).not.toThrow();
   });
 
+  it('rejects a Turnstile secret or site key without the other', () => {
+    // A site key alone shows a challenge nothing verifies; a secret alone
+    // demands a token no widget mints.
+    expect(() => loadEnv({ TURNSTILE_SITE_KEY: 'site' })).toThrowError(
+      /TURNSTILE/
+    );
+    expect(() => loadEnv({ TURNSTILE_SECRET_KEY: 'secret' })).toThrowError(
+      /TURNSTILE/
+    );
+  });
+
   it('refuses an OpenRouter key without a preset', () => {
     // The preset is what names the model; a request without one has nowhere
     // to go, and the failure would surface only once a document is claimed.

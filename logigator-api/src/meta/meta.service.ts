@@ -22,7 +22,8 @@ export class MetaService {
   constructor(@Inject(ENV) private readonly env: Env) {}
 
   /**
-   * What clients need to know before they upload anything or draw a login form.
+   * What clients need to know before they upload anything, draw a login form,
+   * show a challenge or load analytics.
    * The format version comes from the shared core, which is also what the write
    * path normalizes documents to — one constant, both sides of the wire.
    */
@@ -32,6 +33,8 @@ export class MetaService {
       authProviders: isGoogleAuthConfigured(this.env)
         ? ['local', 'google']
         : ['local'],
+      turnstileSiteKey: this.env.TURNSTILE_SITE_KEY ?? null,
+      posthogKey: this.env.POSTHOG_KEY ?? null,
       build
     };
   }

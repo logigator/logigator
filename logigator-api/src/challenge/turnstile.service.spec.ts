@@ -39,7 +39,9 @@ function service(
 ) {
   const env = loadEnv({
     PUBLIC_URL: 'https://logigator.com',
-    ...(secret ? { TURNSTILE_SECRET_KEY: secret } : {})
+    ...(secret
+      ? { TURNSTILE_SECRET_KEY: secret, TURNSTILE_SITE_KEY: 'turnstile-site' }
+      : {})
   });
   return new TurnstileService(env, fetch);
 }
