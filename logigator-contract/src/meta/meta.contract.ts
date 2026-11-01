@@ -16,6 +16,17 @@ export const metaResponseSchema = z
      */
     authProviders: z.array(z.enum(['local', 'google'])),
     /**
+     * The Turnstile widget's site key, reported only where the API holds its
+     * secret and verifies the tokens it mints. `null` means no challenge: a
+     * form sends its request without one.
+     */
+    turnstileSiteKey: z.string().min(1).nullable(),
+    /**
+     * The PostHog project key the site and the editor send to once a visitor
+     * grants analytics consent. `null` means no analytics at all.
+     */
+    posthogKey: z.string().min(1).nullable(),
+    /**
      * Which build is answering: the product version, and the commit and UTC
      * time the bundle was built from. Both are `null` for an unstamped build,
      * which is every build outside a release image.

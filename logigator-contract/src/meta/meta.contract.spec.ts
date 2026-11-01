@@ -5,6 +5,8 @@ import { metaResponseSchema } from './meta.contract';
 const response = {
   formatVersion: CURRENT_FILE_VERSION,
   authProviders: ['local' as const],
+  turnstileSiteKey: null,
+  posthogKey: null,
   build: { version: '2.2.0', commit: null, date: null }
 };
 
