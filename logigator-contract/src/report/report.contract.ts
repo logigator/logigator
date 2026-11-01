@@ -1,5 +1,6 @@
 import * as z from 'zod';
 import { emailSchema } from '../user/user.contract';
+import { turnstileTokenSchema } from '../challenge/challenge.contract';
 
 /**
  * A client-side error report. The shape is fixed from outside — shipped editors
@@ -96,7 +97,8 @@ export type DocumentReportReason = z.infer<typeof documentReportReasonSchema>;
 export const reportDocumentRequestSchema = z.object({
   reason: documentReportReasonSchema,
   explanation: z.string().trim().min(1).max(2000),
-  contactEmail: emailSchema.optional()
+  contactEmail: emailSchema.optional(),
+  turnstileToken: turnstileTokenSchema
 });
 
 export type ReportDocumentRequest = z.infer<typeof reportDocumentRequestSchema>;

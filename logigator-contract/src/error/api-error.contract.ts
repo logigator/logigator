@@ -28,6 +28,11 @@ export const apiErrorCodeSchema = z.enum([
   'email_not_verified',
   /** A one-shot mail token is unknown, already used, or expired. */
   'token_invalid',
+  /**
+   * The request needs a solved Turnstile challenge and carried none, or one
+   * Cloudflare did not accept; the form offers a fresh challenge.
+   */
+  'challenge_failed',
   /** Too many attempts in the current window. */
   'rate_limited',
   /**

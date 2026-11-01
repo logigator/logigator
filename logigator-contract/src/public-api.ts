@@ -66,6 +66,11 @@ export {
   type SocialLink
 } from './social/social.contract';
 export {
+  TURNSTILE_ACTIONS,
+  turnstileTokenSchema,
+  type TurnstileAction
+} from './challenge/challenge.contract';
+export {
   registerRequestSchema,
   registerResponseSchema,
   loginRequestSchema,

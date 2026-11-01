@@ -5,6 +5,7 @@ import {
   userResponseSchema,
   usernameSchema
 } from '../user/user.contract';
+import { turnstileTokenSchema } from '../challenge/challenge.contract';
 
 /**
  * The auth surface, JSON under `/api/auth`. Clients own their forms and read
@@ -14,7 +15,8 @@ import {
 export const registerRequestSchema = z.object({
   username: usernameSchema,
   email: emailSchema,
-  password: passwordSchema
+  password: passwordSchema,
+  turnstileToken: turnstileTokenSchema
 });
 
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
@@ -62,7 +64,8 @@ export const verifyEmailRequestSchema = z.object({
 export type VerifyEmailRequest = z.infer<typeof verifyEmailRequestSchema>;
 
 export const requestPasswordResetSchema = z.object({
-  email: emailSchema
+  email: emailSchema,
+  turnstileToken: turnstileTokenSchema
 });
 
 export type RequestPasswordReset = z.infer<typeof requestPasswordResetSchema>;
