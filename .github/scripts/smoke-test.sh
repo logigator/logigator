@@ -20,6 +20,15 @@ headers_of() {
     --resolve logigator.test:443:127.0.0.1 \
     --dump-header - --output /dev/null "$1" | tr -d '\r'
 }
+# Whether the response to $1 carries a header line matching $2. The headers are
+# read in full first: `grep --quiet` piped from curl exits on its match while
+# the writer may still be writing, and under pipefail the writer's broken pipe
+# would decide the result.
+has_header() {
+  local headers
+  headers=$(headers_of "$1")
+  grep --quiet --ignore-case --extended-regexp "^$2" <<<"$headers"
+}
 fail() {
   echo "::error::$1"
   exit 1
@@ -32,7 +41,7 @@ expect_page() {
   fi
 }
 expect_header() {
-  if ! headers_of "$1" | grep --quiet --ignore-case --extended-regexp "^$2"; then
+  if ! has_header "$1" "$2"; then
     fail "$1 does not answer $2"
   fi
 }
@@ -54,7 +63,7 @@ for path in /en /editor /api/meta /files/smoke-test.webp; do
   expect_header "$site$path" 'X-Content-Type-Options: nosniff$'
   expect_header "$site$path" 'Referrer-Policy: strict-origin-when-cross-origin$'
   expect_header "$site$path" 'X-Frame-Options: SAMEORIGIN$'
-  if headers_of "$site$path" | grep --quiet --ignore-case '^X-Powered-By:'; then
+  if has_header "$site$path" 'X-Powered-By:'; then
     fail "$site$path names its framework"
   fi
 done
@@ -87,6 +96,6 @@ fi
 preview=${BASH_REMATCH[1]}
 expect_header "$site$preview" 'CDN-Cache-Control: public, max-age=86400$'
 expect_header "$site$preview" 'Cache-Control: public, max-age=31536000, immutable$'
-if headers_of "$site/files/smoke-test.webp" | grep --quiet --ignore-case '^CDN-Cache-Control:'; then
+if has_header "$site/files/smoke-test.webp" 'CDN-Cache-Control:'; then
   fail 'a missing file under /files is held at the edge'
 fi
