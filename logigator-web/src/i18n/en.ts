@@ -156,6 +156,7 @@ const en = {
       serviceUnavailable:
         'The service is temporarily unavailable. Please try again in a moment.',
       validationFailed: 'Please check your entries and try again.',
+      challengeFailed: 'The security check failed. Please try again.',
       storageFull:
         'Your cloud storage is full. Delete projects or components you no longer need to make room.',
       network: 'No connection to the server. Check your network and try again.',

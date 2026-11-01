@@ -1,4 +1,4 @@
-Stand: 26. Oktober 2026
+Stand: 1. November 2026
 
 Diese Erklärung beschreibt, welche personenbezogenen Daten Logigator verarbeitet, wozu, auf welcher Rechtsgrundlage und wie lange. Sie gilt für die Website und den Editor unter logigator.com. Verbindlich ist die deutsche Fassung; die englische, französische und spanische sind Übersetzungen.
 
@@ -36,6 +36,8 @@ Logigator läuft auf eigenen Servern in Österreich. Datensicherungen der Datenb
 **Server-Protokolle.** Bei jedem Aufruf speichern unsere Server die IP-Adresse, den Zeitpunkt, die aufgerufene Adresse, den Browser und das Ergebnis der Anfrage. Wir brauchen diese Protokolle, um Fehler zu finden und Missbrauch zu erkennen. Sie werden nach einem Monat gelöscht.
 
 **Schutz vor Missbrauch.** Um wiederholte Anmeldeversuche und Massenregistrierungen zu bremsen, zählt der Server Anfragen je IP-Adresse. Dieser Zähler verfällt nach höchstens einer Stunde.
+
+**Cloudflare Turnstile.** Das Registrierungsformular, das Formular zum Anfordern eines neuen Passworts und das Formular zum Melden einer Schaltung sind durch Cloudflare Turnstile geschützt, damit sie nicht automatisiert genutzt werden können, um anderen Menschen E-Mails zu schicken oder uns mit Meldungen zu überhäufen. Wird eines dieser Formulare angezeigt, lädt dein Browser eine Prüfung von Cloudflare (challenges.cloudflare.com). Sie verarbeitet deine IP-Adresse, technische Merkmale deines Browsers und Geräts und wie du mit der Seite umgehst, um Menschen von automatisierten Anfragen zu unterscheiden; manchmal bittet sie dich, ein Kästchen anzuklicken. Wenn du das Formular absendest, schickt unser Server das Ergebnis der Prüfung und deine IP-Adresse an Cloudflare, um es bestätigen zu lassen.
 
 Rechtsgrundlage ist unser berechtigtes Interesse an einem sicheren und stabilen Betrieb (Art. 6 Abs. 1 lit. f DSGVO).
 
@@ -132,14 +134,14 @@ Rechtsgrundlage ist deine Einwilligung durch den Klick (Art. 6 Abs. 1 lit. a DSG
 
 Wir verkaufen keine Daten und zeigen keine Werbung. Daten erhalten nur die hier genannten Dienstleister, jeweils für den beschriebenen Zweck:
 
-| Dienstleister          | Zweck                                                | Sitz                 |
-| ---------------------- | ---------------------------------------------------- | -------------------- |
-| Cloudflare, Inc.       | Schutz und Auslieferung der Website                  | USA                  |
-| PostHog, Inc.          | Statistik, nur mit Einwilligung                      | USA, Daten in der EU |
-| SMTP2GO                | Versand von E-Mails                                  | Neuseeland           |
-| Zoho Corporation B.V.  | Postfach                                             | Niederlande          |
-| Google Ireland Limited | Anmeldung mit Google, YouTube                        | Irland               |
-| OpenRouter, Inc.       | Übersetzung und Prüfung von Namen und Beschreibungen | USA                  |
+| Dienstleister          | Zweck                                                                   | Sitz                 |
+| ---------------------- | ----------------------------------------------------------------------- | -------------------- |
+| Cloudflare, Inc.       | Schutz und Auslieferung der Website, Prüfung von Formularen (Turnstile) | USA                  |
+| PostHog, Inc.          | Statistik, nur mit Einwilligung                                         | USA, Daten in der EU |
+| SMTP2GO                | Versand von E-Mails                                                     | Neuseeland           |
+| Zoho Corporation B.V.  | Postfach                                                                | Niederlande          |
+| Google Ireland Limited | Anmeldung mit Google, YouTube                                           | Irland               |
+| OpenRouter, Inc.       | Übersetzung und Prüfung von Namen und Beschreibungen                    | USA                  |
 
 Für Neuseeland hat die EU-Kommission ein angemessenes Datenschutzniveau festgestellt. Übermittlungen in die USA stützen sich auf das EU-US Data Privacy Framework, soweit der Empfänger danach zertifiziert ist.
 

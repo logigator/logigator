@@ -3,7 +3,8 @@ import {
   Component,
   computed,
   inject,
-  signal
+  signal,
+  viewChild
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -31,6 +32,7 @@ import {
   passwordsMatch,
   setServerError
 } from '../../../forms/field-error';
+import { Turnstile } from '../../../forms/turnstile/turnstile';
 import { zodValidator } from '../../../forms/zod-validator';
 import { SiteLinks } from '../../../layout/site-links';
 import { TranslateDirective } from '../../../translation/translate.directive';
@@ -56,7 +58,8 @@ import { GoogleSignIn } from '../google-sign-in';
     LgMessage,
     ReactiveFormsModule,
     RouterLink,
-    TranslateDirective
+    TranslateDirective,
+    Turnstile
   ],
   templateUrl: './register-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -66,6 +69,8 @@ export class RegisterPage {
   private readonly query = toSignal(inject(ActivatedRoute).queryParamMap);
 
   protected readonly links = inject(SiteLinks);
+
+  private readonly turnstile = viewChild(Turnstile);
 
   protected readonly form = new FormGroup(
     {
@@ -126,7 +131,10 @@ export class RegisterPage {
   protected async submit(): Promise<void> {
     this.form.markAllAsTouched();
     this.formError.set(null);
-    const body = registerRequestSchema.safeParse(this.form.getRawValue());
+    const body = registerRequestSchema.safeParse({
+      ...this.form.getRawValue(),
+      turnstileToken: this.turnstile()?.token() ?? undefined
+    });
     if (!body.success || this.form.invalid) return;
 
     this.submitting.set(true);
@@ -134,6 +142,7 @@ export class RegisterPage {
       await firstValueFrom(this.authApi.register(body.data));
       this.awaitingConfirmation.set(body.data.email);
     } catch (error) {
+      this.turnstile()?.reset();
       this.reportFailure(error);
     } finally {
       this.submitting.set(false);

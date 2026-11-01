@@ -146,6 +146,8 @@ const de: TranslationSchema = {
         'Der Dienst ist vorübergehend nicht verfügbar. Bitte versuche es gleich noch einmal.',
       validationFailed:
         'Bitte überprüfe deine Eingaben und versuche es erneut.',
+      challengeFailed:
+        'Die Sicherheitsprüfung ist fehlgeschlagen. Bitte versuche es erneut.',
       storageFull:
         'Dein Cloud-Speicher ist voll. Lösche Projekte oder Komponenten, die du nicht mehr brauchst, um Platz zu schaffen.',
       network:

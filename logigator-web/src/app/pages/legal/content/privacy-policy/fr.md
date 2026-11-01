@@ -1,4 +1,4 @@
-Dernière mise à jour : 26 octobre 2026
+Dernière mise à jour : 1er novembre 2026
 
 Cette politique décrit quelles données personnelles Logigator traite, dans quel but, sur quelle base juridique et pendant combien de temps. Elle s’applique au site web et à l’éditeur sur logigator.com. La version allemande fait foi ; les versions anglaise, française et espagnole sont des traductions.
 
@@ -36,6 +36,8 @@ Logigator fonctionne sur ses propres serveurs en Autriche. Les sauvegardes de la
 **Journaux du serveur.** À chaque requête, nos serveurs enregistrent l’adresse IP, l’heure, l’adresse demandée, le navigateur et le résultat. Nous en avons besoin pour trouver les pannes et détecter les abus. Ils sont supprimés au bout d’un mois.
 
 **Protection contre les abus.** Pour freiner les tentatives de connexion répétées et les inscriptions en masse, le serveur compte les requêtes par adresse IP. Ce compteur expire au bout d’une heure au plus.
+
+**Cloudflare Turnstile.** Le formulaire d’inscription, le formulaire de demande d’un nouveau mot de passe et le formulaire de signalement d’un circuit sont protégés par Cloudflare Turnstile, afin qu’ils ne puissent pas être utilisés de manière automatisée pour envoyer des e-mails à d’autres personnes ou nous submerger de signalements. Lorsque l’un de ces formulaires s’affiche, votre navigateur charge une vérification de Cloudflare (challenges.cloudflare.com). Elle traite votre adresse IP, des caractéristiques techniques de votre navigateur et de votre appareil, et la manière dont vous interagissez avec la page, afin de distinguer les personnes des requêtes automatisées ; il arrive qu’elle vous demande de cocher une case. Lorsque vous envoyez le formulaire, notre serveur transmet le résultat de la vérification et votre adresse IP à Cloudflare pour le faire confirmer.
 
 La base juridique est notre intérêt légitime à un fonctionnement sûr et fiable (art. 6, par. 1, point f du RGPD).
 
@@ -132,14 +134,14 @@ La base juridique est le consentement que vous donnez par ce clic (art. 6, par. 
 
 Nous ne vendons aucune donnée et n’affichons aucune publicité. Seuls les prestataires cités ici reçoivent des données, chacun pour la finalité décrite :
 
-| Prestataire            | Finalité                                                | Siège                         |
-| ---------------------- | ------------------------------------------------------- | ----------------------------- |
-| Cloudflare, Inc.       | Protection et diffusion du site                         | États-Unis                    |
-| PostHog, Inc.          | Statistiques, uniquement avec consentement              | États-Unis, données dans l’UE |
-| SMTP2GO                | Envoi des e-mails                                       | Nouvelle-Zélande              |
-| Zoho Corporation B.V.  | Boîte de réception                                      | Pays-Bas                      |
-| Google Ireland Limited | Connexion avec Google, YouTube                          | Irlande                       |
-| OpenRouter, Inc.       | Traduction et vérification des noms et des descriptions | États-Unis                    |
+| Prestataire            | Finalité                                                                  | Siège                         |
+| ---------------------- | ------------------------------------------------------------------------- | ----------------------------- |
+| Cloudflare, Inc.       | Protection et diffusion du site, vérification des formulaires (Turnstile) | États-Unis                    |
+| PostHog, Inc.          | Statistiques, uniquement avec consentement                                | États-Unis, données dans l’UE |
+| SMTP2GO                | Envoi des e-mails                                                         | Nouvelle-Zélande              |
+| Zoho Corporation B.V.  | Boîte de réception                                                        | Pays-Bas                      |
+| Google Ireland Limited | Connexion avec Google, YouTube                                            | Irlande                       |
+| OpenRouter, Inc.       | Traduction et vérification des noms et des descriptions                   | États-Unis                    |
 
 La Commission européenne a constaté que la Nouvelle-Zélande assure un niveau de protection des données adéquat. Les transferts vers les États-Unis reposent sur le cadre de protection des données UE-États-Unis (Data Privacy Framework) lorsque le destinataire y est certifié.
 

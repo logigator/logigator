@@ -4,6 +4,10 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { documentReportReasonSchema } from '@logigator/contract';
 import { DialogConfig, DialogRef } from '@logigator/ui';
 import { configureTestBed } from '../../../testing/configure-test-bed';
+import {
+  FakeTurnstile,
+  provideFakeTurnstile
+} from '../../../testing/fake-turnstile';
 import { TranslationService } from '../../translation/translation.service';
 import {
   ReportDocumentDialog,
@@ -15,6 +19,7 @@ const REPORT_URL = `/api/community/projects/${LINK}/report`;
 
 describe('ReportDocumentDialog', () => {
   let http: HttpTestingController;
+  let turnstile: FakeTurnstile;
 
   async function render(): Promise<{
     el: HTMLElement;
@@ -22,9 +27,11 @@ describe('ReportDocumentDialog', () => {
   }> {
     TestBed.resetTestingModule();
     const data: ReportDocumentData = { kind: 'projects', link: LINK };
+    turnstile = new FakeTurnstile();
     configureTestBed([
       { provide: DialogRef, useValue: new DialogRef<void>() },
-      { provide: DialogConfig, useValue: { data } }
+      { provide: DialogConfig, useValue: { data } },
+      provideFakeTurnstile(turnstile)
     ]);
     http = TestBed.inject(HttpTestingController);
     await TestBed.inject(TranslationService).setActiveLang('en');
@@ -124,21 +131,23 @@ describe('ReportDocumentDialog', () => {
     expect(el.querySelector('form')).not.toBeNull();
   });
 
-  it('keeps the form after a refused report, so it can be sent again', async () => {
+  it('keeps the form after a refused report, with a fresh challenge to send it again', async () => {
     const { el, fixture } = await render();
+    turnstile.solve('report-token');
     await pickReason(el, fixture, 'harassment');
     type(el, 'report-document-explanation', 'Insults in the description.');
     submit(el);
 
-    http
-      .expectOne(REPORT_URL)
-      .flush(
-        { code: 'rate_limited', message: 'Too many attempts.' },
-        { status: 429, statusText: 'Too Many Requests' }
-      );
+    const request = http.expectOne(REPORT_URL);
+    expect(request.request.body.turnstileToken).toBe('report-token');
+    request.flush(
+      { code: 'rate_limited', message: 'Too many attempts.' },
+      { status: 429, statusText: 'Too Many Requests' }
+    );
     await settle(fixture);
 
     expect(el.querySelector('form')).not.toBeNull();
     expect(el.querySelector('lg-message')).not.toBeNull();
+    expect(turnstile.resets).toHaveLength(1);
   });
 });

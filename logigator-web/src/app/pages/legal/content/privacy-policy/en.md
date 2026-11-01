@@ -1,4 +1,4 @@
-Last updated: 26 October 2026
+Last updated: 1 November 2026
 
 This policy describes which personal data Logigator processes, for what purpose, on which legal basis and for how long. It applies to the website and the editor at logigator.com. The German version is binding; the English, French and Spanish versions are translations.
 
@@ -36,6 +36,8 @@ Logigator runs on its own servers in Austria. Database backups are also kept in 
 **Server logs.** For every request, our servers log the IP address, the time, the address requested, the browser and the result. We need these logs to find faults and detect abuse. They are deleted after one month.
 
 **Abuse protection.** To slow down repeated sign-in attempts and mass registrations, the server counts requests per IP address. This counter expires after an hour at most.
+
+**Cloudflare Turnstile.** The registration form, the form for requesting a new password and the form for reporting a circuit are protected by Cloudflare Turnstile, so that they cannot be used automatically to send emails to other people or to flood us with reports. When one of these forms is shown, your browser loads a check from Cloudflare (challenges.cloudflare.com). It processes your IP address, technical characteristics of your browser and device, and how you interact with the page, to tell people from automated requests; sometimes it asks you to click a box. When you submit the form, our server sends the result of the check and your IP address to Cloudflare to confirm it.
 
 The legal basis is our legitimate interest in secure and reliable operation (Art. 6(1)(f) GDPR).
 
@@ -132,14 +134,14 @@ The legal basis is the consent you give by clicking (Art. 6(1)(a) GDPR, § 165(3
 
 We do not sell data and show no advertising. Only the service providers named here receive data, each for the purpose described:
 
-| Provider               | Purpose                                         | Based in            |
-| ---------------------- | ----------------------------------------------- | ------------------- |
-| Cloudflare, Inc.       | Protecting and delivering the website           | USA                 |
-| PostHog, Inc.          | Statistics, only with consent                   | USA, data in the EU |
-| SMTP2GO                | Sending emails                                  | New Zealand         |
-| Zoho Corporation B.V.  | Mailbox                                         | Netherlands         |
-| Google Ireland Limited | Signing in with Google, YouTube                 | Ireland             |
-| OpenRouter, Inc.       | Translating and checking names and descriptions | USA                 |
+| Provider               | Purpose                                                           | Based in            |
+| ---------------------- | ----------------------------------------------------------------- | ------------------- |
+| Cloudflare, Inc.       | Protecting and delivering the website, checking forms (Turnstile) | USA                 |
+| PostHog, Inc.          | Statistics, only with consent                                     | USA, data in the EU |
+| SMTP2GO                | Sending emails                                                    | New Zealand         |
+| Zoho Corporation B.V.  | Mailbox                                                           | Netherlands         |
+| Google Ireland Limited | Signing in with Google, YouTube                                   | Ireland             |
+| OpenRouter, Inc.       | Translating and checking names and descriptions                   | USA                 |
 
 The European Commission has found that New Zealand ensures an adequate level of data protection. Transfers to the USA rely on the EU-US Data Privacy Framework where the recipient is certified under it.
 

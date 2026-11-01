@@ -1,4 +1,4 @@
-Última actualización: 26 de octubre de 2026
+Última actualización: 1 de noviembre de 2026
 
 Esta política describe qué datos personales trata Logigator, con qué finalidad, con qué base jurídica y durante cuánto tiempo. Se aplica al sitio web y al editor en logigator.com. La versión alemana es la vinculante; las versiones inglesa, francesa y española son traducciones.
 
@@ -36,6 +36,8 @@ Logigator funciona en servidores propios en Austria. Las copias de seguridad de 
 **Registros del servidor.** En cada solicitud, nuestros servidores registran la dirección IP, la hora, la dirección solicitada, el navegador y el resultado. Los necesitamos para encontrar fallos y detectar abusos. Se eliminan al cabo de un mes.
 
 **Protección contra abusos.** Para frenar los intentos de inicio de sesión repetidos y los registros masivos, el servidor cuenta las solicitudes por dirección IP. Este contador caduca como máximo al cabo de una hora.
+
+**Cloudflare Turnstile.** El formulario de registro, el formulario para solicitar una contraseña nueva y el formulario para denunciar un circuito están protegidos por Cloudflare Turnstile, para que no puedan usarse de forma automatizada para enviar correos a otras personas ni para inundarnos de denuncias. Cuando se muestra uno de estos formularios, tu navegador carga una comprobación de Cloudflare (challenges.cloudflare.com). Esta trata tu dirección IP, características técnicas de tu navegador y tu dispositivo, y cómo interactúas con la página, para distinguir a las personas de las solicitudes automatizadas; a veces te pide que marques una casilla. Cuando envías el formulario, nuestro servidor envía el resultado de la comprobación y tu dirección IP a Cloudflare para que lo confirme.
 
 La base jurídica es nuestro interés legítimo en un funcionamiento seguro y fiable (art. 6, apdo. 1, letra f del RGPD).
 
@@ -132,14 +134,14 @@ La base jurídica es el consentimiento que das con el clic (art. 6, apdo. 1, let
 
 No vendemos datos ni mostramos publicidad. Solo reciben datos los proveedores indicados aquí, cada uno para la finalidad descrita:
 
-| Proveedor              | Finalidad                                            | Sede                    |
-| ---------------------- | ---------------------------------------------------- | ----------------------- |
-| Cloudflare, Inc.       | Protección y entrega del sitio                       | EE. UU.                 |
-| PostHog, Inc.          | Estadísticas, solo con consentimiento                | EE. UU., datos en la UE |
-| SMTP2GO                | Envío de correos                                     | Nueva Zelanda           |
-| Zoho Corporation B.V.  | Buzón de correo                                      | Países Bajos            |
-| Google Ireland Limited | Inicio de sesión con Google, YouTube                 | Irlanda                 |
-| OpenRouter, Inc.       | Traducción y comprobación de nombres y descripciones | EE. UU.                 |
+| Proveedor              | Finalidad                                                               | Sede                    |
+| ---------------------- | ----------------------------------------------------------------------- | ----------------------- |
+| Cloudflare, Inc.       | Protección y entrega del sitio, comprobación de formularios (Turnstile) | EE. UU.                 |
+| PostHog, Inc.          | Estadísticas, solo con consentimiento                                   | EE. UU., datos en la UE |
+| SMTP2GO                | Envío de correos                                                        | Nueva Zelanda           |
+| Zoho Corporation B.V.  | Buzón de correo                                                         | Países Bajos            |
+| Google Ireland Limited | Inicio de sesión con Google, YouTube                                    | Irlanda                 |
+| OpenRouter, Inc.       | Traducción y comprobación de nombres y descripciones                    | EE. UU.                 |
 
 La Comisión Europea ha constatado que Nueva Zelanda garantiza un nivel adecuado de protección de datos. Las transferencias a EE. UU. se basan en el Marco de Privacidad de Datos UE-EE. UU. (Data Privacy Framework) cuando el destinatario está certificado conforme a él.
 

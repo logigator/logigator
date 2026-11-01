@@ -142,6 +142,7 @@ const fr: TranslationSchema = {
       serviceUnavailable:
         'Le service est momentanément indisponible. Réessayez dans un instant.',
       validationFailed: 'Vérifiez vos saisies puis réessayez.',
+      challengeFailed: 'La vérification de sécurité a échoué. Réessayez.',
       storageFull:
         'Votre stockage cloud est plein. Supprimez des projets ou des composants dont vous n’avez plus besoin pour libérer de la place.',
       network:

@@ -109,6 +109,8 @@
         >{{ t('pages.register.privacyNoticeAfter') }}
       </p>
 
+      <web-turnstile action="register" />
+
       <button lgButton type="submit" [loading]="submitting()">
         {{ t('pages.register.submit') }}
       </button>

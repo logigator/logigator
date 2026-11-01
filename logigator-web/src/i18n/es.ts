@@ -143,6 +143,8 @@ const es: TranslationSchema = {
       serviceUnavailable:
         'El servicio no está disponible temporalmente. Inténtalo de nuevo en un momento.',
       validationFailed: 'Revisa lo que has introducido e inténtalo de nuevo.',
+      challengeFailed:
+        'La comprobación de seguridad ha fallado. Inténtalo de nuevo.',
       storageFull:
         'Tu almacenamiento en la nube está lleno. Elimina proyectos o componentes que ya no necesites para hacer sitio.',
       network:

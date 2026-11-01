@@ -1,5 +1,6 @@
 import { environment } from './environments/environment';
 import { homeVideo, videoEmbedUrl } from './app/pages/home/home-video';
+import { TURNSTILE_ORIGIN } from './app/forms/turnstile/turnstile-loader';
 
 /**
  * Report-only until the reports from production are clean; the header name is
@@ -49,10 +50,10 @@ export function createCspNonce(): string {
  * ignores `report-uri`, so naming a group the response leaves undefined would
  * silence it.
  *
- * Scripts are the bundle, PostHog's own lazily loaded scripts and the inline
- * ones the render stamps with `nonce`: event replay's contract and the loader
- * that swaps in the full stylesheet. No `'strict-dynamic'`, so the host list
- * stays in force. Styles keep `'unsafe-inline'`: components set `style`
+ * Scripts are the bundle, PostHog's own lazily loaded scripts, Turnstile's on
+ * the pages with a challenge, and the inline ones the render stamps with
+ * `nonce`: event replay's contract and the loader that swaps in the full
+ * stylesheet. No `'strict-dynamic'`, so the host list stays in force. Styles keep `'unsafe-inline'`: components set `style`
  * attributes at runtime, and a nonce beside it would switch it off.
  */
 export function siteContentSecurityPolicy(
@@ -64,12 +65,12 @@ export function siteContentSecurityPolicy(
 
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' ${posthog}`,
+    `script-src 'self' 'nonce-${nonce}' ${posthog} ${TURNSTILE_ORIGIN}`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self'",
     `connect-src 'self' ${posthog}`,
-    `frame-src ${video}`,
+    `frame-src ${video} ${TURNSTILE_ORIGIN}`,
     "worker-src 'self' blob:",
     "object-src 'none'",
     "base-uri 'self'",

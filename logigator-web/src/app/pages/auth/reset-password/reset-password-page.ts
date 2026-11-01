@@ -3,7 +3,8 @@ import {
   Component,
   computed,
   inject,
-  signal
+  signal,
+  viewChild
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import {
@@ -31,6 +32,7 @@ import {
 import { AuthApiService } from '../../../api/services/auth-api.service';
 import { genericFailureKey } from '../../../forms/api-failure';
 import { fieldError, passwordsMatch } from '../../../forms/field-error';
+import { Turnstile } from '../../../forms/turnstile/turnstile';
 import { zodValidator } from '../../../forms/zod-validator';
 import { SiteLinks } from '../../../layout/site-links';
 import { TranslateDirective } from '../../../translation/translate.directive';
@@ -61,7 +63,8 @@ const TOKEN_PARAM = 'token';
     LgMessage,
     ReactiveFormsModule,
     RouterLink,
-    TranslateDirective
+    TranslateDirective,
+    Turnstile
   ],
   templateUrl: './reset-password-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -74,6 +77,8 @@ export class ResetPasswordPage {
   private readonly query = toSignal(inject(ActivatedRoute).queryParamMap);
 
   protected readonly links = inject(SiteLinks);
+
+  private readonly turnstile = viewChild(Turnstile);
 
   /** The token from the mail, or `null` on the page reached from the login form. */
   protected readonly token = computed(
@@ -124,9 +129,10 @@ export class ResetPasswordPage {
   protected async requestLink(): Promise<void> {
     this.requestForm.markAllAsTouched();
     this.formError.set(null);
-    const body = requestPasswordResetSchema.safeParse(
-      this.requestForm.getRawValue()
-    );
+    const body = requestPasswordResetSchema.safeParse({
+      ...this.requestForm.getRawValue(),
+      turnstileToken: this.turnstile()?.token() ?? undefined
+    });
     if (!body.success || this.requestForm.invalid) return;
 
     this.submitting.set(true);
@@ -134,6 +140,7 @@ export class ResetPasswordPage {
       await firstValueFrom(this.authApi.requestPasswordReset(body.data));
       this.requested.set(true);
     } catch (error) {
+      this.turnstile()?.reset();
       this.formError.set(genericFailureKey(error));
     } finally {
       this.submitting.set(false);

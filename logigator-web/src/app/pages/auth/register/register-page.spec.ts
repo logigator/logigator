@@ -4,6 +4,11 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
+import {
+  FakeTurnstile,
+  provideFakeTurnstile
+} from '../../../../testing/fake-turnstile';
+import { TranslationService } from '../../../translation/translation.service';
 import { RegisterPage } from './register-page';
 
 const PASSWORD = 'correct1horse';
@@ -12,14 +17,17 @@ describe('RegisterPage', () => {
   let http: HttpTestingController;
   let root: HTMLElement;
   let settle: () => Promise<void>;
+  let turnstile: FakeTurnstile;
 
   function render(): void {
+    turnstile = new FakeTurnstile();
     configureTestBed(
       [
         {
           provide: ActivatedRoute,
           useValue: { queryParamMap: of(convertToParamMap({})) }
-        }
+        },
+        provideFakeTurnstile(turnstile)
       ],
       [RegisterPage]
     );
@@ -70,6 +78,50 @@ describe('RegisterPage', () => {
       email: 'ada@example.com',
       password: PASSWORD
     });
+  });
+
+  it('sends the token of the solved challenge', async () => {
+    render();
+    await settle();
+    turnstile.solve('solved-token');
+    fillValidForm();
+    submit();
+    await settle();
+
+    expect(
+      http.expectOne('/api/auth/register').request.body.turnstileToken
+    ).toBe('solved-token');
+  });
+
+  it('asks for a fresh challenge after a refused submit, and says why', async () => {
+    render();
+    await TestBed.inject(TranslationService).setActiveLang('en');
+    await settle();
+    turnstile.solve('spent-token');
+    fillValidForm();
+    submit();
+    await settle();
+
+    http
+      .expectOne('/api/auth/register')
+      .flush(
+        { code: 'challenge_failed', message: 'failed' },
+        { status: 400, statusText: 'Bad Request' }
+      );
+    await settle();
+
+    expect(turnstile.resets).toHaveLength(1);
+    expect(root.querySelector('lg-message')?.textContent).toContain(
+      'security check'
+    );
+
+    // The spent token is gone: a resubmit before the challenge is solved
+    // again goes without one, and the API decides.
+    submit();
+    await settle();
+    expect(
+      http.expectOne('/api/auth/register').request.body.turnstileToken
+    ).toBeUndefined();
   });
 
   it('refuses to submit two passwords that do not match', async () => {

@@ -3,7 +3,8 @@ import {
   Component,
   computed,
   inject,
-  signal
+  signal,
+  viewChild
 } from '@angular/core';
 import {
   AbstractControl,
@@ -34,6 +35,7 @@ import {
 } from '../../api/services/community-api.service';
 import { genericFailureKey } from '../../forms/api-failure';
 import { fieldError } from '../../forms/field-error';
+import { Turnstile } from '../../forms/turnstile/turnstile';
 import { zodValidator } from '../../forms/zod-validator';
 import { TranslateDirective } from '../../translation/translate.directive';
 import { TranslationKey } from '../../translation/translation-key.model';
@@ -68,7 +70,8 @@ function notBlank(control: AbstractControl): ValidationErrors | null {
     LgSelect,
     LgTextarea,
     ReactiveFormsModule,
-    TranslateDirective
+    TranslateDirective,
+    Turnstile
   ],
   templateUrl: './report-document-dialog.html',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -78,6 +81,8 @@ export class ReportDocumentDialog extends LgDialogContent<ReportDocumentData> {
   private readonly translation = inject(TranslationService);
 
   private readonly data = this.dialogData!;
+
+  private readonly turnstile = viewChild(Turnstile);
 
   protected readonly MAX_EXPLANATION_LENGTH = MAX_EXPLANATION_LENGTH;
 
@@ -134,6 +139,7 @@ export class ReportDocumentDialog extends LgDialogContent<ReportDocumentData> {
     const { reason, explanation, contactEmail } = this.form.getRawValue();
     if (this.form.invalid || this.sending() || !reason) return;
 
+    const turnstileToken = this.turnstile()?.token();
     this.sending.set(true);
     try {
       await firstValueFrom(
@@ -141,11 +147,13 @@ export class ReportDocumentDialog extends LgDialogContent<ReportDocumentData> {
           reason,
           explanation: explanation.trim(),
           // Left out rather than sent empty: the API checks any address given.
-          ...(contactEmail.trim() ? { contactEmail: contactEmail.trim() } : {})
+          ...(contactEmail.trim() ? { contactEmail: contactEmail.trim() } : {}),
+          ...(turnstileToken ? { turnstileToken } : {})
         })
       );
       this.sent.set(true);
     } catch (error) {
+      this.turnstile()?.reset();
       this.formError.set(genericFailureKey(error));
     } finally {
       this.sending.set(false);

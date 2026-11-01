@@ -20,6 +20,11 @@ export interface Environment {
    * editor's address, and the editor rewrites `/editor/` to it.
    */
   editorUrl: string;
+  /**
+   * The Turnstile widget's site key (public). The API verifies the tokens it
+   * mints only where it holds the widget's secret.
+   */
+  turnstileSiteKey: string;
   analytics: {
     /** PostHog project API key (public, write-only). Empty disables PostHog. */
     posthogKey: string;

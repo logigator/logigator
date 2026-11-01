@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { DOCUMENT } from '@angular/common';
+import { TestBed } from '@angular/core/testing';
 import { environment } from './environments/environment';
 import { homeVideo, videoEmbedUrl } from './app/pages/home/home-video';
 import {
@@ -7,6 +9,7 @@ import {
   siteContentSecurityPolicy,
   stampCspNonce
 } from './content-security-policy';
+import { TurnstileLoader } from './app/forms/turnstile/turnstile-loader';
 
 function directives(policy: string): Map<string, string[]> {
   return new Map(
@@ -48,6 +51,24 @@ describe('siteContentSecurityPolicy', () => {
       const embed = new URL(videoEmbedUrl(homeVideo(lang))).origin;
       expect(policy.get('frame-src')).toContain(embed);
     }
+  });
+
+  // The loader adds its script without a nonce, so the host list is what
+  // admits it.
+  it('lets the Turnstile loader add its script and frame', () => {
+    const page = document.implementation.createHTMLDocument();
+    TestBed.configureTestingModule({
+      providers: [{ provide: DOCUMENT, useValue: page }]
+    });
+    void TestBed.inject(TurnstileLoader).load();
+
+    const script = page.querySelector('script');
+    expect(script?.hasAttribute('nonce')).toBe(false);
+    const origin = new URL(script?.src ?? '').origin;
+    expect(policy.get('script-src')).toContain(origin);
+    // The challenge runs in a frame from the same origin.
+    expect(policy.get('frame-src')).toContain(origin);
+    TestBed.resetTestingModule();
   });
 
   it('is framed by this origin only', () => {
