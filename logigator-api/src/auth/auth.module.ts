@@ -1,4 +1,5 @@
 import { forwardRef, Module } from '@nestjs/common';
+import { ChallengeModule } from '../challenge/challenge.module';
 import { RateLimitGuard } from '../common/rate-limit.guard';
 import { MailModule } from '../mail/mail.module';
 import { UsersModule } from '../users/users.module';
@@ -18,7 +19,7 @@ import { ReauthenticationService } from './reauthentication.service';
  * day somebody forgets the decorator.
  */
 @Module({
-  imports: [forwardRef(() => UsersModule), MailModule],
+  imports: [forwardRef(() => UsersModule), MailModule, ChallengeModule],
   controllers: [AuthController, GoogleAuthController],
   providers: [
     AuthService,

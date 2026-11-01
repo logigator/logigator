@@ -655,6 +655,40 @@ describe('password reset budgets', () => {
   });
 });
 
+describe('verification resend budgets', () => {
+  let api: E2eApp;
+
+  beforeAll(async () => {
+    api = await startE2eApp();
+    await api.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { username: 'Ada', ...CREDENTIALS }
+    });
+  });
+
+  afterAll(async () => {
+    await api.close();
+  });
+
+  it('sends one unverified mailbox five mails an hour, however many addresses ask', async () => {
+    api.mail.clear();
+    const statuses = [];
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const response = await api.inject({
+        method: 'POST',
+        url: '/api/auth/resend-verification',
+        remoteAddress: `203.0.113.${attempt + 1}`,
+        payload: CREDENTIALS
+      });
+      statuses.push(response.statusCode);
+    }
+
+    expect(statuses).toEqual([204, 204, 204, 204, 204, 429]);
+    expect(api.mail.sent).toHaveLength(5);
+  });
+});
+
 /**
  * Resolves once the process clock has left the millisecond it was in.
  *

@@ -292,6 +292,9 @@ and the E2E harness).
   only that dump. The API image's `postgresql-client-<major>` must match the compose `postgres`
   image's major.
 - `AuthGuard` is per-route, never global.
+- **Every anonymous route that mails an unproven address or the operator** (`register`,
+  `password-reset`, document reports) calls `TurnstileService.verify` with its form's action
+  before it writes, mails or spends a budget. Unset `TURNSTILE_SECRET_KEY` turns it off.
 - **`POST /api/csp-report` is a plain Fastify route in a plugin of its own**
   (`reports/csp-report.route.ts`), so its content-type parsers and 16 KB limit reach no other route.
   It answers an empty `204` and opens no session (`config.sessionless`).

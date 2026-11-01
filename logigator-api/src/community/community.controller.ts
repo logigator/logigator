@@ -8,8 +8,10 @@ import {
   Post,
   Put,
   Query,
+  Req,
   UseGuards
 } from '@nestjs/common';
+import type { FastifyRequest } from 'fastify';
 import {
   communityPageQuerySchema,
   communityQuerySchema,
@@ -34,6 +36,7 @@ import {
 } from '@logigator/contract';
 import type { LanguageId } from '@logigator/core';
 import { AuthGuard, CurrentUser, SessionUserId } from '../auth/auth.guard';
+import { TurnstileService } from '../challenge/turnstile.service';
 import { RateLimit, RateLimitGuard } from '../common/rate-limit.guard';
 import { SiteLanguageParam } from '../common/site-language-param.pipe';
 import { UuidParam } from '../common/uuid-param.pipe';
@@ -56,7 +59,8 @@ import { CommunityService } from './community.service';
 export class CommunityController {
   constructor(
     private readonly community: CommunityService,
-    private readonly reports: DocumentReportsService
+    private readonly reports: DocumentReportsService,
+    private readonly turnstile: TurnstileService
   ) {}
 
   @Get('projects')
@@ -187,6 +191,7 @@ export class CommunityController {
    * needed, since a notice about illegal content has to be open to everybody;
    * the session is recorded when there is one. Limited by address and sized
    * for a classroom behind one, which is far more reports than it ever sends.
+   * A solved challenge keeps a script from burying the real reports.
    */
   @Post('projects/:link/report')
   @UseGuards(RateLimitGuard)
@@ -194,8 +199,10 @@ export class CommunityController {
   async reportProject(
     @Param('link', UuidParam) link: string,
     @Body({ schema: reportDocumentRequestSchema }) body: ReportDocumentRequest,
-    @SessionUserId() callerId: string | null
+    @SessionUserId() callerId: string | null,
+    @Req() request: FastifyRequest
   ): Promise<ReportDocumentResponse> {
+    await this.turnstile.verify(body.turnstileToken, 'report', request.ip);
     await this.reports.report('project', link, body, callerId);
     return { received: true };
   }
@@ -206,8 +213,10 @@ export class CommunityController {
   async reportComponent(
     @Param('link', UuidParam) link: string,
     @Body({ schema: reportDocumentRequestSchema }) body: ReportDocumentRequest,
-    @SessionUserId() callerId: string | null
+    @SessionUserId() callerId: string | null,
+    @Req() request: FastifyRequest
   ): Promise<ReportDocumentResponse> {
+    await this.turnstile.verify(body.turnstileToken, 'report', request.ip);
     await this.reports.report('component', link, body, callerId);
     return { received: true };
   }

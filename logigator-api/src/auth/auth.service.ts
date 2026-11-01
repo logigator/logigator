@@ -22,6 +22,10 @@ import { PasswordService } from './password.service';
 const RESETS_PER_RECIPIENT = 5;
 const RESET_WINDOW_SECONDS = 3600;
 
+/** Verification mails one unverified account may ask for again per window. */
+const RESENDS_PER_RECIPIENT = 5;
+const RESEND_WINDOW_SECONDS = 3600;
+
 /** Local (email + password) authentication. */
 @Injectable()
 export class AuthService {
@@ -87,7 +91,11 @@ export class AuthService {
     return user;
   }
 
-  /** Sends the confirmation mail again, for an account that never opened it. */
+  /**
+   * Sends the confirmation mail again, for an account that never opened it.
+   * The mailbox has a budget of its own: one registration is enough to hold
+   * the password, and the address it names may be anybody's.
+   */
   async resendVerification(
     body: ResendVerificationRequest,
     ip: string,
@@ -96,6 +104,16 @@ export class AuthService {
     const user = await this.authenticate(body.email, body.password, ip);
     if (user.emailVerified) return;
 
+    await spendBudgets(
+      this.redis,
+      [
+        {
+          key: `rate:resend-verification:recipient:${accountKey(user.email)}`,
+          limit: RESENDS_PER_RECIPIENT
+        }
+      ],
+      RESEND_WINDOW_SECONDS
+    );
     await this.sendVerification(user, locale);
   }
 

@@ -20,6 +20,7 @@ import {
   type Database
 } from '../src/database/database.module';
 import { runMigrations } from '../src/database/migrate';
+import { TURNSTILE_FETCH } from '../src/challenge/turnstile.service';
 import { MAIL_TRANSPORT } from '../src/mail/mail.transport';
 import { createRedisClient } from '../src/redis/redis.client';
 import {
@@ -139,6 +140,11 @@ export interface E2eAppOptions {
    * worker out exactly as in production.
    */
   analyzer?: TextAnalyzer;
+  /**
+   * Answers Turnstile's siteverify instead of Cloudflare. Without it a spec
+   * that sets `TURNSTILE_SECRET_KEY` would reach the real service.
+   */
+  siteverify?: typeof globalThis.fetch;
 }
 
 export interface E2eApp {
@@ -210,6 +216,11 @@ export async function startE2eApp(
       .useValue(options.analyzer)
       .overrideProvider(ANALYSIS_CLOCK)
       .useValue(clock);
+  }
+  if (options.siteverify) {
+    builder = builder
+      .overrideProvider(TURNSTILE_FETCH)
+      .useValue(options.siteverify);
   }
   const moduleRef = await builder.compile();
 

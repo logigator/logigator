@@ -241,6 +241,14 @@ const variables = z.object({
     .min(1)
     .default(50),
 
+  /**
+   * The secret of the site's Turnstile widget. Set, registering, asking for a
+   * password reset and reporting a document need a solved challenge; unset
+   * turns the check off and any token is ignored, which is the development
+   * default.
+   */
+  TURNSTILE_SECRET_KEY: z.string().optional(),
+
   /** Lifetime of the one-shot mail tokens (verification, password reset). */
   AUTH_TOKEN_TTL_MINUTES: z.coerce.number().int().min(1).default(60),
   /** Cost of new hashes; existing ones carry their own and still verify. */

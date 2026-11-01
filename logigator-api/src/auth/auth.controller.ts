@@ -25,6 +25,7 @@ import {
   type ResendVerificationRequest,
   type VerifyEmailRequest
 } from '@logigator/contract';
+import { TurnstileService } from '../challenge/turnstile.service';
 import { RateLimit, RateLimitGuard } from '../common/rate-limit.guard';
 import { localeFromRequest } from '../common/locale';
 import { SessionService } from '../session/session.service';
@@ -33,18 +34,20 @@ import { AuthService } from './auth.service';
 
 /**
  * The credential endpoints, all JSON. Each one that sends a mail or redeems a
- * token is rate limited per address. A password check counts only wrong
- * passwords, against one budget for `login` and `resend-verification` alike,
- * so spreading guesses across the two buys nothing. Login also has a loose
- * budget for every attempt, since each one runs bcrypt even with credentials
- * that are right.
+ * token is rate limited per address, and the two that mail an address nobody
+ * has proven need a solved challenge as well. A password check counts only
+ * wrong passwords, against one budget for `login` and `resend-verification`
+ * alike, so spreading guesses across the two buys nothing. Login also has a
+ * loose budget for every attempt, since each one runs bcrypt even with
+ * credentials that are right.
  */
 @Controller('auth')
 @UseGuards(RateLimitGuard)
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
-    private readonly session: SessionService
+    private readonly session: SessionService,
+    private readonly turnstile: TurnstileService
   ) {}
 
   @Post('register')
@@ -54,6 +57,7 @@ export class AuthController {
     @Body({ schema: registerRequestSchema }) body: RegisterRequest,
     @Req() request: FastifyRequest
   ): Promise<RegisterResponse> {
+    await this.turnstile.verify(body.turnstileToken, 'register', request.ip);
     await this.auth.register(body, localeFromRequest(request));
     return { verificationRequired: true };
   }
@@ -114,6 +118,11 @@ export class AuthController {
     body: RequestPasswordReset,
     @Req() request: FastifyRequest
   ): Promise<void> {
+    await this.turnstile.verify(
+      body.turnstileToken,
+      'password-reset',
+      request.ip
+    );
     await this.auth.requestPasswordReset(
       body.email,
       localeFromRequest(request)
