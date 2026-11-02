@@ -203,6 +203,67 @@ describe('ShortcutService', () => {
     expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(false);
   });
 
+  it('isHeld follows the space bar for the held pan, but not a space typed into a field', () => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+    expect(service.isHeld(ShortcutActionEnum.PAN_HOLD)).toBe(true);
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: ' ' }));
+    expect(service.isHeld(ShortcutActionEnum.PAN_HOLD)).toBe(false);
+
+    const field = document.createElement('input');
+    document.body.appendChild(field);
+    try {
+      field.dispatchEvent(
+        new KeyboardEvent('keydown', { key: ' ', bubbles: true })
+      );
+      expect(service.isHeld(ShortcutActionEnum.PAN_HOLD)).toBe(false);
+    } finally {
+      field.remove();
+    }
+  });
+
+  it('leaves the space bar to a focused button: no held pan, no preventDefault', () => {
+    const button = document.createElement('button');
+    document.body.appendChild(button);
+    try {
+      const onButton = new KeyboardEvent('keydown', {
+        key: ' ',
+        bubbles: true,
+        cancelable: true
+      });
+      button.dispatchEvent(onButton);
+      expect(onButton.defaultPrevented).toBe(false);
+      expect(service.isHeld(ShortcutActionEnum.PAN_HOLD)).toBe(false);
+      button.dispatchEvent(
+        new KeyboardEvent('keyup', { key: ' ', bubbles: true })
+      );
+
+      const onBoard = new KeyboardEvent('keydown', {
+        key: ' ',
+        cancelable: true
+      });
+      window.dispatchEvent(onBoard);
+      expect(onBoard.defaultPrevented).toBe(true);
+      expect(service.isHeld(ShortcutActionEnum.PAN_HOLD)).toBe(true);
+      window.dispatchEvent(new KeyboardEvent('keyup', { key: ' ' }));
+    } finally {
+      button.remove();
+    }
+  });
+
+  it('reports the editor focused unless a control has the focus', () => {
+    expect(service.isEditorFocused(window)).toBe(true);
+    expect(service.isEditorFocused(document.body)).toBe(true);
+    expect(service.isEditorFocused(document.createElement('canvas'))).toBe(
+      true
+    );
+    expect(service.isEditorFocused(document.createElement('button'))).toBe(
+      false
+    );
+    expect(service.isEditorFocused(document.createElement('select'))).toBe(
+      false
+    );
+  });
+
   it('isHeld follows a rebinding to a plain letter key', () => {
     service.setBinding(ShortcutActionEnum.SELECT_SCISSOR, {
       key: 'x',

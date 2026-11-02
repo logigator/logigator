@@ -1126,6 +1126,7 @@ const es: TranslationSchema = {
       toolSelect: 'Seleccionar',
       selectScissor: 'Cortar cables en el borde de la selección (mantener)',
       selectAdditive: 'Añadir a la selección o quitarlo de ella (mantener)',
+      panHold: 'Desplazar la vista arrastrando (mantener)',
       toolErase: 'Borrar',
       toolPlaceText: 'Colocar texto',
       toggleSimulation: 'Iniciar/detener simulación',

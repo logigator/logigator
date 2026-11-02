@@ -187,6 +187,7 @@ describe('PointerController', () => {
   // One notch of 100 px is one zoom-button step.
   const notches = (n: number) => Math.pow(1.2, n);
   const lastZoom = () => vi.mocked(nav.zoomBy).mock.lastCall!;
+  const lastPan = () => vi.mocked(nav.pan).mock.lastCall![0];
 
   it('zooms at the cursor on wheel and suppresses the page scroll', () => {
     const preventDefault = vi.fn();
@@ -272,11 +273,55 @@ describe('PointerController', () => {
         timeStamp,
         ...fields
       });
+    const gesture = (
+      phase: 'start' | 'change' | 'end',
+      timeStamp: number,
+      scale: number
+    ) => {
+      const event = {
+        clientX: 100 + 32,
+        clientY: 50 + 16,
+        scale,
+        timeStamp,
+        preventDefault: vi.fn()
+      };
+      if (phase === 'start') controller.onGestureStart(event);
+      else if (phase === 'change') controller.onGestureChange(event);
+      else controller.onGestureEnd(event);
+      return event;
+    };
 
-    it('zooms with a two-finger swipe, like a wheel', () => {
+    it('zooms with a straight vertical two-finger swipe, like a wheel', () => {
       at(0, { deltaY: -7 });
       expect(lastZoom()[0]).toBeCloseTo(notches(0.07), 10);
       expect(lastZoom()[1]).toMatchObject({ x: 32, y: 16 });
+    });
+
+    it('pans with a swipe that moves sideways, for the rest of its burst', () => {
+      at(0, { deltaX: 4, deltaY: -7 });
+      expect(lastPan()).toMatchObject({ x: -4, y: 7 });
+      // The same swipe turning straight vertical keeps panning.
+      at(16, { deltaY: -5 });
+      expect(lastPan()).toMatchObject({ x: -0, y: 5 });
+      expect(nav.zoomBy).not.toHaveBeenCalled();
+
+      // A new burst that only scrolls vertically zooms again.
+      at(300, { deltaY: -5 });
+      expect(nav.zoomBy).toHaveBeenCalledTimes(1);
+    });
+
+    it('pans sideways with shift held, unless the browser swapped the axes', () => {
+      at(0, { shiftKey: true, deltaY: 100 });
+      expect(lastPan()).toMatchObject({ x: -100, y: -0 });
+      at(1000, { shiftKey: true, deltaX: 3, deltaMode: 1 });
+      expect(lastPan().x).toBeCloseTo(-100, 10);
+      expect(nav.zoomBy).not.toHaveBeenCalled();
+    });
+
+    it('zooms with ctrl or cmd held, even while moving sideways', () => {
+      at(0, { metaKey: true, deltaX: 20, deltaY: 100 });
+      expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
+      expect(nav.pan).not.toHaveBeenCalled();
     });
 
     it('drops the finger drift a browser interleaves with a pinch', () => {
@@ -314,6 +359,44 @@ describe('PointerController', () => {
     it('zooms a ctrl-held mouse wheel by notches, not at the pinch rate', () => {
       at(0, { ctrlKey: true, deltaY: 3, deltaMode: 1 });
       expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
+    });
+
+    it("zooms with Safari's pinch by the change in scale, at the pointer", () => {
+      const start = gesture('start', 0, 1);
+      expect(start.preventDefault).toHaveBeenCalled();
+      gesture('change', 16, 1.5);
+      gesture('change', 32, 1.2);
+      const end = gesture('end', 48, 1.2);
+      expect(end.preventDefault).toHaveBeenCalled();
+
+      const calls = vi.mocked(nav.zoomBy).mock.calls;
+      expect(calls.map(([f]) => f)).toEqual([1.5, 1.2 / 1.5]);
+      expect(calls[0][1]).toMatchObject({ x: 32, y: 16 });
+    });
+
+    it('counts a pinch once when Safari sends it as gestures and wheel alike', () => {
+      gesture('start', 0, 1);
+      at(8, { ctrlKey: true, deltaY: -5 });
+      gesture('change', 16, 1.1);
+      at(20, { deltaY: -2 });
+      gesture('end', 32, 1.1);
+      at(40, { ctrlKey: true, deltaY: -1 });
+
+      expect(vi.mocked(nav.zoomBy).mock.calls.map(([f]) => f)).toEqual([1.1]);
+      expect(nav.pan).not.toHaveBeenCalled();
+
+      // A later pinch arriving as wheel events alone zooms again.
+      at(1000, { ctrlKey: true, deltaY: -5 });
+      expect(nav.zoomBy).toHaveBeenCalledTimes(2);
+    });
+
+    it('leaves a touchscreen pinch Safari also reports as gestures to the fingers', () => {
+      controller.onPointerDown(touch(1, 110, 60));
+      controller.onPointerDown(touch(2, 150, 60));
+      gesture('start', 0, 1);
+      gesture('change', 16, 2);
+
+      expect(nav.zoomBy).not.toHaveBeenCalled();
     });
   });
 

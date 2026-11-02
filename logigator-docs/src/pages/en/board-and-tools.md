@@ -4,9 +4,9 @@ The board is the grid you build on. Components and wires snap to it, and the sta
 
 ## Moving around {#moving-around}
 
-The mouse wheel zooms at the pointer, and so does a two-finger swipe or pinch on a trackpad. The zoom buttons in the toolbar and View → Zoom In, Zoom Out and Zoom 100% do the same in fixed steps.
+The mouse wheel zooms at the pointer, and so does a pinch on a trackpad, or `Ctrl` (`⌘` on a Mac) held while you scroll. Scrolling sideways pans: a two-finger swipe on a trackpad that moves sideways pans the board in every direction, and so does the mouse wheel with `Shift` held. The zoom buttons in the toolbar and View → Zoom In, Zoom Out and Zoom 100% do the same in fixed steps.
 
-To pan, drag with the right or middle mouse button. That works with every tool. With the Pan tool active, a left drag pans as well.
+To pan, drag with the right or middle mouse button, or with the left one while you hold `Space`. That works with every tool. With the Pan tool active, a left drag pans as well.
 
 The minimap in the bottom-right corner shows the whole circuit with a frame around the part in view. Click or drag in it to move the view there. Hide minimap collapses it, and the editor remembers that.
 

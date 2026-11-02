@@ -6,7 +6,8 @@ import {
   isPinch,
   WHEEL_ZOOM_PER_PX,
   WheelEventLike,
-  wheelPixels
+  wheelPixels,
+  wheelScroll
 } from './wheel-input';
 
 /**
@@ -23,14 +24,27 @@ export interface PointerEventLike {
   timeStamp: number;
 }
 
+/**
+ * The subset of Safari's `GestureEvent` the controller reads: Safari delivers
+ * a trackpad pinch as `gesturestart`/`gesturechange`/`gestureend`, `scale`
+ * running from 1 at the start of the pinch.
+ */
+export interface GestureEventLike {
+  clientX: number;
+  clientY: number;
+  scale: number;
+  timeStamp?: number;
+  preventDefault(): void;
+}
+
 /** Time window (ms) and screen-space slop (canvas-local CSS px) within which a
  *  primary press continues the previous one into a click run. */
 const DOUBLE_CLICK_MS = 500;
 const DOUBLE_CLICK_SLOP = 6;
 
-// Wheel events closer together than this belong to one pinch: a pinch's
-// events, and the scroll events a browser interleaves with them, arrive
-// every frame.
+// Wheel and gesture events closer together than this belong to one burst (a
+// pinch, a swipe): its events, and the scroll events a browser interleaves
+// with a pinch, arrive every frame.
 const WHEEL_BURST_GAP_MS = 150;
 // Zoom factor per pixel of trackpad pinch: `e^(-delta · k)`, so the zoom
 // follows the fingers continuously. A pinch's deltas are small (see isPinch),
@@ -44,7 +58,7 @@ const RIGHT_BUTTON = 2;
 export type { WheelEventLike } from './wheel-input';
 
 /** Viewport navigation the controller drives (middle/right-drag pan, wheel
- *  zoom and trackpad pinch, two-finger touch pan/pinch). Deltas and centers are canvas-local CSS px. */
+ *  zoom and pan, trackpad pinch, two-finger touch pan/pinch). Deltas and centers are canvas-local CSS px. */
 export interface PointerNavTarget {
   pan(delta: Point): void;
   zoomIn(center: Point): void;
@@ -89,8 +103,10 @@ export interface PointerControllerOptions {
  * - Touch: pointers feed the {@link MultiTouchGesture} first; a second finger
  *   hands it navigation and cancels the tool stream, so a finger never both
  *   operates a tool and navigates.
- * - Wheel: zoom anchored at the cursor, non-passive so page scroll/zoom is
- *   suppressed over the canvas.
+ * - Wheel: a vertical scroll zooms at the cursor, one with any sideways
+ *   movement (or shift held) pans. A trackpad pinch (a ctrl-wheel in most
+ *   browsers, `gesture*` events in Safari) zooms at the cursor. Non-passive,
+ *   so page scroll/zoom is suppressed over the canvas.
  *
  * Pointer capture keeps move/up flowing when a drag leaves the canvas; a
  * pointer that loses it while still pressed ends its stream like a cancel,
@@ -108,6 +124,14 @@ export class PointerController {
   // zooming at the wheel's.
   private _wheelLast = -Infinity;
   private _wheelPinch = false;
+  // Whether the current burst has panned: a trackpad swipe stays a pan when
+  // it turns straight vertical, rather than flipping to zoom mid-gesture.
+  private _wheelPan = false;
+  // Safari's pinch: the `scale` of its last `gesturechange`, and when its last
+  // gesture event arrived. A live gesture owns the zoom, so a ctrl-wheel the
+  // same pinch may also send is not counted twice.
+  private _gestureScale = 1;
+  private _gestureLast = -Infinity;
   private _panPointer: number | null = null;
   private _panButton = RIGHT_BUTTON;
   private readonly _panLast = new Point();
@@ -153,6 +177,22 @@ export class PointerController {
       signal,
       passive: false
     });
+    // Safari's trackpad pinch; no other browser sends these.
+    canvas.addEventListener(
+      'gesturestart',
+      (e) => this.onGestureStart(e as unknown as GestureEventLike),
+      { signal, passive: false }
+    );
+    canvas.addEventListener(
+      'gesturechange',
+      (e) => this.onGestureChange(e as unknown as GestureEventLike),
+      { signal, passive: false }
+    );
+    canvas.addEventListener(
+      'gestureend',
+      (e) => this.onGestureEnd(e as unknown as GestureEventLike),
+      { signal, passive: false }
+    );
     canvas.addEventListener('contextmenu', (e) => e.preventDefault(), {
       signal
     });
@@ -297,27 +337,42 @@ export class PointerController {
   }
 
   /**
-   * Every wheel input zooms at the pointer, continuously: a mouse wheel and a
-   * two-finger trackpad swipe alike. The DOM does not say which device
-   * scrolled, and no heuristic tells them apart reliably on every device, so
-   * nothing here tries — the board pans by drag. A trackpad pinch, which
-   * browsers deliver as a ctrl-wheel of small deltas ({@link isPinch}), zooms
-   * at its own rate.
+   * A vertical scroll zooms at the pointer, continuously, as a mouse wheel
+   * expects. The DOM does not say which device scrolled, so a scroll with any
+   * sideways movement is taken for a two-finger trackpad swipe and pans, and
+   * the rest of its burst pans with it. Shift scrolls sideways; ctrl or ⌘
+   * always zooms. A trackpad pinch, which browsers deliver as a ctrl-wheel of
+   * small deltas ({@link isPinch}), zooms at its own rate.
    */
   public onWheel(e: WheelEventLike): void {
     e.preventDefault();
     if (!this._project()) return;
     const now = e.timeStamp ?? performance.now();
-    if (now - this._wheelLast > WHEEL_BURST_GAP_MS) this._wheelPinch = false;
+    if (now - this._wheelLast > WHEEL_BURST_GAP_MS) {
+      this._wheelPinch = false;
+      this._wheelPan = false;
+    }
     this._wheelLast = now;
+
+    const safariPinch = now - this._gestureLast <= WHEEL_BURST_GAP_MS;
 
     const center = this._localPosition(e);
     if (isPinch(e)) {
       this._wheelPinch = true;
+      if (safariPinch) return;
       this.opts.nav.zoomBy(Math.exp(-e.deltaY * PINCH_ZOOM_PER_PX), center);
       return;
     }
-    if (this._wheelPinch && !e.ctrlKey) return;
+    // The scroll events carrying the fingers' drift during a pinch.
+    if ((this._wheelPinch || safariPinch) && !e.ctrlKey) return;
+
+    const modifier = e.ctrlKey || e.metaKey;
+    const scroll = wheelScroll(e);
+    if (!modifier && (scroll.x !== 0 || this._wheelPan)) {
+      this._wheelPan = true;
+      this.opts.nav.pan(new Point(-scroll.x, -scroll.y));
+      return;
+    }
 
     if (e.deltaY === 0) return;
     // Continuous, proportional to the delta: a notch is one zoom-button step,
@@ -328,6 +383,33 @@ export class PointerController {
       Math.exp(-wheelPixels(e, e.deltaY) * WHEEL_ZOOM_PER_PX),
       center
     );
+  }
+
+  public onGestureStart(e: GestureEventLike): void {
+    e.preventDefault();
+    this._gestureScale = 1;
+    this._gestureLast = e.timeStamp ?? performance.now();
+  }
+
+  /**
+   * Zooms Safari's pinch at the pointer by the change in `scale` since the
+   * last event. A touchscreen pinch, which Safari reports this way as well, is
+   * left to the {@link MultiTouchGesture} that already follows its fingers.
+   */
+  public onGestureChange(e: GestureEventLike): void {
+    e.preventDefault();
+    this._gestureLast = e.timeStamp ?? performance.now();
+    const factor = e.scale / this._gestureScale;
+    this._gestureScale = e.scale;
+    if (!this._project() || this._gesture.isActive) return;
+    if (!Number.isFinite(factor) || factor <= 0) return;
+    this.opts.nav.zoomBy(factor, this._localPosition(e));
+  }
+
+  public onGestureEnd(e: GestureEventLike): void {
+    e.preventDefault();
+    // Wheel events trailing the pinch still belong to it.
+    this._gestureLast = e.timeStamp ?? performance.now();
   }
 
   private _endPan(): void {

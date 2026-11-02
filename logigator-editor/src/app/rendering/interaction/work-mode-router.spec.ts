@@ -201,6 +201,21 @@ describe('WorkModeRouter in SIMULATION mode', () => {
     expect(emissions).toEqual([]); // it was a pan, not a tap
   });
 
+  it('reports a pan only once the drag passes the tap threshold', () => {
+    router.setMode(WorkMode.SIMULATION);
+
+    router.down(makeInput(2, 2));
+    expect(router.hasSession()).toBe(true);
+    expect(router.panning()).toBe(false);
+
+    router.move(makeInput(60, 60));
+    expect(router.panning()).toBe(true);
+
+    router.up();
+    expect(router.panning()).toBe(false);
+    expect(router.hasSession()).toBe(false);
+  });
+
   describe('a press on a button', () => {
     let button: Component;
 
@@ -307,6 +322,45 @@ describe('WorkModeRouter in SELECT mode', () => {
   afterEach(() => {
     router.destroy();
     project.destroy({ children: true });
+  });
+
+  describe('with the pan key held', () => {
+    const holdSpace = () =>
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+    afterEach(() =>
+      window.dispatchEvent(new KeyboardEvent('keyup', { key: ' ' }))
+    );
+
+    it('pans on a drag instead of moving the selection', () => {
+      const comp = makeAnd(2);
+      comp.position.set(3, 3);
+      project.addComponent(comp);
+      project.selectionManager.select([comp], []);
+      const panSpy = vi.spyOn(project.viewport, 'pan');
+
+      holdSpace();
+      expect(router.panKeyHeld()).toBe(true);
+      router.down(makeInput(4, 4));
+      router.move(makeInput(60, 60));
+      expect(router.panning()).toBe(true);
+      router.up();
+
+      expect(panSpy).toHaveBeenCalled();
+      expect(comp.position.x).toBe(3);
+      expect(comp.position.y).toBe(3);
+    });
+
+    it('leaves the selection alone on a tap', () => {
+      const comp = makeAnd(2);
+      comp.position.set(3, 3);
+      project.addComponent(comp);
+      project.selectionManager.select([comp], []);
+
+      holdSpace();
+      tap(router, 20, 20);
+
+      expect(project.selectionManager.selectedComponents.has(comp)).toBe(true);
+    });
   });
 
   it('dragging from the grab margin (off the element bounds) moves the selection', () => {

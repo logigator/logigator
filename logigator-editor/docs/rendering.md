@@ -82,7 +82,7 @@ The same two classes drive the board and every watch canvas.
 
 **File:** `interaction/pointer-controller.ts`
 
-Per-canvas listener bundle (pointer, wheel, contextmenu; detached through one
+Per-canvas listener bundle (pointer, wheel, Safari gesture, contextmenu; detached through one
 `AbortController`). Every event becomes a `PointerInput` —
 `{ pointerId, pointerType, global, grid, clickCount }`, where `global` is
 canvas-local CSS pixels (what `viewport.pan`/`zoomBy` expect) and `grid` is that
@@ -119,19 +119,35 @@ it is fresh before the next render.
   merges the wheel input between two frames into one event and sums its delta,
   so a fast scroll over a slow frame is one event several notches long. The
   1.2 ladder belongs to the zoom buttons alone; `zoomBy` resyncs it so a button
-  press continues from wherever the wheel left the zoom. Every wheel input zooms
-  — a two-finger trackpad swipe as much as a mouse wheel. The DOM does not say
-  which device scrolled, and no heuristic tells them apart on every device (a
-  horizontal-component rule flipped near-vertical swipes between zoom and pan
-  mid-gesture, and fractional deltas come from high-resolution mice too), so
-  the board pans by drag only. A trackpad pinch, which browsers send as a
-  ctrl-wheel of small pixel deltas (`wheel-input.ts` `isPinch`), zooms at its
-  own rate, always at the pointer: the scroll events a browser interleaves with
-  a pinch, carrying the fingers' drift, are dropped until the pinch ends.
+  press continues from wherever the wheel left the zoom. The DOM does not say
+  which device scrolled, so a scroll with any sideways movement is taken for a
+  two-finger trackpad swipe and pans by its `deltaX`/`deltaY` (`wheel-input.ts`
+  `wheelScroll`, in pixels whatever the `deltaMode`; `Shift` turns a
+  vertical-only wheel sideways). Once a burst has panned, the rest of it pans
+  too: a plain horizontal-component rule flipped near-vertical swipes between
+  zoom and pan mid-gesture. A swipe that starts straight vertical still zooms.
+  `Ctrl` or `⌘` always zooms. A wheel pan renders through a `'single'` ticker
+  signal from the board's `pan`, a no-op while a drag runs the ticker.
+- **Trackpad pinch** — Chromium and Firefox send it as a ctrl-wheel of small
+  pixel deltas (`isPinch`), Safari as `gesturestart`/`gesturechange`/
+  `gestureend` with a running `scale`. Either zooms at its own rate, always at
+  the pointer: the scroll events a browser interleaves with a pinch, carrying
+  the fingers' drift, are dropped until the pinch ends, and while Safari's
+  gesture events are arriving its ctrl-wheels are dropped too, so a pinch sent
+  both ways counts once. Safari reports a touchscreen pinch as gestures as
+  well; that one is left to `MultiTouchGesture`.
 
 The `PointerNavTarget` comes from the host (the board maps it onto the active
 project plus ticker; a watch wraps `pan` to re-blit). Handlers are public so
 specs drive them with plain objects instead of synthesized DOM events.
+
+The hosts set the canvas cursor, since nothing else in the scene does: a
+closed hand (`grabbing`) while `setActive` brackets a navigation drag or a
+`PanSession` has passed its tap threshold (`PanSession.panning`, surfaced by
+the router as `panning`), and on the board an open hand (`grab`) while the
+`PAN_HOLD` key (Space by default) is held and no session is open. A press with
+that key held opens a `PanSession` whatever the mode, whose tap does nothing.
+A wheel pan changes no cursor.
 
 ### `WorkModeRouter`
 

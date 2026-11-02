@@ -1,3 +1,4 @@
+import { computed, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Point, Rectangle } from 'pixi.js';
 import { WorkMode } from '../../work-mode/work-mode.enum';
@@ -6,6 +7,7 @@ import { Component } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
 import { Wire } from '../../wires/wire';
 import { DragSession } from '../drag-session';
+import { PanSession } from '../sessions/pan.session';
 import { PastePlacementSession } from '../sessions/paste-placement.session';
 import { SelectionMoveSession } from '../sessions/selection-move.session';
 import { groupGridBounds } from '../sessions/rotate-elements';
@@ -37,6 +39,20 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   private _project: Project | null = null;
   private _mode: WorkMode = WorkMode.PAN;
   private _activeDrag: DragSession | null = null;
+  // `_activeDrag` for the board's cursor, which must follow it reactively.
+  private readonly _session = signal<DragSession | null>(null);
+
+  /** Whether a session is open (a press, or a paste or move awaiting one). */
+  public readonly hasSession = computed(() => this._session() !== null);
+  /** Whether the held pan key makes the next press pan (tracks the key). */
+  public readonly panKeyHeld = computed(() =>
+    this._shortcuts.isHeld(ShortcutActionEnum.PAN_HOLD)
+  );
+  /** Whether a {@link PanSession} is moving the board right now. */
+  public readonly panning = computed(() => {
+    const session = this._session();
+    return session instanceof PanSession && session.panning();
+  });
 
   // Canvas-local position of the resting cursor; touch never sets it and
   // leaving the canvas clears it. Screen space, not grid space: pan and zoom
@@ -206,6 +222,15 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
       if (this._activeDrag.onDown && !this._activeDrag.onDown(input)) {
         this.abortActiveDrag();
       }
+      return;
+    }
+
+    // The held pan key turns any tool's drag into a pan, and a tap into
+    // nothing.
+    if (this._shortcuts.isHeld(ShortcutActionEnum.PAN_HOLD)) {
+      this._startDrag(
+        new PanSession(project, input.global, input.grid, () => undefined)
+      );
       return;
     }
 
@@ -397,6 +422,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   private _startDrag(session: DragSession): void {
     this._activeTool?.onSessionStart?.();
     this._activeDrag = session;
+    this._session.set(session);
     if (this._project) {
       // Sessions detach elements into the drag layer, where a history
       // operation would corrupt the quad tree, so undo/redo stay inert until
@@ -421,6 +447,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
 
   private _stopDrag(): void {
     this._activeDrag = null;
+    this._session.set(null);
     if (this._project) {
       this._project.actionManager.locked = false;
       this._project.triggerTicker('off');

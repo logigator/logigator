@@ -1,3 +1,4 @@
+import { signal } from '@angular/core';
 import { Point, Rectangle } from 'pixi.js';
 import { DragSession } from '../drag-session';
 import { PointerInput } from '../interaction/pointer-input';
@@ -22,7 +23,10 @@ export class PanSession implements DragSession {
   private readonly _lastGlobal: Point;
   private readonly _startGlobal: Point;
   private readonly _clickPoint: Point;
-  private _moved = false;
+  private readonly _moved = signal(false);
+  /** Whether the press has passed the tap threshold and moves the board: the
+   *  hosts show a grabbing hand from then on. */
+  public readonly panning = this._moved.asReadonly();
 
   constructor(
     private readonly project: Project,
@@ -40,13 +44,13 @@ export class PanSession implements DragSession {
 
   onMove(input: PointerInput): void {
     const g = input.global;
-    if (!this._moved) {
+    if (!this._moved()) {
       const dx = g.x - this._startGlobal.x;
       const dy = g.y - this._startGlobal.y;
       if (dx * dx + dy * dy <= CLICK_MOVE_THRESHOLD * CLICK_MOVE_THRESHOLD) {
         return; // still within tap tolerance — don't pan yet
       }
-      this._moved = true;
+      this._moved.set(true);
     }
     this.project.viewport.pan(
       new Point(g.x - this._lastGlobal.x, g.y - this._lastGlobal.y)
@@ -55,7 +59,7 @@ export class PanSession implements DragSession {
   }
 
   onEnd(): void {
-    if (this._moved) return; // it was a pan; leave the tap action untouched
+    if (this._moved()) return; // it was a pan; leave the tap action untouched
     if (this.onTap) {
       this.onTap(this._clickPoint);
       return;
