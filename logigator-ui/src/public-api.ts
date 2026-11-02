@@ -201,6 +201,7 @@ export type {
 } from './components/toast/toast.service';
 
 export { LgOverlayService } from './components/overlay/overlay.service';
+export { provideLgOverlays } from './components/overlay/provide-lg-overlays';
 export { LgCaret } from './internal/caret';
 export {
   OVERLAY_GAP,
