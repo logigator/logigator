@@ -4,9 +4,9 @@ Le plan de travail est la grille sur laquelle vous construisez. Composants et fi
 
 ## Se déplacer {#moving-around}
 
-La molette de la souris zoome à l'endroit du pointeur, tout comme un balayage à deux doigts ou un pincement sur le pavé tactile. Les boutons de zoom de la barre d'outils et Affichage → Zoom avant, Zoom arrière et Zoom 100 % font de même par paliers fixes.
+La molette de la souris zoome à l'endroit du pointeur, tout comme un pincement sur le pavé tactile, ou un défilement en maintenant `Ctrl` (`⌘` sur Mac). Un défilement de côté déplace la vue : un balayage à deux doigts sur le pavé tactile qui part de côté déplace le plan dans toutes les directions, tout comme la molette en maintenant `Shift`. Les boutons de zoom de la barre d'outils et Affichage → Zoom avant, Zoom arrière et Zoom 100 % font de même par paliers fixes.
 
-Pour déplacer la vue, faites glisser avec le bouton droit ou central de la souris. Cela fonctionne avec tous les outils. Quand l'outil Déplacement est actif, un glisser avec le bouton gauche déplace aussi la vue.
+Pour déplacer la vue, faites glisser avec le bouton droit ou central de la souris, ou avec le bouton gauche en maintenant `Space`. Cela fonctionne avec tous les outils. Quand l'outil Déplacement est actif, un glisser avec le bouton gauche déplace aussi la vue.
 
 La minicarte, dans le coin inférieur droit, montre tout le circuit avec un cadre autour de la partie visible. Cliquez ou faites glisser dedans pour y amener la vue. « Masquer la minicarte » la replie, et l'éditeur s'en souvient.
 

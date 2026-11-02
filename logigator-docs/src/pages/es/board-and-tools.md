@@ -4,9 +4,9 @@ El tablero es la cuadrícula en la que construyes. Los componentes y los cables 
 
 ## Moverse {#moving-around}
 
-La rueda del ratón hace zoom en la posición del puntero, igual que deslizar dos dedos o pellizcar en el panel táctil. Los botones de zoom de la barra de herramientas y Vista → Acercar, Alejar y Zoom 100% hacen lo mismo en pasos fijos.
+La rueda del ratón hace zoom en la posición del puntero, igual que pellizcar en el panel táctil o desplazar manteniendo `Ctrl` (`⌘` en un Mac). Desplazar de lado mueve la vista: deslizar dos dedos en el panel táctil hacia un lado mueve el tablero en cualquier dirección, igual que la rueda manteniendo `Shift`. Los botones de zoom de la barra de herramientas y Vista → Acercar, Alejar y Zoom 100% hacen lo mismo en pasos fijos.
 
-Para desplazar la vista, arrastra con el botón derecho o central del ratón. Funciona con cualquier herramienta. Con la herramienta Desplazar activa, arrastrar con el botón izquierdo también desplaza.
+Para desplazar la vista, arrastra con el botón derecho o central del ratón, o con el izquierdo mientras mantienes `Space`. Funciona con cualquier herramienta. Con la herramienta Desplazar activa, arrastrar con el botón izquierdo también desplaza.
 
 El minimapa, en la esquina inferior derecha, muestra todo el circuito con un marco alrededor de la parte visible. Haz clic o arrastra en él para llevar la vista allí. «Ocultar minimapa» lo pliega, y el editor lo recuerda.
 

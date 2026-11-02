@@ -4,9 +4,9 @@ Die Arbeitsfläche ist das Raster, auf dem du baust. Komponenten und Leitungen r
 
 ## Bewegen {#moving-around}
 
-Das Mausrad zoomt an der Zeigerposition, ebenso ein Wischen mit zwei Fingern oder Aufziehen auf dem Trackpad. Die Zoom-Schaltflächen in der Werkzeugleiste und Ansicht → Einzoomen, Auszoomen und Zoom 100% tun dasselbe in festen Stufen.
+Das Mausrad zoomt an der Zeigerposition, ebenso Aufziehen auf dem Trackpad oder Scrollen mit gedrücktem `Ctrl` (`⌘` auf dem Mac). Seitwärts scrollen verschiebt: Ein Wischen mit zwei Fingern auf dem Trackpad, das zur Seite geht, verschiebt die Arbeitsfläche in jede Richtung, ebenso das Mausrad mit gedrücktem `Shift`. Die Zoom-Schaltflächen in der Werkzeugleiste und Ansicht → Einzoomen, Auszoomen und Zoom 100% tun dasselbe in festen Stufen.
 
-Zum Verschieben der Ansicht ziehst du mit der rechten oder mittleren Maustaste. Das funktioniert in jedem Werkzeug. Ist das Werkzeug „Schwenken“ aktiv, verschiebt auch Ziehen mit der linken Taste.
+Zum Verschieben der Ansicht ziehst du mit der rechten oder mittleren Maustaste, oder mit der linken, während du `Space` hältst. Das funktioniert in jedem Werkzeug. Ist das Werkzeug „Schwenken“ aktiv, verschiebt auch Ziehen mit der linken Taste.
 
 Die Minimap in der rechten unteren Ecke zeigt die ganze Schaltung mit einem Rahmen um den sichtbaren Ausschnitt. Klicke oder ziehe darin, um die Ansicht dorthin zu bewegen. „Minimap ausblenden“ klappt sie ein, und der Editor merkt sich das.
 
