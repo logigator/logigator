@@ -21,7 +21,7 @@ import {
 import { provideTransloco, TranslocoService } from '@jsverse/transloco';
 import { provideMarkdown } from 'ngx-markdown';
 import { firstValueFrom } from 'rxjs';
-import { provideLgLabels } from '@logigator/ui';
+import { provideLgLabels, provideLgOverlays } from '@logigator/ui';
 import { routes } from './app.routes';
 import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE } from '@logigator/core';
 import { TranslationLoaderService } from './translation/translation-loader.service';
@@ -102,6 +102,8 @@ export const appConfig: ApplicationConfig = {
     // server render, which has no origin to fetch a relative path from, still
     // renders the whole document.
     provideMarkdown(),
+    // Overlays stay in the shared z-index scale, so toasts show above dialogs.
+    provideLgOverlays(),
     // @logigator/ui's stock strings come from `common.*`, so every surface the
     // library renders is localized without its call site passing a label.
     provideLgLabels(() => {

@@ -15,7 +15,7 @@ import { provideHttpClient, HttpClient } from '@angular/common/http';
 import { LocationStrategy } from '@angular/common';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 import { provideMarkdown } from 'ngx-markdown';
-import { provideLgLabels } from '@logigator/ui';
+import { provideLgLabels, provideLgOverlays } from '@logigator/ui';
 import { AnalyticsService } from './analytics/analytics.service';
 import { provideDialogAnalytics } from './analytics/dialog-telemetry';
 import { provideEditorAnalyticsSources } from './analytics/editor-analytics-sources';
@@ -77,6 +77,8 @@ export const appConfig: ApplicationConfig = {
       inject(AnalyticsService).init();
     }),
     provideEditorAnalyticsSources(),
+    // Overlays stay in the shared z-index scale, so toasts show above dialogs.
+    provideLgOverlays(),
     // @logigator/ui's stock strings come from `common.*`, so every surface the
     // library renders is localized without its call site passing a label. The
     // resolver is consulted per component construction, so a short-lived
