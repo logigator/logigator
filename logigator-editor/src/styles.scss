@@ -12,6 +12,14 @@ body {
   @apply overflow-hidden;
 }
 
+// A two-finger swipe pans the board; one that ends off the canvas (over a
+// panel) must not turn into the browser's back/forward swipe or rubber-band
+// the page.
+html,
+body {
+  overscroll-behavior: none;
+}
+
 // The Phosphor arrow-(counter-)clockwise font glyphs hint to a flat, clipped
 // top on the circular arc at some device-pixel ratios (browser zoom shifts the
 // raster grid and it disappears). Render these two as their own vector outlines

@@ -119,12 +119,16 @@ it is fresh before the next render.
   merges the wheel input between two frames into one event and sums its delta,
   so a fast scroll over a slow frame is one event several notches long. The
   1.2 ladder belongs to the zoom buttons alone; `zoomBy` resyncs it so a button
-  press continues from wherever the wheel left the zoom. Every wheel input zooms
-  — a two-finger trackpad swipe as much as a mouse wheel. The DOM does not say
-  which device scrolled, and no heuristic tells them apart on every device (a
-  horizontal-component rule flipped near-vertical swipes between zoom and pan
-  mid-gesture, and fractional deltas come from high-resolution mice too), so
-  the board pans by drag only. A trackpad pinch, which browsers send as a
+  press continues from wherever the wheel left the zoom. The DOM does not say
+  which device scrolled, so a scroll with any sideways movement is taken for a
+  two-finger trackpad swipe and pans by its `deltaX`/`deltaY` (`wheel-input.ts`
+  `wheelScroll`, in pixels whatever the `deltaMode`; `Shift` turns a
+  vertical-only wheel sideways). Once a burst has panned, the rest of it pans
+  too: a plain horizontal-component rule flipped near-vertical swipes between
+  zoom and pan mid-gesture. A swipe that starts straight vertical still zooms.
+  `Ctrl` or `⌘` always zooms. A wheel pan renders through a `'single'` ticker
+  signal from the board's `pan`, a no-op while a drag runs the ticker. A
+  trackpad pinch, which browsers send as a
   ctrl-wheel of small pixel deltas (`wheel-input.ts` `isPinch`), zooms at its
   own rate, always at the pointer: the scroll events a browser interleaves with
   a pinch, carrying the fingers' drift, are dropped until the pinch ends.
