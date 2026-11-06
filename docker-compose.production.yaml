@@ -18,7 +18,9 @@
 # The same `.env` holds the values below. SESSION_SECRET is required (32+
 # characters): the API refuses to start in production without one. To rotate
 # it, set `new,old` and drop `old` once SESSION_MAX_AGE_DAYS have passed. On
-# the server, also set SITE_HOST, POSTGRES_PASSWORD and CLOUDFLARE_TUNNEL_TOKEN.
+# the server, also set SITE_HOST, POSTGRES_PASSWORD, REDIS_PASSWORD and
+# CLOUDFLARE_TUNNEL_TOKEN. REDIS_PASSWORD goes into a URL unencoded, so it is
+# letters and digits only (`openssl rand -hex 32`).
 # The site and the editor carry no keys of their own: TURNSTILE_SITE_KEY (with
 # its secret) and POSTHOG_KEY reach them from the API's `GET /api/meta`, and
 # leaving them unset turns the challenge and analytics off.
@@ -39,16 +41,16 @@
 # report; nothing restarts a container that turns unhealthy.
 #
 # The host's monitoring agent scrapes the metrics ports, which are published on
-# loopback only: the API on 9301, the site on 9302, the origin's Caddy on 9303,
-# and the Postgres and Redis exporters on 9187 and 9121. The Postgres exporter
-# signs in as `monitoring` with POSTGRES_MONITORING_PASSWORD, a role created
-# once in `docker compose exec postgres psql -U logigator -d logigator`:
+# loopback only: the API on 9301, the site on 9302, the origin's Caddy on 9303.
+# Postgres (5432) and Redis (6379) are published on loopback for the agent's
+# own exporters. It signs in to Postgres as `monitoring`, a role created once
+# in `docker compose exec postgres psql -U logigator -d logigator`:
 #
 #   CREATE ROLE monitoring LOGIN PASSWORD '…'; GRANT pg_monitor TO monitoring;
 
 x-api-environment: &api-environment
   DATABASE_URL: postgresql://logigator:${POSTGRES_PASSWORD:-logigator}@postgres:5432/logigator
-  REDIS_URL: redis://redis:6379
+  REDIS_URL: redis://:${REDIS_PASSWORD:-logigator}@redis:6379
   PUBLIC_URL: https://${SITE_HOST:-logigator.test}
   # Every request reaches the API from a container on this network, and the
   # origin has already written the visitor's address into X-Forwarded-For.
@@ -248,6 +250,8 @@ services:
       - POSTGRES_DB=logigator
       - POSTGRES_USER=logigator
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-logigator}
+    ports:
+      - '127.0.0.1:5432:5432'
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U logigator -d logigator']
       interval: 5s
@@ -263,6 +267,12 @@ services:
       - net
     volumes:
       - redis_data:/data
+    command: ['redis-server', '--requirepass', '${REDIS_PASSWORD:-logigator}']
+    environment:
+      # What `redis-cli` signs in with, for the healthcheck and a shell.
+      - REDISCLI_AUTH=${REDIS_PASSWORD:-logigator}
+    ports:
+      - '127.0.0.1:6379:6379'
     # Only `PONG` is ready: while a snapshot is still loading, `ping` answers
     # `LOADING`.
     healthcheck:
@@ -270,34 +280,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-    restart: unless-stopped
-
-  postgres-exporter:
-    image: quay.io/prometheuscommunity/postgres-exporter:v0.20.1
-    networks:
-      - net
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      - DATA_SOURCE_URI=postgres:5432/logigator?sslmode=disable
-      - DATA_SOURCE_USER=monitoring
-      - DATA_SOURCE_PASS=${POSTGRES_MONITORING_PASSWORD:-}
-    ports:
-      - '127.0.0.1:9187:9187'
-    restart: unless-stopped
-
-  redis-exporter:
-    image: oliver006/redis_exporter:v1.97.0
-    networks:
-      - net
-    depends_on:
-      redis:
-        condition: service_healthy
-    environment:
-      - REDIS_ADDR=redis://redis:6379
-    ports:
-      - '127.0.0.1:9121:9121'
     restart: unless-stopped
 
 volumes:
