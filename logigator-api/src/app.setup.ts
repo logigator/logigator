@@ -1,6 +1,6 @@
 import fastifyCompress from '@fastify/compress';
 import fastifyMultipart from '@fastify/multipart';
-import { randomUUID } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import type { FastifyServerOptions } from 'fastify';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import type { Env } from './config/env';
@@ -18,8 +18,8 @@ import { registerSessionPlugins } from './session/session.plugin';
  *
  * Every log line of a request carries its `reqId`: Cloudflare's `Cf-Ray` for
  * the request when the edge sent one, which names the same request in
- * Cloudflare's own logs, and a random UUID otherwise. Fastify's default is a
- * counter that starts over with every process.
+ * Cloudflare's own logs, and 12 random characters otherwise. Fastify's default
+ * is a counter that starts over with every process.
  */
 export function apiServerOptions(env: Env): FastifyServerOptions {
   return {
@@ -27,10 +27,13 @@ export function apiServerOptions(env: Env): FastifyServerOptions {
       level: env.LOG_LEVEL,
       // The level's name rather than pino's number, as every other service
       // in the log store writes it.
-      formatters: { level: (label) => ({ level: label }) }
+      formatters: { level: (label) => ({ level: label }) },
+      // No `pid` or `hostname`: always 1 and the container's id, which the log
+      // store already names every line by.
+      base: undefined
     },
     requestIdHeader: 'cf-ray',
-    genReqId: () => randomUUID(),
+    genReqId: () => randomBytes(9).toString('base64url'),
     trustProxy: env.TRUST_PROXY,
     bodyLimit: env.REQUEST_MAX_BYTES
   };
