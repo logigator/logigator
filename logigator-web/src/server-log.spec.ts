@@ -104,7 +104,7 @@ describe('the server error handler', () => {
     const first = handle(new Error('one')).logged[0];
     const second = handle(new Error('two')).logged[0];
 
-    expect(first['reqId']).toEqual(expect.any(String));
+    expect(first['reqId']).toMatch(/^[A-Za-z0-9_-]{12}$/);
     expect(first['reqId']).not.toBe(second['reqId']);
   });
 

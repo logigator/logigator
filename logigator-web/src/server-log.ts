@@ -53,10 +53,6 @@ export function createServerLog(
       `${JSON.stringify({
         level,
         time: Date.now(),
-        pid: process.pid,
-        // What `os.hostname()` answers in a container, without a `node:` import
-        // the unit-test bundle cannot resolve.
-        hostname: process.env['HOSTNAME'],
         ...fields,
         msg
       })}\n`
@@ -112,16 +108,24 @@ function reportFailure(failure: ServerFailure): void {
 
 const requestIds = new WeakMap<Request, string>();
 
+/** 72 random bits in base64url, as the API generates its own. */
+function randomId(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(9));
+  return btoa(String.fromCharCode(...bytes))
+    .replaceAll('+', '-')
+    .replaceAll('/', '_');
+}
+
 /**
  * Cloudflare's `Cf-Ray` for the request when the edge sent one, as the API
- * takes it, so a line names the request Cloudflare's own logs name; a random
- * UUID otherwise, the same one every time it is asked for the same request.
+ * takes it, so a line names the request Cloudflare's own logs name; 12 random
+ * characters otherwise, the same every time it is asked for the same request.
  */
 export function requestId(req: Request): string {
   let id = requestIds.get(req);
   if (id === undefined) {
     const ray = req.headers['cf-ray'];
-    id = typeof ray === 'string' && ray !== '' ? ray : crypto.randomUUID();
+    id = typeof ray === 'string' && ray !== '' ? ray : randomId();
     requestIds.set(req, id);
   }
   return id;
