@@ -18,14 +18,15 @@ export default {
   // ESM-authored.
   experiments: { outputModule: true, topLevelAwait: true },
   // The server, the migration runner, the document re-normalizer, the example
-  // seed and the moderation CLI. Bundling all of them keeps deploys free of
-  // drizzle-kit and of any TypeScript loader.
+  // seed, the moderation CLI and the stats printer. Bundling all of them keeps
+  // deploys free of drizzle-kit and of any TypeScript loader.
   entry: {
     main: './src/main.ts',
     migrate: './src/database/migrate.main.ts',
     renormalize: './src/database/renormalize.main.ts',
     'seed-examples': './src/database/seed-examples.main.ts',
-    moderate: './src/moderation/moderate.main.ts'
+    moderate: './src/moderation/moderate.main.ts',
+    stats: './src/stats/stats.main.ts'
   },
   output: {
     // Every artifact in the workspace lands in the root dist/ under its name.
