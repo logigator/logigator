@@ -2,12 +2,13 @@ import type { ErrorRequestHandler, Request, RequestHandler } from 'express';
 
 /**
  * The server's log: JSON lines on stdout in the shape the API's logger (pino,
- * through Fastify) writes — the same numeric `level`, `time`, `reqId`, `req`,
- * `res`, `err` and `msg` — so one query over the stack's logs finds the lines
- * of both. `LOG_LEVEL` takes the API's values and default too.
+ * through Fastify) writes — the same `level` by name, `time`, `reqId`, `req`,
+ * `res`, `err` and `msg`, and `event: 'error'` on a failure's line — so one
+ * query over the stack's logs finds the lines of both. `LOG_LEVEL` takes the
+ * API's values and default too.
  */
 
-/** pino's numeric levels; `silent` writes nothing. */
+/** pino's numeric levels, which order the names; `silent` writes nothing. */
 const LEVELS = {
   trace: 10,
   debug: 20,
@@ -50,7 +51,7 @@ export function createServerLog(
     if (LEVELS[level] < LEVELS[threshold]) return;
     sink(
       `${JSON.stringify({
-        level: LEVELS[level],
+        level,
         time: Date.now(),
         pid: process.pid,
         // What `os.hostname()` answers in a container, without a `node:` import
@@ -80,6 +81,33 @@ function serializeError(error: unknown): SerializedError {
     return { type: error.name, message: error.message, stack: error.stack };
   }
   return { type: typeof error, message: String(error) };
+}
+
+/** A failure this log writes, as a counter names it. */
+export type ServerFailure =
+  'render_error' | 'unhandled_rejection' | 'uncaught_exception';
+
+type FailureListener = (failure: ServerFailure) => void;
+
+/**
+ * The listeners, on the global object: `server.ts` and the render are bundled
+ * apart, each with a copy of this module.
+ */
+const failureListeners = ((globalThis as Record<symbol, unknown>)[
+  Symbol.for('logigator.serverFailureListeners')
+] ??= new Set<FailureListener>()) as Set<FailureListener>;
+
+/**
+ * Calls `listener` with every failure logged from now on, whatever the level
+ * lets through. Returns its removal.
+ */
+export function onServerFailure(listener: FailureListener): () => void {
+  failureListeners.add(listener);
+  return () => failureListeners.delete(listener);
+}
+
+function reportFailure(failure: ServerFailure): void {
+  for (const listener of failureListeners) listener(failure);
 }
 
 const requestIds = new WeakMap<Request, string>();
@@ -168,7 +196,8 @@ export function createErrorHandler(
         reqId: requestId(req),
         req: { method: req.method, url: req.originalUrl },
         res: { statusCode: 500 },
-        err: serializeError(error)
+        err: serializeError(error),
+        event: 'error'
       },
       'request failed'
     );
@@ -191,12 +220,14 @@ export function logRenderError(
   request: { reqId: string | null; method: string; url: string } | null,
   log: ServerLog = stdoutLog
 ): void {
+  reportFailure('render_error');
   log(
     'error',
     {
       ...(request?.reqId ? { reqId: request.reqId } : {}),
       ...(request ? { req: { method: request.method, url: request.url } } : {}),
-      err: serializeError(error)
+      err: serializeError(error),
+      event: 'error'
     },
     'render error'
   );
@@ -213,9 +244,19 @@ export function logProcessFailures(log: ServerLog = stdoutLog): void {
   process.removeAllListeners('unhandledRejection');
   process.removeAllListeners('uncaughtException');
   process.on('unhandledRejection', (reason) => {
-    log('error', { err: serializeError(reason) }, 'unhandled rejection');
+    reportFailure('unhandled_rejection');
+    log(
+      'error',
+      { err: serializeError(reason), event: 'error' },
+      'unhandled rejection'
+    );
   });
   process.on('uncaughtException', (error) => {
-    log('error', { err: serializeError(error) }, 'uncaught exception');
+    reportFailure('uncaught_exception');
+    log(
+      'error',
+      { err: serializeError(error), event: 'error' },
+      'uncaught exception'
+    );
   });
 }

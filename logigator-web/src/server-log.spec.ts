@@ -6,8 +6,10 @@ import {
   createRequestLogger,
   createServerLog,
   logRenderError,
+  onServerFailure,
   requestId,
-  type LogLevel
+  type LogLevel,
+  type ServerFailure
 } from './server-log';
 
 /** A log at `threshold` and the lines it wrote, parsed. */
@@ -82,7 +84,7 @@ describe('the server error handler', () => {
 
     expect(logged).toEqual([
       expect.objectContaining({
-        level: 50,
+        level: 'error',
         time: expect.any(Number),
         reqId: '8f2a1c-FRA',
         req: { method: 'GET', url: '/en/community/projects?page=2' },
@@ -92,6 +94,7 @@ describe('the server error handler', () => {
           message: 'a render failed',
           stack: expect.stringContaining('TypeError: a render failed')
         }),
+        event: 'error',
         msg: 'request failed'
       })
     ]);
@@ -163,16 +166,28 @@ describe('a render error', () => {
 
     expect(logged()).toEqual([
       expect.objectContaining({
-        level: 50,
+        level: 'error',
         reqId: '8f2a1c-FRA',
         req: { method: 'GET', url: '/en/docs?q=wire' },
         err: expect.objectContaining({
           type: 'TypeError',
           message: 'a template failed'
         }),
+        event: 'error',
         msg: 'render error'
       })
     ]);
+  });
+
+  it('reaches a failure listener even where the level writes nothing', () => {
+    const { log } = capture('silent');
+    const heard: ServerFailure[] = [];
+    const stop = onServerFailure((failure) => heard.push(failure));
+    logRenderError(new Error('broken'), null, log);
+    stop();
+    logRenderError(new Error('after'), null, log);
+
+    expect(heard).toEqual(['render_error']);
   });
 });
 
@@ -206,7 +221,7 @@ describe('the request line', () => {
     expect(passedOn).toBe(true);
     expect(logged).toEqual([
       expect.objectContaining({
-        level: 30,
+        level: 'info',
         reqId: '8f2a1c-FRA',
         req: { method: 'GET', url: '/en/community/projects?page=2' },
         res: { statusCode: 404 },

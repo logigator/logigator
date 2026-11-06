@@ -17,6 +17,7 @@ import { appConfig } from './app.config';
 import { serverRoutes } from './app.routes.server';
 import { API_ORIGIN } from './api/server-api.interceptor';
 import { RenderErrorHandler } from './render-error-handler';
+import { provideRenderRoute } from './render-route';
 import { SITE_ORIGIN } from './seo/site-origin';
 
 /** Only reachable if a render ever runs without a request; see `SITE_ORIGIN`. */
@@ -51,7 +52,8 @@ const serverConfig: ApplicationConfig = {
       const nonce = inject(CSP_NONCE);
       if (nonce) stampCspNonce(inject(DOCUMENT), nonce);
     }),
-    { provide: ErrorHandler, useClass: RenderErrorHandler }
+    { provide: ErrorHandler, useClass: RenderErrorHandler },
+    provideRenderRoute()
   ]
 };
 

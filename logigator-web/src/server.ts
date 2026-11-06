@@ -25,8 +25,11 @@ import {
   createErrorHandler,
   createRequestLogger,
   logProcessFailures,
+  onServerFailure,
   requestId
 } from './server-log';
+import { nameRoute, ServerMetrics } from './server-metrics';
+import { environment } from './environments/environment';
 import { pathInLanguage } from './app/translation/language-url';
 import { negotiateRequestLanguage } from './app/translation/language-negotiation';
 import {
@@ -69,9 +72,15 @@ const app = express();
 // Names the framework to every response for no reader's benefit.
 app.disable('x-powered-by');
 const angularApp = new AngularNodeAppEngine();
+const metrics = new ServerMetrics();
+onServerFailure((failure) => metrics.countFailure(failure));
 
-/** One log line per request, static files included. */
+/**
+ * One log line per request, static files included, and its count under the
+ * route each handler below names with `nameRoute`.
+ */
 app.use(createRequestLogger());
+app.use(metrics.requestRecorder());
 
 /** The served path of a file, as {@link IMMUTABLE_PATH} expects to see it. */
 function toUrlPath(absolutePath: string): string {
@@ -93,6 +102,7 @@ app.use(
     index: false,
     redirect: false,
     setHeaders: (res, path) => {
+      nameRoute(res, 'static');
       res.setHeader(
         'Cache-Control',
         IMMUTABLE_PATH.test(toUrlPath(path))
@@ -131,9 +141,11 @@ app.use((req, res, next) => {
     return;
   }
   if (answer === NOT_FOUND) {
+    nameRoute(res, 'not_found');
     res.sendStatus(404);
     return;
   }
+  nameRoute(res, 'redirect');
   res.set(redirectHeaders(answer));
   res.redirect(answer.status, answer.location);
 });
@@ -148,6 +160,7 @@ app.use((req, res, next) => {
  * line rather than an error — the rules are the same for every host either way.
  */
 app.get('/robots.txt', (req, res) => {
+  nameRoute(res, '/robots.txt');
   const origin = requestOrigin(req);
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   res.setHeader('Cache-Control', `public, max-age=${MUTABLE_ASSET_MAX_AGE}`);
@@ -193,6 +206,7 @@ app.get('/sitemap.xml', (req, res, next) => {
     next();
     return;
   }
+  nameRoute(res, '/sitemap.xml');
   sitemapSet()
     .then((files) => sendSitemapXml(res, renderSitemapIndex(origin, files)))
     .catch(next);
@@ -216,6 +230,7 @@ app.use((req, res, next) => {
     next();
     return;
   }
+  nameRoute(res, '/sitemaps/:file.xml');
   sitemapSet()
     .then((files) => {
       const file = files.find(({ name }) => name === match[1]);
@@ -261,6 +276,7 @@ app.use((req, res, next) => {
     next();
     return;
   }
+  nameRoute(res, '/:lang/docs/:page.md');
   loadDocPage(page, lang)
     .then((markdown) => {
       const destinations = docDestinations(
@@ -306,6 +322,7 @@ app.get('/:lang/changelog.atom', (req, res, next) => {
     next();
     return;
   }
+  nameRoute(res, '/:lang/changelog.atom');
   loadChangelog(lang)
     .then((changelog) => {
       res.setHeader('Content-Type', 'application/atom+xml; charset=utf-8');
@@ -340,6 +357,7 @@ function rootRelative(url: string): string {
  * log lines and its calls to the API name the request as the error handler
  * would. Its reports go to the Reporting API group only
  * where {@link requestOrigin} vouches for the host the endpoint is named on.
+ * The render writes the template of the route it matched into the context.
  */
 app.use((req, res, next) => {
   const cspNonce = createCspNonce();
@@ -350,11 +368,12 @@ app.use((req, res, next) => {
     CONTENT_SECURITY_POLICY_HEADER,
     siteContentSecurityPolicy(cspNonce, { reportTo: origin !== null })
   );
+  const context: RenderContext = { cspNonce, requestId: requestId(req) };
   angularApp
-    .handle(req, {
-      cspNonce,
-      requestId: requestId(req)
-    } satisfies RenderContext)
+    .handle(req, context)
+    .finally(() => {
+      if (context.route) nameRoute(res, context.route);
+    })
     .then((response) =>
       response ? writeResponseToNodeResponse(response, res) : next()
     )
@@ -369,7 +388,9 @@ app.use(createErrorHandler());
  * imports `reqHandler` instead and runs the same middleware chain, so a
  * redirect or a static path behaves the same in development.
  *
- * A stop signal closes the listener and lets the requests in flight finish
+ * `METRICS_PORT`, where set, serves `GET /metrics` on a listener of its own.
+ *
+ * A stop signal closes the listeners and lets the requests in flight finish
  * before the process exits. Without a handler of its own the process ignores
  * the signal — it runs as PID 1 in its container — and is killed only once
  * the runtime's grace period has run out.
@@ -378,8 +399,15 @@ if (isMainModule(import.meta.url)) {
   logProcessFailures();
   const port = Number(process.env['PORT'] ?? 4000);
   const server = app.listen(port, () => undefined);
+  const metricsPort = process.env['METRICS_PORT'];
+  const metricsServer = metricsPort
+    ? metrics.listen(Number(metricsPort), environment.version)
+    : null;
   for (const signal of ['SIGTERM', 'SIGINT'] as const) {
-    process.once(signal, () => server.close(() => process.exit(0)));
+    process.once(signal, () => {
+      metricsServer?.close();
+      server.close(() => process.exit(0));
+    });
   }
 }
 
