@@ -175,6 +175,58 @@ export class Metrics {
     }
   });
 
+  readonly users = new Gauge({
+    name: 'logigator_users',
+    help: 'Accounts, by whether their address is verified.',
+    labelNames: ['state'] as const,
+    registers: [this.registry]
+  });
+
+  readonly documents = new Gauge({
+    name: 'logigator_documents',
+    help: 'Projects and components, by kind, visibility and whether moderation hid them.',
+    labelNames: ['kind', 'visibility', 'hidden'] as const,
+    registers: [this.registry]
+  });
+
+  readonly stars = new Gauge({
+    name: 'logigator_stars',
+    help: 'Stars on projects and components.',
+    registers: [this.registry]
+  });
+
+  readonly documentReportsOpen = new Gauge({
+    name: 'logigator_document_reports_open',
+    help: 'Document reports not yet resolved, by source (human, machine).',
+    labelNames: ['source'] as const,
+    registers: [this.registry]
+  });
+
+  readonly textsAwaitingCheck = new Gauge({
+    name: 'logigator_texts_awaiting_check',
+    help: 'Public documents whose current text waits for its check, while text analysis runs.',
+    registers: [this.registry]
+  });
+
+  readonly textsParked = new Gauge({
+    name: 'logigator_texts_parked',
+    help: 'Texts the analysis worker gave up on until they change.',
+    registers: [this.registry]
+  });
+
+  readonly storageBytes = new Gauge({
+    name: 'logigator_storage_bytes',
+    help: 'Bytes counted against storage quotas, by type (documents, previews).',
+    labelNames: ['type'] as const,
+    registers: [this.registry]
+  });
+
+  readonly totalsReadAt = new Gauge({
+    name: 'logigator_totals_last_read_timestamp_seconds',
+    help: 'When the database totals were last read, as a Unix time. Absent until the first scrape after a start.',
+    registers: [this.registry]
+  });
+
   readonly buildInfo = new Gauge({
     name: 'logigator_build_info',
     help: 'The running build, always 1.',

@@ -88,8 +88,7 @@ runner the E2E harness and a release use), `db:renormalize` (re-normalize older-
 `--all` re-extracts every derived row), `db:seed-examples` (writes `logigator-api/examples/` into
 the seed account, idempotent; `--previews` re-uploads previews), `db:moderate` (lists open document
 reports, readers' and the text analysis worker's, `hide`/`unhide <kind> <link>`, `resolve
-<report-id>`; the only moderation surface, no admin role; hiding and unhiding mail the owner),
-`db:stats` (the database's totals in Prometheus text format, for the host's textfile collector).
+<report-id>`; the only moderation surface, no admin role; hiding and unhiding mail the owner).
 
 `@logigator/ui` has no build script; its ng-packagr target in `angular.json` must stay, because the
 unit-test builder reads its build options from it.
@@ -247,8 +246,8 @@ liveness probe; `GET /api/health/ready` checks Postgres and Redis. `src/` layers
 `MachineModerationService`, the `db:moderate` service), `translation/` (detection and translation
 rules, machine texts), `text-analysis/` (the one OpenRouter call that detects, translates and
 moderates: client, prompt, worker), `metrics/` (the one `Metrics` registry, the request counter
-hook, `/metrics` on `METRICS_PORT`), `logging/` (Nest's `Logger` through Fastify's pino),
-`stats/`, `common/`, plus `app.setup.ts` (shared by `main.ts` and the E2E harness).
+hook, the database's totals, `/metrics` on `METRICS_PORT`), `logging/` (Nest's `Logger` through
+Fastify's pino), `common/`, plus `app.setup.ts` (shared by `main.ts` and the E2E harness).
 
 **Invariants:**
 
@@ -317,7 +316,7 @@ hook, `/metrics` on `METRICS_PORT`), `logging/` (Nest's `Logger` through Fastify
   every description as the source it was given.
 
 **Build: Rspack** (`rspack.config.mjs`), ESM output, entries for the server plus `migrate`,
-`renormalize`, `seed-examples`, `moderate` and `stats`. Its comments explain each setting; the ones that
+`renormalize`, `seed-examples` and `moderate`. Its comments explain each setting; the ones that
 break silently:
 
 - `tsconfig.json` holds the workspace aliases (`resolve.tsConfig` points at it), and Vitest finds it

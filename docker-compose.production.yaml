@@ -45,13 +45,6 @@
 # once in `docker compose exec postgres psql -U logigator -d logigator`:
 #
 #   CREATE ROLE monitoring LOGIN PASSWORD '…'; GRANT pg_monitor TO monitoring;
-#
-# The database's counts come from the API's `stats` command, which a timer on
-# the host runs every five minutes into the agent's textfile directory:
-#
-#   docker compose -f docker-compose.production.yaml exec -T api \
-#     node dist/logigator-api/stats.js > <dir>/logigator.prom.tmp \
-#     && mv <dir>/logigator.prom.tmp <dir>/logigator.prom
 
 x-api-environment: &api-environment
   DATABASE_URL: postgresql://logigator:${POSTGRES_PASSWORD:-logigator}@postgres:5432/logigator

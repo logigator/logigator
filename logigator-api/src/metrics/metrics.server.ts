@@ -11,6 +11,7 @@ import manifest from '../../../package.json';
 import { ENV, type Env } from '../config/env';
 import { PG_POOL } from '../database/database.module';
 import { Metrics } from './metrics';
+import { DatabaseTotals } from './totals';
 
 /**
  * `GET /metrics` on `METRICS_PORT`, a listener of its own that no proxy route
@@ -25,7 +26,8 @@ export class MetricsServer implements OnApplicationShutdown {
   constructor(
     @Inject(ENV) private readonly env: Env,
     @Inject(PG_POOL) private readonly pool: Pool,
-    private readonly metrics: Metrics
+    private readonly metrics: Metrics,
+    private readonly totals: DatabaseTotals
   ) {}
 
   /** Listens on `METRICS_PORT`; does nothing when it is unset. */
@@ -47,16 +49,19 @@ export class MetricsServer implements OnApplicationShutdown {
         response.writeHead(404).end();
         return;
       }
-      registry.metrics().then(
-        (body) => {
-          response.writeHead(200, { 'Content-Type': registry.contentType });
-          response.end(body);
-        },
-        (error: unknown) => {
-          this.logger.error(error);
-          response.writeHead(500).end();
-        }
-      );
+      this.totals
+        .refresh()
+        .then(() => registry.metrics())
+        .then(
+          (body) => {
+            response.writeHead(200, { 'Content-Type': registry.contentType });
+            response.end(body);
+          },
+          (error: unknown) => {
+            this.logger.error(error);
+            response.writeHead(500).end();
+          }
+        );
     });
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject);
