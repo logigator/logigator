@@ -88,7 +88,8 @@ runner the E2E harness and a release use), `db:renormalize` (re-normalize older-
 `--all` re-extracts every derived row), `db:seed-examples` (writes `logigator-api/examples/` into
 the seed account, idempotent; `--previews` re-uploads previews), `db:moderate` (lists open document
 reports, readers' and the text analysis worker's, `hide`/`unhide <kind> <link>`, `resolve
-<report-id>`; the only moderation surface, no admin role; hiding and unhiding mail the owner).
+<report-id>`; the only moderation surface, no admin role; hiding and unhiding mail the owner),
+`db:stats` (the database's totals in Prometheus text format, for the host's textfile collector).
 
 `@logigator/ui` has no build script; its ng-packagr target in `angular.json` must stay, because the
 unit-test builder reads its build options from it.
@@ -245,11 +246,15 @@ liveness probe; `GET /api/health/ready` checks Postgres and Redis. `src/` layers
 `community/`, `reports/` (error reports and document reports), `moderation/` (verdicts,
 `MachineModerationService`, the `db:moderate` service), `translation/` (detection and translation
 rules, machine texts), `text-analysis/` (the one OpenRouter call that detects, translates and
-moderates: client, prompt, worker), `common/`, plus `app.setup.ts` (shared by `main.ts`
-and the E2E harness).
+moderates: client, prompt, worker), `metrics/` (the one `Metrics` registry, the request counter
+hook, `/metrics` on `METRICS_PORT`), `logging/` (Nest's `Logger` through Fastify's pino),
+`stats/`, `common/`, plus `app.setup.ts` (shared by `main.ts` and the E2E harness).
 
 **Invariants:**
 
+- **Product activity is `logigator_http_requests_total` by route**: a feature gets no counter of
+  its own where its route already says it. Metric labels (API and site) are code-owned names only,
+  never ids, links, addresses, raw paths or client-supplied strings: series are kept forever.
 - **Every document write goes through `CircuitDocumentService.ingest`** (core's parser, strict).
   Counts, dependency edges and component ports are derived there, never taken from a client.
 - **A write that can grow an account's storage runs inside `StorageQuotaService.guard`**: it
@@ -312,7 +317,7 @@ and the E2E harness).
   every description as the source it was given.
 
 **Build: Rspack** (`rspack.config.mjs`), ESM output, entries for the server plus `migrate`,
-`renormalize`, `seed-examples` and `moderate`. Its comments explain each setting; the ones that
+`renormalize`, `seed-examples`, `moderate` and `stats`. Its comments explain each setting; the ones that
 break silently:
 
 - `tsconfig.json` holds the workspace aliases (`resolve.tsConfig` points at it), and Vitest finds it

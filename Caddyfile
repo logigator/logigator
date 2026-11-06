@@ -3,6 +3,16 @@
 # no port: Cloudflare through the `cloudflared` tunnel in production, the
 # `edge` service in the dev stack and in a local staging run.
 
+# HTTP metrics for every site, labelled by host. The origin's site names no
+# host, so Caddy labels hosts only when told to observe catch-all ones; the set
+# stays bounded, since only the edge's hostnames and the healthcheck reach it.
+{
+	metrics {
+		per_host
+		observe_catchall_hosts
+	}
+}
+
 # What a request learned at the edge, handed to an application. Only an edge can
 # reach this listener, so its `Cf-Connecting-Ip` is the visitor's address, and
 # it overwrites whatever chain a visitor sent along. The scheme is the edge's,
@@ -124,4 +134,10 @@
 		output stdout
 		level {$CADDY_LOG_LEVEL:info}
 	}
+}
+
+# `/metrics` for the host's monitoring agent, on a port of its own that the
+# edge never reaches.
+:2020 {
+	metrics
 }

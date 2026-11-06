@@ -3,8 +3,9 @@
 # the same network.
 #
 # Cloudflare is the edge. On the server it reaches the stack through a tunnel:
-# `cloudflared` dials out, so nothing here publishes a port, and the tunnel's
-# public hostname points at `http://origin:8080` in the Cloudflare dashboard.
+# `cloudflared` dials out, so nothing here publishes a port beyond loopback, and
+# the tunnel's public hostname points at `http://origin:8080` in the Cloudflare
+# dashboard.
 # Locally, `edge` stands in for Cloudflare instead, terminating TLS for
 # logigator.test with Caddy's internal CA and setting the one header the origin
 # takes from Cloudflare.
@@ -36,6 +37,21 @@
 # the origin after the site and the API. The two Node images carry no curl or
 # wget, so their checks are a one-line `fetch` in Node itself. The checks only
 # report; nothing restarts a container that turns unhealthy.
+#
+# The host's monitoring agent scrapes the metrics ports, which are published on
+# loopback only: the API on 9301, the site on 9302, the origin's Caddy on 9303,
+# and the Postgres and Redis exporters on 9187 and 9121. The Postgres exporter
+# signs in as `monitoring` with POSTGRES_MONITORING_PASSWORD, a role created
+# once in `docker compose exec postgres psql -U logigator -d logigator`:
+#
+#   CREATE ROLE monitoring LOGIN PASSWORD '…'; GRANT pg_monitor TO monitoring;
+#
+# The database's counts come from the API's `stats` command, which a timer on
+# the host runs every five minutes into the agent's textfile directory:
+#
+#   docker compose -f docker-compose.production.yaml exec -T api \
+#     node dist/logigator-api/stats.js > <dir>/logigator.prom.tmp \
+#     && mv <dir>/logigator.prom.tmp <dir>/logigator.prom
 
 x-api-environment: &api-environment
   DATABASE_URL: postgresql://logigator:${POSTGRES_PASSWORD:-logigator}@postgres:5432/logigator
@@ -117,6 +133,8 @@ services:
       - storage:/srv/files:ro
     environment:
       - CADDY_LOG_LEVEL=${CADDY_LOG_LEVEL:-info}
+    ports:
+      - '127.0.0.1:9303:2020'
     # The editor's shell, which Caddy serves itself: the check is of the origin
     # alone, not of what it forwards to.
     healthcheck:
@@ -141,6 +159,9 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - NG_ALLOWED_HOSTS=${SITE_HOST:-logigator.test}
       - NG_TRUST_PROXY_HEADERS=x-forwarded-host,x-forwarded-proto,x-forwarded-for
+      - METRICS_PORT=9302
+    ports:
+      - '127.0.0.1:9302:9302'
     # Answered by the server itself, without a render or an API read.
     healthcheck:
       test:
@@ -203,7 +224,11 @@ services:
         condition: service_completed_successfully
     volumes:
       - storage:/data/storage
-    environment: *api-environment
+    environment:
+      <<: *api-environment
+      METRICS_PORT: 9301
+    ports:
+      - '127.0.0.1:9301:9301'
     # Liveness: answered without reaching Postgres or Redis, so an outage of
     # either does not mark the API itself unhealthy. Readiness,
     # `/api/health/ready`, is for a monitor outside the stack.
@@ -252,6 +277,34 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
+
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.20.1
+    networks:
+      - net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATA_SOURCE_URI=postgres:5432/logigator?sslmode=disable
+      - DATA_SOURCE_USER=monitoring
+      - DATA_SOURCE_PASS=${POSTGRES_MONITORING_PASSWORD:-}
+    ports:
+      - '127.0.0.1:9187:9187'
+    restart: unless-stopped
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.97.0
+    networks:
+      - net
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+    ports:
+      - '127.0.0.1:9121:9121'
     restart: unless-stopped
 
 volumes:
