@@ -3086,6 +3086,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@opentelemetry/api@npm:^1.4.0":
+  version: 1.10.0
+  resolution: "@opentelemetry/api@npm:1.10.0"
+  checksum: 10c0/c666f89d882e2e3ea3780b4e419de3ba7e00a80bf334269c3c8507a5e2b4e453e2bc8368f6230f894d789b206c14dde313ea6f51fa7bc629f0eff8480b5d356b
+  languageName: node
+  linkType: hard
+
 "@oxc-parser/binding-android-arm-eabi@npm:0.150.0":
   version: 0.150.0
   resolution: "@oxc-parser/binding-android-arm-eabi@npm:0.150.0"
@@ -3437,6 +3444,16 @@ __metadata:
   version: 1.419.0
   resolution: "@posthog/types@npm:1.419.0"
   checksum: 10c0/335d7da35e46f2cbe1bebb8bfaadfe5a34d561cf816b97bb3b33b7216158c44a2242069ac09d49c24e431348168a5c7e34f07245d79c503d8161a414bfa98672
+  languageName: node
+  linkType: hard
+
+"@prometheus-io/client@npm:^0.16.1":
+  version: 0.16.1
+  resolution: "@prometheus-io/client@npm:0.16.1"
+  dependencies:
+    "@opentelemetry/api": "npm:^1.4.0"
+    tdigest: "npm:^0.1.1"
+  checksum: 10c0/a6068cab1140329de0d1b86ceeeb589ce7eeba7133c370a33e0ce08d78dd2c30629012dba6444a7c1c780d2a4419991403234b200cb406a3d55a66a3f83509c8
   languageName: node
   linkType: hard
 
@@ -4980,6 +4997,13 @@ __metadata:
   dependencies:
     require-from-string: "npm:^2.0.2"
   checksum: 10c0/b608addec6bd6e5d1c0cc7b6116002d589c6e666966503aca2aa7b2f61717ecaaeb0ac1a16c1374d61ee757de4f2f24017312a70781f5c4b127ffab54a2f7187
+  languageName: node
+  linkType: hard
+
+"bintrees@npm:1.0.2":
+  version: 1.0.2
+  resolution: "bintrees@npm:1.0.2"
+  checksum: 10c0/132944b20c93c1a8f97bf8aa25980a76c6eb4291b7f2df2dbcd01cb5b417c287d3ee0847c7260c9f05f3d5a4233aaa03dec95114e97f308abe9cc3f72bed4a44
   languageName: node
   linkType: hard
 
@@ -7648,6 +7672,7 @@ __metadata:
     "@nestjs/schedule": "npm:^12.0.2"
     "@nestjs/testing": "npm:^12.3.2"
     "@node-rs/bcrypt": "npm:^2.0.0"
+    "@prometheus-io/client": "npm:^0.16.1"
     "@rspack/cli": "npm:^2.3.0"
     "@rspack/core": "npm:^2.3.0"
     "@standard-schema/spec": "npm:^1.1.0"
@@ -7744,6 +7769,7 @@ __metadata:
     "@jsverse/utils": "npm:1.0.0-beta.5"
     "@milkdown/kit": "npm:^7.23.0"
     "@phosphor-icons/web": "npm:^2.1.2"
+    "@prometheus-io/client": "npm:^0.16.1"
     "@tailwindcss/postcss": "npm:^4.3.3"
     "@types/express": "npm:^5.0.6"
     "@types/node": "npm:^26.6.6"
@@ -11068,6 +11094,15 @@ __metadata:
     mkdirp: "npm:^1.0.3"
     yallist: "npm:^4.0.0"
   checksum: 10c0/a5eca3eb50bc11552d453488344e6507156b9193efd7635e98e867fab275d527af53d8866e2370cd09dfe74378a18111622ace35af6a608e5223a7d27fe99537
+  languageName: node
+  linkType: hard
+
+"tdigest@npm:^0.1.1":
+  version: 0.1.3
+  resolution: "tdigest@npm:0.1.3"
+  dependencies:
+    bintrees: "npm:1.0.2"
+  checksum: 10c0/16b8c0b9c195a5c697b394ede0eb64341cbdceea58ff233f7b422a835c994988f51707d29df61292a505b7888650ec05e8bbb318463b799e263dc4767e76a1d0
   languageName: node
   linkType: hard
 
