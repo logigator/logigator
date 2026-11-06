@@ -15,6 +15,7 @@ import {
 } from '../database/schema';
 import { type CircuitTable, kindOf } from '../documents/circuit-queries';
 import { humanVersionsOf } from '../documents/document-text-queries';
+import { Metrics } from '../metrics/metrics';
 import { MachineModerationService } from '../moderation/machine-moderation.service';
 import { BLOCKED_VERDICT } from '../moderation/moderation-verdict';
 import { RedisService } from '../redis/redis.service';
@@ -79,9 +80,11 @@ const USER_COUNTER_TTL_SECONDS = 2 * 24 * 60 * 60;
 
 const INTERVAL_NAME = 'text-analysis-worker';
 
+const PAUSE_KINDS = ['backoff', 'budget', 'configuration'] as const;
+
 /** Why the loop is not claiming: a route that failed, or the whole system. */
 interface Pause {
-  kind: 'backoff' | 'budget' | 'configuration';
+  kind: (typeof PAUSE_KINDS)[number];
   until: number;
 }
 
@@ -140,8 +143,11 @@ export class TextAnalysisWorker
     @Inject(ANALYSIS_CLOCK) private readonly clock: AnalysisClock,
     private readonly redis: RedisService,
     private readonly scheduler: SchedulerRegistry,
-    private readonly moderation: MachineModerationService
-  ) {}
+    private readonly moderation: MachineModerationService,
+    private readonly metrics: Metrics
+  ) {
+    this.setPause(null);
+  }
 
   /**
    * Through the registry rather than `@Interval`, which takes a constant: the
@@ -228,7 +234,7 @@ export class TextAnalysisWorker
     if (this.pause) {
       if (this.clock.now() < this.pause.until) return false;
       this.lifted = this.pause.kind;
-      this.pause = null;
+      this.setPause(null);
     }
     return true;
   }
@@ -252,15 +258,17 @@ export class TextAnalysisWorker
         return;
       case 'refused':
         this.budgetCheck = false;
-        this.logger.warn(
-          `The key endpoint refuses this key (${budget.status}); text analysis goes by the calls' own failures from here on`
-        );
+        this.logger.warn({
+          status: budget.status,
+          msg: `The key endpoint refuses this key (${budget.status}); text analysis goes by the calls' own failures from here on`
+        });
         return;
       case 'unavailable':
         if (!wasUnreadable) {
-          this.logger.warn(
-            `The key's budget could not be read (${budget.reason}); analyzing anyway`
-          );
+          this.logger.warn({
+            reason: budget.reason,
+            msg: "The key's budget could not be read; analyzing anyway"
+          });
         }
         return;
       case 'available':
@@ -285,10 +293,12 @@ export class TextAnalysisWorker
       ? null
       : await this.reserveCall(claim.userId);
     if (counter === null) {
+      this.metrics.textAnalysisOwnerLimitReached.inc();
       if (!overLimit.has(claim.userId)) {
-        this.logger.log(
-          `Owner ${claim.userId} reached the daily text analysis limit; their documents wait for the next UTC day`
-        );
+        this.logger.log({
+          userId: claim.userId,
+          msg: `Owner ${claim.userId} reached the daily text analysis limit; their documents wait for the next UTC day`
+        });
       }
       overLimit.add(claim.userId);
       await holdClaimUntil(
@@ -332,7 +342,11 @@ export class TextAnalysisWorker
       );
       // An edit or a version landed during the call: the result describes a
       // document that is gone. The new one is claimable once it settles.
-      if (!written) await releaseClaim(this.db, table, claim);
+      if (written) {
+        this.metrics.textAnalysisTexts.inc({ outcome: 'analyzed' });
+      } else {
+        await releaseClaim(this.db, table, claim);
+      }
       return;
     }
 
@@ -362,7 +376,10 @@ export class TextAnalysisWorker
       });
     } catch (error) {
       this.logger.error(
-        `Moderation of ${claim.id} failed; its translation goes on`,
+        {
+          documentId: claim.id,
+          msg: `Moderation of ${claim.id} failed; its translation goes on`
+        },
         error
       );
     }
@@ -396,13 +413,21 @@ export class TextAnalysisWorker
         const judged =
           failure.verdict !== null && failure.verdict !== BLOCKED_VERDICT;
         const attempts = await recordFailure(this.db, table, claim, judged);
-        if (attempts !== null && attempts >= MAX_ANALYSIS_ATTEMPTS) {
-          this.logger.warn(
-            `Analysis of ${claim.id} failed ${attempts} times and waits for an edit: ${failure.reason}`
-          );
-          if (!judged) {
-            await this.reportUnjudged(table, claim, attempts, failure);
-          }
+        // The claim was given up during the call, so nothing was counted.
+        if (attempts === null) return;
+        if (attempts < MAX_ANALYSIS_ATTEMPTS) {
+          this.metrics.textAnalysisTexts.inc({ outcome: 'failed' });
+          return;
+        }
+        this.metrics.textAnalysisTexts.inc({ outcome: 'parked' });
+        this.logger.warn({
+          documentId: claim.id,
+          attempts,
+          reason: failure.reason,
+          msg: `Analysis of ${claim.id} failed ${attempts} times and waits for an edit`
+        });
+        if (!judged) {
+          await this.reportUnjudged(table, claim, attempts, failure);
         }
         return;
       }
@@ -449,14 +474,21 @@ export class TextAnalysisWorker
         call
       });
     } catch (error) {
-      this.logger.error(`Reporting unjudged ${claim.id} failed`, error);
+      this.logger.error(
+        { documentId: claim.id, msg: `Reporting unjudged ${claim.id} failed` },
+        error
+      );
     }
   }
 
   private callWorked(): void {
     this.transientStreak = 0;
     if (this.lifted === 'budget' || this.lifted === 'configuration') {
-      this.logger.log(`Text analysis resumed after a ${this.lifted} pause`);
+      this.logger.log({
+        event: 'worker_resume',
+        kind: this.lifted,
+        msg: `Text analysis resumed after a ${this.lifted} pause`
+      });
     }
     this.lifted = null;
   }
@@ -476,7 +508,7 @@ export class TextAnalysisWorker
               2 ** this.transientStreak,
             MAX_BACKOFF_MS
           );
-    this.pause = { kind: 'backoff', until: this.clock.now() + delay };
+    this.setPause({ kind: 'backoff', until: this.clock.now() + delay });
     this.lifted = null;
   }
 
@@ -487,25 +519,43 @@ export class TextAnalysisWorker
       this.pauseForBudget(failure.reason);
       return;
     }
-    this.logger.error(
-      `Text analysis paused, the key or the preset needs fixing: ${failure.reason}. One call is retried each hour.`
-    );
-    this.pause = {
+    this.logger.error({
+      event: 'worker_pause',
+      kind: 'configuration',
+      reason: failure.reason,
+      msg: 'Text analysis paused, the key or the preset needs fixing. One call is retried each hour.'
+    });
+    this.setPause({
       kind: 'configuration',
       until: this.clock.now() + CONFIGURATION_RETRY_MS
-    };
+    });
     this.lifted = null;
   }
 
   private pauseForBudget(reason: string): void {
     // Logged when the pause begins, not on each half-hourly look.
     if (this.lifted !== 'budget') {
-      this.logger.warn(`Text analysis paused for budget: ${reason}`);
+      this.logger.warn({
+        event: 'worker_pause',
+        kind: 'budget',
+        reason,
+        msg: 'Text analysis paused for budget'
+      });
     }
-    this.pause = {
+    this.setPause({
       kind: 'budget',
       until: this.clock.now() + BUDGET_RECHECK_MS
-    };
+    });
     this.lifted = null;
+  }
+
+  private setPause(pause: Pause | null): void {
+    this.pause = pause;
+    for (const kind of PAUSE_KINDS) {
+      this.metrics.textAnalysisPaused.set(
+        { kind },
+        kind === pause?.kind ? 1 : 0
+      );
+    }
   }
 }

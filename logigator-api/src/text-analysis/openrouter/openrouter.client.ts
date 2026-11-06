@@ -1,4 +1,5 @@
 import { Logger, type LoggerService } from '@nestjs/common';
+import type { Metrics } from '../../metrics/metrics';
 import {
   BLOCKED_VERDICT,
   isStricter,
@@ -56,6 +57,7 @@ export interface OpenRouterClientOptions {
    * tuning and swaps only the model.
    */
   model?: string;
+  metrics: Metrics;
   fetch?: typeof fetch;
   logger?: Pick<LoggerService, 'log' | 'warn'>;
 }
@@ -139,12 +141,14 @@ export class OpenRouterClient implements TextAnalyzer {
   private readonly model: string;
   private readonly headers: Record<string, string>;
   private readonly fetch: typeof fetch;
+  private readonly metrics: Metrics;
   private readonly logger: Pick<LoggerService, 'log' | 'warn'>;
 
   constructor(options: OpenRouterClientOptions) {
     this.model = options.model ?? `@preset/${options.preset}`;
     this.headers = openRouterHeaders(options.apiKey, options.publicUrl);
     this.fetch = options.fetch ?? fetch;
+    this.metrics = options.metrics;
     this.logger = options.logger ?? new Logger(OpenRouterClient.name);
   }
 
@@ -174,9 +178,13 @@ export class OpenRouterClient implements TextAnalyzer {
         verdictCall = completion.usage;
       }
       if (result.kind !== 'content') {
-        this.logger.warn(
-          `Analysis of ${documentId} failed (${describeFailure(result)}): ${result.reason}`
-        );
+        this.logger.warn({
+          documentId,
+          failure: result.kind,
+          ...(result.kind === 'system' && { pause: result.pause }),
+          reason: result.reason,
+          msg: `Analysis of ${documentId} failed (${describeFailure(result)})`
+        });
         return { ...result, ...accounted() };
       }
 
@@ -188,10 +196,13 @@ export class OpenRouterClient implements TextAnalyzer {
       if (read.verdict && read.verdict.category !== 'none') {
         // The category and nothing else: the note is the model's words over
         // the author's text, and stays with the report.
-        this.logger.log(
-          `Moderation verdict for ${documentId}: ${read.verdict.category}` +
-            (read.verdict.certain ? ', certain' : ', not certain')
-        );
+        this.logger.log({
+          event: 'moderation_verdict',
+          documentId,
+          category: read.verdict.category,
+          certain: read.verdict.certain,
+          msg: `Moderation verdict for ${documentId}: ${read.verdict.category}`
+        });
       }
       if (read.ok) {
         return {
@@ -206,9 +217,13 @@ export class OpenRouterClient implements TextAnalyzer {
       }
 
       rejection = read.rejection;
-      this.logger.warn(
-        `Analysis reply for ${documentId} refused (${rejection.stage}): ${rejection.reason}`
-      );
+      this.logger.warn({
+        documentId,
+        attempt: attempt + 1,
+        stage: rejection.stage,
+        reason: rejection.reason,
+        msg: `Analysis reply for ${documentId} refused (${rejection.stage})`
+      });
     }
 
     return {
@@ -226,11 +241,21 @@ export class OpenRouterClient implements TextAnalyzer {
     let response: Response;
     let body: unknown;
     try {
-      response = await this.fetch(`${OPENROUTER_BASE_URL}/api/v1/key`, {
-        headers: this.headers,
-        signal: AbortSignal.timeout(CALL_TIMEOUT_MS)
-      });
-      body = await response.json().catch(() => undefined);
+      ({ response, body } = await this.metrics.timeOutbound(
+        'openrouter',
+        async () => {
+          const response = await this.fetch(
+            `${OPENROUTER_BASE_URL}/api/v1/key`,
+            {
+              headers: this.headers,
+              signal: AbortSignal.timeout(CALL_TIMEOUT_MS)
+            }
+          );
+          const body: unknown = await response.json().catch(() => undefined);
+          return { response, body };
+        },
+        ({ response }) => !response.ok
+      ));
     } catch (error) {
       return { kind: 'unavailable', reason: describeError(error) };
     }
@@ -266,20 +291,26 @@ export class OpenRouterClient implements TextAnalyzer {
     let response: Response;
     let body: unknown;
     try {
-      response = await this.fetch(
-        `${OPENROUTER_BASE_URL}/api/v1/chat/completions`,
-        {
-          method: 'POST',
-          headers: { ...this.headers, 'Content-Type': 'application/json' },
-          body: JSON.stringify(request),
-          signal: AbortSignal.timeout(CALL_TIMEOUT_MS)
-        }
-      );
       // Read inside the same guard: the timeout covers the body too, and a
       // body cut off mid-way is the route failing rather than the reply. A
       // body that arrives whole but is not JSON, such as a proxy's error
       // page, is left to the status to classify.
-      body = parseJson(await response.text());
+      ({ response, body } = await this.metrics.timeOutbound(
+        'openrouter',
+        async () => {
+          const response = await this.fetch(
+            `${OPENROUTER_BASE_URL}/api/v1/chat/completions`,
+            {
+              method: 'POST',
+              headers: { ...this.headers, 'Content-Type': 'application/json' },
+              body: JSON.stringify(request),
+              signal: AbortSignal.timeout(CALL_TIMEOUT_MS)
+            }
+          );
+          return { response, body: parseJson(await response.text()) };
+        },
+        ({ response }) => !response.ok
+      ));
     } catch (error) {
       return {
         result: {
@@ -302,7 +333,7 @@ export class OpenRouterClient implements TextAnalyzer {
     }
 
     const { usage, choice } = readCompletion(body);
-    if (usage) this.logUsage(usage, documentId);
+    if (usage) this.recordUsage(usage, documentId);
     return {
       result: classifyChoice(choice, body, retryAfter),
       usage,
@@ -312,14 +343,37 @@ export class OpenRouterClient implements TextAnalyzer {
     };
   }
 
-  private logUsage(usage: CallUsage, documentId: string): void {
-    this.logger.log(
-      `Analysis call for ${documentId}: ${usage.model ?? 'unknown model'} ` +
-        `via ${usage.provider ?? 'unknown provider'}, ` +
-        `${usage.promptTokens ?? '?'} prompt (${usage.cachedTokens ?? '?'} cached) + ` +
-        `${usage.completionTokens ?? '?'} completion tokens, ` +
-        `$${usage.costUsd ?? '?'} (${usage.generationId ?? 'no generation id'})`
-    );
+  /**
+   * Counts a call's tokens and cost as OpenRouter reports them: `prompt` is
+   * every prompt token, `cached` the part of them read from a cache.
+   */
+  private recordUsage(usage: CallUsage, documentId: string): void {
+    const model = usage.model ?? 'unknown';
+    const tokens = {
+      prompt: usage.promptTokens,
+      cached: usage.cachedTokens,
+      completion: usage.completionTokens
+    };
+    for (const [type, count] of Object.entries(tokens)) {
+      if (count !== null) {
+        this.metrics.openRouterTokens.inc({ model, type }, count);
+      }
+    }
+    if (usage.costUsd !== null) {
+      this.metrics.openRouterCost.inc({ model }, usage.costUsd);
+    }
+
+    this.logger.log({
+      documentId,
+      model: usage.model,
+      provider: usage.provider,
+      promptTokens: usage.promptTokens,
+      cachedTokens: usage.cachedTokens,
+      completionTokens: usage.completionTokens,
+      costUsd: usage.costUsd,
+      generationId: usage.generationId,
+      msg: `Analysis call for ${documentId}`
+    });
   }
 }
 

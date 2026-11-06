@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LOCALES } from '../../common/locale';
+import { Metrics } from '../../metrics/metrics';
 import type { ModerationVerdict } from '../../moderation/moderation-verdict';
 import { analysisRetryMessage } from '../analysis-prompt';
 import {
@@ -117,14 +118,17 @@ function client(
 ) {
   const logs: string[] = [];
   const record = (message: unknown) => {
-    logs.push(String(message));
+    logs.push(typeof message === 'string' ? message : JSON.stringify(message));
   };
+  const metrics = new Metrics();
   return {
     logs,
+    metrics,
     client: new OpenRouterClient({
       apiKey: 'sk-or-test',
       preset: 'logigator-dev',
       publicUrl: 'https://logigator.test',
+      metrics,
       fetch,
       logger: { log: record, warn: record },
       ...overrides
@@ -585,11 +589,77 @@ describe('OpenRouterClient.analyze', () => {
     const all = logs.join('\n');
     expect(all).toContain('doc-42');
     expect(all).toContain('harassment');
-    expect(all).toContain('0.0004');
-    expect(all).toContain('512 cached');
+    expect(all).toContain('"costUsd":0.0004');
+    expect(all).toContain('"cachedTokens":512');
     expect(all).toContain('vendor/served-model-20261001');
     expect(all).not.toContain('7f3a');
     expect(all).not.toContain('Volladdierer');
+  });
+});
+
+describe('OpenRouterClient metrics', () => {
+  const series = async (metric: {
+    get(): Promise<{
+      values: { labels: object; value: number; metricName?: string }[];
+    }>;
+  }) =>
+    (await metric.get()).values.map(({ labels, value }) => ({
+      ...labels,
+      value
+    }));
+
+  it('counts every call’s tokens and cost by the model OpenRouter named', async () => {
+    const unnamed = completion(VALID_CONTENT);
+    delete unnamed['model'];
+    const { fetch } = fakeFetch(
+      json(200, completion('not json')),
+      json(200, completion(VALID_CONTENT)),
+      json(200, unnamed)
+    );
+    const { client: analyzer, metrics } = client(fetch);
+    // A refused reply and its retry, then a reply naming no model.
+    await analyzer.analyze(INPUT, 'doc-1');
+    await analyzer.analyze(INPUT, 'doc-2');
+
+    const served = 'vendor/served-model-20261001';
+    expect(await series(metrics.openRouterTokens)).toEqual([
+      { model: served, type: 'prompt', value: 1200 },
+      { model: served, type: 'cached', value: 1024 },
+      { model: served, type: 'completion', value: 240 },
+      { model: 'unknown', type: 'prompt', value: 600 },
+      { model: 'unknown', type: 'cached', value: 512 },
+      { model: 'unknown', type: 'completion', value: 120 }
+    ]);
+    expect(await series(metrics.openRouterCost)).toEqual([
+      { model: served, value: 0.0008 },
+      { model: 'unknown', value: 0.0004 }
+    ]);
+  });
+
+  it('times every request, the key read included, and counts a failed status or network error as an error', async () => {
+    const { fetch } = fakeFetch(
+      json(200, completion(VALID_CONTENT)),
+      json(500, { error: { code: 500, message: 'down' } }),
+      new TypeError('fetch failed'),
+      json(200, { data: { limit_remaining: 1 } })
+    );
+    const { client: analyzer, metrics } = client(fetch);
+    await analyzer.analyze(INPUT, 'doc-1');
+    await analyzer.analyze(INPUT, 'doc-2');
+    await analyzer.analyze(INPUT, 'doc-3');
+    await analyzer.readBudget();
+
+    expect(await series(metrics.outboundRequests)).toEqual([
+      { target: 'openrouter', outcome: 'ok', value: 2 },
+      { target: 'openrouter', outcome: 'error', value: 2 }
+    ]);
+    const durations = (await metrics.outboundRequestDuration.get()).values;
+    expect(
+      durations.find(
+        ({ metricName }) =>
+          metricName === 'logigator_outbound_request_duration_seconds_count'
+      )
+    ).toMatchObject({ labels: { target: 'openrouter' }, value: 4 });
   });
 });
 

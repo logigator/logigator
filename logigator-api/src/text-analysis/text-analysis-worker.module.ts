@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ENV, type Env } from '../config/env';
+import { Metrics } from '../metrics/metrics';
 import { ModerationModule } from '../moderation/moderation.module';
 import { OpenRouterClient } from './openrouter/openrouter.client';
 import {
@@ -27,8 +28,8 @@ import { TEXT_ANALYZER } from './text-analyzer';
     { provide: ANALYSIS_CLOCK, useValue: systemClock },
     {
       provide: TEXT_ANALYZER,
-      inject: [ENV],
-      useFactory: (env: Env) => {
+      inject: [ENV, Metrics],
+      useFactory: (env: Env, metrics: Metrics) => {
         if (!env.OPENROUTER_API_KEY || !env.OPENROUTER_PRESET) {
           throw new Error(
             'The text analyzer needs OPENROUTER_API_KEY and OPENROUTER_PRESET.'
@@ -37,7 +38,8 @@ import { TEXT_ANALYZER } from './text-analyzer';
         return new OpenRouterClient({
           apiKey: env.OPENROUTER_API_KEY,
           preset: env.OPENROUTER_PRESET,
-          publicUrl: env.PUBLIC_URL
+          publicUrl: env.PUBLIC_URL,
+          metrics
         });
       }
     }

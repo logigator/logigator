@@ -7,6 +7,7 @@ import { documentReports } from '../database/schema';
 import { type CircuitTable, tableOf } from '../documents/circuit-queries';
 import { awaitingCheck } from '../documents/text-check';
 import { MailService } from '../mail/mail.service';
+import { Metrics } from '../metrics/metrics';
 import type { CallUsage } from '../text-analysis/text-analyzer';
 import {
   announceReport,
@@ -87,11 +88,16 @@ export class MachineModerationService {
     @Inject(DB) private readonly db: Database,
     @Inject(ENV) private readonly env: Env,
     private readonly mail: MailService,
-    private readonly moderation: ModerationService
+    private readonly moderation: ModerationService,
+    private readonly metrics: Metrics
   ) {}
 
   async apply(input: MachineVerdictInput): Promise<MachineVerdictResult> {
     const { verdict } = input;
+    this.metrics.moderationVerdicts.inc({
+      category: verdict.category,
+      certain: String(verdict.certain)
+    });
     if (verdict.category === 'none') return 'ignored';
     const category = verdict.category;
 
@@ -126,6 +132,15 @@ export class MachineModerationService {
       await announced;
       return 'reported';
     }
+    this.metrics.moderationAutoHides.inc();
+    this.logger.log({
+      event: 'auto_hide',
+      kind: input.kind,
+      documentId: input.documentId,
+      category,
+      reportId: opened.reportId,
+      msg: `Hid ${input.kind} ${input.documentId} for ${category}`
+    });
     // Never undoes the hide: the owner sees the notice on the page either way.
     await Promise.all([
       announced,
