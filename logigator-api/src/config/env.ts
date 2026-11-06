@@ -18,6 +18,11 @@ const variables = z.object({
     .default('development'),
   HOST: z.string().min(1).default('0.0.0.0'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+  /**
+   * Where `GET /metrics` is served, on `HOST`, by a listener of its own that
+   * no proxy route reaches. Unset serves no metrics.
+   */
+  METRICS_PORT: z.coerce.number().int().min(1).max(65535).optional(),
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
     .default('info'),

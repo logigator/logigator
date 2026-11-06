@@ -11,6 +11,7 @@ import { DocumentsModule } from './documents/documents.module';
 import { HealthModule } from './health/health.module';
 import { MailModule } from './mail/mail.module';
 import { MetaModule } from './meta/meta.module';
+import { MetricsModule } from './metrics/metrics.module';
 import { ModerationModule } from './moderation/moderation.module';
 import { RedisModule } from './redis/redis.module';
 import { ReportsModule } from './reports/reports.module';
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module';
     // constructed.
     ScheduleModule.forRoot(),
     DatabaseModule,
+    MetricsModule,
     RedisModule,
     SessionModule,
     StorageModule,

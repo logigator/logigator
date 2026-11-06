@@ -8,6 +8,7 @@ import { AppModule } from './app.module';
 import { apiServerOptions, configureApiApp } from './app.setup';
 import { loadEnv } from './config/env';
 import { PinoNestLogger } from './logging/pino-nest-logger';
+import { MetricsServer } from './metrics/metrics.server';
 
 async function bootstrap(): Promise<void> {
   const env = loadEnv(process.env);
@@ -27,6 +28,7 @@ async function bootstrap(): Promise<void> {
   app.enableShutdownHooks([], { useProcessExit: true });
 
   await app.listen({ host: env.HOST, port: env.PORT });
+  await app.get(MetricsServer).start();
 }
 
 void bootstrap().catch((error: unknown) => {

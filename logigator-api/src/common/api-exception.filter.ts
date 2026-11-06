@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { ApiError, ApiErrorCode } from '@logigator/contract';
+import { recordErrorCode, routeLabel } from '../metrics/http-metrics';
 import { ApiException } from './api-exception';
 
 /**
@@ -83,20 +84,24 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const reply = http.getResponse<FastifyReply>();
     const status = this.statusFor(exception);
 
+    const body = this.toBody(exception);
+
     void reply.status(status);
+    recordErrorCode(request, body.code);
     if (status >= 500) {
       request.log.error(
         {
+          event: 'error',
           req: request,
           res: reply,
-          route: request.routeOptions.url,
+          route: routeLabel(request),
           err: exception
         },
         'request failed'
       );
     }
 
-    void reply.send(this.toBody(exception));
+    void reply.send(body);
   }
 
   private statusFor(exception: unknown): number {

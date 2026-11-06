@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import type { FastifyServerOptions } from 'fastify';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import type { Env } from './config/env';
+import { registerHttpMetrics } from './metrics/http-metrics';
 import { registerCspReportRoute } from './reports/csp-report.route';
 import { registerSessionPlugins } from './session/session.plugin';
 
@@ -43,6 +44,8 @@ export async function configureApiApp(
   app: NestFastifyApplication,
   env: Env
 ): Promise<void> {
+  // First, so the hooks reach every route registered after them.
+  registerHttpMetrics(app);
   await app.register(fastifyMultipart, {
     // Two files per request: a preview upload carries the light and the dark
     // render together.
