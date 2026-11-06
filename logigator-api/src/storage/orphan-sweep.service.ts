@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path';
 import { ENV, type Env } from '../config/env';
 import { DB, type Database } from '../database/database.module';
 import { components, projects, users } from '../database/schema';
+import { Metrics } from '../metrics/metrics';
 import { FileStorageService, type StorageArea } from './file-storage.service';
 
 export interface SweepReport {
@@ -34,7 +35,8 @@ export class OrphanSweepService {
   constructor(
     @Inject(ENV) env: Env,
     @Inject(DB) private readonly db: Database,
-    private readonly files: FileStorageService
+    private readonly files: FileStorageService,
+    private readonly metrics: Metrics
   ) {
     this.root = resolve(env.STORAGE_DIR);
     this.graceMs = env.STORAGE_SWEEP_GRACE_MINUTES * 60_000;
@@ -46,19 +48,28 @@ export class OrphanSweepService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_4AM)
   async scheduled(): Promise<void> {
+    const sweep = 'orphaned_files';
+    let failed = false;
     for (const area of ['profile', 'preview'] as const) {
       try {
         const report = await this.sweep(area);
+        this.metrics.sweepRemoved.inc({ sweep }, report.removed);
         if (report.removed > 0 || report.spared > 0) {
-          this.logger.log(
-            `Swept ${area}: ${report.removed} orphaned of ${report.scanned}, ${report.spared} too new to judge`
-          );
+          this.logger.log({
+            event: 'sweep',
+            sweep,
+            area,
+            ...report,
+            msg: 'Swept orphaned files'
+          });
         }
       } catch (error) {
         // A failed sweep runs again tomorrow; it must not take the process.
-        this.logger.error(`Sweeping ${area} failed`, error);
+        failed = true;
+        this.logger.error({ sweep, area, err: error, msg: 'Sweep failed' });
       }
     }
+    if (!failed) this.metrics.sweepLastSuccess.setToCurrentTime({ sweep });
   }
 
   async sweep(area: StorageArea): Promise<SweepReport> {

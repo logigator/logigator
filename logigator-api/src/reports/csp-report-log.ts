@@ -1,6 +1,7 @@
 import type { FastifyBaseLogger } from 'fastify';
+import type { Metrics } from '../metrics/metrics';
 import type { RedisService } from '../redis/redis.service';
-import { cspViolationsFrom } from './csp-report';
+import { cspViolationLabels, cspViolationsFrom } from './csp-report';
 
 export type LogLine = Pick<FastifyBaseLogger, 'warn'>;
 
@@ -32,6 +33,7 @@ interface Dropped {
  * counted in Redis so every process shares the budget; and the process logs
  * {@link CSP_LOG_CAP} in all. What the limits hold back is only counted, and
  * the next window opens with one `csp reports dropped` line saying how much.
+ * The metrics count every violation received, and every drop as it happens.
  *
  * Redis is asked only about a violation that would otherwise be logged, so a
  * flood of repeats, garbage or reports past the cap costs no round trip.
@@ -43,6 +45,10 @@ export class CspReportLog {
 
   constructor(
     private readonly counter: Pick<RedisService, 'countInWindows'>,
+    private readonly metrics: Pick<
+      Metrics,
+      'cspViolations' | 'cspReportsDropped'
+    >,
     private readonly summaryLog: LogLine,
     private readonly now: () => number = Date.now
   ) {
@@ -59,8 +65,11 @@ export class CspReportLog {
     this.rollOver();
     const violations = cspViolationsFrom(body, userAgent);
     if (violations.length === 0) {
-      this.dropped.unreadable++;
+      this.drop('unreadable');
       return;
+    }
+    for (const violation of violations) {
+      this.metrics.cspViolations.inc(cspViolationLabels(violation));
     }
 
     const fresh = violations
@@ -80,10 +89,10 @@ export class CspReportLog {
     this.rollOver();
     fresh.forEach(({ violation, key }, index) => {
       if ((counts[index] ?? 0) > CSP_ADDRESS_LIMIT) {
-        this.dropped.addressLimit++;
+        this.drop('addressLimit');
       } else if (this.admits(key)) {
         this.seen.add(key);
-        log.warn({ csp: violation }, 'csp violation');
+        log.warn({ event: 'csp_violation', csp: violation }, 'csp violation');
       }
     });
   }
@@ -91,14 +100,19 @@ export class CspReportLog {
   /** Whether a violation may still be logged, counting it if not. */
   private admits(key: string): boolean {
     if (this.seen.has(key)) {
-      this.dropped.duplicate++;
+      this.drop('duplicate');
       return false;
     }
     if (this.seen.size >= CSP_LOG_CAP) {
-      this.dropped.logCap++;
+      this.drop('logCap');
       return false;
     }
     return true;
+  }
+
+  private drop(reason: keyof Dropped): void {
+    this.dropped[reason]++;
+    this.metrics.cspReportsDropped.inc();
   }
 
   private rollOver(): void {

@@ -1,8 +1,9 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import type { Transporter } from 'nodemailer';
+import type { SendMailOptions, Transporter } from 'nodemailer';
 import type { DocumentReportReason } from '@logigator/contract';
 import { ENV, type Env } from '../config/env';
 import type { Locale } from '../common/locale';
+import { Metrics } from '../metrics/metrics';
 import { MAIL_STRINGS } from './mail-strings';
 import { renderMail, type MailKind } from './mail-template';
 import { MAIL_TRANSPORT } from './mail.transport';
@@ -39,7 +40,8 @@ export class MailService {
 
   constructor(
     @Inject(MAIL_TRANSPORT) private readonly transport: Transporter,
-    @Inject(ENV) private readonly env: Env
+    @Inject(ENV) private readonly env: Env,
+    private readonly metrics: Metrics
   ) {}
 
   /** Confirms a newly registered address. Until it is opened, login is refused. */
@@ -168,7 +170,7 @@ export class MailService {
 
     // A crash message can be any length, and a subject line cannot.
     const subject = mail.subject.slice(0, 160);
-    const info: unknown = await this.transport.sendMail({
+    const info = await this.deliver('operator', {
       from: this.env.MAIL_FROM,
       to: this.env.REPORT_MAIL_TO,
       ...mail,
@@ -176,9 +178,12 @@ export class MailService {
     });
 
     if (!this.env.SMTP_URL) {
-      this.logger.warn(
-        `No SMTP_URL configured — operator mail "${subject}" for ${this.env.REPORT_MAIL_TO} was not sent.`
-      );
+      this.logger.warn({
+        kind: 'operator',
+        to: this.env.REPORT_MAIL_TO,
+        subject,
+        msg: 'No SMTP_URL configured, so the operator mail was not sent'
+      });
       this.logger.debug(info);
     }
     return true;
@@ -219,7 +224,7 @@ export class MailService {
       ...(values ? { values } : {})
     });
 
-    const info: unknown = await this.transport.sendMail({
+    const info = await this.deliver(kind, {
       from: this.env.MAIL_FROM,
       to: recipient.email,
       subject: mail.subject,
@@ -230,10 +235,40 @@ export class MailService {
 
     if (!this.env.SMTP_URL) {
       // Nothing was sent, so the link is the only way to reach the next step.
-      this.logger.warn(
-        `No SMTP_URL configured — ${kind} mail for ${recipient.email} was not sent. Link: ${link}`
-      );
+      this.logger.warn({
+        kind,
+        to: recipient.email,
+        link,
+        msg: 'No SMTP_URL configured, so the mail was not sent'
+      });
       this.logger.debug(info);
     }
+  }
+
+  /**
+   * Hands one mail to the transport and counts what became of it. Without
+   * `SMTP_URL` the transport only echoes the message, so that is `skipped`
+   * and no outbound call.
+   */
+  private async deliver(
+    kind: MailKind | 'operator',
+    message: SendMailOptions
+  ): Promise<unknown> {
+    let info: unknown;
+    try {
+      info = this.env.SMTP_URL
+        ? await this.metrics.timeOutbound('smtp', () =>
+            this.transport.sendMail(message)
+          )
+        : await this.transport.sendMail(message);
+    } catch (error) {
+      this.metrics.mails.inc({ kind, outcome: 'failed' });
+      throw error;
+    }
+    this.metrics.mails.inc({
+      kind,
+      outcome: this.env.SMTP_URL ? 'sent' : 'skipped'
+    });
+    return info;
   }
 }

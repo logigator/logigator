@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Metrics } from '../metrics/metrics';
 
 // The protocol library is replaced wholesale: this spec is about what the flow
 // record keeps, and discovery would go to Google to find out nothing relevant.
@@ -6,6 +7,7 @@ vi.mock('openid-client', () => ({
   discovery: () => Promise.resolve({}),
   buildAuthorizationUrl: () => new URL('https://accounts.google.com/o/oauth2'),
   calculatePKCECodeChallenge: () => Promise.resolve('challenge'),
+  customFetch: Symbol('customFetch'),
   randomPKCECodeVerifier: () => 'verifier',
   randomState: () => 'state',
   randomNonce: () => 'nonce',
@@ -55,7 +57,8 @@ describe('Google sign-in return path', () => {
       redis as never,
       { findByGoogleUserId: () => Promise.resolve(USER) } as never,
       {} as never,
-      {} as never
+      {} as never,
+      new Metrics()
     );
   });
 

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { Metrics } from '../metrics/metrics';
 import {
   CSP_ADDRESS_LIMIT,
   CSP_LOG_CAP,
@@ -53,6 +54,7 @@ describe('CspReportLog', () => {
   let counter: FakeCounter;
   let requestLog: RecordingLog;
   let summaryLog: RecordingLog;
+  let metrics: Metrics;
   let log: CspReportLog;
 
   function receive(body: unknown, address = '203.0.113.7') {
@@ -68,7 +70,8 @@ describe('CspReportLog', () => {
     counter = new FakeCounter();
     requestLog = new RecordingLog();
     summaryLog = new RecordingLog();
-    log = new CspReportLog(counter, summaryLog, () => now);
+    metrics = new Metrics();
+    log = new CspReportLog(counter, metrics, summaryLog, () => now);
   });
 
   it('logs a violation once per window', async () => {
@@ -160,5 +163,30 @@ describe('CspReportLog', () => {
     ]);
 
     expect(requestLog.messages('csp violation')).toHaveLength(1);
+  });
+
+  it('counts every violation received and every one held back', async () => {
+    await receive(report('a'));
+    await receive(report('a'));
+    await receive([
+      {
+        type: 'csp-violation',
+        body: {
+          effectiveDirective: 'script-src-elem',
+          documentURL: 'https://logigator.com/editor/'
+        }
+      }
+    ]);
+    await receive('garbage');
+
+    const violations = (await metrics.cspViolations.get()).values.map(
+      ({ labels, value }) => ({ ...labels, value })
+    );
+    expect(violations).toEqual([
+      { document: 'site', directive: 'img-src', value: 2 },
+      { document: 'editor', directive: 'script-src-elem', value: 1 }
+    ]);
+    // The repeat and the unreadable body.
+    expect((await metrics.cspReportsDropped.get()).values[0]?.value).toBe(2);
   });
 });

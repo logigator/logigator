@@ -299,6 +299,7 @@ export class MachineModerationService {
     { reportId, document }: OpenedReport,
     verdict: Pick<OperatorReport, 'reason' | 'explanation' | 'hidden'>
   ): Promise<void> {
+    this.metrics.documentReports.inc({ source: 'machine' });
     return announceReport(
       {
         reportId,

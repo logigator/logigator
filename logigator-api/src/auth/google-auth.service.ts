@@ -3,11 +3,13 @@ import {
   authorizationCodeGrant,
   buildAuthorizationUrl,
   calculatePKCECodeChallenge,
+  customFetch,
   discovery,
   randomNonce,
   randomPKCECodeVerifier,
   randomState,
-  type Configuration
+  type Configuration,
+  type CustomFetch
 } from 'openid-client';
 import { reduceToUsername, usernameSchema } from '@logigator/contract';
 import { safeReturnPath } from '@logigator/core';
@@ -15,6 +17,7 @@ import { ApiException } from '../common/api-exception';
 import { ENV, type Env } from '../config/env';
 import type { UserRow } from '../database/schema';
 import { isUniqueViolation } from '../database/unique-violation';
+import { Metrics } from '../metrics/metrics';
 import { RedisService } from '../redis/redis.service';
 import { isGoogleAuthConfigured } from './google-auth.config';
 import { FileStorageService } from '../storage/file-storage.service';
@@ -106,12 +109,21 @@ export class GoogleAuthService {
   private readonly logger = new Logger(GoogleAuthService.name);
   private configuration?: Promise<Configuration>;
 
+  private readonly timedFetch: CustomFetch = (url, options) =>
+    this.metrics.timeOutbound(
+      'google',
+      // The library's body type predates TypeScript's typed `Uint8Array`.
+      () => fetch(url, options as RequestInit),
+      (response) => !response.ok
+    );
+
   constructor(
     @Inject(ENV) private readonly env: Env,
     private readonly redis: RedisService,
     private readonly users: UsersService,
     private readonly files: FileStorageService,
-    private readonly images: ImageService
+    private readonly images: ImageService,
+    private readonly metrics: Metrics
   ) {}
 
   /** Whether the deployment has credentials, and so whether the routes work. */
@@ -359,9 +371,11 @@ export class GoogleAuthService {
     }
 
     try {
-      const response = await fetch(picture, {
-        signal: AbortSignal.timeout(5000)
-      });
+      const response = await this.metrics.timeOutbound(
+        'google',
+        () => fetch(picture, { signal: AbortSignal.timeout(5000) }),
+        (response) => !response.ok
+      );
       if (!response.ok) return null;
 
       const content = await readCapped(response, this.env.UPLOAD_MAX_BYTES);
@@ -386,10 +400,14 @@ export class GoogleAuthService {
       );
     }
 
+    // Discovery's fetch stays with the configuration, so it times the token
+    // exchange and every later call to Google too.
     this.configuration ??= discovery(
       GOOGLE_ISSUER,
       this.env.GOOGLE_CLIENT_ID as string,
-      this.env.GOOGLE_CLIENT_SECRET
+      this.env.GOOGLE_CLIENT_SECRET,
+      undefined,
+      { [customFetch]: this.timedFetch }
     ).catch((error: unknown) => {
       // Do not cache a failure: a transient network problem must not answer for
       // the life of the process.

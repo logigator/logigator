@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Metrics } from '../metrics/metrics';
 
 /** The identity Google answers the next exchange with. */
 let googleSub = 'google-ada';
@@ -7,6 +8,7 @@ vi.mock('openid-client', () => ({
   discovery: () => Promise.resolve({}),
   buildAuthorizationUrl: () => new URL('https://accounts.google.com/o/oauth2'),
   calculatePKCECodeChallenge: () => Promise.resolve('challenge'),
+  customFetch: Symbol('customFetch'),
   randomPKCECodeVerifier: () => 'verifier',
   randomState: () => 'state',
   randomNonce: () => 'nonce',
@@ -92,7 +94,8 @@ describe('a Google round trip from a session', () => {
       new FakeRedis() as never,
       users as never,
       {} as never,
-      {} as never
+      {} as never,
+      new Metrics()
     );
   });
 

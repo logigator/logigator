@@ -15,6 +15,7 @@ import {
 } from '../database/schema';
 import { findByResolvingLink } from '../documents/circuit-queries';
 import { MailService } from '../mail/mail.service';
+import { Metrics } from '../metrics/metrics';
 
 /** The two kinds of document a report can name, as the API spells them. */
 export type ReportedKind = 'project' | 'component';
@@ -108,11 +109,19 @@ export async function announceReport(
   publicUrl: string,
   logger: Logger
 ): Promise<void> {
-  logger.warn(JSON.stringify(reportSummary(report)));
+  logger.warn({
+    event: 'document_report',
+    ...reportSummary(report),
+    msg: 'Document report'
+  });
   try {
     await mail.sendDocumentReport(operatorReportMail(report, publicUrl));
   } catch (error) {
-    logger.error(`Could not mail the ${report.source} report`, error);
+    logger.error({
+      source: report.source,
+      err: error,
+      msg: 'Could not mail the document report'
+    });
   }
 }
 
@@ -148,7 +157,8 @@ export class DocumentReportsService {
   constructor(
     @Inject(DB) private readonly db: Database,
     @Inject(ENV) private readonly env: Env,
-    private readonly mail: MailService
+    private readonly mail: MailService,
+    private readonly metrics: Metrics
   ) {}
 
   async report(
@@ -180,6 +190,7 @@ export class DocumentReportsService {
         reporterId
       })
       .returning({ id: documentReports.id });
+    this.metrics.documentReports.inc({ source: 'human' });
 
     await announceReport(
       {

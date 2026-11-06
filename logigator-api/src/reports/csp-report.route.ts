@@ -1,5 +1,6 @@
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import type { FastifyInstance } from 'fastify';
+import { Metrics } from '../metrics/metrics';
 import { RedisService } from '../redis/redis.service';
 import { CspReportLog } from './csp-report-log';
 
@@ -28,9 +29,10 @@ export async function registerCspReportRoute(
   app: NestFastifyApplication
 ): Promise<void> {
   const redis = app.get(RedisService);
+  const metrics = app.get(Metrics);
 
   await app.register(async (instance: FastifyInstance) => {
-    const reports = new CspReportLog(redis, instance.log);
+    const reports = new CspReportLog(redis, metrics, instance.log);
     const parseJson = instance.getDefaultJsonParser('remove', 'remove');
 
     instance.removeAllContentTypeParsers();
@@ -55,7 +57,7 @@ export async function registerCspReportRoute(
             return reply.code(status).send();
           }
           request.log.error(
-            { route: CSP_REPORT_PATH, err: error },
+            { event: 'error', route: CSP_REPORT_PATH, err: error },
             'request failed'
           );
           return reply.code(500).send();

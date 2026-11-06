@@ -111,6 +111,9 @@ describe('MachineModerationService metrics', () => {
     ).toBe('reported');
 
     expect(await series(metrics.moderationAutoHides)).toEqual([{ value: 1 }]);
+    expect(await series(metrics.documentReports)).toEqual([
+      { source: 'machine', value: 3 }
+    ]);
     expect(await series(metrics.moderationVerdicts)).toEqual([
       { category: 'harassment', certain: 'true', value: 1 },
       { category: 'harassment', certain: 'false', value: 1 },

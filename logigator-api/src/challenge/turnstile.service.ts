@@ -2,6 +2,7 @@ import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import type { TurnstileAction } from '@logigator/contract';
 import { ApiException } from '../common/api-exception';
 import { ENV, type Env } from '../config/env';
+import { Metrics } from '../metrics/metrics';
 
 export const SITEVERIFY_URL =
   'https://challenges.cloudflare.com/turnstile/v0/siteverify';
@@ -46,7 +47,8 @@ export class TurnstileService {
 
   constructor(
     @Inject(ENV) env: Env,
-    @Inject(TURNSTILE_FETCH) private readonly fetch: typeof globalThis.fetch
+    @Inject(TURNSTILE_FETCH) private readonly fetch: typeof globalThis.fetch,
+    private readonly metrics: Metrics
   ) {
     this.secret = env.TURNSTILE_SECRET_KEY;
     this.hostname = new URL(env.PUBLIC_URL).hostname;
@@ -65,9 +67,7 @@ export class TurnstileService {
       ? reply['error-codes'].map(String)
       : [];
     if (errorCodes.some((code) => SERVER_FAULTS.has(code))) {
-      this.logger.error(
-        `siteverify refused the request: ${errorCodes.join(', ')}`
-      );
+      this.logger.error({ errorCodes, msg: 'siteverify refused the request' });
       throw unavailable();
     }
 
@@ -76,14 +76,16 @@ export class TurnstileService {
       reply.hostname !== this.hostname ||
       reply.action !== action
     ) {
-      this.logger.debug(
-        `Challenge refused for ${action}: ${JSON.stringify({
+      this.logger.debug({
+        action,
+        reply: {
           success: reply.success,
           hostname: reply.hostname,
-          action: reply.action,
-          errorCodes
-        })}`
-      );
+          action: reply.action
+        },
+        errorCodes,
+        msg: 'Challenge refused'
+      });
       throw challengeFailed();
     }
   }
@@ -93,16 +95,21 @@ export class TurnstileService {
     ip: string
   ): Promise<SiteverifyReply> {
     try {
-      const response = await this.fetch(SITEVERIFY_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          secret: this.secret,
-          response: token,
-          remoteip: ip
-        }),
-        signal: AbortSignal.timeout(SITEVERIFY_TIMEOUT_MS)
-      });
+      const response = await this.metrics.timeOutbound(
+        'turnstile',
+        () =>
+          this.fetch(SITEVERIFY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              secret: this.secret,
+              response: token,
+              remoteip: ip
+            }),
+            signal: AbortSignal.timeout(SITEVERIFY_TIMEOUT_MS)
+          }),
+        (response) => !response.ok
+      );
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const reply: unknown = await response.json();
       if (typeof reply !== 'object' || reply === null) {

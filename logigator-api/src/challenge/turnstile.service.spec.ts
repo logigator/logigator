@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadEnv } from '../config/env';
 import { ApiException } from '../common/api-exception';
+import { Metrics } from '../metrics/metrics';
 import { SITEVERIFY_URL, TurnstileService } from './turnstile.service';
 
 interface Call {
@@ -43,7 +44,7 @@ function service(
       ? { TURNSTILE_SECRET_KEY: secret, TURNSTILE_SITE_KEY: 'turnstile-site' }
       : {})
   });
-  return new TurnstileService(env, fetch);
+  return new TurnstileService(env, fetch, new Metrics());
 }
 
 async function codeOf(promise: Promise<unknown>): Promise<string> {

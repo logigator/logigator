@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { and, eq, lt } from 'drizzle-orm';
 import { DB, type Database } from '../database/database.module';
 import { users } from '../database/schema';
+import { Metrics } from '../metrics/metrics';
 
 /**
  * How long an account may wait for its address to be confirmed. A constant
@@ -25,19 +26,30 @@ export const UNVERIFIED_ACCOUNT_RETENTION_DAYS = 90;
 export class UnverifiedAccountSweepService {
   private readonly logger = new Logger(UnverifiedAccountSweepService.name);
 
-  constructor(@Inject(DB) private readonly db: Database) {}
+  constructor(
+    @Inject(DB) private readonly db: Database,
+    private readonly metrics: Metrics
+  ) {}
 
   /** Nightly, beside the storage sweep; nothing waits on it. */
   @Cron(CronExpression.EVERY_DAY_AT_4AM)
   async scheduled(): Promise<void> {
+    const sweep = 'unverified_accounts';
     try {
       const removed = await this.sweep();
+      this.metrics.sweepRemoved.inc({ sweep }, removed);
+      this.metrics.sweepLastSuccess.setToCurrentTime({ sweep });
       if (removed > 0) {
-        this.logger.log(`Deleted ${removed} unverified accounts`);
+        this.logger.log({
+          event: 'sweep',
+          sweep,
+          removed,
+          msg: 'Deleted unverified accounts'
+        });
       }
     } catch (error) {
       // A failed sweep runs again tomorrow; it must not take the process.
-      this.logger.error('Sweeping unverified accounts failed', error);
+      this.logger.error({ sweep, err: error, msg: 'Sweep failed' });
     }
   }
 

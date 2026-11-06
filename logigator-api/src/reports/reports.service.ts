@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { ReportErrorRequest } from '@logigator/contract';
 import { MailService } from '../mail/mail.service';
+import { Metrics } from '../metrics/metrics';
 
 /**
  * Where a client-side error report goes: always one structured log line, and a
@@ -16,7 +17,10 @@ import { MailService } from '../mail/mail.service';
 export class ReportsService {
   private readonly logger = new Logger('ErrorReport');
 
-  constructor(private readonly mail: MailService) {}
+  constructor(
+    private readonly mail: MailService,
+    private readonly metrics: Metrics
+  ) {}
 
   async record(
     report: ReportErrorRequest,
@@ -36,7 +40,8 @@ export class ReportsService {
       hasCircuit: Boolean(report.projectDump ?? report.project)
     };
 
-    this.logger.warn(JSON.stringify(summary));
+    this.logger.warn({ event: 'bug_report', ...summary, msg: 'Error report' });
+    this.metrics.bugReports.inc({ source: sourceLabel(report.source) });
 
     // A report never fails the request that sent it — something already went
     // wrong client-side, and the log line above is the part that always works.
@@ -54,6 +59,11 @@ export class ReportsService {
       this.logger.error('Could not mail the error report', error);
     }
   }
+}
+
+/** The client a report claims to come from, as one of a fixed set. */
+export function sourceLabel(source: string | undefined): 'editor' | 'other' {
+  return source?.startsWith('editor') ? 'editor' : 'other';
 }
 
 function location(report: ReportErrorRequest): string | undefined {

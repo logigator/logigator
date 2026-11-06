@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   browserOf,
+  cspViolationLabels,
   cspViolationsFrom,
   MAX_REPORTS_PER_REQUEST,
   reducedUrl
@@ -142,6 +143,38 @@ describe('cspViolationsFrom', () => {
     );
 
     expect(violation).toEqual({ directive: 'img-src', browser: 'chrome 141' });
+  });
+});
+
+describe('cspViolationLabels', () => {
+  it.each([
+    ['script-src-elem', 'script-src-elem'],
+    ['frame-ancestors', 'frame-ancestors'],
+    ['require-trusted-types-for', 'require-trusted-types-for'],
+    // Reads as a directive, so it passes the parser, but CSP has no such one.
+    ['made-up-src', 'other']
+  ])('labels %s as %s', (directive, label) => {
+    expect(cspViolationLabels({ directive, browser: 'other' }).directive).toBe(
+      label
+    );
+  });
+
+  it.each([
+    ['https://logigator.com/editor', 'editor'],
+    ['https://logigator.com/editor/project/:id', 'editor'],
+    ['https://logigator.com/en/editor-tips', 'site'],
+    ['https://logigator.com/editorial', 'site'],
+    ['https://logigator.com/en/community', 'site'],
+    ['about', 'site'],
+    [undefined, 'site']
+  ])('places a violation on %s in the %s', (document, label) => {
+    expect(
+      cspViolationLabels({
+        directive: 'img-src',
+        browser: 'other',
+        ...(document ? { document } : {})
+      }).document
+    ).toBe(label);
   });
 });
 

@@ -149,6 +149,61 @@ function normalized(
   return violation;
 }
 
+/** The directives CSP3 defines that a violation can name. */
+const DIRECTIVES = new Set([
+  'base-uri',
+  'block-all-mixed-content',
+  'child-src',
+  'connect-src',
+  'default-src',
+  'fenced-frame-src',
+  'font-src',
+  'form-action',
+  'frame-ancestors',
+  'frame-src',
+  'img-src',
+  'manifest-src',
+  'media-src',
+  'navigate-to',
+  'object-src',
+  'plugin-types',
+  'prefetch-src',
+  'require-trusted-types-for',
+  'sandbox',
+  'script-src',
+  'script-src-attr',
+  'script-src-elem',
+  'style-src',
+  'style-src-attr',
+  'style-src-elem',
+  'trusted-types',
+  'upgrade-insecure-requests',
+  'webrtc',
+  'worker-src'
+]);
+
+/** A violation's metric labels, each from a fixed set. */
+export function cspViolationLabels(violation: CspViolation): {
+  document: 'editor' | 'site';
+  directive: string;
+} {
+  return {
+    document: isEditorDocument(violation.document) ? 'editor' : 'site',
+    directive: DIRECTIVES.has(violation.directive)
+      ? violation.directive
+      : 'other'
+  };
+}
+
+function isEditorDocument(document: string | undefined): boolean {
+  if (!document) return false;
+  try {
+    return /^\/editor(?:\/|$)/.test(new URL(document).pathname);
+  } catch {
+    return false;
+  }
+}
+
 /** `inline`, `eval`, `data`, `blob`, `wasm-eval`, …, or a bare scheme. */
 const KEYWORD = /^[a-z][a-z0-9+-]{0,31}:?$/i;
 
