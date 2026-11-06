@@ -7,13 +7,17 @@ import {
 import { AppModule } from './app.module';
 import { apiServerOptions, configureApiApp } from './app.setup';
 import { loadEnv } from './config/env';
+import { PinoNestLogger } from './logging/pino-nest-logger';
 
 async function bootstrap(): Promise<void> {
   const env = loadEnv(process.env);
 
+  const adapter = new FastifyAdapter(apiServerOptions(env));
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule.forEnv(env),
-    new FastifyAdapter(apiServerOptions(env))
+    adapter,
+    // Nest's own lines and every `Logger` go out through Fastify's pino.
+    { logger: new PinoNestLogger(adapter.getInstance().log) }
   );
 
   await configureApiApp(app, env);
@@ -29,6 +33,10 @@ void bootstrap().catch((error: unknown) => {
   // Nothing is listening when this runs, so every failure here is fatal: one
   // record through the logger the rest of the boot uses, rather than Node's
   // unhandled-rejection dump.
-  new Logger('Bootstrap').fatal(error);
+  new Logger('Bootstrap').fatal({
+    event: 'error',
+    err: error,
+    msg: 'Startup failed'
+  });
   process.exit(1);
 });

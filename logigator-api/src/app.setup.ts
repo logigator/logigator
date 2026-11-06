@@ -22,7 +22,12 @@ import { registerSessionPlugins } from './session/session.plugin';
  */
 export function apiServerOptions(env: Env): FastifyServerOptions {
   return {
-    logger: { level: env.LOG_LEVEL },
+    logger: {
+      level: env.LOG_LEVEL,
+      // The level's name rather than pino's number, as every other service
+      // in the log store writes it.
+      formatters: { level: (label) => ({ level: label }) }
+    },
     requestIdHeader: 'cf-ray',
     genReqId: () => randomUUID(),
     trustProxy: env.TRUST_PROXY,
