@@ -150,7 +150,7 @@ export function createRequestLogger(
           reqId,
           req: { method: req.method, url: req.originalUrl },
           res: { statusCode: res.statusCode },
-          responseTime: performance.now() - start
+          responseTime: Math.round((performance.now() - start) * 100) / 100
         },
         'request completed'
       );
