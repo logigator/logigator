@@ -27,7 +27,18 @@ export function apiServerOptions(env: Env): FastifyServerOptions {
       level: env.LOG_LEVEL,
       // The level's name rather than pino's number, as every other service
       // in the log store writes it.
-      formatters: { level: (label) => ({ level: label }) },
+      formatters: {
+        level: (label) => ({ level: label }),
+        // Fastify's request lines time to the nanosecond; a hundredth of a
+        // millisecond is plenty.
+        log: (fields) =>
+          typeof fields['responseTime'] === 'number'
+            ? {
+                ...fields,
+                responseTime: Math.round(fields['responseTime'] * 100) / 100
+              }
+            : fields
+      },
       // No `pid` or `hostname`: always 1 and the container's id, which the log
       // store already names every line by.
       base: undefined
